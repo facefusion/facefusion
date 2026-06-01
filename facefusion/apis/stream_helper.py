@@ -145,12 +145,14 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			frame_duration = (video_receive_time - temp_video_receive_time) if temp_video_receive_time else 1.0 / 30
 			temp_video_receive_time = video_receive_time
 
+			audio_packets : list[tuple[bytes, float]] = []
+
 			while audio_deque and audio_deque[0][1] < video_receive_time + frame_duration:
 				audio_frame, audio_time = audio_deque.popleft()
 				output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
 
 				if output_audio_buffer:
-					rtc.send_audio(rtc_peer, output_audio_buffer, int(audio_time * 48000))
+					audio_packets.append((output_audio_buffer, audio_time))
 
 			output_vision_frame = streamer.process_frame(create_empty_audio_frame(), temp_vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
@@ -175,6 +177,9 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 					frame_index = 0
 
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
+
+			for audio_buffer, audio_time in audio_packets:
+				rtc.send_audio(rtc_peer, audio_buffer, int(audio_time * 48000))
 
 			if output_video_buffer:
 				rtc.send_video(rtc_peer, output_video_buffer, int(video_receive_time * 90000))
