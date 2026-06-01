@@ -181,7 +181,7 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], au
 		if output_audio_buffer:
 			rtc.send_audio(rtc_peer, output_audio_buffer, int(temp_audio_time * 48000))
 
-		if not audio_deque:
+		if len(audio_deque) == 0:
 			audio_event.wait()
 			audio_event.clear()
 
