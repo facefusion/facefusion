@@ -231,8 +231,8 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 			available_event.wait()
 			available_event.clear()
 
-	# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
-	video_deque.append((numpy.empty(0), 0.0))
+	empty_vision_frame = numpy.empty(0)
+	video_deque.append((empty_vision_frame, 0.0))
 	video_event.set()
 	destroy_video_decoder(video_codec, video_decoder)
 
