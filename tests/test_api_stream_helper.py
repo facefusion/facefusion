@@ -156,10 +156,12 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
+	# TODO: avoid concatenation — session_id should be a parametrize parameter like video_codec
 	session_id = 'test-run-peer-loop-' + video_codec
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
 
+	# TODO: reduce patches — receiving video_frames is mocked to avoid blocking but that removes meaningful test coverage
 	with patch('facefusion.apis.stream_helper.receive_video_frames'):
 		with patch('facefusion.apis.stream_helper.run_encode_loop') as mock_encode_loop:
 			thread = threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True)
@@ -167,7 +169,9 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int) -> None:
 			thread.join(timeout = 5.0)
 
 	assert mock_encode_loop.called
+	# TODO: test against full call args not just [0][1] — assert mock_encode_loop.call_args matches rtc_peer and video_codec
 	assert mock_encode_loop.call_args[0][1] == video_codec
+	# TODO: assert rtc_store.has_peers(session_id) is True before the action, then False after
 	assert rtc_store.has_peers(session_id) is False
 
 
@@ -198,6 +202,8 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	video_event.set()
 
 	with patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
+		# TODO: thread name is unclear — rename to encode_loop_thread to identify what it runs
+		# TODO: thread block fires without flow testing — nobody triggers the deque/event naturally; the test pre-populates state rather than simulating real receive behaviour
 		thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 		thread.start()
 		time.sleep(0.1)
@@ -242,6 +248,8 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 	manager.process_frame.return_value = source_frame
 	manager.opus_encode.return_value = bytes([ 1 ] * 32)
 
+	# TODO: too many patches — 4 nested mocks make this test a lie, real behaviour is hidden behind stubs
+	# TODO: nobody triggers the threads naturally — events and deques are pre-populated rather than driven by real receive flow
 	with patch('facefusion.apis.stream_helper.streamer.process_frame', manager.process_frame):
 		with patch('facefusion.apis.stream_helper.opus_encoder.encode', manager.opus_encode):
 			with patch('facefusion.apis.stream_helper.rtc.send_audio', manager.send_audio):
@@ -269,6 +277,7 @@ def test_receive_video_frames() -> None:
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
 		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
+			# TODO: rename receiver_thread — does not identify whether it receives video or audio
 			receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_deque, video_event), daemon = True)
 			receiver_thread.start()
 			receiver_thread.join(timeout = 2.0)
@@ -291,6 +300,7 @@ def test_receive_audio_frames() -> None:
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
 		with patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_data.tobytes()):
+			# TODO: rename receiver_thread — does not identify whether it receives video or audio
 			receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_deque), daemon = True)
 			receiver_thread.start()
 			receiver_thread.join(timeout = 2.0)
