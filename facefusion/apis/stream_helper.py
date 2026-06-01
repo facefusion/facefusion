@@ -49,9 +49,6 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 		audio_codec : AudioCodec = 'opus'
 		audio_payload_type = rtc.get_payload_type(sdp_offer, audio_codec)
-		#todo we try to avoid empty variables like that
-		audio_receiver_track = None
-		audio_sender_track = None
 
 		if audio_payload_type:
 			audio_receiver_track = rtc.add_audio_track(peer_connection, 'recvonly', audio_codec, audio_payload_type)
@@ -74,7 +71,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 				'receiver_bitrate': receiver_bitrate
 			}
 
-			if audio_receiver_track and audio_sender_track:
+			if audio_payload_type:
 				rtc_peer['audio'] = RtcPeerAudio(
 					sender_track = audio_sender_track,
 					receiver_track = audio_receiver_track,
