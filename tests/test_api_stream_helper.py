@@ -189,7 +189,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 	video_event.set()
 
 	with patch('facefusion.apis.stream_helper.rtc.send_video') as send_video_mock:
-		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_codec, video_deque, video_event), daemon = True)
+		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_deque, video_event), daemon = True)
 		encode_loop_thread.start()
 		empty_vision_frame = numpy.empty(0)
 		video_deque.append((empty_vision_frame, 0.0))

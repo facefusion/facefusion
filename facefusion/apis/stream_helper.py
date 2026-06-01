@@ -114,10 +114,9 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_deque : deque[VideoPack] = deque(maxlen = 1)
 	audio_deque : deque[AudioPack] = deque(maxlen = 10)
 	video_event = threading.Event()
-	video_codec = rtc_peer.get('video').get('codec')
 
 	video_receive = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
-	video_encode = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_codec, video_deque, video_event)
+	video_encode = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_deque, video_event)
 	coroutines = [ video_receive, video_encode ]
 
 	if rtc_peer.get('audio'):
@@ -130,9 +129,10 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 #TODO: needs review
-def run_video_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
+	video_codec = rtc_peer.get('video').get('codec')
 	temp_vision_frame, video_receive_time = video_deque.popleft()
 
 	if numpy.any(temp_vision_frame):
