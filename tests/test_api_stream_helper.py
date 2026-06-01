@@ -1,3 +1,4 @@
+import asyncio
 import ctypes
 import struct
 import threading
@@ -161,7 +162,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int) -> None:
 
 	with patch('facefusion.apis.stream_helper.receive_video_frames'):
 		with patch('facefusion.apis.stream_helper.run_encode_loop') as mock_encode_loop:
-			thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
+			thread = threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True)
 			thread.start()
 			thread.join(timeout = 5.0)
 

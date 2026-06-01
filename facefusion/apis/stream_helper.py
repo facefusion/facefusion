@@ -1,3 +1,4 @@
+import asyncio
 import ctypes
 import threading
 import time
@@ -86,7 +87,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			rtc_store.init_peers(session_id)
 			rtc_store.get_peers(session_id).append(rtc_peer)
 
-			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
+			threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True).start()
 			return local_sdp
 
 		datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
@@ -108,32 +109,23 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 
 #TODO: needs review
-#TODO: method is too complex
-def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_deque : deque[VisionPacket] = deque(maxlen = 1)
 	audio_deque : deque[AudioPacket] = deque(maxlen = 10)
 	video_event = threading.Event()
-	receiver_threads = []
-
 	video_codec = rtc_peer.get('video').get('codec')
 	video_track = rtc_peer.get('video').get('receiver_track')
-	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_deque, video_event), daemon = True)
-	receiver_threads.append(video_receiver_thread)
+
+	video_receive = asyncio.to_thread(receive_video_frames, video_track, video_codec, video_deque, video_event)
+	encode_loop = asyncio.to_thread(run_encode_loop, rtc_peer, video_codec, video_deque, audio_deque, video_event)
+	coroutines = [ video_receive, encode_loop ]
 
 	if rtc_peer.get('audio'):
 		audio_codec : AudioCodec = 'opus'
 		audio_track = rtc_peer.get('audio').get('receiver_track')
-		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (audio_track, audio_codec, audio_deque), daemon = True)
-		receiver_threads.append(audio_receiver_thread)
+		coroutines.append(asyncio.to_thread(receive_audio_frames, audio_track, audio_codec, audio_deque))
 
-	for receiver_thread in receiver_threads:
-		receiver_thread.start()
-
-	run_encode_loop(rtc_peer, video_codec, video_deque, audio_deque, video_event)
-
-	for receiver_thread in receiver_threads:
-		receiver_thread.join()
-
+	await asyncio.gather(*coroutines)
 	rtc_store.delete_peers(session_id)
 
 
