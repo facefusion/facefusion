@@ -17,7 +17,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.types import AudioPack, RtcPeer, VideoCodec, VideoPack
+from facefusion.types import AudioCodec, AudioPack, RtcPeer, RtcPeerAudio, RtcPeerVideo, VideoCodec, VideoPack
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -207,8 +207,8 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 		thread.start()
 		time.sleep(0.1)
-		# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
-		video_deque.append((numpy.empty(0), 0.0))
+		empty_vision_frame = numpy.empty(0)
+		video_deque.append((empty_vision_frame, 0.0))
 		video_event.set()
 		thread.join(timeout = 5.0)
 
@@ -258,8 +258,8 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 					thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 					thread.start()
 					time.sleep(0.1)
-					# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
-					video_deque.append((numpy.empty(0), 0.0))
+					empty_vision_frame = numpy.empty(0)
+					video_deque.append((empty_vision_frame, 0.0))
 					video_event.set()
 					thread.join(timeout = 5.0)
 
@@ -269,7 +269,8 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 	assert call_names.index('process_frame') < call_names.index('send_audio')
 
 
-def test_receive_video_frames() -> None:
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
@@ -278,10 +279,15 @@ def test_receive_video_frames() -> None:
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
 		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
-			# TODO: rename receiver_thread — does not identify whether it receives video or audio
-			receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_deque, video_event), daemon = True)
-			receiver_thread.start()
-			receiver_thread.join(timeout = 2.0)
+			rtc_peer_video : RtcPeerVideo =\
+			{
+				'sender_track': 0,
+				'receiver_track': 0,
+				'codec': video_codec
+			}
+			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
+			video_receiver_thread.start()
+			video_receiver_thread.join(timeout = 2.0)
 
 	# TODO: avoid [0][0] tuple indexing — use named access once VideoPack becomes a TypedDict
 	if is_linux() or is_windows():
@@ -292,19 +298,24 @@ def test_receive_video_frames() -> None:
 
 
 # TODO: refine test
-def test_receive_audio_frames() -> None:
+@pytest.mark.parametrize('audio_codec', [ 'opus' ])
+def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	# TODO: rename audio_data — not a recognised naming convention
-	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32)
+	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
 	audio_deque : deque[AudioPack] = deque()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
-		with patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_data.tobytes()):
-			# TODO: rename receiver_thread — does not identify whether it receives video or audio
-			receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_deque), daemon = True)
-			receiver_thread.start()
-			receiver_thread.join(timeout = 2.0)
+		with patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
+			rtc_peer_audio : RtcPeerAudio =\
+			{
+				'sender_track': 0,
+				'receiver_track': 0,
+				'codec': audio_codec
+			}
+			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque), daemon = True)
+			audio_receiver_thread.start()
+			audio_receiver_thread.join(timeout = 2.0)
 
 	# TODO: assertions do not verify meaningful audio content — dtype/size/len would pass for an empty silent frame
 	assert audio_deque[0][0].dtype == numpy.float32
