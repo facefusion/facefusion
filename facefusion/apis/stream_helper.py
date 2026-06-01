@@ -18,6 +18,7 @@ from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPacket, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VisionPacket, VpxDecoder, VpxEncoder
 
 
+#TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
 async def process_image(websocket : WebSocket) -> None:
 	source_paths = state_manager.get_item('source_paths')
 
@@ -218,6 +219,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			receive_time = time.monotonic()
+			# TODO: align buffer naming with input/output and video/audio convention
 			frame_buffer = receive_buffer.raw[:buffer_size.value]
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
@@ -251,6 +253,7 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_dequ
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			receive_time = time.monotonic()
+			# TODO: rename opus_buffer and output_buffer to audio convention
 			opus_buffer = receive_buffer.raw[:buffer_size.value]
 			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
 
