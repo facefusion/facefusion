@@ -244,6 +244,7 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 	audio_deque.append((audio_frame, 0.100))
 	video_event.set()
 
+	# TODO: rename manager — generic name gives no context about what is being mocked
 	manager = MagicMock()
 	manager.process_frame.return_value = source_frame
 	manager.opus_encode.return_value = bytes([ 1 ] * 32)
