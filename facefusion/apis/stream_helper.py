@@ -15,7 +15,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPacket, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VisionPacket, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VideoPack, VpxDecoder, VpxEncoder
 
 
 #TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
@@ -111,8 +111,8 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 #TODO: needs review
 async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	video_deque : deque[VisionPacket] = deque(maxlen = 1)
-	audio_deque : deque[AudioPacket] = deque(maxlen = 10)
+	video_deque : deque[VideoPack] = deque(maxlen = 1)
+	audio_deque : deque[AudioPack] = deque(maxlen = 10)
 	video_event = threading.Event()
 	video_codec = rtc_peer.get('video').get('codec')
 	video_track = rtc_peer.get('video').get('receiver_track')
@@ -132,7 +132,7 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 #TODO: needs review
 #TODO: method is too complex
-def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VisionPacket], audio_deque : deque[AudioPacket], video_event : threading.Event) -> None:
+def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], audio_deque : deque[AudioPack], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
 	temp_vision_frame, video_receive_time = video_deque.popleft()
@@ -204,7 +204,7 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 
 
 # TODO: method is too complex
-def receive_video_frames(video_track : int, video_codec : VideoCodec, video_deque : deque[VisionPacket], video_event : threading.Event) -> None:
+def receive_video_frames(video_track : int, video_codec : VideoCodec, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
@@ -238,7 +238,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 
 # TODO: audio_codec is not used but has to, even if there is just one
 # TODO: method is too complex
-def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPacket]) -> None:
+def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPack]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
