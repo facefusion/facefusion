@@ -133,7 +133,7 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 	video_event.wait()
 	video_event.clear()
 	video_codec = rtc_peer.get('video').get('codec')
-	temp_vision_frame, video_receive_time = video_deque.popleft()
+	temp_vision_frame, temp_video_time = video_deque.popleft()
 
 	if numpy.any(temp_vision_frame):
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
@@ -166,12 +166,12 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
 			if output_video_buffer:
-				rtc.send_video(rtc_peer, output_video_buffer, int(video_receive_time * 90000))
+				rtc.send_video(rtc_peer, output_video_buffer, int(temp_video_time * 90000))
 
 			frame_index += 1
 			video_event.wait()
 			video_event.clear()
-			temp_vision_frame, video_receive_time = video_deque.popleft()
+			temp_vision_frame, temp_video_time = video_deque.popleft()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_remb(rtc_peer)
@@ -180,20 +180,20 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
 	audio_event.wait()
 	audio_event.clear()
-	audio_frame, audio_time = audio_deque.popleft()
+	temp_audio_frame, temp_audio_time = audio_deque.popleft()
 	audio_encoder = opus_encoder.create(48000, 2)
 
-	while numpy.any(audio_frame):
-		output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
+	while numpy.any(temp_audio_frame):
+		output_audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), 960)
 
 		if output_audio_buffer:
-			rtc.send_audio(rtc_peer, output_audio_buffer, int(audio_time * 48000))
+			rtc.send_audio(rtc_peer, output_audio_buffer, int(temp_audio_time * 48000))
 
 		if not audio_deque:
 			audio_event.wait()
 			audio_event.clear()
 
-		audio_frame, audio_time = audio_deque.popleft()
+		temp_audio_frame, temp_audio_time = audio_deque.popleft()
 
 	opus_encoder.destroy(audio_encoder)
 
