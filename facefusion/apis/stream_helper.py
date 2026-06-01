@@ -15,7 +15,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, RtcPeerVideo, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder
 
 
 #TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
@@ -115,16 +115,13 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	audio_deque : deque[AudioPack] = deque(maxlen = 10)
 	video_event = threading.Event()
 	video_codec = rtc_peer.get('video').get('codec')
-	video_track = rtc_peer.get('video').get('receiver_track')
 
-	video_receive = asyncio.to_thread(receive_video_frames, video_track, video_codec, video_deque, video_event)
+	video_receive = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
 	encode_loop = asyncio.to_thread(run_encode_loop, rtc_peer, video_codec, video_deque, audio_deque, video_event)
 	coroutines = [ video_receive, encode_loop ]
 
 	if rtc_peer.get('audio'):
-		audio_codec : AudioCodec = 'opus'
-		audio_track = rtc_peer.get('audio').get('receiver_track')
-		coroutines.append(asyncio.to_thread(receive_audio_frames, audio_track, audio_codec, audio_deque))
+		coroutines.append(asyncio.to_thread(receive_audio_frames, rtc_peer.get('audio'), audio_deque))
 
 	await asyncio.gather(*coroutines)
 	rtc_store.delete_peers(session_id)
@@ -204,8 +201,9 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 
 
 # TODO: method is too complex
-# TODO: video_codec is passed separately — consider whether it can be derived from video_track instead
-def receive_video_frames(video_track : int, video_codec : VideoCodec, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+	video_track = rtc_peer_video.get('receiver_track')
+	video_codec = rtc_peer_video.get('codec')
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
@@ -238,7 +236,9 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 
 
 # TODO: method is too complex
-def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPack]) -> None:
+def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[AudioPack]) -> None:
+	audio_track = rtc_peer_audio.get('receiver_track')
+	audio_codec = rtc_peer_audio.get('codec')
 	datachannel_library = datachannel_module.create_static_library()
 
 	if audio_codec == 'opus':
