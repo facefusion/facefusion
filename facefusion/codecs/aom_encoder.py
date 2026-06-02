@@ -24,8 +24,8 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 
 			if aom_library.aom_codec_enc_init_ver(aom_encoder, ctypes.byref(aom_codec), config_buffer, 0, 25) == 0:
 				aom_library.aom_codec_control(aom_encoder, 13, ctypes.c_int(cpu_count))
-				aom_library.aom_codec_control(aom_encoder, 75, ctypes.c_int(2))
-				aom_library.aom_codec_control(aom_encoder, 106, ctypes.c_int(1))
+				aom_library.aom_codec_control(aom_encoder, 75, ctypes.c_int(1))
+				aom_library.aom_codec_control(aom_encoder, 106, ctypes.c_int(0))
 				aom_library.aom_codec_control(aom_encoder, 122, ctypes.c_int(0))
 				aom_library.aom_codec_control(aom_encoder, 123, ctypes.c_int(0))
 				ctypes.memmove(ctypes.addressof(aom_encoder) + 128, config_buffer, 1024)

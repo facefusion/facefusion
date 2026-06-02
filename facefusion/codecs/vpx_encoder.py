@@ -30,7 +30,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 
 			if vpx_library.vpx_codec_enc_init_ver(vpx_encoder, ctypes.byref(vp8_codec), config_buffer, 0, 39) == 0:
 				vpx_library.vpx_codec_control_(vpx_encoder, 13, ctypes.c_int(cpu_count))
-				vpx_library.vpx_codec_control_(vpx_encoder, 12, ctypes.c_int(3))
+				vpx_library.vpx_codec_control_(vpx_encoder, 12, ctypes.c_int(0))
 				vpx_library.vpx_codec_control_(vpx_encoder, 27, ctypes.c_int(10))
 				ctypes.memmove(ctypes.addressof(vpx_encoder) + 64, config_buffer, 512)
 				return vpx_encoder
