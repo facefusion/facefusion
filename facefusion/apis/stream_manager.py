@@ -28,6 +28,19 @@ async def process_image(websocket : WebSocket) -> None:
 			await websocket.send_bytes(output_frame_buffer.tobytes())
 
 
+async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
+	websocket_event = await websocket.receive()
+
+	while websocket_event.get('type') == 'websocket.receive':
+		frame_buffer = websocket_event.get('bytes') or bytes()
+		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+
+		if numpy.any(vision_frame):
+			yield vision_frame
+
+		websocket_event = await websocket.receive()
+
+
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 
@@ -85,19 +98,6 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 	return None
-
-
-async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
-	websocket_event = await websocket.receive()
-
-	while websocket_event.get('type') == 'websocket.receive':
-		frame_buffer = websocket_event.get('bytes') or bytes()
-		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
-
-		if numpy.any(vision_frame):
-			yield vision_frame
-
-		websocket_event = await websocket.receive()
 
 
 async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:

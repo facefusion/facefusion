@@ -53,6 +53,30 @@ async def test_process_image() -> None:
 		assert create_hash(websocket_mock.send_bytes.call_args[0][0]) == '0142782f'
 
 
+@pytest.mark.anyio
+async def test_receive_vision_frames() -> None:
+	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
+	websocket_mock = AsyncMock()
+	websocket_mock.receive.side_effect =\
+	[
+		{
+			'type': 'websocket.receive',
+			'bytes': image_buffer
+		},
+		{
+			'type': 'websocket.receive',
+			'bytes': 'invalid'.encode()
+		},
+		{
+			'type': 'websocket.disconnect'
+		}
+	]
+
+	vision_frames = receive_vision_frames(websocket_mock)
+
+	assert create_hash((await anext(vision_frames)).tobytes()) == '5ed32ca0'
+
+
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
 def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	peer_connection = rtc.create_peer_connection()
@@ -87,30 +111,6 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 
 		rtc.adapt_receiver_bitrate(peer, 4000)
 		assert receiver_bitrate.value == 4000
-
-
-@pytest.mark.anyio
-async def test_receive_vision_frames() -> None:
-	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
-	websocket_mock = AsyncMock()
-	websocket_mock.receive.side_effect =\
-	[
-		{
-			'type': 'websocket.receive',
-			'bytes': image_buffer
-		},
-		{
-			'type': 'websocket.receive',
-			'bytes': 'invalid'.encode()
-		},
-		{
-			'type': 'websocket.disconnect'
-		}
-	]
-
-	vision_frames = receive_vision_frames(websocket_mock)
-
-	assert create_hash((await anext(vision_frames)).tobytes()) == '5ed32ca0'
 
 
 @pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-run-peer-loop-av1'), ('vp8', 96, 'test-run-peer-loop-vp8') ])

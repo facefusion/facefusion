@@ -25,47 +25,24 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
+		previous_video_time = temp_video_time
 		frame_index = 0
-		#todo
-		prev_video_time = temp_video_time
 
 		while numpy.any(temp_vision_frame):
-			# todo
 			encode_start = time.monotonic()
-			output_vision_frame = streamer.process_frame(create_empty_audio_frame(), temp_vision_frame)
-			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
-			output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-
-			peer_bitrate = rtc_peer.get('sender_bitrate').value
-
-			if output_resolution[0] - temp_resolution[0] or output_resolution[1] - temp_resolution[1]:
-				destroy_video_encoder(video_codec, video_encoder)
-				temp_resolution = output_resolution
-				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-				frame_index = 0
-
-			if peer_bitrate and peer_bitrate - temp_bitrate:
-				temp_bitrate = peer_bitrate
-
-				if not update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate):
-					destroy_video_encoder(video_codec, video_encoder)
-					video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-					frame_index = 0
-
+			output_vision_buffer, output_resolution = process_video_frame(temp_vision_frame)
+			peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
+			video_encoder, temp_resolution, temp_bitrate, frame_index = adapt_video_encoder(video_codec, video_encoder, temp_resolution, temp_bitrate, output_resolution, peer_bitrate, frame_index)
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
 			if output_video_buffer:
 				rtc.send_video(rtc_peer, output_video_buffer, int(temp_video_time * 90000))
 
-			# todo
 			encode_time = time.monotonic() - encode_start
-			frame_interval = temp_video_time - prev_video_time
-			prev_video_time = temp_video_time
+			frame_interval = temp_video_time - previous_video_time
+			previous_video_time = temp_video_time
 
-			# todo
-			if frame_interval > 0:
-				receiver_bitrate : BitRate = max(500, min(8000, int(rtc_peer.get('receiver_bitrate').value * frame_interval / encode_time)))
-				rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
+			rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
 
 			frame_index += 1
 			video_event.wait()
@@ -74,14 +51,6 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
-
-
-def fill_video_deque(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_buffer : bytes, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
-	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
-
-	if numpy.any(vision_frame):
-		video_deque.append((vision_frame, time.monotonic()))
-		video_event.set()
 
 
 def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
@@ -109,6 +78,52 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	video_deque.append((empty_vision_frame, 0.0))
 	video_event.set()
 	destroy_video_decoder(video_codec, video_decoder)
+
+
+def fill_video_deque(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_buffer : bytes, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
+
+	if numpy.any(vision_frame):
+		video_deque.append((vision_frame, time.monotonic()))
+		video_event.set()
+
+
+def process_video_frame(vision_frame : VisionFrame) -> tuple[bytes, Resolution]:
+	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), vision_frame)
+	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
+	output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	return output_vision_buffer, output_resolution
+
+
+def adapt_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, resolution : Resolution, bitrate : BitRate, output_resolution : Resolution, peer_bitrate : BitRate, frame_index : int) -> tuple[VpxEncoder | AomEncoder, Resolution, BitRate, int]:
+	if output_resolution[0] - resolution[0] or output_resolution[1] - resolution[1]:
+		destroy_video_encoder(video_codec, video_encoder)
+		resolution = output_resolution
+		video_encoder = create_video_encoder(video_codec, resolution, bitrate)
+		frame_index = 0
+
+	if peer_bitrate and peer_bitrate - bitrate:
+		bitrate = peer_bitrate
+
+		if not update_video_encoder_bitrate(video_codec, video_encoder, bitrate):
+			destroy_video_encoder(video_codec, video_encoder)
+			video_encoder = create_video_encoder(video_codec, resolution, bitrate)
+			frame_index = 0
+
+	return video_encoder, resolution, bitrate, frame_index
+
+
+def calculate_receiver_bitrate(rtc_peer : RtcPeer, encode_time : float, frame_interval : float) -> BitRate:
+	min_bitrate : BitRate = 500
+	max_bitrate : BitRate = 8000
+	bitrate : BitRate = rtc_peer.get('receiver_bitrate').value
+
+	if frame_interval > 0:
+		scale = frame_interval / encode_time
+		bitrate = int(bitrate * scale)
+		bitrate = max(min_bitrate, min(max_bitrate, bitrate))
+
+	return bitrate
 
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
