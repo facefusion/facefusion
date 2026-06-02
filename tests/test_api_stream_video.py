@@ -56,7 +56,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 			'codec': video_codec
 		},
 		'sender_bitrate': ctypes.c_uint(0),
-		'receiver_bitrate': ctypes.c_uint(0)
+		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
 	video_deque : deque[VideoPack] = deque()

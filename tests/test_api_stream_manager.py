@@ -80,12 +80,12 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 		receiver_bitrate = peer.get('receiver_bitrate')
 
 		assert sender_bitrate.value == 0
-		assert receiver_bitrate.value == 0
+		assert receiver_bitrate.value == 8000
 
-		rtc.handle_remb(0, 8000000, ctypes.addressof(sender_bitrate))
+		rtc.handle_sender_bitrate(0, 8000000, ctypes.addressof(sender_bitrate))
 		assert sender_bitrate.value == 8000
 
-		rtc.handle_remb(0, 4000000, ctypes.addressof(receiver_bitrate))
+		rtc.adapt_receiver_bitrate(peer, 4000)
 		assert receiver_bitrate.value == 4000
 
 

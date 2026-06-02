@@ -42,9 +42,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
 
 		sender_bitrate = ctypes.c_uint(0)
-		receiver_bitrate = ctypes.c_uint(0)
-		rtc.wire_remb(video_sender_track, sender_bitrate)
-		rtc.wire_remb(video_receiver_track, receiver_bitrate)
+		receiver_bitrate = ctypes.c_uint(8000)
+		rtc.wire_sender_bitrate(video_sender_track, sender_bitrate)
 
 		audio_codec : AudioCodec = 'opus'
 		audio_payload_type = rtc.get_payload_type(sdp_offer, audio_codec)
