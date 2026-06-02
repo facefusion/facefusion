@@ -28,7 +28,6 @@ async def process_image(websocket : WebSocket) -> None:
 			await websocket.send_bytes(output_frame_buffer.tobytes())
 
 
-#TODO: needs review
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 
@@ -41,9 +40,10 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, video_payload_type)
 		video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
+
 		sender_bitrate = ctypes.c_uint(0)
-		rtc.wire_remb(video_sender_track, sender_bitrate)
 		receiver_bitrate = ctypes.c_uint(0)
+		rtc.wire_remb(video_sender_track, sender_bitrate)
 		rtc.wire_remb(video_receiver_track, receiver_bitrate)
 
 		audio_codec : AudioCodec = 'opus'
@@ -101,7 +101,6 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-#TODO: needs review
 async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_deque : deque[VideoPack] = deque(maxlen = 1)
 	audio_deque : deque[AudioPack] = deque(maxlen = 10)
