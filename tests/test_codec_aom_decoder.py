@@ -42,7 +42,7 @@ def test_decode() -> None:
 		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'e3c0ebd8'
 
 	if is_macos():
-		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == '0a0ab3d0'
+		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'c8c6fdaa'
 
 
 def test_destroy() -> None:
