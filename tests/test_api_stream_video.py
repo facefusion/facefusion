@@ -9,7 +9,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, fill_video_deque, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -93,7 +93,17 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_event = threading.Event()
 
 	datachannel_library_mock = MagicMock()
-	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
+
+	def fake_set_frame_callback(track, callback):
+		callback(track, bytes([ 0 ]), 1, None, None)
+		return 0
+
+	def fake_set_closed_callback(track, callback):
+		callback(track, None)
+		return 0
+
+	datachannel_library_mock.rtcSetFrameCallback.side_effect = fake_set_frame_callback
+	datachannel_library_mock.rtcSetClosedCallback.side_effect = fake_set_closed_callback
 
 	with patch('facefusion.apis.stream_video.datachannel_module.create_static_library', return_value = datachannel_library_mock):
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
@@ -117,34 +127,24 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_fill_video_deque(video_codec : VideoCodec) -> None:
+def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	video_encoder = create_video_encoder(video_codec, (426, 226), 1000)
 	video_decoder = create_video_decoder(video_codec)
-	encode_buffer = encode_video_frame(video_codec, video_encoder, input_buffer, (426, 226), 0)
 	video_deque : deque[VideoPack] = deque()
 	video_event = threading.Event()
 
-	fill_video_deque(video_codec, video_decoder, encode_buffer, video_deque, video_event)
+	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+		handle_video_frame(video_codec, video_decoder, video_deque, video_event, 0, bytes([ 0 ]), 1, None, None)
 
 	vision_frame, _ = video_deque.popleft()
 
 	assert video_event.is_set()
 
 	if is_linux() or is_windows():
-		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == 'b5b6486d'
-
-		if video_codec == 'vp8':
-			assert create_hash(vision_frame.tobytes()) == '99ef2c25'
+		assert create_hash(vision_frame.tobytes()) == 'a17439db'
 
 	if is_macos():
-		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == '74e9926f'
-
-		if video_codec == 'vp8':
-			assert create_hash(vision_frame.tobytes()) == 'ff3ecb43'
+		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])

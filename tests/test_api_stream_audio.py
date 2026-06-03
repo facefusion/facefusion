@@ -7,7 +7,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_audio import fill_audio_deque, receive_audio_frames, run_audio_encode_loop
+from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, run_audio_encode_loop
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
@@ -73,7 +73,7 @@ def test_run_audio_encode_loop() -> None:
 	assert send_audio_mock.called is True
 
 
-def test_fill_audio_deque() -> None:
+def test_handle_audio_frame() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_decoder_mock = MagicMock()
@@ -81,7 +81,7 @@ def test_fill_audio_deque() -> None:
 	audio_event = threading.Event()
 
 	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
-		fill_audio_deque('opus', audio_decoder_mock, audio_frame.tobytes(), audio_deque, audio_event)
+		handle_audio_frame('opus', audio_decoder_mock, audio_deque, audio_event, 0, bytes([ 0 ]), 1, None, None)
 
 	buffer_frame, _ = audio_deque.popleft()
 
@@ -97,7 +97,17 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	audio_event = threading.Event()
 
 	datachannel_library_mock = MagicMock()
-	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
+
+	def fake_set_frame_callback(track, callback):
+		callback(track, bytes([ 0 ]), 1, None, None)
+		return 0
+
+	def fake_set_closed_callback(track, callback):
+		callback(track, None)
+		return 0
+
+	datachannel_library_mock.rtcSetFrameCallback.side_effect = fake_set_frame_callback
+	datachannel_library_mock.rtcSetClosedCallback.side_effect = fake_set_closed_callback
 
 	with patch('facefusion.apis.stream_audio.datachannel_module.create_static_library', return_value = datachannel_library_mock):
 		with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
