@@ -73,22 +73,6 @@ def test_run_audio_encode_loop() -> None:
 	assert send_audio_mock.called is True
 
 
-def test_handle_audio_frame() -> None:
-	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
-	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
-	audio_decoder_mock = MagicMock()
-	audio_deque : deque[AudioPack] = deque()
-	audio_event = threading.Event()
-
-	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
-		handle_audio_frame('opus', audio_decoder_mock, audio_deque, audio_event, 0, bytes([ 0 ]), 1, None, None)
-
-	buffer_frame, _ = audio_deque.popleft()
-
-	assert audio_event.is_set()
-	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
-
-
 @pytest.mark.parametrize('audio_codec', [ 'opus' ])
 def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
@@ -115,4 +99,20 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 
 	buffer_frame, _ = audio_deque.popleft()
 
+	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
+
+
+def test_handle_audio_frame() -> None:
+	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
+	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
+	audio_decoder_mock = MagicMock()
+	audio_deque : deque[AudioPack] = deque()
+	audio_event = threading.Event()
+
+	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
+		handle_audio_frame('opus', audio_decoder_mock, audio_deque, audio_event, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+
+	buffer_frame, _ = audio_deque.popleft()
+
+	assert audio_event.is_set()
 	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())

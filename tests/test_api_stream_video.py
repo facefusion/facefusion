@@ -119,27 +119,6 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_handle_video_frame(video_codec : VideoCodec) -> None:
-	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_decoder = create_video_decoder(video_codec)
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
-
-	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
-		handle_video_frame(video_codec, video_decoder, video_deque, video_event, 0, bytes([ 0 ]), 1, None, None)
-
-	vision_frame, _ = video_deque.popleft()
-
-	assert video_event.is_set()
-
-	if is_linux() or is_windows():
-		assert create_hash(vision_frame.tobytes()) == 'a17439db'
-
-	if is_macos():
-		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
-
-
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -227,3 +206,24 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
 
 	destroy_video_encoder(video_codec, video_encoder)
+
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_handle_video_frame(video_codec : VideoCodec) -> None:
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_decoder = create_video_decoder(video_codec)
+	video_deque : deque[VideoPack] = deque()
+	video_event = threading.Event()
+
+	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+		handle_video_frame(video_codec, video_decoder, video_deque, video_event, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+
+	vision_frame, _ = video_deque.popleft()
+
+	assert video_event.is_set()
+
+	if is_linux() or is_windows():
+		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+
+	if is_macos():
+		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
