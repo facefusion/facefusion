@@ -6,10 +6,10 @@ from functools import partial
 import numpy
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioPack, VideoPack
+from facefusion.types import AudioPack, FrameCallback, FrameHandler, VideoPack
 
 
-def create_frame_callback(track : int, handler : partial) -> ctypes.CFUNCTYPE:
+def create_frame_callback(track : int, handler : FrameHandler) -> FrameCallback:
 	datachannel_library = datachannel_module.create_static_library()
 	frame_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(handler)
 	datachannel_library.rtcSetFrameCallback(track, frame_callback)

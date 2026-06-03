@@ -45,8 +45,11 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 			rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
 
 			frame_index += 1
-			video_event.wait()
 			video_event.clear()
+
+			if len(video_deque) == 0:
+				video_event.wait()
+
 			temp_vision_frame, temp_video_time = video_deque.popleft()
 
 		destroy_video_encoder(video_codec, video_encoder)

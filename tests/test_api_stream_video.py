@@ -92,20 +92,9 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_deque : deque[VideoPack] = deque()
 	video_event = threading.Event()
 
-	datachannel_library_mock = MagicMock()
+	datachannel_mock = MagicMock()
 
-	def fake_set_frame_callback(track, callback):
-		callback(track, bytes([ 0 ]), 1, None, None)
-		return 0
-
-	def fake_set_closed_callback(track, callback):
-		callback(track, None)
-		return 0
-
-	datachannel_library_mock.rtcSetFrameCallback.side_effect = fake_set_frame_callback
-	datachannel_library_mock.rtcSetClosedCallback.side_effect = fake_set_closed_callback
-
-	with patch('facefusion.apis.stream_video.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			rtc_peer_video : RtcPeerVideo =\
 			{
@@ -115,6 +104,9 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 			}
 			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
 			video_receiver_thread.start()
+			video_event.wait(timeout = 5.0)
+			datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
+			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			video_receiver_thread.join(timeout = 5.0)
 
 	vision_frame, _ = video_deque.popleft()

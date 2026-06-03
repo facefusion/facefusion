@@ -96,20 +96,9 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	audio_deque : deque[AudioPack] = deque()
 	audio_event = threading.Event()
 
-	datachannel_library_mock = MagicMock()
+	datachannel_mock = MagicMock()
 
-	def fake_set_frame_callback(track, callback):
-		callback(track, bytes([ 0 ]), 1, None, None)
-		return 0
-
-	def fake_set_closed_callback(track, callback):
-		callback(track, None)
-		return 0
-
-	datachannel_library_mock.rtcSetFrameCallback.side_effect = fake_set_frame_callback
-	datachannel_library_mock.rtcSetClosedCallback.side_effect = fake_set_closed_callback
-
-	with patch('facefusion.apis.stream_audio.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
 			rtc_peer_audio : RtcPeerAudio =\
 			{
@@ -119,6 +108,9 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			}
 			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque, audio_event), daemon = True)
 			audio_receiver_thread.start()
+			audio_event.wait(timeout = 5.0)
+			datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
+			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			audio_receiver_thread.join(timeout = 5.0)
 
 	buffer_frame, _ = audio_deque.popleft()

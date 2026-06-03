@@ -26,9 +26,10 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], au
 			audio_timestamp = int(temp_audio_time * 48000)
 			rtc.send_audio(rtc_peer, output_audio_buffer, audio_timestamp)
 
+		audio_event.clear()
+
 		if len(audio_deque) == 0:
 			audio_event.wait()
-			audio_event.clear()
 
 		temp_audio_frame, temp_audio_time = audio_deque.popleft()
 

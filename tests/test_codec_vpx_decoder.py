@@ -26,7 +26,7 @@ def before_all() -> None:
 def test_create() -> None:
 	assert create(1)
 
-	with patch('facefusion.codecs.vpx_decoder.vpx_module.create_static_library', return_value = None):
+	with patch('facefusion.libraries.vpx.create_static_library', return_value = None):
 		assert create(1) is None
 
 

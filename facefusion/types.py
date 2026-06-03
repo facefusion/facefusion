@@ -97,6 +97,9 @@ Resolution : TypeAlias = Tuple[int, int]
 AudioCodec : TypeAlias = Literal['opus']
 VideoCodec : TypeAlias = Literal['av1', 'vp8']
 
+FrameHandler : TypeAlias = Callable[..., None]
+FrameCallback : TypeAlias = Callable[..., None]
+
 AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 AomDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p
