@@ -62,6 +62,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	video_decoder = create_video_decoder(video_codec)
 
 	done_event = create_done_event(video_track, video_deque, video_event)
+	# todo - why is the callback method not added in the factory?
 	done_event.frame_callback = create_frame_callback(video_track, partial(handle_video_frame, video_codec, video_decoder, video_deque, video_event))  # type: ignore[attr-defined]
 	done_event.wait()
 	destroy_video_decoder(video_codec, video_decoder)
@@ -183,6 +184,7 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
+#todo: this one is weird, its not in stream_event.py - but why are the stream event ones exist then?
 def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_deque : deque[VideoPack], video_event : threading.Event, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)

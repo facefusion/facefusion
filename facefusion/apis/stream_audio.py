@@ -42,6 +42,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 	audio_decoder = create_audio_decoder(audio_codec)
 
 	done_event = create_done_event(audio_track, audio_deque, audio_event)
+	#todo - why is the callback method not added in the factory?
 	done_event.frame_callback = create_frame_callback(audio_track, partial(handle_audio_frame, audio_codec, audio_decoder, audio_deque, audio_event))  # type: ignore[attr-defined]
 	done_event.wait()
 	destroy_audio_decoder(audio_codec, audio_decoder)

@@ -66,6 +66,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			audio_sender_track = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, audio_payload_type)
 
 		rtc.set_remote_description(peer_connection, sdp_offer)
+		#todo: not sure I agree with the local prefix... why not just sdp_answer as variable?
 		local_sdp = rtc.create_sdp_answer(peer_connection)
 
 		if local_sdp:
@@ -92,7 +93,9 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			rtc_store.init_peers(session_id)
 			rtc_store.get_peers(session_id).append(rtc_peer)
 
+			#todo: can we use partial here?
 			threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True).start()
+
 			return local_sdp
 
 		datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
@@ -105,10 +108,12 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	audio_deque : deque[AudioPack] = deque(maxlen = 10)
 	video_event = threading.Event()
 
+	#todo: remove asyncio if we can save couple of lines
 	video_receiver_thread = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
 	video_encoder_thread = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_deque, video_event)
 	coroutines = [ video_receiver_thread, video_encoder_thread ]
 
+	# todo: more like a question: could audio event be removed and we have a general media_event if audio is required?
 	if rtc_peer.get('audio'):
 		audio_event = threading.Event()
 		coroutines.append(asyncio.to_thread(receive_audio_frames, rtc_peer.get('audio'), audio_deque, audio_event))
