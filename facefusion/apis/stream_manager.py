@@ -1,7 +1,7 @@
 import ctypes
 import threading
-from collections import deque
 from collections.abc import AsyncIterator
+from queue import Queue
 from typing import Optional
 
 import cv2
@@ -101,19 +101,17 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	video_deque : deque[VideoPack] = deque(maxlen = 1)
-	audio_deque : deque[AudioPack] = deque(maxlen = 10)
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
+	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
 
-	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_deque, video_event), daemon = True)
-	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_deque, video_event), daemon = True)
+	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue), daemon = True)
+	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
 	video_receiver_thread.start()
 	video_encoder_thread.start()
 
 	if rtc_peer.get('audio'):
-		audio_event = threading.Event()
-		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer.get('audio'), audio_deque, audio_event), daemon = True)
-		audio_encoder_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_deque, audio_event), daemon = True)
+		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer.get('audio'), audio_queue), daemon = True)
+		audio_encoder_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_queue), daemon = True)
 		audio_receiver_thread.start()
 		audio_encoder_thread.start()
 		audio_receiver_thread.join()

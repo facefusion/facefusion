@@ -1,8 +1,7 @@
 import ctypes
-import threading
 import time
-from collections import deque
 from functools import partial
+from queue import Queue
 from typing import Optional
 
 import cv2
@@ -15,11 +14,9 @@ from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
-def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
-	video_event.wait()
-	video_event.clear()
+def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	temp_vision_frame, temp_video_time = video_deque.popleft()
+	temp_vision_frame, temp_video_time = video_queue.get()
 
 	if numpy.any(temp_vision_frame):
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
@@ -43,30 +40,23 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 			previous_video_time = temp_video_time
 
 			rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
-
 			frame_index += 1
-			video_event.clear()
-
-			if len(video_deque) == 0:
-				video_event.wait()
-
-			temp_vision_frame, temp_video_time = video_deque.popleft()
+			temp_vision_frame, temp_video_time = video_queue.get()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
 
 
-def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[VideoPack]) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
 
-	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_deque, video_event)
+	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_queue)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
 	empty_vision_frame = numpy.empty(0)
-	video_deque.append((empty_vision_frame, 0.0))
-	video_event.set()
+	video_queue.put((empty_vision_frame, 0.0))
 	destroy_video_decoder(video_codec, video_decoder)
 
 
@@ -186,10 +176,12 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_deque : deque[VideoPack], video_event : threading.Event, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
+def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[VideoPack], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if numpy.any(vision_frame):
-		video_deque.append((vision_frame, time.monotonic()))
-		video_event.set()
+		if video_queue.full():
+			video_queue.get_nowait()
+
+		video_queue.put((vision_frame, time.monotonic()))

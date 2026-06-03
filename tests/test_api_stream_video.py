@@ -1,7 +1,8 @@
 import ctypes
 import struct
 import threading
-from collections import deque
+from functools import partial
+from queue import Queue
 from unittest.mock import MagicMock, patch
 
 import cv2
@@ -59,18 +60,15 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
-	video_deque.append((video_frame, 0.1))
-	video_event.set()
+	video_queue.put((video_frame, 0.1))
 
 	with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_deque, video_event), daemon = True)
+		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
 		encode_loop_thread.start()
 		empty_vision_frame = numpy.empty(0)
-		video_deque.append((empty_vision_frame, 0.0))
-		video_event.set()
+		video_queue.put((empty_vision_frame, 0.0))
 		encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
@@ -89,10 +87,11 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
 	datachannel_mock = MagicMock()
+	ready_event = threading.Event()
+	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
 
 	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
@@ -102,14 +101,14 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 				'receiver_track': 0,
 				'codec': video_codec
 			}
-			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
+			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_queue), daemon = True)
 			video_receiver_thread.start()
-			video_event.wait(timeout = 5.0)
+			ready_event.wait(timeout = 5.0)
 			datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
 			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			video_receiver_thread.join(timeout = 5.0)
 
-	vision_frame, _ = video_deque.popleft()
+	vision_frame, _ = video_queue.get_nowait()
 
 	if is_linux() or is_windows():
 		assert create_hash(vision_frame.tobytes()) == 'a17439db'
@@ -212,15 +211,12 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_decoder = create_video_decoder(video_codec)
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
 	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
-		handle_video_frame(video_codec, video_decoder, video_deque, video_event, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+		handle_video_frame(video_codec, video_decoder, video_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
 
-	vision_frame, _ = video_deque.popleft()
-
-	assert video_event.is_set()
+	vision_frame, _ = video_queue.get_nowait()
 
 	if is_linux() or is_windows():
 		assert create_hash(vision_frame.tobytes()) == 'a17439db'
