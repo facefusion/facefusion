@@ -224,6 +224,9 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcChainRembHandler.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p) ]
 	library.rtcChainRembHandler.restype = ctypes.c_int
 
+	library.rtcRequestBitrate.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	library.rtcRequestBitrate.restype = ctypes.c_int
+
 	library.rtcSetAvailableCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
 	library.rtcSetAvailableCallback.restype = ctypes.c_int
 

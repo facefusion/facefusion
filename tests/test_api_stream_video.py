@@ -56,7 +56,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 			'codec': video_codec
 		},
 		'sender_bitrate': ctypes.c_uint(0),
-		'receiver_bitrate': ctypes.c_uint(0)
+		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
 	video_deque : deque[VideoPack] = deque()
@@ -84,6 +84,36 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 
 	if video_codec == 'vp8':
 		pytest.skip()
+
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_receive_video_frames(video_codec : VideoCodec) -> None:
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_deque : deque[VideoPack] = deque()
+	video_event = threading.Event()
+
+	datachannel_library_mock = MagicMock()
+	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
+
+	with patch('facefusion.apis.stream_video.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+			rtc_peer_video : RtcPeerVideo =\
+			{
+				'sender_track': 0,
+				'receiver_track': 0,
+				'codec': video_codec
+			}
+			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
+			video_receiver_thread.start()
+			video_receiver_thread.join(timeout = 5.0)
+
+	vision_frame, _ = video_deque.popleft()
+
+	if is_linux() or is_windows():
+		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+
+	if is_macos():
+		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
@@ -115,36 +145,6 @@ def test_fill_video_deque(video_codec : VideoCodec) -> None:
 
 		if video_codec == 'vp8':
 			assert create_hash(vision_frame.tobytes()) == 'ff3ecb43'
-
-
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_receive_video_frames(video_codec : VideoCodec) -> None:
-	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
-
-	datachannel_library_mock = MagicMock()
-	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-
-	with patch('facefusion.apis.stream_video.datachannel_module.create_static_library', return_value = datachannel_library_mock):
-		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
-			rtc_peer_video : RtcPeerVideo =\
-			{
-				'sender_track': 0,
-				'receiver_track': 0,
-				'codec': video_codec
-			}
-			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
-			video_receiver_thread.start()
-			video_receiver_thread.join(timeout = 5.0)
-
-	vision_frame, _ = video_deque.popleft()
-
-	if is_linux() or is_windows():
-		assert create_hash(vision_frame.tobytes()) == 'a17439db'
-
-	if is_macos():
-		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])

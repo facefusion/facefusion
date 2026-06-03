@@ -23,7 +23,8 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], au
 		output_audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), 960)
 
 		if output_audio_buffer:
-			rtc.send_audio(rtc_peer, output_audio_buffer, int(temp_audio_time * 48000))
+			audio_timestamp = int(temp_audio_time * 48000)
+			rtc.send_audio(rtc_peer, output_audio_buffer, audio_timestamp)
 
 		if len(audio_deque) == 0:
 			audio_event.wait()
@@ -32,14 +33,6 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], au
 		temp_audio_frame, temp_audio_time = audio_deque.popleft()
 
 	opus_encoder.destroy(audio_encoder)
-
-
-def fill_audio_deque(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_buffer : bytes, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
-	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
-
-	if audio_frame:
-		audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), time.monotonic()))
-		audio_event.set()
 
 
 def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
@@ -67,6 +60,14 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 	audio_deque.append((empty_audio_frame, 0.0))
 	audio_event.set()
 	destroy_audio_decoder(audio_codec, audio_decoder)
+
+
+def fill_audio_deque(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_buffer : bytes, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
+	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
+
+	if audio_frame:
+		audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), time.monotonic()))
+		audio_event.set()
 
 
 def decode_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, input_buffer : bytes) -> Optional[bytes]:

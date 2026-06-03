@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, handle_remb, send_audio, send_video, set_remote_description, wire_remb
+from facefusion.rtc import adapt_receiver_bitrate, add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, handle_sender_bitrate, send_audio, send_video, set_remote_description, wire_sender_bitrate
 from facefusion.types import RtcPeer, VideoCodec
 
 
@@ -153,7 +153,7 @@ def test_get_payload_type() -> None:
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
-def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
+def test_wire_sender_bitrate(video_codec : VideoCodec, payload_type : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
 	video_sender_track = add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
@@ -170,38 +170,38 @@ def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	wire_remb(video_sender_track, rtc_peer.get('sender_bitrate'))
+	wire_sender_bitrate(video_sender_track, rtc_peer.get('sender_bitrate'))
 
 	assert rtc_peer.get('sender_bitrate').value == 0
 
-	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('sender_bitrate')))
+	handle_sender_bitrate(0, 8000000, ctypes.addressof(rtc_peer.get('sender_bitrate')))
 
-	assert rtc_peer.get('sender_bitrate').value == 6000
+	assert rtc_peer.get('sender_bitrate').value == 8000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
-def test_wire_remb_receiver(video_codec : VideoCodec, payload_type : int) -> None:
+def test_adapt_receiver_bitrate(video_codec : VideoCodec, payload_type : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
+	video_sender_track = add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
 	rtc_peer : RtcPeer =\
 	{
 		'peer_connection': peer_connection,
 		'video':
 		{
-			'sender_track': video_receiver_track,
+			'sender_track': video_sender_track,
 			'receiver_track': video_receiver_track,
 			'codec': video_codec
 		},
 		'sender_bitrate': ctypes.c_uint(0),
-		'receiver_bitrate': ctypes.c_uint(0)
+		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	wire_remb(video_receiver_track, rtc_peer.get('receiver_bitrate'))
-	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('receiver_bitrate')))
+	adapt_receiver_bitrate(rtc_peer, 4000)
 
-	assert rtc_peer.get('receiver_bitrate').value == 6000
+	assert rtc_peer.get('receiver_bitrate').value == 4000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)

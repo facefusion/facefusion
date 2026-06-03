@@ -2,7 +2,7 @@ import ctypes
 from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+from facefusion.types import AudioCodec, BitRate, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -226,15 +226,24 @@ def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> i
 
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)
-def handle_remb(track : int, bitrate : int, pointer : int) -> None:
+def handle_sender_bitrate(_ : int, bitrate : BitRate, pointer : int) -> None:
 	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
 
 
-def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
+def wire_sender_bitrate(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(bitrate), ctypes.c_void_p))
-	datachannel_library.rtcChainRembHandler(video_track, handle_remb)
+	datachannel_library.rtcChainRembHandler(video_track, handle_sender_bitrate)
 
 
-def clear_remb(rtc_peer : RtcPeer) -> None:
+def adapt_receiver_bitrate(rtc_peer : RtcPeer, bitrate : BitRate) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	receiver_track = rtc_peer.get('video').get('receiver_track')
+
+	rtc_peer.get('receiver_bitrate').value = bitrate
+	datachannel_library.rtcRequestBitrate(receiver_track, bitrate * 1000)
+
+
+def clear_bitrate(rtc_peer : RtcPeer) -> None:
 	rtc_peer.get('sender_bitrate').value = 0
+	rtc_peer.get('receiver_bitrate').value = 0
