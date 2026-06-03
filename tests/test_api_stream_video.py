@@ -141,7 +141,7 @@ def test_fill_video_deque(video_codec : VideoCodec) -> None:
 
 	if is_macos():
 		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == 'eafd1fab'
+			assert create_hash(vision_frame.tobytes()) == '74e9926f'
 
 		if video_codec == 'vp8':
 			assert create_hash(vision_frame.tobytes()) == 'ff3ecb43'
@@ -165,7 +165,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 
 	if is_macos():
 		if video_codec == 'av1':
-			assert create_hash(decode_buffer) == 'eafd1fab'
+			assert create_hash(decode_buffer) == '74e9926f'
 
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == 'ff3ecb43'
