@@ -1,4 +1,3 @@
-import asyncio
 import ctypes
 import threading
 from unittest.mock import AsyncMock, patch
@@ -138,7 +137,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	with patch('facefusion.apis.stream_manager.receive_video_frames'):
 		with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
-			thread = threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True)
+			thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
 			thread.start()
 			thread.join(timeout = 5.0)
 
