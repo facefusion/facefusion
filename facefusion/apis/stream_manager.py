@@ -65,10 +65,9 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			audio_sender_track = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, audio_payload_type)
 
 		rtc.set_remote_description(peer_connection, sdp_offer)
-		#todo: not sure I agree with the local prefix... why not just sdp_answer as variable?
-		local_sdp = rtc.create_sdp_answer(peer_connection)
+		sdp_answer = rtc.create_sdp_answer(peer_connection)
 
-		if local_sdp:
+		if sdp_answer:
 			rtc_peer : RtcPeer =\
 			{
 				'peer_connection': peer_connection,
@@ -94,7 +93,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
 
-			return local_sdp
+			return sdp_answer
 
 		datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 

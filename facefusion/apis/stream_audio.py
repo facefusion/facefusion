@@ -8,7 +8,7 @@ from typing import Optional
 import numpy
 
 from facefusion import rtc
-from facefusion.apis.stream_event import create_done_event, create_frame_callback
+from facefusion.apis.stream_event import create_receive_event
 from facefusion.codecs import opus_decoder, opus_encoder
 from facefusion.types import AudioCodec, AudioPack, OpusDecoder, RtcPeer, RtcPeerAudio
 
@@ -41,10 +41,12 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 	audio_codec = rtc_peer_audio.get('codec')
 	audio_decoder = create_audio_decoder(audio_codec)
 
-	done_event = create_done_event(audio_track, audio_deque, audio_event)
-	#todo - why is the callback method not added in the factory?
-	done_event.frame_callback = create_frame_callback(audio_track, partial(handle_audio_frame, audio_codec, audio_decoder, audio_deque, audio_event))  # type: ignore[attr-defined]
-	done_event.wait()
+	audio_frame_handler = partial(handle_audio_frame, audio_codec, audio_decoder, audio_deque, audio_event)
+	receive_event = create_receive_event(audio_track, audio_frame_handler)
+	receive_event.wait()
+	empty_audio_frame = numpy.empty(0)
+	audio_deque.append((empty_audio_frame, 0.0))
+	audio_event.set()
 	destroy_audio_decoder(audio_codec, audio_decoder)
 
 

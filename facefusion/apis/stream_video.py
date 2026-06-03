@@ -9,7 +9,7 @@ import cv2
 import numpy
 
 from facefusion import rtc, streamer
-from facefusion.apis.stream_event import create_done_event, create_frame_callback
+from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
@@ -61,10 +61,12 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
 
-	done_event = create_done_event(video_track, video_deque, video_event)
-	# todo - why is the callback method not added in the factory?
-	done_event.frame_callback = create_frame_callback(video_track, partial(handle_video_frame, video_codec, video_decoder, video_deque, video_event))  # type: ignore[attr-defined]
-	done_event.wait()
+	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_deque, video_event)
+	receive_event = create_receive_event(video_track, video_frame_handler)
+	receive_event.wait()
+	empty_vision_frame = numpy.empty(0)
+	video_deque.append((empty_vision_frame, 0.0))
+	video_event.set()
 	destroy_video_decoder(video_codec, video_decoder)
 
 
@@ -184,7 +186,6 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-#todo: this one is weird, its not in stream_event.py - but why are the stream event ones exist then?
 def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_deque : deque[VideoPack], video_event : threading.Event, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
