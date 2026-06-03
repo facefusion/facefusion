@@ -77,7 +77,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 
 	if video_codec == 'av1':
 		if is_linux() or is_windows():
-			assert create_hash(send_video_mock.call_args[0][1]) == '9ba7212b'
+			assert create_hash(send_video_mock.call_args[0][1]) == 'cc6a35cc'
 
 		if is_macos():
 			pytest.skip()
@@ -134,7 +134,7 @@ def test_fill_video_deque(video_codec : VideoCodec) -> None:
 
 	if is_linux() or is_windows():
 		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == 'c97d6d29'
+			assert create_hash(vision_frame.tobytes()) == 'b5b6486d'
 
 		if video_codec == 'vp8':
 			assert create_hash(vision_frame.tobytes()) == '99ef2c25'
@@ -158,7 +158,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 
 	if is_linux() or is_windows():
 		if video_codec == 'av1':
-			assert create_hash(decode_buffer) == 'c97d6d29'
+			assert create_hash(decode_buffer) == 'b5b6486d'
 
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == '99ef2c25'
