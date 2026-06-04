@@ -25,7 +25,7 @@ def before_all() -> None:
 def test_create() -> None:
 	assert create(48000, 2)
 
-	with patch('facefusion.codecs.opus_encoder.opus_module.create_static_library', return_value = None):
+	with patch('facefusion.libraries.opus.create_static_library', return_value = None):
 		assert create(48000, 2) is None
 
 

@@ -1,91 +1,75 @@
 import ctypes
-import threading
 import time
 from collections import deque
+from concurrent.futures import Future, ThreadPoolExecutor
+from functools import partial
+from queue import Queue
 from typing import Optional
 
 import cv2
 import numpy
 
-from facefusion import rtc, streamer
-from facefusion.apis.stream_event import create_event
+from facefusion import rtc, state_manager, streamer
+from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
-from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
-def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
-	video_event.wait()
-	video_event.clear()
+def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	temp_vision_frame, temp_video_time = video_deque.popleft()
+	temp_vision_frame, temp_video_time = video_queue.get()
 
 	if numpy.any(temp_vision_frame):
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		previous_video_time = temp_video_time
+		#todo: find less complex type here
+		temp_deque : deque[tuple[Future[tuple[bytes, Resolution]], float]] = deque()
+		execution_thread_count = state_manager.get_item('execution_thread_count')
 		frame_index = 0
 
-		while numpy.any(temp_vision_frame):
-			encode_start = time.monotonic()
-			output_vision_buffer, output_resolution = process_video_frame(temp_vision_frame)
-			peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
-			video_encoder, temp_resolution, temp_bitrate, frame_index = adapt_video_encoder(video_codec, video_encoder, temp_resolution, temp_bitrate, output_resolution, peer_bitrate, frame_index)
-			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
+		with ThreadPoolExecutor(max_workers = execution_thread_count) as executor:
+			while numpy.any(temp_vision_frame) or temp_deque:
 
-			if output_video_buffer:
-				rtc.send_video(rtc_peer, output_video_buffer, int(temp_video_time * 90000))
+				if numpy.any(temp_vision_frame) and len(temp_deque) < execution_thread_count:
+					temp_deque.append((executor.submit(process_video_frame, temp_vision_frame), temp_video_time))
+					temp_vision_frame, temp_video_time = video_queue.get()
 
-			encode_time = time.monotonic() - encode_start
-			frame_interval = temp_video_time - previous_video_time
-			previous_video_time = temp_video_time
+				else:
+					output_future, output_video_time = temp_deque.popleft()
+					encode_start = time.monotonic()
+					output_vision_buffer, output_resolution = output_future.result()
+					peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
+					video_encoder, temp_resolution, temp_bitrate, frame_index = adapt_video_encoder(video_codec, video_encoder, temp_resolution, temp_bitrate, output_resolution, peer_bitrate, frame_index)
+					output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
-			rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
+					if output_video_buffer:
+						rtc.send_video(rtc_peer, output_video_buffer, int(output_video_time * 90000))
 
-			frame_index += 1
-			video_event.wait()
-			video_event.clear()
-			temp_vision_frame, temp_video_time = video_deque.popleft()
+					encode_time = time.monotonic() - encode_start
+					frame_interval = output_video_time - previous_video_time
+					previous_video_time = output_video_time
+
+					rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
+					frame_index += 1
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
 
 
-def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[VideoPack]) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
-	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	available_event = create_event(video_track, datachannel_library)
-	receive_status_code = -3
 
-	while receive_status_code == 0 or receive_status_code == -3:
-		buffer_size = ctypes.c_int(512 * 1024)
-		receive_status_code = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
-
-		if receive_status_code == 0 and buffer_size.value > 0:
-			video_buffer = receive_buffer.raw[:buffer_size.value]
-			fill_video_deque(video_codec, video_decoder, video_buffer, video_deque, video_event)
-
-		if receive_status_code == -3:
-			available_event.wait()
-			available_event.clear()
-
+	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_queue)
+	receive_event = create_receive_event(video_track, video_frame_handler)
+	receive_event.wait()
 	empty_vision_frame = numpy.empty(0)
-	video_deque.append((empty_vision_frame, 0.0))
-	video_event.set()
+	video_queue.put((empty_vision_frame, 0.0))
 	destroy_video_decoder(video_codec, video_decoder)
-
-
-def fill_video_deque(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_buffer : bytes, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
-	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
-
-	if numpy.any(vision_frame):
-		video_deque.append((vision_frame, time.monotonic()))
-		video_event.set()
 
 
 def process_video_frame(vision_frame : VisionFrame) -> tuple[bytes, Resolution]:
@@ -202,3 +186,14 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 		return vpx_encoder.update_bitrate(video_encoder, bitrate)
 
 	return False
+
+
+def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[VideoPack], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
+	video_buffer = ctypes.string_at(data, size)
+	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
+
+	if numpy.any(vision_frame):
+		if video_queue.full():
+			video_queue.get_nowait()
+
+		video_queue.put((vision_frame, time.monotonic()))

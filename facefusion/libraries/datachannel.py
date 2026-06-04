@@ -166,7 +166,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
 	library.rtcInitLogger.restype = None
-	library.rtcInitLogger(5, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
+	library.rtcInitLogger(2, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
 
 	library.rtcCreatePeerConnection.restype = ctypes.c_int
 
@@ -215,8 +215,8 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]
 	library.rtcChainRtcpReceivingSession.restype = ctypes.c_int
 
-	library.rtcReceiveMessage.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int) ]
-	library.rtcReceiveMessage.restype = ctypes.c_int
+	library.rtcSetFrameCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p) ]
+	library.rtcSetFrameCallback.restype = ctypes.c_int
 
 	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
 	library.rtcSetUserPointer.restype = None
@@ -227,8 +227,8 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcRequestBitrate.argtypes = [ ctypes.c_int, ctypes.c_uint ]
 	library.rtcRequestBitrate.restype = ctypes.c_int
 
-	library.rtcSetAvailableCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetAvailableCallback.restype = ctypes.c_int
+	library.rtcSetClosedCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetClosedCallback.restype = ctypes.c_int
 
 	return library
 

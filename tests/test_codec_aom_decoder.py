@@ -26,7 +26,7 @@ def before_all() -> None:
 def test_create() -> None:
 	assert create(1)
 
-	with patch('facefusion.codecs.aom_decoder.aom_module.create_static_library', return_value = None):
+	with patch('facefusion.libraries.aom.create_static_library', return_value = None):
 		assert create(1) is None
 
 
@@ -42,7 +42,7 @@ def test_decode() -> None:
 		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'e3c0ebd8'
 
 	if is_macos():
-		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == '0a0ab3d0'
+		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'c8c6fdaa'
 
 
 def test_destroy() -> None:

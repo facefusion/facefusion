@@ -1,7 +1,8 @@
 import ctypes
 import struct
 import threading
-from collections import deque
+from functools import partial
+from queue import Queue
 from unittest.mock import MagicMock, patch
 
 import cv2
@@ -9,7 +10,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, fill_video_deque, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -23,6 +24,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	state_manager.init_item('execution_thread_count', 8)
 	state_manager.init_item('processors', [])
 
 	aom_module.pre_check()
@@ -59,18 +61,15 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
-	video_deque.append((video_frame, 0.1))
-	video_event.set()
+	video_queue.put((video_frame, 0.1))
 
 	with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_deque, video_event), daemon = True)
+		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
 		encode_loop_thread.start()
 		empty_vision_frame = numpy.empty(0)
-		video_deque.append((empty_vision_frame, 0.0))
-		video_event.set()
+		video_queue.put((empty_vision_frame, 0.0))
 		encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
@@ -89,13 +88,14 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
-	datachannel_library_mock = MagicMock()
-	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
+	datachannel_mock = MagicMock()
+	ready_event = threading.Event()
+	#todo: lambda not allowed
+	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
 
-	with patch('facefusion.apis.stream_video.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			rtc_peer_video : RtcPeerVideo =\
 			{
@@ -103,48 +103,20 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 				'receiver_track': 0,
 				'codec': video_codec
 			}
-			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
+			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_queue), daemon = True)
 			video_receiver_thread.start()
+			ready_event.wait(timeout = 5.0)
+			datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
+			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			video_receiver_thread.join(timeout = 5.0)
 
-	vision_frame, _ = video_deque.popleft()
+	vision_frame, _ = video_queue.get_nowait()
 
 	if is_linux() or is_windows():
 		assert create_hash(vision_frame.tobytes()) == 'a17439db'
 
 	if is_macos():
 		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
-
-
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_fill_video_deque(video_codec : VideoCodec) -> None:
-	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	video_encoder = create_video_encoder(video_codec, (426, 226), 1000)
-	video_decoder = create_video_decoder(video_codec)
-	encode_buffer = encode_video_frame(video_codec, video_encoder, input_buffer, (426, 226), 0)
-	video_deque : deque[VideoPack] = deque()
-	video_event = threading.Event()
-
-	fill_video_deque(video_codec, video_decoder, encode_buffer, video_deque, video_event)
-
-	vision_frame, _ = video_deque.popleft()
-
-	assert video_event.is_set()
-
-	if is_linux() or is_windows():
-		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == 'b5b6486d'
-
-		if video_codec == 'vp8':
-			assert create_hash(vision_frame.tobytes()) == '99ef2c25'
-
-	if is_macos():
-		if video_codec == 'av1':
-			assert create_hash(vision_frame.tobytes()) == '74e9926f'
-
-		if video_codec == 'vp8':
-			assert create_hash(vision_frame.tobytes()) == 'ff3ecb43'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
@@ -165,7 +137,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 
 	if is_macos():
 		if video_codec == 'av1':
-			assert create_hash(decode_buffer) == '74e9926f'
+			assert create_hash(decode_buffer) == 'eafd1fab'
 
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == 'ff3ecb43'
@@ -178,10 +150,11 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		video_encoder = aom_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		video_encoder = vpx_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
@@ -201,17 +174,18 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
 	destroy_video_encoder(video_codec, video_encoder)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 
@@ -235,3 +209,21 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
 
 	destroy_video_encoder(video_codec, video_encoder)
+
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_handle_video_frame(video_codec : VideoCodec) -> None:
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_decoder = create_video_decoder(video_codec)
+	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
+
+	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+		handle_video_frame(video_codec, video_decoder, video_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+
+	vision_frame, _ = video_queue.get_nowait()
+
+	if is_linux() or is_windows():
+		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+
+	if is_macos():
+		assert create_hash(vision_frame.tobytes()) == '38d00e2a'

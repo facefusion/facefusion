@@ -25,7 +25,7 @@ def before_all() -> None:
 def test_create() -> None:
 	assert create((320, 240), 1000, 8, 16)
 
-	with patch('facefusion.codecs.aom_encoder.aom_module.create_static_library', return_value = None):
+	with patch('facefusion.libraries.aom.create_static_library', return_value = None):
 		assert create((320, 240), 1000, 8, 16) is None
 
 
