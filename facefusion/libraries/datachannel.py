@@ -166,7 +166,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
 	library.rtcInitLogger.restype = None
-	library.rtcInitLogger(5, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
+	library.rtcInitLogger(2, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
 
 	library.rtcCreatePeerConnection.restype = ctypes.c_int
 
