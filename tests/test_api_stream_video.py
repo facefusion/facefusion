@@ -24,6 +24,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	state_manager.init_item('execution_thread_count', 8)
 	state_manager.init_item('processors', [])
 
 	aom_module.pre_check()
