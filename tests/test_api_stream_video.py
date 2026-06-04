@@ -91,6 +91,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 	datachannel_mock = MagicMock()
 	ready_event = threading.Event()
+	#todo: lambda not allowed
 	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
 
 	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
@@ -148,10 +149,11 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		video_encoder = aom_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		video_encoder = vpx_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
@@ -171,17 +173,18 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
 	destroy_video_encoder(video_codec, video_encoder)
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
-
+	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 

@@ -79,6 +79,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 
 	datachannel_mock = MagicMock()
 	ready_event = threading.Event()
+	# todo: lambda not allowed
 	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
 
 	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
