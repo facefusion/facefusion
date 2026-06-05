@@ -10,11 +10,8 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, Visio
 
 
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[Face]:
-	source_faces = []
+	source_faces = get_static_faces(source_vision_frames)
 	target_faces = get_many_faces([ target_vision_frame ])
-
-	if state_manager.get_item('face_selector_gender') == 'auto' or state_manager.get_item('face_selector_race') == 'auto':
-		source_faces = get_static_faces(source_vision_frames)
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
