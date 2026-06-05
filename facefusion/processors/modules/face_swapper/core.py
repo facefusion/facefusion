@@ -592,7 +592,7 @@ def post_process() -> None:
 		face_recognizer.clear_inference_pool()
 
 
-def swap_face(source_face : Face, target_face : Face, source_vision_frame : Optional[VisionFrame], temp_vision_frame : VisionFrame) -> VisionFrame:
+def swap_face(source_face : Face, target_face : Face, source_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
@@ -631,7 +631,7 @@ def swap_face(source_face : Face, target_face : Face, source_vision_frame : Opti
 	return paste_vision_frame
 
 
-def forward_swap_face(source_face : Face, target_face : Face, source_vision_frame : Optional[VisionFrame], crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward_swap_face(source_face : Face, target_face : Face, source_vision_frame : VisionFrame, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
@@ -639,11 +639,9 @@ def forward_swap_face(source_face : Face, target_face : Face, source_vision_fram
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':
 			if model_type in [ 'blendswap', 'uniface' ]:
-				face_swapper_inputs[face_swapper_input.name] = source_vision_frame
+				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face, source_vision_frame)
 			else:
-				source_embedding = prepare_source_embedding(source_face)
-				source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
-				face_swapper_inputs[face_swapper_input.name] = source_embedding
+				face_swapper_inputs[face_swapper_input.name] = prepare_source_face(source_face, target_face)
 		if face_swapper_input.name == 'target':
 			face_swapper_inputs[face_swapper_input.name] = crop_vision_frame
 
@@ -678,6 +676,12 @@ def prepare_source_frame(source_face : Face, source_vision_frame : VisionFrame) 
 	source_vision_frame = source_vision_frame.transpose(2, 0, 1)
 	source_vision_frame = numpy.expand_dims(source_vision_frame, axis = 0).astype(numpy.float32)
 	return source_vision_frame
+
+
+def prepare_source_face(source_face : Face, target_face : Face) -> Embedding:
+	source_embedding = prepare_source_embedding(source_face)
+	source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
+	return source_embedding
 
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
@@ -777,10 +781,10 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
 
 	if source_face and target_faces:
-		source_frame = prepare_source_frame(source_face, get_first(source_vision_frames))
+		source_vision_frame = get_first(source_vision_frames)
 
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
-			temp_vision_frame = swap_face(source_face, target_face, source_frame, temp_vision_frame)
+			temp_vision_frame = swap_face(source_face, target_face, source_vision_frame, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask
