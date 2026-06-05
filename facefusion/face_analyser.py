@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import numpy
 
-from facefusion import state_manager, face_store
+from facefusion import face_store, state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_faces_by_angle
