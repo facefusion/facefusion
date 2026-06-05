@@ -758,7 +758,7 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 	if source_vision_frames:
 		for source_vision_frame in source_vision_frames:
-			temp_faces = get_static_faces([source_vision_frame])
+			temp_faces = get_static_faces([ source_vision_frame ])
 			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 
 			if temp_faces:
