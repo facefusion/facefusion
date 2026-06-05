@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality
+from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -108,3 +108,17 @@ def test_set_video_quality() -> None:
 	assert set_video_quality('hevc_videotoolbox', 0) == [ '-b:v', '1024k' ]
 	assert set_video_quality('hevc_videotoolbox', 50) == [ '-b:v', '25768k' ]
 	assert set_video_quality('hevc_videotoolbox', 100) == [ '-b:v', '50512k' ]
+
+
+def test_set_video_tag() -> None:
+	assert set_video_tag('libx265') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_nvenc') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_amf') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_qsv') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_videotoolbox') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('libx264') == []
+	assert set_video_tag('h264_nvenc') == []
+
+
+def test_set_faststart() -> None:
+	assert set_faststart() == [ '-movflags', '+faststart' ]

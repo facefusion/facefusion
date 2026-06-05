@@ -187,6 +187,16 @@ def copy_video_encoder() -> List[Command]:
 	return set_video_encoder('copy')
 
 
+def set_video_tag(video_encoder : VideoEncoder) -> List[Command]:
+	if video_encoder in [ 'libx265', 'hevc_nvenc', 'hevc_amf', 'hevc_qsv', 'hevc_videotoolbox' ]:
+		return [ '-tag:v', 'hvc1' ]
+	return []
+
+
+def set_faststart() -> List[Command]:
+	return [ '-movflags', '+faststart' ]
+
+
 def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> List[Command]:
 	if video_encoder in [ 'libx264', 'libx264rgb', 'libx265' ]:
 		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()

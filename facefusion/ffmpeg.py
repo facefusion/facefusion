@@ -186,6 +186,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.select_media_stream('0:v:0'),
 		ffmpeg_builder.select_media_stream('1:a:0'),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
+		ffmpeg_builder.set_faststart(),
 		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -208,6 +209,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
 		ffmpeg_builder.set_audio_volume(output_audio_volume),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
+		ffmpeg_builder.set_faststart(),
 		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -228,6 +230,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.set_input(temp_frames_pattern),
 		ffmpeg_builder.set_media_resolution(pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
+		ffmpeg_builder.set_video_tag(output_video_encoder),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.concat(
@@ -259,6 +262,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		ffmpeg_builder.set_input(concat_video_file.name),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
+		ffmpeg_builder.set_faststart(),
 		ffmpeg_builder.force_output(output_path)
 	)
 	process = run_ffmpeg(commands)
