@@ -1,8 +1,10 @@
+import os
+import tempfile
 from configparser import ConfigParser
 
 import pytest
 
-from facefusion import config
+from facefusion import config, state_manager
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -41,7 +43,13 @@ def before_all() -> None:
 			'unset': ''
 		}
 	})
-	pytest.MonkeyPatch().setattr(config, 'get_config_parser', lambda: config_parser)
+	file_descriptor, config_path = tempfile.mkstemp(suffix = '.ini')
+
+	with os.fdopen(file_descriptor, 'w') as config_file:
+		config_parser.write(config_file)
+
+	state_manager.init_item('config_path', config_path)
+	config.clear_config_parser()
 
 
 def test_get_str_value() -> None:
