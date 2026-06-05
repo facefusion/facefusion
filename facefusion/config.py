@@ -1,25 +1,20 @@
 from configparser import ConfigParser
+from functools import lru_cache
 from typing import List, Optional
 
 from facefusion import state_manager
 from facefusion.common_helper import cast_bool, cast_float, cast_int
 
-CONFIG_PARSER = None
 
-
+@lru_cache
 def get_config_parser() -> ConfigParser:
-	global CONFIG_PARSER
-
-	if CONFIG_PARSER is None:
-		CONFIG_PARSER = ConfigParser()
-		CONFIG_PARSER.read(state_manager.get_item('config_path'), encoding = 'utf-8')
-	return CONFIG_PARSER
+	config_parser = ConfigParser()
+	config_parser.read(state_manager.get_item('config_path'), encoding = 'utf-8')
+	return config_parser
 
 
 def clear_config_parser() -> None:
-	global CONFIG_PARSER
-
-	CONFIG_PARSER = None
+	get_config_parser.cache_clear()
 
 
 def get_str_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[str]:

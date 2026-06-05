@@ -7,8 +7,8 @@ from facefusion import config
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	config.CONFIG_PARSER = ConfigParser()
-	config.CONFIG_PARSER.read_dict(
+	config_parser = ConfigParser()
+	config_parser.read_dict(
 	{
 		'str':
 		{
@@ -41,6 +41,7 @@ def before_all() -> None:
 			'unset': ''
 		}
 	})
+	pytest.MonkeyPatch().setattr(config, 'get_config_parser', lambda: config_parser)
 
 
 def test_get_str_value() -> None:
