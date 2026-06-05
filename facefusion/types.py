@@ -49,6 +49,8 @@ Face = namedtuple('Face',
 	'gender',
 	'race'
 ])
+FaceStore : TypeAlias = Dict[str, List[Face]]
+
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
@@ -58,12 +60,12 @@ VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoPoolSet = TypedDict('VideoPoolSet',
 {
-	'capture': VideoCaptureSet,
-	'writer': VideoWriterSet
+	'capture' : VideoCaptureSet,
+	'writer' : VideoWriterSet
 })
 CameraPoolSet = TypedDict('CameraPoolSet',
 {
-	'capture': CameraCaptureSet
+	'capture' : CameraCaptureSet
 })
 
 ColorMode = Literal['rgb', 'rgba']
@@ -344,7 +346,7 @@ State = TypedDict('State',
 	'benchmark_cycle_count' : int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
-	'face_detector_margin': Margin,
+	'face_detector_margin' : Margin,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_landmarker_model' : FaceLandmarkerModel,
@@ -365,7 +367,7 @@ State = TypedDict('State',
 	'face_mask_regions' : List[FaceMaskRegion],
 	'face_mask_blur' : float,
 	'face_mask_padding' : Padding,
-	'voice_extractor_model': VoiceExtractorModel,
+	'voice_extractor_model' : VoiceExtractorModel,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
