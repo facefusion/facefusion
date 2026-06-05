@@ -5,7 +5,7 @@ import numpy
 import facefusion.choices
 from facefusion import state_manager
 from facefusion.common_helper import get_first
-from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
@@ -14,7 +14,7 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 	target_faces = get_many_faces([ target_vision_frame ])
 
 	if state_manager.get_item('face_selector_gender') == 'auto' or state_manager.get_item('face_selector_race') == 'auto':
-		source_faces = get_many_faces(source_vision_frames)
+		source_faces = get_static_faces(source_vision_frames)
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
@@ -25,7 +25,7 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = get_many_faces([ reference_vision_frame ])
+		reference_faces = get_static_faces([ reference_vision_frame ])
 		reference_faces = sort_and_filter_faces(source_faces, reference_faces)
 		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
 
