@@ -5,6 +5,7 @@ import pytest
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_analyser import get_many_faces
+from facefusion.face_store import clear_faces
 from facefusion.vision import read_static_image
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -40,6 +41,7 @@ def before_each() -> None:
 	face_detector.clear_inference_pool()
 	face_landmarker.clear_inference_pool()
 	face_recognizer.clear_inference_pool()
+	clear_faces()
 
 
 @pytest.mark.parametrize('face_detector_model, face_detector_size',

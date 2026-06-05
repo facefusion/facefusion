@@ -12,7 +12,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face, scale_face
+from facefusion.face_analyser import get_average_face, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
@@ -566,7 +566,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_vision_frames = read_static_images(source_image_paths)
-	source_faces = get_many_faces(source_vision_frames)
+	source_faces = get_static_faces(source_vision_frames)
 
 	if not get_one_face(source_faces):
 		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
@@ -770,7 +770,7 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 	if source_vision_frames:
 		for source_vision_frame in source_vision_frames:
-			temp_faces = get_many_faces([source_vision_frame])
+			temp_faces = get_static_faces([ source_vision_frame ])
 			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 
 			if temp_faces:
