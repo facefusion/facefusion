@@ -100,7 +100,9 @@ def get_static_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 
 		if not faces:
 			faces = get_many_faces([ vision_frame ])
-			face_store.set_faces(vision_frame, faces)
+
+			if faces:
+				face_store.set_faces(vision_frame, faces)
 
 		many_faces.extend(faces)
 
