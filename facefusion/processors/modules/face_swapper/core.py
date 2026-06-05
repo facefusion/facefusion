@@ -641,7 +641,9 @@ def forward_swap_face(source_face : Face, target_face : Face, source_vision_fram
 			if model_type in [ 'blendswap', 'uniface' ]:
 				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face, source_vision_frame)
 			else:
-				face_swapper_inputs[face_swapper_input.name] = prepare_source_face(source_face, target_face)
+				source_embedding = prepare_source_embedding(source_face)
+				source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
+				face_swapper_inputs[face_swapper_input.name] = source_embedding
 		if face_swapper_input.name == 'target':
 			face_swapper_inputs[face_swapper_input.name] = crop_vision_frame
 
@@ -676,12 +678,6 @@ def prepare_source_frame(source_face : Face, source_vision_frame : VisionFrame) 
 	source_vision_frame = source_vision_frame.transpose(2, 0, 1)
 	source_vision_frame = numpy.expand_dims(source_vision_frame, axis = 0).astype(numpy.float32)
 	return source_vision_frame
-
-
-def prepare_source_face(source_face : Face, target_face : Face) -> Embedding:
-	source_embedding = prepare_source_embedding(source_face)
-	source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
-	return source_embedding
 
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
