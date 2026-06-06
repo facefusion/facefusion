@@ -25,7 +25,8 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) ->
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		previous_video_time = temp_video_time
-		temp_deque = deque()
+		#todo: fix typing once issue below is sorted out
+		temp_deque = deque() #type:ignore[var-annotated]
 		execution_thread_count = state_manager.get_item('execution_thread_count')
 		frame_index = 0
 
@@ -33,6 +34,7 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) ->
 			while numpy.any(temp_vision_frame) or temp_deque:
 
 				if numpy.any(temp_vision_frame) and len(temp_deque) < execution_thread_count:
+					#todo: why does the deque contain a future and not just the data
 					temp_deque.append((executor.submit(process_video_frame, temp_vision_frame), temp_video_time))
 					temp_vision_frame, temp_video_time = video_queue.get()
 
