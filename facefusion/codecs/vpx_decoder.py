@@ -3,10 +3,10 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import VideoCodec, VpxDecoder, VpxPointer
+from facefusion.types import VpxDecoder, VpxPointer, VxpVideoCodec
 
 
-def create(video_codec : VideoCodec, thread_count : int) -> Optional[VpxDecoder]:
+def create(video_codec : VxpVideoCodec, thread_count : int) -> Optional[VpxDecoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
