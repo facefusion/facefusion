@@ -1,5 +1,6 @@
 import ctypes
 from collections import namedtuple
+from concurrent.futures import Future
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
@@ -320,7 +321,8 @@ RtcPeer = TypedDict('RtcPeer',
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
-VideoPack : TypeAlias = tuple[VisionFrame, float]
+VideoFuture : TypeAlias = Future[tuple[bytes, Resolution]]
+VideoPack : TypeAlias = tuple[VideoFuture, float]
 AudioPack : TypeAlias = tuple[AudioFrame, float]
 
 SdpAudioMedia = TypedDict('SdpAudioMedia',

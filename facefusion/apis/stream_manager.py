@@ -1,6 +1,7 @@
 import ctypes
 import threading
 from collections.abc import AsyncIterator
+from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from typing import Optional
 
@@ -8,7 +9,7 @@ import cv2
 import numpy
 from starlette.websockets import WebSocket
 
-from facefusion import rtc, rtc_store, streamer
+from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.audio import create_empty_audio_frame
@@ -104,10 +105,12 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+	#todo: we need to test different maxsize for video queue (audio quaue is x 10) here or make it depend on execution thread count
 	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
+	video_executor = ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count'))
 
-	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue), daemon = True)
+	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue, video_executor), daemon = True)
 	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
 	video_receiver_thread.start()
 	video_encoder_thread.start()
@@ -122,6 +125,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 	video_receiver_thread.join()
 	video_encoder_thread.join()
+	video_executor.shutdown(wait = True)
 	rtc_store.delete_peers(session_id)
 
 

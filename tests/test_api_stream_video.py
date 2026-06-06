@@ -1,6 +1,7 @@
 import ctypes
 import struct
 import threading
+from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
 from unittest.mock import MagicMock, patch
@@ -10,13 +11,13 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
-from facefusion.types import FrameHandler, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack
+from facefusion.types import FrameHandler, RtcPeer, RtcPeerVideo, VideoCodec, VideoFuture, VideoPack
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -67,14 +68,16 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 
 	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
-	video_queue.put((video_frame, 0.1))
+	with ThreadPoolExecutor(max_workers = 1) as executor:
+		video_queue.put((executor.submit(process_video_frame, video_frame), 0.1))
 
-	with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
-		encode_loop_thread.start()
-		empty_vision_frame = numpy.empty(0)
-		video_queue.put((empty_vision_frame, 0.0))
-		encode_loop_thread.join(timeout = 5.0)
+		with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
+			encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
+			encode_loop_thread.start()
+			empty_future : VideoFuture = Future()
+			empty_future.set_result((bytes(), (0, 0)))
+			video_queue.put((empty_future, 0.0))
+			encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
 
@@ -101,28 +104,31 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	ready_event = threading.Event()
 	datachannel_mock.rtcSetClosedCallback.side_effect = partial(set_ready_event, ready_event)
 
-	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
-		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
-			rtc_peer_video : RtcPeerVideo =\
-			{
-				'sender_track': 0,
-				'receiver_track': 0,
-				'codec': video_codec
-			}
-			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_queue), daemon = True)
-			video_receiver_thread.start()
-			ready_event.wait(timeout = 5.0)
-			datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
-			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
-			video_receiver_thread.join(timeout = 5.0)
+	with ThreadPoolExecutor(max_workers = 1) as executor:
+		with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
+			with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+				with patch('facefusion.apis.stream_video.process_video_frame', return_value = (video_frame.tobytes(), (426, 226))):
+					rtc_peer_video : RtcPeerVideo =\
+					{
+						'sender_track': 0,
+						'receiver_track': 0,
+						'codec': video_codec
+					}
+					video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_queue, executor), daemon = True)
+					video_receiver_thread.start()
+					ready_event.wait(timeout = 5.0)
+					datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
+					datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
+					video_receiver_thread.join(timeout = 5.0)
+					output_future, _ = video_queue.get_nowait()
 
-	vision_frame, _ = video_queue.get_nowait()
+	output_vision_buffer, _ = output_future.result()
 
 	if is_linux() or is_windows():
-		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+		assert create_hash(output_vision_buffer) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
+		assert create_hash(output_vision_buffer) == '38d00e2a'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -230,13 +236,16 @@ def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	video_decoder = create_video_decoder(video_codec)
 	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
 
-	with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
-		handle_video_frame(video_codec, video_decoder, video_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+	with ThreadPoolExecutor(max_workers = 1) as executor:
+		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
+			with patch('facefusion.apis.stream_video.process_video_frame', return_value = (video_frame.tobytes(), (426, 226))):
+				handle_video_frame(video_codec, video_decoder, video_queue, executor, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+				output_future, _ = video_queue.get_nowait()
 
-	vision_frame, _ = video_queue.get_nowait()
+	output_vision_buffer, _ = output_future.result()
 
 	if is_linux() or is_windows():
-		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+		assert create_hash(output_vision_buffer) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
+		assert create_hash(output_vision_buffer) == '38d00e2a'

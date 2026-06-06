@@ -36,8 +36,10 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Audi
 	audio_frame_handler = partial(handle_audio_frame, audio_codec, audio_decoder, audio_queue)
 	receive_event = create_receive_event(audio_track, audio_frame_handler)
 	receive_event.wait()
+
 	empty_audio_frame = numpy.empty(0)
 	audio_queue.put((empty_audio_frame, 0.0))
+	# todo: is this the correct place to destroy?
 	destroy_audio_decoder(audio_codec, audio_decoder)
 
 
@@ -58,6 +60,7 @@ def destroy_audio_decoder(audio_codec : AudioCodec, audio_decoder : OpusDecoder)
 		opus_decoder.destroy(audio_decoder)
 
 
+#todo: we can remove the dead args or pass audio buffer
 def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[AudioPack], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	audio_buffer = ctypes.string_at(data, size)
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)

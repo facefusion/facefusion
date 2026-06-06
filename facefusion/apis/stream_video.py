@@ -1,7 +1,6 @@
 import ctypes
 import time
-from collections import deque
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
 from typing import Optional
@@ -9,67 +8,61 @@ from typing import Optional
 import cv2
 import numpy
 
-from facefusion import rtc, state_manager, streamer
+from facefusion import rtc, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
-from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
+from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoFuture, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
 def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	temp_vision_frame, temp_video_time = video_queue.get()
+	output_future, output_video_time = video_queue.get()
+	output_buffer, output_resolution = output_future.result()
 
-	if numpy.any(temp_vision_frame):
-		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
+	if output_buffer:
+		temp_resolution : Resolution = output_resolution
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-		previous_video_time = temp_video_time
-		#todo: fix typing once issue below is sorted out
-		temp_deque = deque() #type:ignore[var-annotated]
-		execution_thread_count = state_manager.get_item('execution_thread_count')
+		previous_video_time = output_video_time
 		frame_index = 0
 
-		with ThreadPoolExecutor(max_workers = execution_thread_count) as executor:
-			while numpy.any(temp_vision_frame) or temp_deque:
+		while output_buffer:
+			encode_start = time.monotonic()
+			peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
+			# todo: horrible method with too many arguments - it needs calculate_xxx_bitrate or whatever is adjusted here - like calculate_receiver_bitrate ?
+			video_encoder, temp_resolution, temp_bitrate, frame_index = adapt_video_encoder(video_codec, video_encoder, temp_resolution, temp_bitrate, output_resolution, peer_bitrate, frame_index)
+			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_buffer, temp_resolution, frame_index)
 
-				if numpy.any(temp_vision_frame) and len(temp_deque) < execution_thread_count:
-					#todo: why does the deque contain a future and not just the data
-					temp_deque.append((executor.submit(process_video_frame, temp_vision_frame), temp_video_time))
-					temp_vision_frame, temp_video_time = video_queue.get()
+			if output_video_buffer:
+				rtc.send_video(rtc_peer, output_video_buffer, int(output_video_time * 90000))
 
-				else:
-					output_future, output_video_time = temp_deque.popleft()
-					encode_start = time.monotonic()
-					output_vision_buffer, output_resolution = output_future.result()
-					peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
-					video_encoder, temp_resolution, temp_bitrate, frame_index = adapt_video_encoder(video_codec, video_encoder, temp_resolution, temp_bitrate, output_resolution, peer_bitrate, frame_index)
-					output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
+			encode_time = time.monotonic() - encode_start
+			frame_interval = output_video_time - previous_video_time
+			previous_video_time = output_video_time
 
-					if output_video_buffer:
-						rtc.send_video(rtc_peer, output_video_buffer, int(output_video_time * 90000))
-
-					encode_time = time.monotonic() - encode_start
-					frame_interval = output_video_time - previous_video_time
-					previous_video_time = output_video_time
-
-					rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
-					frame_index += 1
+			rtc.adapt_receiver_bitrate(rtc_peer, calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval))
+			frame_index += 1
+			output_future, output_video_time = video_queue.get()
+			output_buffer, output_resolution = output_future.result()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
 
 
-def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[VideoPack]) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[VideoPack], video_executor : ThreadPoolExecutor) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
 
-	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_queue)
+	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
-	empty_vision_frame = numpy.empty(0)
-	video_queue.put((empty_vision_frame, 0.0))
+
+	empty_future : VideoFuture = Future()
+	empty_future.set_result((bytes(), (0, 0)))
+	video_queue.put((empty_future, 0.0))
+	#todo: is this the correct place to destroy?
 	destroy_video_decoder(video_codec, video_decoder)
 
 
@@ -80,8 +73,10 @@ def process_video_frame(vision_frame : VisionFrame) -> tuple[bytes, Resolution]:
 	return output_vision_buffer, output_resolution
 
 
+#todo: why not video_encoder : VideoEncoder type?
 def adapt_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, resolution : Resolution, bitrate : BitRate, output_resolution : Resolution, peer_bitrate : BitRate, frame_index : int) -> tuple[VpxEncoder | AomEncoder, Resolution, BitRate, int]:
 	if output_resolution[0] - resolution[0] or output_resolution[1] - resolution[1]:
+		# todo: why destroy and recreate all the time, why not via an update method?
 		destroy_video_encoder(video_codec, video_encoder)
 		resolution = output_resolution
 		video_encoder = create_video_encoder(video_codec, resolution, bitrate)
@@ -91,6 +86,7 @@ def adapt_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | A
 		bitrate = peer_bitrate
 
 		if not update_video_encoder_bitrate(video_codec, video_encoder, bitrate):
+			# todo: why destroy and recreate all the time, why not via an update method?
 			destroy_video_encoder(video_codec, video_encoder)
 			video_encoder = create_video_encoder(video_codec, resolution, bitrate)
 			frame_index = 0
@@ -189,7 +185,8 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[VideoPack], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
+#todo: we can remove the dead args or pass video_buffer
+def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[VideoPack], video_executor : ThreadPoolExecutor, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
@@ -197,4 +194,5 @@ def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 		if video_queue.full():
 			video_queue.get_nowait()
 
-		video_queue.put((vision_frame, time.monotonic()))
+		video_future = video_executor.submit(process_video_frame, vision_frame)
+		video_queue.put((video_future, time.monotonic()))
