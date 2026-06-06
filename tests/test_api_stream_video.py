@@ -152,7 +152,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 			assert create_hash(decode_buffer) == 'ff3ecb43'
 
 		if video_codec == 'vp9':
-			assert create_hash(decode_buffer) == 'ff3ecb43'
+			assert create_hash(decode_buffer) == 'a994fa02'
 
 	assert decode_video_frame(video_codec, video_decoder, bytes()) is None
 

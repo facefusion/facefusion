@@ -2,8 +2,6 @@ from unittest.mock import patch
 
 import cv2
 import pytest
-
-from facefusion.types import VxpVideoCodec
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
@@ -12,6 +10,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import vpx as vpx_module
+from facefusion.types import VxpVideoCodec
 from facefusion.vision import read_video_frame
 
 
