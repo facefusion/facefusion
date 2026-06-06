@@ -105,10 +105,10 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	#todo: we need to test different maxsize for video queue (audio quaue is x 10) here or make it depend on execution thread count
-	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
-	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
-	video_executor = ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count'))
+	execution_thread_count = state_manager.get_item('execution_thread_count')
+	video_queue : Queue[VideoPack] = Queue(maxsize = execution_thread_count)
+	audio_queue : Queue[AudioPack] = Queue(maxsize = execution_thread_count * 10)
+	video_executor = ThreadPoolExecutor(max_workers = execution_thread_count)
 
 	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue, video_executor), daemon = True)
 	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)

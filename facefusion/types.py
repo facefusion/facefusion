@@ -322,6 +322,7 @@ RtcPeer = TypedDict('RtcPeer',
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
 VideoFuture : TypeAlias = Future[tuple[bytes, Resolution]]
+#todo: for me this is no longer a VideoPack cause it is too different from AudioPack - eventual kill the XXXPack convention
 VideoPack : TypeAlias = tuple[VideoFuture, float]
 AudioPack : TypeAlias = tuple[AudioFrame, float]
 

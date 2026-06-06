@@ -12,6 +12,7 @@ from facefusion.codecs import opus_decoder, opus_encoder
 from facefusion.types import AudioCodec, AudioPack, OpusDecoder, RtcPeer, RtcPeerAudio
 
 
+# todo: why is this called encode_loop, is there a decode loop as well?
 def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[AudioPack]) -> None:
 	temp_audio_frame, temp_audio_time = audio_queue.get()
 	audio_encoder = opus_encoder.create(48000, 2)
