@@ -13,7 +13,7 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module
-from facefusion.types import AudioCodec, AudioPack, RtcPeer, RtcPeerAudio
+from facefusion.types import AudioCodec, AudioPack, FrameHandler, RtcPeer, RtcPeerAudio
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -34,6 +34,10 @@ def before_all() -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	rtc_store.clear()
+
+
+def set_ready_event(ready_event : threading.Event, track : int, close_callback : FrameHandler) -> None:
+	ready_event.set()
 
 
 def test_run_audio_encode_loop() -> None:
@@ -79,8 +83,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 
 	datachannel_mock = MagicMock()
 	ready_event = threading.Event()
-	# todo: lambda not allowed
-	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
+	datachannel_mock.rtcSetClosedCallback.side_effect = partial(set_ready_event, ready_event)
 
 	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):

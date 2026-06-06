@@ -16,7 +16,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
-from facefusion.types import RtcPeer, RtcPeerVideo, VideoCodec, VideoPack
+from facefusion.types import FrameHandler, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -40,6 +40,10 @@ def before_all() -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	rtc_store.clear()
+
+
+def set_ready_event(ready_event : threading.Event, track : int, close_callback : FrameHandler) -> None:
+	ready_event.set()
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
@@ -92,8 +96,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 	datachannel_mock = MagicMock()
 	ready_event = threading.Event()
-	#todo: lambda not allowed
-	datachannel_mock.rtcSetClosedCallback.side_effect = partial(lambda event, *args: event.set(), ready_event)
+	datachannel_mock.rtcSetClosedCallback.side_effect = partial(set_ready_event, ready_event)
 
 	with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
@@ -150,11 +153,9 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
-	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		video_encoder = aom_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		video_encoder = vpx_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
@@ -174,18 +175,15 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
-	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
 	destroy_video_encoder(video_codec, video_encoder)
-	# todo: this head be hash based checks before, now the codnitions seem pointless
+
 	if video_codec == 'av1':
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
-	# todo: this head be hash based checks before, now the codnitions seem pointless
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 

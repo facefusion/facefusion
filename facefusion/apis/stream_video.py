@@ -1,7 +1,7 @@
 import ctypes
 import time
 from collections import deque
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from queue import Queue
 from typing import Optional
@@ -25,8 +25,7 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) ->
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		previous_video_time = temp_video_time
-		#todo: find less complex type here
-		temp_deque : deque[tuple[Future[tuple[bytes, Resolution]], float]] = deque()
+		temp_deque = deque()
 		execution_thread_count = state_manager.get_item('execution_thread_count')
 		frame_index = 0
 
