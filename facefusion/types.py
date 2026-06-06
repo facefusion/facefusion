@@ -97,7 +97,7 @@ Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
 AudioCodec : TypeAlias = Literal['opus']
-VideoCodec : TypeAlias = Literal['av1', 'vp8']
+VideoCodec : TypeAlias = Literal['av1', 'vp8', 'vp9']
 
 FrameHandler : TypeAlias = Callable[..., None]
 

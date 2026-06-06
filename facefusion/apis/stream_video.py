@@ -12,7 +12,7 @@ import numpy
 from facefusion import rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
-from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
+from facefusion.codecs import aom_decoder, aom_encoder, vp9_decoder, vp9_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
@@ -122,6 +122,12 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 		if vpx_pointer:
 			return normalize_vision_frame(vpx_pointer)
 
+	if video_codec == 'vp9':
+		vpx_pointer = vp9_decoder.decode(video_decoder, input_buffer)
+
+		if vpx_pointer:
+			return normalize_vision_frame(vpx_pointer)
+
 	return None
 
 
@@ -131,6 +137,9 @@ def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | Ao
 
 	if video_codec == 'vp8':
 		return vpx_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
+
+	if video_codec == 'vp9':
+		return vp9_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
 
 	return bytes()
 
@@ -148,6 +157,9 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 	if video_codec == 'vp8':
 		return vpx_decoder.create(8)
 
+	if video_codec == 'vp9':
+		return vp9_decoder.create(8)
+
 	return None
 
 
@@ -157,6 +169,9 @@ def create_video_encoder(video_codec : VideoCodec, frame_resolution : Resolution
 
 	if video_codec == 'vp8':
 		return vpx_encoder.create(frame_resolution, bitrate, 8, 10)
+
+	if video_codec == 'vp9':
+		return vp9_encoder.create(frame_resolution, bitrate, 8, 10)
 
 	return None
 
@@ -168,6 +183,9 @@ def destroy_video_decoder(video_codec : VideoCodec, video_decoder : VpxDecoder |
 	if video_codec == 'vp8':
 		vpx_decoder.destroy(video_decoder)
 
+	if video_codec == 'vp9':
+		vp9_decoder.destroy(video_decoder)
+
 
 def destroy_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder) -> None:
 	if video_codec == 'av1':
@@ -176,6 +194,9 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder |
 	if video_codec == 'vp8':
 		vpx_encoder.destroy(video_encoder)
 
+	if video_codec == 'vp9':
+		vp9_encoder.destroy(video_encoder)
+
 
 def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, bitrate : BitRate) -> bool:
 	if video_codec == 'av1':
@@ -183,6 +204,9 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 
 	if video_codec == 'vp8':
 		return vpx_encoder.update_bitrate(video_encoder, bitrate)
+
+	if video_codec == 'vp9':
+		return vp9_encoder.update_bitrate(video_encoder, bitrate)
 
 	return False
 

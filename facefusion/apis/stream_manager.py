@@ -43,6 +43,9 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 
+	if rtc.get_payload_type(sdp_offer, 'vp9'):
+		video_codec = 'vp9'
+
 	if rtc.get_payload_type(sdp_offer, 'av1'):
 		video_codec = 'av1'
 

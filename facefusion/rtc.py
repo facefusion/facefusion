@@ -139,6 +139,9 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 		if video_codec == 'vp8':
 			datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 
+		if video_codec == 'vp9':
+			datachannel_library.rtcSetVP9Packetizer(video_track, ctypes.byref(video_packetizer))
+
 		datachannel_library.rtcChainRtcpSrReporter(video_track)
 		datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
 
@@ -153,6 +156,14 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 			video_depacketizer.payloadType = payload_type
 			video_depacketizer.clockRate = 90000
 			datachannel_library.rtcSetVP8Depacketizer(video_track, ctypes.byref(video_depacketizer))
+
+		if video_codec == 'vp9':
+			video_depacketizer = datachannel_module.define_rtc_packetizer_init()
+			video_depacketizer.ssrc = 0
+			video_depacketizer.cname = b'video'
+			video_depacketizer.payloadType = payload_type
+			video_depacketizer.clockRate = 90000
+			datachannel_library.rtcSetVP9Depacketizer(video_track, ctypes.byref(video_depacketizer))
 
 		datachannel_library.rtcChainRtcpReceivingSession(video_track)
 
@@ -210,6 +221,9 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 
 	if video_codec == 'vp8':
 		track_init.codec = 1
+
+	if video_codec == 'vp9':
+		track_init.codec = 2
 
 	return ctypes.byref(track_init)
 

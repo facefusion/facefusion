@@ -186,6 +186,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 
 	library.rtcSetAV1Packetizer.restype = ctypes.c_int
 	library.rtcSetVP8Packetizer.restype = ctypes.c_int
+	library.rtcSetVP9Packetizer.restype = ctypes.c_int
 
 	library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
 	library.rtcChainRtcpSrReporter.restype = ctypes.c_int
@@ -210,6 +211,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcSetAV1Depacketizer.argtypes = [ ctypes.c_int, ctypes.c_int ]
 	library.rtcSetAV1Depacketizer.restype = ctypes.c_int
 	library.rtcSetVP8Depacketizer.restype = ctypes.c_int
+	library.rtcSetVP9Depacketizer.restype = ctypes.c_int
 	library.rtcSetOpusDepacketizer.restype = ctypes.c_int
 
 	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]

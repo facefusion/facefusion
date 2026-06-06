@@ -11,7 +11,7 @@ import pytest
 
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
-from facefusion.codecs import aom_encoder, vpx_encoder
+from facefusion.codecs import aom_encoder, vp9_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -46,7 +46,7 @@ def set_ready_event(ready_event : threading.Event, track : int, close_callback :
 	ready_event.set()
 
 
-@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
+@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96), ('vp9', 98) ])
 def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	peer_connection = rtc.create_peer_connection()
@@ -88,8 +88,11 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 	if video_codec == 'vp8':
 		pytest.skip()
 
+	if video_codec == 'vp9':
+		pytest.skip()
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_queue : Queue[VideoPack] = Queue(maxsize = 30)
@@ -122,7 +125,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -138,6 +141,9 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == '99ef2c25'
 
+		if video_codec == 'vp9':
+			assert create_hash(decode_buffer) == 'f2d3e3fb'
+
 	if is_macos():
 		if video_codec == 'av1':
 			assert create_hash(decode_buffer) == 'eafd1fab'
@@ -145,10 +151,13 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == 'ff3ecb43'
 
+		if video_codec == 'vp9':
+			assert create_hash(decode_buffer) == 'ff3ecb43'
+
 	assert decode_video_frame(video_codec, video_decoder, bytes()) is None
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -159,6 +168,9 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	if video_codec == 'vp8':
 		video_encoder = vpx_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
+	if video_codec == 'vp9':
+		video_encoder = vp9_encoder.create((426, 226), 1000, 1, 0)
+		encode_buffer = vp9_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
 	video_decoder = create_video_decoder(video_codec)
 
@@ -169,7 +181,7 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	assert decode_video_frame(video_codec, video_decoder, encode_buffer) is None
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -179,6 +191,8 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
+	if video_codec == 'vp9':
+		assert vp9_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
 	destroy_video_encoder(video_codec, video_encoder)
 
@@ -186,9 +200,11 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 	if video_codec == 'vp8':
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
+	if video_codec == 'vp9':
+		assert vp9_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
@@ -196,6 +212,9 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 		assert struct.unpack_from('I', video_encoder, 128 + 136)[0] == 4000
 
 	if video_codec == 'vp8':
+		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 4000
+
+	if video_codec == 'vp9':
 		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 4000
 
 	assert update_video_encoder_bitrate(video_codec, video_encoder, 6000)
@@ -206,10 +225,13 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 	if video_codec == 'vp8':
 		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
 
+	if video_codec == 'vp9':
+		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
+
 	destroy_video_encoder(video_codec, video_encoder)
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_decoder = create_video_decoder(video_codec)
