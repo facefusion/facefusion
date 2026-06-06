@@ -39,7 +39,6 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Audi
 
 	empty_audio_frame = numpy.empty(0)
 	audio_queue.put((empty_audio_frame, 0.0))
-	# todo: is this the correct place to destroy?
 	destroy_audio_decoder(audio_codec, audio_decoder)
 
 

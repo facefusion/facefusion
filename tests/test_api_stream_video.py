@@ -11,7 +11,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate, update_video_encoder_resolution
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -201,6 +201,33 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 	if video_codec in [ 'vp8', 'vp9' ]:
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
+
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
+def test_update_video_encoder_resolution(video_codec : VideoCodec) -> None:
+	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
+
+	if video_codec == 'av1':
+		assert struct.unpack_from('I', video_encoder, 128 + 12)[0] == 426
+
+	if video_codec == 'vp8':
+		assert struct.unpack_from('I', video_encoder, 64 + 12)[0] == 426
+
+	if video_codec == 'vp9':
+		assert struct.unpack_from('I', video_encoder, 64 + 12)[0] == 426
+
+	assert update_video_encoder_resolution(video_codec, video_encoder, (320, 180))
+
+	if video_codec == 'av1':
+		assert struct.unpack_from('I', video_encoder, 128 + 12)[0] == 320
+
+	if video_codec == 'vp8':
+		assert struct.unpack_from('I', video_encoder, 64 + 12)[0] == 320
+
+	if video_codec == 'vp9':
+		assert struct.unpack_from('I', video_encoder, 64 + 12)[0] == 320
+
+	destroy_video_encoder(video_codec, video_encoder)
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])

@@ -66,6 +66,17 @@ def collect(aom_encoder : AomEncoder) -> bytes:
 	return bytes().join(output_parts)
 
 
+def update_resolution(aom_encoder : AomEncoder, frame_resolution : Resolution) -> bool:
+	aom_library = aom_module.create_static_library()
+
+	if aom_library:
+		struct.pack_into('I', aom_encoder, 128 + 12, frame_resolution[0])
+		struct.pack_into('I', aom_encoder, 128 + 16, frame_resolution[1])
+		return aom_library.aom_codec_enc_config_set(aom_encoder, ctypes.cast(ctypes.addressof(aom_encoder) + 128, ctypes.c_void_p)) == 0
+
+	return False
+
+
 def update_bitrate(aom_encoder : AomEncoder, bitrate : BitRate) -> bool:
 	aom_library = aom_module.create_static_library()
 

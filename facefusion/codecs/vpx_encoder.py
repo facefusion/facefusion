@@ -76,6 +76,17 @@ def collect(vpx_encoder : VpxEncoder) -> bytes:
 	return bytes().join(output_parts)
 
 
+def update_resolution(vpx_encoder : VpxEncoder, frame_resolution : Resolution) -> bool:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		struct.pack_into('I', vpx_encoder, 64 + 12, frame_resolution[0])
+		struct.pack_into('I', vpx_encoder, 64 + 16, frame_resolution[1])
+		return vpx_library.vpx_codec_enc_config_set(vpx_encoder, ctypes.cast(ctypes.addressof(vpx_encoder) + 64, ctypes.c_void_p)) == 0
+
+	return False
+
+
 def update_bitrate(vpx_encoder : VpxEncoder, bitrate : BitRate) -> bool:
 	vpx_library = vpx_module.create_static_library()
 
