@@ -165,7 +165,10 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	if video_codec == 'av1':
 		video_encoder = aom_encoder.create((426, 226), 1000, 1, 0)
 		encode_buffer = aom_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
-	if video_codec in [ 'vp8', 'vp9' ]:
+	if video_codec == 'vp8':
+		video_encoder = vpx_encoder.create(video_codec, (426, 226), 1000, 1, 0)
+		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
+	if video_codec == 'vp9':
 		video_encoder = vpx_encoder.create(video_codec, (426, 226), 1000, 1, 0)
 		encode_buffer = vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 0)
 
