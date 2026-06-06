@@ -3,15 +3,20 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import VpxDecoder, VpxPointer
+from facefusion.types import VideoCodec, VpxDecoder, VpxPointer
 
 
-def create(thread_count : int) -> Optional[VpxDecoder]:
+def create(video_codec : VideoCodec, thread_count : int) -> Optional[VpxDecoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
 		vpx_decoder = ctypes.create_string_buffer(64)
-		vpx_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_dx_algo')
+		vpx_algo = 'vpx_codec_vp8_dx_algo'
+
+		if video_codec == 'vp9':
+			vpx_algo = 'vpx_codec_vp9_dx_algo'
+
+		vpx_codec = ctypes.c_void_p.in_dll(vpx_library, vpx_algo)
 		config_buffer = ctypes.create_string_buffer(128)
 
 		struct.pack_into('I', config_buffer, 0, thread_count)
