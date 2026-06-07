@@ -3,7 +3,7 @@ import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import numpy
@@ -12,59 +12,55 @@ from facefusion import rtc, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
-from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VideoFuture, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
+from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
-# todo: why is this called encode_loop, is there a decode loop as well?
-def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[VideoPack]) -> None:
+def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	# todo video_future, video_time, video_buffer, video_resolution
-	output_future, output_video_time = video_queue.get()
-	output_buffer, output_resolution = output_future.result()
+	video_time, video_future = video_queue.get()
+	video_buffer, video_resolution = video_future.result()
 
-	if output_buffer:
-		temp_resolution : Resolution = output_resolution
+	if video_buffer:
+		temp_resolution : Resolution = video_resolution
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-		temp_video_time = output_video_time
+		temp_video_time = video_time
 		frame_index = 0
 
-		while output_buffer:
+		while video_buffer:
 			encode_start = time.monotonic()
 			sender_bitrate = calculate_sender_bitrate(rtc_peer, temp_bitrate)
 
-			if output_resolution[0] - temp_resolution[0] or output_resolution[1] - temp_resolution[1]:
-				temp_resolution = output_resolution
+			if video_resolution[0] - temp_resolution[0] or video_resolution[1] - temp_resolution[1]:
+				temp_resolution = video_resolution
 				update_video_encoder_resolution(video_codec, video_encoder, temp_resolution)
 
 			if sender_bitrate - temp_bitrate:
 				temp_bitrate = sender_bitrate
 				update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate)
 
-			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_buffer, temp_resolution, frame_index)
+			output_video_buffer = encode_video_frame(video_codec, video_encoder, video_buffer, temp_resolution, frame_index)
 
-			# todo: video buffer
 			if output_video_buffer:
-				video_timestamp = int(output_video_time * 90000)
+				video_timestamp = int(video_time * 90000)
 				rtc.send_video(rtc_peer, output_video_buffer, video_timestamp)
 
 			encode_time = time.monotonic() - encode_start
-			frame_interval = output_video_time - temp_video_time
-			temp_video_time = output_video_time
+			frame_interval = video_time - temp_video_time
+			temp_video_time = video_time
 
 			receiver_bitrate = calculate_receiver_bitrate(rtc_peer, encode_time, frame_interval)
 			rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
 			frame_index += 1
 
-			#todo video_future, video_time, video_resolution
-			output_future, output_video_time = video_queue.get()
-			output_buffer, output_resolution = output_future.result()
+			video_time, video_future = video_queue.get()
+			video_buffer, video_resolution = video_future.result()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
 
 
-def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[VideoPack], video_executor : ThreadPoolExecutor) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]], video_executor : ThreadPoolExecutor) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
@@ -73,13 +69,13 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Vide
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
 
-	empty_future : VideoFuture = Future()
+	empty_future : Future[Tuple[bytes, Resolution]] = Future()
 	empty_future.set_result((bytes(), (0, 0)))
-	video_queue.put((empty_future, 0.0))
+	video_queue.put((0.0, empty_future))
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def process_video_frame(vision_frame : VisionFrame) -> tuple[bytes, Resolution]:
+def process_video_frame(vision_frame : VisionFrame) -> Tuple[bytes, Resolution]:
 	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), vision_frame)
 	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 	output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -103,10 +99,10 @@ def calculate_receiver_bitrate(rtc_peer : RtcPeer, encode_time : float, frame_in
 def calculate_sender_bitrate(rtc_peer : RtcPeer, bitrate : BitRate) -> BitRate:
 	min_bitrate : BitRate = 500
 	max_bitrate : BitRate = 8000
-	__bitrate__ : BitRate = rtc_peer.get('sender_bitrate').value
+	peer_bitrate : BitRate = rtc_peer.get('sender_bitrate').value
 
-	if __bitrate__ > 0:
-		bitrate = max(min_bitrate, min(max_bitrate, __bitrate__))
+	if peer_bitrate > 0:
+		bitrate = max(min_bitrate, min(max_bitrate, peer_bitrate))
 
 	return bitrate
 
@@ -209,4 +205,4 @@ def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 			video_queue.get_nowait()
 
 		video_future = video_executor.submit(process_video_frame, vision_frame)
-		video_queue.put((video_future, time.monotonic()))
+		video_queue.put((time.monotonic(), video_future))

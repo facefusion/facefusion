@@ -1,9 +1,9 @@
 import ctypes
 import threading
 from collections.abc import AsyncIterator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from queue import Queue
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import numpy
@@ -14,7 +14,7 @@ from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.audio import create_empty_audio_frame
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, AudioPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame
+from facefusion.types import AudioCodec, AudioFrame, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 async def process_image(websocket : WebSocket) -> None:
@@ -106,8 +106,9 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	execution_thread_count = state_manager.get_item('execution_thread_count')
-	video_queue : Queue[VideoPack] = Queue(maxsize = execution_thread_count)
-	audio_queue : Queue[AudioPack] = Queue(maxsize = execution_thread_count * 10)
+	#todo: is bytes, Resolution not a XXXPointer type
+	video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]] = Queue(maxsize = execution_thread_count)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)
 	video_executor = ThreadPoolExecutor(max_workers = execution_thread_count)
 
 	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue, video_executor), daemon = True)

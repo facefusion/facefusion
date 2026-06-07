@@ -1,6 +1,5 @@
 import ctypes
 from collections import namedtuple
-from concurrent.futures import Future
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
@@ -320,11 +319,6 @@ RtcPeer = TypedDict('RtcPeer',
 	'receiver_bitrate': ctypes.c_uint
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
-
-VideoFuture : TypeAlias = Future[tuple[bytes, Resolution]]
-#todo: for me this is no longer a VideoPack cause it is too different from AudioPack - eventual kill the XXXPack convention
-VideoPack : TypeAlias = tuple[VideoFuture, float]
-AudioPack : TypeAlias = tuple[AudioFrame, float]
 
 SdpAudioMedia = TypedDict('SdpAudioMedia',
 {
