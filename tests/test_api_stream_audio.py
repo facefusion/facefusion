@@ -101,10 +101,9 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			audio_receiver_thread.join(timeout = 5.0)
 
-	# todo: buffer frame or output_buffer or output_audio_buffer? follow codebase naming
-	_, buffer_frame = audio_queue.get_nowait()
+	_, temp_audio_frame = audio_queue.get_nowait()
 
-	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
+	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())
 
 
 def test_handle_audio_frame() -> None:
@@ -116,7 +115,6 @@ def test_handle_audio_frame() -> None:
 	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
 		handle_audio_frame('opus', audio_decoder_mock, audio_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
 
-	# todo: buffer frame or output_buffer or output_audio_buffer? follow codebase naming
-	_, buffer_frame = audio_queue.get_nowait()
+	_, temp_audio_frame = audio_queue.get_nowait()
 
-	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
+	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())

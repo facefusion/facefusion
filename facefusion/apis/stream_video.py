@@ -39,11 +39,11 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[float, F
 				temp_bitrate = sender_bitrate
 				update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate)
 
-			output_video_buffer = encode_video_frame(video_codec, video_encoder, video_buffer, temp_resolution, frame_index)
+			__video_buffer__ = encode_video_frame(video_codec, video_encoder, video_buffer, temp_resolution, frame_index)
 
-			if output_video_buffer:
+			if __video_buffer__:
 				video_timestamp = int(video_time * 90000)
-				rtc.send_video(rtc_peer, output_video_buffer, video_timestamp)
+				rtc.send_video(rtc_peer, __video_buffer__, video_timestamp)
 
 			encode_time = time.monotonic() - encode_start
 			frame_interval = video_time - temp_video_time
@@ -75,11 +75,11 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def process_video_frame(vision_frame : VisionFrame) -> Tuple[bytes, Resolution]:
-	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), vision_frame)
+def process_video_frame(input_vision_frame : VisionFrame) -> Tuple[bytes, Resolution]:
+	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), input_vision_frame)
 	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
-	output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	return output_vision_buffer, output_resolution
+	output_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	return output_buffer, output_resolution
 
 
 def calculate_receiver_bitrate(rtc_peer : RtcPeer, encode_time : float, frame_interval : float) -> BitRate:

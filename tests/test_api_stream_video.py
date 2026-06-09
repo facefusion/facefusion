@@ -121,16 +121,15 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 					datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
 					datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 					video_receiver_thread.join(timeout = 5.0)
-					# todo: video_future? follow codebase naming
-					_, output_future = video_queue.get_nowait()
+					_, video_future = video_queue.get_nowait()
 
-	output_vision_buffer, _ = output_future.result()
+	video_buffer, _ = video_future.result()
 
 	if is_linux() or is_windows():
-		assert create_hash(output_vision_buffer) == 'a17439db'
+		assert create_hash(video_buffer) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(output_vision_buffer) == '38d00e2a'
+		assert create_hash(video_buffer) == '38d00e2a'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -269,13 +268,12 @@ def test_handle_video_frame(video_codec : VideoCodec) -> None:
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			with patch('facefusion.apis.stream_video.process_video_frame', return_value = (video_frame.tobytes(), (426, 226))):
 				handle_video_frame(video_codec, video_decoder, video_queue, executor, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
-				# todo: video_future? follow codebase naming
-				_, output_future = video_queue.get_nowait()
+				_, video_future = video_queue.get_nowait()
 
-	output_vision_buffer, _ = output_future.result()
+	video_buffer, _ = video_future.result()
 
 	if is_linux() or is_windows():
-		assert create_hash(output_vision_buffer) == 'a17439db'
+		assert create_hash(video_buffer) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(output_vision_buffer) == '38d00e2a'
+		assert create_hash(video_buffer) == '38d00e2a'
