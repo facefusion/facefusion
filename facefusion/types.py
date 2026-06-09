@@ -320,9 +320,6 @@ RtcPeer = TypedDict('RtcPeer',
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
-VideoPack : TypeAlias = tuple[VisionFrame, float]
-AudioPack : TypeAlias = tuple[AudioFrame, float]
-
 SdpAudioMedia = TypedDict('SdpAudioMedia',
 {
 	'codec': AudioCodec,

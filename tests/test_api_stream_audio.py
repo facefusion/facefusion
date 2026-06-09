@@ -2,6 +2,7 @@ import ctypes
 import threading
 from functools import partial
 from queue import Queue
+from typing import Tuple
 from unittest.mock import MagicMock, patch
 
 import numpy
@@ -13,7 +14,7 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module
-from facefusion.types import AudioCodec, AudioPack, FrameHandler, RtcPeer, RtcPeerAudio
+from facefusion.types import AudioCodec, AudioFrame, FrameHandler, RtcPeer, RtcPeerAudio
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -57,9 +58,9 @@ def test_run_audio_encode_loop() -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 300)
 
-	audio_queue.put((audio_frame, 0.100))
+	audio_queue.put((0.100, audio_frame))
 
 	encoder_mock = MagicMock()
 	encoder_mock.encode.return_value = bytes([ 1 ] * 32)
@@ -68,7 +69,7 @@ def test_run_audio_encode_loop() -> None:
 		with patch('facefusion.apis.stream_audio.rtc.send_audio') as send_audio_mock:
 			audio_loop_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_queue), daemon = True)
 			audio_loop_thread.start()
-			audio_queue.put((numpy.empty(0), 0.0))
+			audio_queue.put((0.0, numpy.empty(0)))
 			audio_loop_thread.join(timeout = 5.0)
 
 	assert encoder_mock.encode.called is True
@@ -79,7 +80,7 @@ def test_run_audio_encode_loop() -> None:
 def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
-	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 300)
 
 	datachannel_mock = MagicMock()
 	ready_event = threading.Event()
@@ -100,20 +101,20 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
 			audio_receiver_thread.join(timeout = 5.0)
 
-	buffer_frame, _ = audio_queue.get_nowait()
+	_, temp_audio_frame = audio_queue.get_nowait()
 
-	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
+	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())
 
 
 def test_handle_audio_frame() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_decoder_mock = MagicMock()
-	audio_queue : Queue[AudioPack] = Queue(maxsize = 300)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 300)
 
 	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
 		handle_audio_frame('opus', audio_decoder_mock, audio_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
 
-	buffer_frame, _ = audio_queue.get_nowait()
+	_, temp_audio_frame = audio_queue.get_nowait()
 
-	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
+	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())
