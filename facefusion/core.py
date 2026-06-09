@@ -16,6 +16,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode
+from facefusion.vision import has_video_support
 from facefusion.workflows import image_to_image, image_to_video
 
 
@@ -336,7 +337,8 @@ def conditional_process() -> ErrorCode:
 
 	if is_image(state_manager.get_item('target_path')):
 		return image_to_image.process(start_time)
-	if is_video(state_manager.get_item('target_path')):
+
+	if is_video(state_manager.get_item('target_path')) and has_video_support(state_manager.get_item('target_path')):
 		return image_to_video.process(start_time)
 
 	return 0

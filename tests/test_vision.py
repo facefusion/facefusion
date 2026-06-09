@@ -5,7 +5,7 @@ import pytest
 
 from facefusion.common_helper import is_linux
 from facefusion.download import conditional_download
-from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, has_video_support, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, unpack_resolution, write_image
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -28,6 +28,8 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-frames:v', '1', get_test_example_file('target-240p-1frame.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-frames:v', '2', get_test_example_file('target-240p-2frame.mp4') ])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -65,6 +67,14 @@ def test_restrict_image_resolution() -> None:
 def test_read_video_frame() -> None:
 	assert hasattr(read_video_frame(get_test_example_file('target-240p-25fps.mp4')), '__array_interface__')
 	assert read_video_frame('invalid') is None
+
+
+@pytest.mark.skipif(os.environ.get('CI') and is_linux(), reason = 'h264 codec not present')
+def test_has_video_support() -> None:
+	assert has_video_support(get_test_example_file('target-240p.mp4')) is True
+	assert has_video_support(get_test_example_file('target-240p-1frame.mp4')) is True
+	assert has_video_support(get_test_example_file('target-240p-2frame.mp4')) is True
+	assert has_video_support('invalid') is False
 
 
 def test_count_video_frame_total() -> None:

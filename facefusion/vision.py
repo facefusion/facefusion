@@ -92,6 +92,15 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
+def has_video_support(video_path : str) -> bool:
+	video_frame_total = count_video_frame_total(video_path)
+
+	if video_frame_total > 0:
+		return bool(numpy.any(read_video_frame(video_path, 1)) or numpy.any(read_video_frame(video_path, video_frame_total // 2)) or numpy.any(read_video_frame(video_path, video_frame_total)))
+
+	return False
+
+
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
