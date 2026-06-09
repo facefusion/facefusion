@@ -200,9 +200,6 @@ def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
-	if numpy.any(vision_frame):
-		if video_queue.full():
-			video_queue.get_nowait()
-
+	if numpy.any(vision_frame) and video_queue.qsize() < video_queue.maxsize:
 		video_future = video_executor.submit(process_video_frame, vision_frame)
 		video_queue.put((time.monotonic(), video_future))
