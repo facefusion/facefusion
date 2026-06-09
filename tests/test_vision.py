@@ -28,8 +28,7 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-frames:v', '1', get_test_example_file('target-240p-1frame.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-frames:v', '2', get_test_example_file('target-240p-2frame.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libsvtav1', get_test_example_file('target-240p-av1.mp4') ])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -72,8 +71,7 @@ def test_read_video_frame() -> None:
 @pytest.mark.skipif(os.environ.get('CI') and is_linux(), reason = 'h264 codec not present')
 def test_has_video_support() -> None:
 	assert has_video_support(get_test_example_file('target-240p.mp4')) is True
-	assert has_video_support(get_test_example_file('target-240p-1frame.mp4')) is True
-	assert has_video_support(get_test_example_file('target-240p-2frame.mp4')) is True
+	assert has_video_support(get_test_example_file('target-240p-av1.mp4')) is False
 	assert has_video_support('invalid') is False
 
 
