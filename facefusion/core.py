@@ -342,5 +342,3 @@ def conditional_process() -> ErrorCode:
 		return image_to_video.process(start_time)
 
 	return 0
-
-
