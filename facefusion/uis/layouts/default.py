@@ -10,12 +10,6 @@ from facefusion.uis.components import about, age_modifier_options, background_re
 
 
 def pre_check() -> bool:
-	common_modules = [ facefusion.face_classifier, facefusion.face_detector, facefusion.face_landmarker, facefusion.face_masker, facefusion.face_recognizer ]
-
-	for common_module in common_modules:
-		if not common_module.pre_check():
-			return False
-
 	return True
 
 

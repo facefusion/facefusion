@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, translator, voice_extractor
+from facefusion import state_manager, translator
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, filter_image_paths, has_audio, has_image
 from facefusion.uis.core import register_ui_component
@@ -55,9 +55,6 @@ def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
 		source_audio_path = get_first(filter_audio_paths(file_names))
 		source_image_path = get_first(filter_image_paths(file_names))
 		state_manager.set_item('source_paths', file_names)
-
-		if has_source_audio:
-			voice_extractor.pre_check()
 
 		return gradio.Audio(value = source_audio_path, visible = has_source_audio), gradio.Image(value = source_image_path, visible = has_source_image)
 
