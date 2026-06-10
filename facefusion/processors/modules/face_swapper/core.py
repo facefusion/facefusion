@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
 from typing import List, Optional, Tuple
 
 import cv2
@@ -541,9 +542,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -580,16 +589,14 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		get_static_model_initializer.cache_clear()
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
-		face_classifier.clear_inference_pool()
-		face_detector.clear_inference_pool()
-		face_landmarker.clear_inference_pool()
-		face_masker.clear_inference_pool()
-		face_recognizer.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
 def swap_face(source_face : Face, target_face : Face, source_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
