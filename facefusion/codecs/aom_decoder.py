@@ -3,7 +3,7 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import aom as aom_module
-from facefusion.types import AomDecoder, AomPointer
+from facefusion.types import AomDecoder, Buffer, BufferPack
 
 
 def create(thread_count : int) -> Optional[AomDecoder]:
@@ -23,7 +23,7 @@ def create(thread_count : int) -> Optional[AomDecoder]:
 	return None
 
 
-def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointer]:
+def decode(aom_decoder : AomDecoder, input_buffer : Buffer) -> Optional[BufferPack]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library and input_buffer:
@@ -37,7 +37,7 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 				frame_width = ctypes.c_uint.from_address(address + 28).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 32).value & ~1
 
-				return AomPointer(
+				return BufferPack(
 					buffer = collect(address, frame_width, frame_height),
 					resolution = (frame_width, frame_height)
 				)
@@ -45,7 +45,7 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 	return None
 
 
-def collect(address : int, frame_width : int, frame_height : int) -> bytes:
+def collect(address : int, frame_width : int, frame_height : int) -> Buffer:
 	output_parts = []
 
 	for index in range(3):

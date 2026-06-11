@@ -76,7 +76,6 @@ Matrix : TypeAlias = NDArray[Any]
 Anchors : TypeAlias = NDArray[Any]
 Translation : TypeAlias = NDArray[Any]
 
-AudioBuffer : TypeAlias = bytes
 Audio : TypeAlias = NDArray[Any]
 AudioChunk : TypeAlias = NDArray[Any]
 AudioFrame : TypeAlias = NDArray[Any]
@@ -90,6 +89,7 @@ BitRate : TypeAlias = int
 SampleRate : TypeAlias = int
 Fps : TypeAlias = float
 Duration : TypeAlias = float
+Time : TypeAlias = float
 Color : TypeAlias = Tuple[int, int, int, int]
 Padding : TypeAlias = Tuple[int, int, int, int]
 Margin : TypeAlias = Tuple[int, int, int, int]
@@ -111,14 +111,10 @@ OpusDecoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
-AomPointer = TypedDict('AomPointer',
+Buffer : TypeAlias = bytes
+BufferPack = TypedDict('BufferPack',
 {
-	'buffer' : bytes,
-	'resolution' : Resolution
-})
-VpxPointer = TypedDict('VpxPointer',
-{
-	'buffer' : bytes,
+	'buffer' : Buffer,
 	'resolution' : Resolution
 })
 

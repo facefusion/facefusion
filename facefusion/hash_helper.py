@@ -3,10 +3,11 @@ import zlib
 from typing import Optional
 
 from facefusion.filesystem import get_file_name, is_file
+from facefusion.types import Buffer
 
 
-def create_hash(content : bytes) -> str:
-	return format(zlib.crc32(content), '08x')
+def create_hash(buffer : Buffer) -> str:
+	return format(zlib.crc32(buffer), '08x')
 
 
 def validate_hash(validate_path : str) -> bool:
