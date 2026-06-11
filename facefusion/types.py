@@ -13,6 +13,10 @@ Angle : TypeAlias = int
 Detection : TypeAlias = NDArray[Any]
 Prediction : TypeAlias = NDArray[Any]
 
+Measurement : TypeAlias = NDArray[Any]
+Mean : TypeAlias = NDArray[Any]
+Covariance : TypeAlias = NDArray[Any]
+
 BoundingBox : TypeAlias = NDArray[Any]
 FaceLandmark5 : TypeAlias = NDArray[Any]
 FaceLandmark68 : TypeAlias = NDArray[Any]
@@ -50,6 +54,16 @@ Face = namedtuple('Face',
 	'race'
 ])
 FaceStore : TypeAlias = Dict[str, List[Face]]
+
+Track = namedtuple('Track',
+[
+	'track_id',
+	'mean',
+	'covariance',
+	'state',
+	'hit_streak',
+	'time_since_update'
+])
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
@@ -120,6 +134,7 @@ FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
+TrackState = Literal['tracked', 'lost']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceOccluderModel = Literal['many', 'xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
