@@ -2,7 +2,7 @@ import ctypes
 from typing import Optional
 
 from facefusion.libraries import opus as opus_module
-from facefusion.types import OpusEncoder
+from facefusion.types import Buffer, OpusEncoder
 
 
 def create(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
@@ -14,7 +14,7 @@ def create(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
 	return None
 
 
-def encode(opus_encoder : OpusEncoder, input_buffer : bytes, frame_size : int) -> bytes:
+def encode(opus_encoder : OpusEncoder, input_buffer : Buffer, frame_size : int) -> Buffer:
 	opus_library = opus_module.create_static_library()
 	output_buffer = bytes()
 

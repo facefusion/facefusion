@@ -9,10 +9,10 @@ import numpy
 from facefusion import rtc
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.codecs import opus_decoder, opus_encoder
-from facefusion.types import AudioCodec, AudioFrame, OpusDecoder, RtcPeer, RtcPeerAudio
+from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPeer, RtcPeerAudio, Time
 
 
-def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[float, AudioFrame]]) -> None:
+def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
 	temp_audio_time, temp_audio_frame = audio_queue.get()
 	audio_encoder = opus_encoder.create(48000, 2)
 
@@ -28,7 +28,7 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[float, A
 	opus_encoder.destroy(audio_encoder)
 
 
-def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tuple[float, AudioFrame]]) -> None:
+def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
 	audio_track = rtc_peer_audio.get('receiver_track')
 	audio_codec = rtc_peer_audio.get('codec')
 	audio_decoder = create_audio_decoder(audio_codec)
@@ -42,7 +42,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tupl
 	destroy_audio_decoder(audio_codec, audio_decoder)
 
 
-def decode_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, input_buffer : bytes) -> Optional[bytes]:
+def decode_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, input_buffer : Buffer) -> Optional[Buffer]:
 	if audio_codec == 'opus':
 		return opus_decoder.decode(audio_decoder, input_buffer, 960, 2)
 	return None
@@ -59,8 +59,7 @@ def destroy_audio_decoder(audio_codec : AudioCodec, audio_decoder : OpusDecoder)
 		opus_decoder.destroy(audio_decoder)
 
 
-#todo: Alias Time for float
-def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[float, AudioFrame]], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
+def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	audio_buffer = ctypes.string_at(data, size)
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 

@@ -12,13 +12,15 @@ from facefusion import rtc, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
-from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeer, RtcPeerVideo, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
+from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
-def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]]) -> None:
+def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
 	video_time, video_future = video_queue.get()
-	video_buffer, video_resolution = video_future.result()
+	video_pack = video_future.result()
+	video_buffer = video_pack.get('buffer')
+	video_resolution = video_pack.get('resolution')
 
 	if video_buffer:
 		temp_resolution : Resolution = video_resolution
@@ -54,13 +56,15 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[float, F
 			frame_index += 1
 
 			video_time, video_future = video_queue.get()
-			video_buffer, video_resolution = video_future.result()
+			video_pack = video_future.result()
+			video_buffer = video_pack.get('buffer')
+			video_resolution = video_pack.get('resolution')
 
 		destroy_video_encoder(video_codec, video_encoder)
 		rtc.clear_bitrate(rtc_peer)
 
 
-def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]], video_executor : ThreadPoolExecutor) -> None:
+def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
@@ -69,17 +73,17 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
 
-	empty_future : Future[Tuple[bytes, Resolution]] = Future()
-	empty_future.set_result((bytes(), (0, 0)))
+	empty_future : Future[BufferPack] = Future()
+	empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
 	video_queue.put((0.0, empty_future))
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def process_video_frame(input_vision_frame : VisionFrame) -> Tuple[bytes, Resolution]:
+def process_video_frame(input_vision_frame : VisionFrame) -> BufferPack:
 	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), input_vision_frame)
 	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 	output_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	return output_buffer, output_resolution
+	return BufferPack(buffer = output_buffer, resolution = output_resolution)
 
 
 def calculate_receiver_bitrate(rtc_peer : RtcPeer, encode_time : float, frame_interval : float) -> BitRate:
@@ -107,7 +111,7 @@ def calculate_sender_bitrate(rtc_peer : RtcPeer, bitrate : BitRate) -> BitRate:
 	return bitrate
 
 
-def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
+def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : Buffer) -> Optional[VisionFrame]:
 	if video_codec == 'av1':
 		aom_pointer = aom_decoder.decode(video_decoder, input_buffer)
 
@@ -123,7 +127,7 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 	return None
 
 
-def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
+def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, input_buffer : Buffer, frame_resolution : Resolution, frame_index : int) -> Buffer:
 	if video_codec == 'av1':
 		return aom_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
 
@@ -133,7 +137,7 @@ def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | Ao
 	return bytes()
 
 
-def normalize_vision_frame(frame_pointer : AomPointer | VpxPointer) -> VisionFrame:
+def normalize_vision_frame(frame_pointer : BufferPack) -> VisionFrame:
 	frame_width, frame_height = frame_pointer.get('resolution')
 	vision_frame = numpy.frombuffer(frame_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
 	return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
@@ -196,7 +200,7 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 
 
 #todo: we can remove the dead args or pass audio buffer
-def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[float, Future[Tuple[bytes, Resolution]]]], video_executor : ThreadPoolExecutor, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
+def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
 	video_buffer = ctypes.string_at(data, size)
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 

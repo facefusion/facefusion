@@ -2,7 +2,7 @@ import ctypes
 from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, BitRate, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+from facefusion.types import AudioCodec, BitRate, Buffer, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -47,7 +47,7 @@ def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffe
 	return None
 
 
-def send_video(rtc_peer : RtcPeer, video_buffer : bytes, video_timestamp : int) -> None:
+def send_video(rtc_peer : RtcPeer, video_buffer : Buffer, video_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peer.get('video'):
@@ -61,7 +61,7 @@ def send_video(rtc_peer : RtcPeer, video_buffer : bytes, video_timestamp : int) 
 	return None
 
 
-def send_audio(rtc_peer : RtcPeer, audio_buffer : bytes, audio_timestamp : int) -> None:
+def send_audio(rtc_peer : RtcPeer, audio_buffer : Buffer, audio_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peer.get('audio'):

@@ -3,7 +3,7 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import VpxDecoder, VpxPointer, VxpVideoCodec
+from facefusion.types import Buffer, BufferPack, VpxDecoder, VxpVideoCodec
 
 
 def create(video_codec : VxpVideoCodec, thread_count : int) -> Optional[VpxDecoder]:
@@ -27,7 +27,7 @@ def create(video_codec : VxpVideoCodec, thread_count : int) -> Optional[VpxDecod
 	return None
 
 
-def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointer]:
+def decode(vpx_decoder : VpxDecoder, input_buffer : Buffer) -> Optional[BufferPack]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library and input_buffer:
@@ -41,7 +41,7 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 				frame_width = ctypes.c_uint.from_address(address + 24).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 28).value & ~1
 
-				return VpxPointer(
+				return BufferPack(
 					buffer = collect(address, frame_width, frame_height),
 					resolution = (frame_width, frame_height)
 				)
@@ -49,7 +49,7 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 	return None
 
 
-def collect(address : int, frame_width : int, frame_height : int) -> bytes:
+def collect(address : int, frame_width : int, frame_height : int) -> Buffer:
 	output_parts = []
 
 	for index in range(3):

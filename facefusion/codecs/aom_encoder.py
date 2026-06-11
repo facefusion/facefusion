@@ -3,7 +3,7 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import aom as aom_module
-from facefusion.types import AomEncoder, BitRate, Resolution
+from facefusion.types import AomEncoder, BitRate, Buffer, Resolution
 
 
 def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[AomEncoder]:
@@ -34,7 +34,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 	return None
 
 
-def encode(aom_encoder : AomEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
+def encode(aom_encoder : AomEncoder, input_buffer : Buffer, frame_resolution : Resolution, frame_index : int) -> Buffer:
 	aom_library = aom_module.create_static_library()
 	output_buffer = bytes()
 
@@ -48,7 +48,7 @@ def encode(aom_encoder : AomEncoder, input_buffer : bytes, frame_resolution : Re
 	return output_buffer
 
 
-def collect(aom_encoder : AomEncoder) -> bytes:
+def collect(aom_encoder : AomEncoder) -> Buffer:
 	aom_library = aom_module.create_static_library()
 	output_parts = []
 

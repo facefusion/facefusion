@@ -14,7 +14,7 @@ from facefusion.content_analyser import analyse_stream
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, Fps, StreamMode, VisionFrame
+from facefusion.types import AudioFrame, Buffer, Fps, StreamMode, VisionFrame
 from facefusion.vision import extract_vision_mask, read_static_images
 
 
@@ -69,7 +69,7 @@ def process_frame(stream_audio_frame : AudioFrame, stream_vision_frame : VisionF
 	return temp_vision_frame
 
 
-def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
+def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[Buffer]:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(stream_resolution),

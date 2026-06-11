@@ -3,7 +3,7 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import BitRate, Resolution, VpxEncoder, VxpVideoCodec
+from facefusion.types import BitRate, Buffer, Resolution, VpxEncoder, VxpVideoCodec
 
 
 def create(video_codec : VxpVideoCodec, frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
@@ -44,7 +44,7 @@ def create(video_codec : VxpVideoCodec, frame_resolution : Resolution, bitrate :
 	return None
 
 
-def encode(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
+def encode(vpx_encoder : VpxEncoder, input_buffer : Buffer, frame_resolution : Resolution, frame_index : int) -> Buffer:
 	vpx_library = vpx_module.create_static_library()
 	output_buffer = bytes()
 
@@ -58,7 +58,7 @@ def encode(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Re
 	return output_buffer
 
 
-def collect(vpx_encoder : VpxEncoder) -> bytes:
+def collect(vpx_encoder : VpxEncoder) -> Buffer:
 	vpx_library = vpx_module.create_static_library()
 	output_parts = []
 

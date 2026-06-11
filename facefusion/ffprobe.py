@@ -2,10 +2,10 @@ import subprocess
 from typing import Dict, List
 
 from facefusion import ffprobe_builder
-from facefusion.types import AudioMetadata, Command, Fps, VideoMetadata
+from facefusion.types import AudioMetadata, Buffer, Command, Fps, VideoMetadata
 
 
-def run_ffprobe(commands : List[Command]) -> subprocess.Popen[bytes]:
+def run_ffprobe(commands : List[Command]) -> subprocess.Popen[Buffer]:
 	commands = ffprobe_builder.run(commands)
 	return subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
