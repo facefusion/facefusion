@@ -26,6 +26,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_landmarker_score', args.get('face_landmarker_score'))
 	apply_state_item('face_selector_mode', args.get('face_selector_mode'))
 	apply_state_item('face_selector_order', args.get('face_selector_order'))
+	apply_state_item('face_tracking', args.get('face_tracking'))
 	apply_state_item('face_selector_age_start', args.get('face_selector_age_start'))
 	apply_state_item('face_selector_age_end', args.get('face_selector_age_end'))
 	apply_state_item('face_selector_gender', args.get('face_selector_gender'))

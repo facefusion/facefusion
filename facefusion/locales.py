@@ -117,6 +117,7 @@ LOCALES : Locales =\
 			'face_landmarker_score': 'filter the detected face landmarks based on the confidence score',
 			'face_selector_mode': 'use reference based tracking or simple matching',
 			'face_selector_order': 'specify the order of the detected faces',
+			'face_tracking': 'keep a persistent identity per face across frames in many mode',
 			'face_selector_age_start': 'filter the detected faces based on the starting age',
 			'face_selector_age_end': 'filter the detected faces based on the ending age',
 			'face_selector_gender': 'filter the detected faces based on their gender',

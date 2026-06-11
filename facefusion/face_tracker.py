@@ -1,13 +1,15 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 import scipy.linalg
 import scipy.optimize
 
-from facefusion.types import BoundingBox, Covariance, Mean, Measurement, Track
+from facefusion.hash_helper import create_hash
+from facefusion.types import BoundingBox, Covariance, Face, Mean, Measurement, Track, TrackStore, VisionFrame
 
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
+TRACK_STORE : TrackStore = {}
 
 
 def create_motion_matrix() -> numpy.ndarray:
@@ -171,6 +173,17 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], iou_threshold : 
 	return track_ids
 
 
+def assign_frame_tracks(vision_frame : VisionFrame, faces : List[Face]) -> None:
+	detection_bounding_boxes = [ face.bounding_box for face in faces ]
+	track_ids = update_tracks(detection_bounding_boxes)
+	TRACK_STORE[create_hash(vision_frame.tobytes())] = list(zip(track_ids, detection_bounding_boxes))
+
+
+def lookup_frame_tracks(vision_frame : VisionFrame) -> Optional[List[Tuple[int, BoundingBox]]]:
+	return TRACK_STORE.get(create_hash(vision_frame.tobytes()))
+
+
 def clear_tracks() -> None:
+	TRACK_STORE.clear()
 	TRACK_STATE.clear()
 	TRACK_ID_COUNTER[0] = 0

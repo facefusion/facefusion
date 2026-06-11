@@ -122,6 +122,7 @@ def create_face_selector_program() -> ArgumentParser:
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = translator.get('help.face_selector_mode'), default = config.get_str_value('face_selector', 'face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
 	group_face_selector.add_argument('--face-selector-order', help = translator.get('help.face_selector_order'), default = config.get_str_value('face_selector', 'face_selector_order', 'large-small'), choices = facefusion.choices.face_selector_orders)
+	group_face_selector.add_argument('--face-tracking', help = translator.get('help.face_tracking'), action = 'store_true', default = config.get_bool_value('face_selector', 'face_tracking'))
 	group_face_selector.add_argument('--face-selector-age-start', help = translator.get('help.face_selector_age_start'), type = int, default = config.get_int_value('face_selector', 'face_selector_age_start'), choices = facefusion.choices.face_selector_age_range, metavar = create_int_metavar(facefusion.choices.face_selector_age_range))
 	group_face_selector.add_argument('--face-selector-age-end', help = translator.get('help.face_selector_age_end'), type = int, default = config.get_int_value('face_selector', 'face_selector_age_end'), choices = facefusion.choices.face_selector_age_range, metavar = create_int_metavar(facefusion.choices.face_selector_age_range))
 	group_face_selector.add_argument('--face-selector-gender', help = translator.get('help.face_selector_gender'), default = config.get_str_value('face_selector', 'face_selector_gender'), choices = facefusion.choices.face_selector_genders)
@@ -129,7 +130,7 @@ def create_face_selector_program() -> ArgumentParser:
 	group_face_selector.add_argument('--reference-face-position', help = translator.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector', 'reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = translator.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'), choices = facefusion.choices.reference_face_distance_range, metavar = create_float_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = translator.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector', 'reference_frame_number', '0'))
-	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
+	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_tracking', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
 	return program
 
 

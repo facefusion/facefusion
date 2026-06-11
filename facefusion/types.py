@@ -64,6 +64,7 @@ Track = namedtuple('Track',
 	'hit_streak',
 	'time_since_update'
 ])
+TrackStore : TypeAlias = Dict[str, List[Tuple[int, BoundingBox]]]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
@@ -299,6 +300,7 @@ StateKey = Literal\
 	'face_landmarker_score',
 	'face_selector_mode',
 	'face_selector_order',
+	'face_tracking',
 	'face_selector_gender',
 	'face_selector_race',
 	'face_selector_age_start',
@@ -368,6 +370,7 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
+	'face_tracking' : bool,
 	'face_selector_race' : FaceSelectorRace,
 	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
