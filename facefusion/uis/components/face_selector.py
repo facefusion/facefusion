@@ -19,6 +19,7 @@ from facefusion.vision import fit_cover_frame, read_static_image, read_static_im
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
+FACE_TRACKING_CHECKBOX : Optional[gradio.Checkbox] = None
 FACE_SELECTOR_GENDER_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_RACE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_AGE_RANGE_SLIDER : Optional[RangeSlider] = None
@@ -29,6 +30,7 @@ REFERENCE_FACE_DISTANCE_SLIDER : Optional[gradio.Slider] = None
 def render() -> None:
 	global FACE_SELECTOR_MODE_DROPDOWN
 	global FACE_SELECTOR_ORDER_DROPDOWN
+	global FACE_TRACKING_CHECKBOX
 	global FACE_SELECTOR_GENDER_DROPDOWN
 	global FACE_SELECTOR_RACE_DROPDOWN
 	global FACE_SELECTOR_AGE_RANGE_SLIDER
@@ -84,6 +86,11 @@ def render() -> None:
 				value = (face_selector_age_start, face_selector_age_end),
 				step = calculate_int_step(facefusion.choices.face_selector_age_range)
 			)
+		with gradio.Row():
+			FACE_TRACKING_CHECKBOX = gradio.Checkbox(
+				label = translator.get('uis.face_tracking_checkbox'),
+				value = state_manager.get_item('face_tracking')
+			)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = translator.get('uis.reference_face_distance_slider'),
 		value = state_manager.get_item('reference_face_distance'),
@@ -94,6 +101,7 @@ def render() -> None:
 	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)
 	register_ui_component('face_selector_order_dropdown', FACE_SELECTOR_ORDER_DROPDOWN)
+	register_ui_component('face_tracking_checkbox', FACE_TRACKING_CHECKBOX)
 	register_ui_component('face_selector_gender_dropdown', FACE_SELECTOR_GENDER_DROPDOWN)
 	register_ui_component('face_selector_race_dropdown', FACE_SELECTOR_RACE_DROPDOWN)
 	register_ui_component('face_selector_age_range_slider', FACE_SELECTOR_AGE_RANGE_SLIDER)
@@ -104,6 +112,7 @@ def render() -> None:
 def listen() -> None:
 	FACE_SELECTOR_MODE_DROPDOWN.change(update_face_selector_mode, inputs = FACE_SELECTOR_MODE_DROPDOWN, outputs = [ REFERENCE_FACE_POSITION_GALLERY, REFERENCE_FACE_DISTANCE_SLIDER ])
 	FACE_SELECTOR_ORDER_DROPDOWN.change(update_face_selector_order, inputs = FACE_SELECTOR_ORDER_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
+	FACE_TRACKING_CHECKBOX.change(update_face_tracking, inputs = FACE_TRACKING_CHECKBOX)
 	FACE_SELECTOR_GENDER_DROPDOWN.change(update_face_selector_gender, inputs = FACE_SELECTOR_GENDER_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	FACE_SELECTOR_RACE_DROPDOWN.change(update_face_selector_race, inputs = FACE_SELECTOR_RACE_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	FACE_SELECTOR_AGE_RANGE_SLIDER.release(update_face_selector_age_range, inputs = FACE_SELECTOR_AGE_RANGE_SLIDER, outputs = REFERENCE_FACE_POSITION_GALLERY)
@@ -155,6 +164,10 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradio.Gallery:
 	state_manager.set_item('face_selector_order', convert_str_none(face_analyser_order))
 	return update_reference_position_gallery()
+
+
+def update_face_tracking(face_tracking : bool) -> None:
+	state_manager.set_item('face_tracking', face_tracking)
 
 
 def update_face_selector_gender(face_selector_gender : FaceSelectorGender) -> gradio.Gallery:

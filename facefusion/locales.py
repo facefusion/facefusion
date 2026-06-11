@@ -223,6 +223,7 @@ LOCALES : Locales =\
 			'face_selector_gender_dropdown': 'FACE SELECTOR GENDER',
 			'face_selector_mode_dropdown': 'FACE SELECTOR MODE',
 			'face_selector_order_dropdown': 'FACE SELECTOR ORDER',
+			'face_tracking_checkbox': 'FACE TRACKING',
 			'face_selector_race_dropdown': 'FACE SELECTOR RACE',
 			'face_occluder_model_dropdown': 'FACE OCCLUDER MODEL',
 			'face_parser_model_dropdown': 'FACE PARSER MODEL',
