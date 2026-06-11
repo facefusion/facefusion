@@ -62,7 +62,8 @@ Track = namedtuple('Track',
 	'covariance',
 	'state',
 	'hit_streak',
-	'time_since_update'
+	'time_since_update',
+	'embedding'
 ])
 TrackStore : TypeAlias = Dict[str, List[Tuple[int, BoundingBox]]]
 

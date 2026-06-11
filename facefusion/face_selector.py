@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -36,6 +36,9 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 
 		if reference_face:
 			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
+
+			if state_manager.get_item('face_tracking'):
+				match_faces = bridge_reference_by_track(reference_vision_frame, reference_face, target_vision_frame, target_faces, match_faces)
 			return match_faces
 
 	return []
@@ -60,6 +63,42 @@ def resolve_track_order(frame_tracks : List[Tuple[int, BoundingBox]], face : Fac
 			best_iou = current_iou
 			best_track_id = track_id
 	return best_track_id
+
+
+def bridge_reference_by_track(reference_vision_frame : VisionFrame, reference_face : Face, target_vision_frame : VisionFrame, target_faces : List[Face], match_faces : List[Face]) -> List[Face]:
+	if match_faces:
+		return match_faces
+
+	reference_track_id = resolve_track_order(face_tracker.lookup_frame_tracks(reference_vision_frame) or [], reference_face)
+
+	if reference_track_id < TRACK_FALLBACK_ORDER:
+		tracked_face = find_face_by_track_id(target_vision_frame, target_faces, reference_track_id)
+
+		if tracked_face:
+			return [ tracked_face ]
+	return match_faces
+
+
+def find_face_by_track_id(target_vision_frame : VisionFrame, target_faces : List[Face], track_id : int) -> Optional[Face]:
+	frame_tracks = face_tracker.lookup_frame_tracks(target_vision_frame) or []
+
+	for stored_track_id, bounding_box in frame_tracks:
+		if stored_track_id == track_id:
+			return find_face_by_bounding_box(target_faces, bounding_box)
+	return None
+
+
+def find_face_by_bounding_box(target_faces : List[Face], bounding_box : BoundingBox) -> Optional[Face]:
+	best_iou = TRACK_MATCH_IOU
+	best_face = None
+
+	for face in target_faces:
+		current_iou = face_tracker.calculate_iou(face.bounding_box, bounding_box)
+
+		if current_iou > best_iou:
+			best_iou = current_iou
+			best_face = face
+	return best_face
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:

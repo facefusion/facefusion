@@ -1,8 +1,8 @@
 import numpy
 import pytest
 
-from facefusion.face_selector import order_faces_by_track
-from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, update_tracks
+from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track
+from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, update_tracks
 from facefusion.types import Face
 
 
@@ -44,6 +44,15 @@ def test_kalman_predict() -> None:
 
 def test_iou_distance() -> None:
 	cost_matrix = iou_distance([ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]) ], [ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 100.0, 100.0, 110.0, 110.0 ]) ])
+
+	assert cost_matrix[0][0] == 0.0
+	assert cost_matrix[0][1] == 1.0
+
+
+def test_embedding_distance() -> None:
+	embedding_a = numpy.array([ 1.0, 0.0 ])
+	embedding_b = numpy.array([ -1.0, 0.0 ])
+	cost_matrix = embedding_distance([ embedding_a ], [ embedding_a, embedding_b ])
 
 	assert cost_matrix[0][0] == 0.0
 	assert cost_matrix[0][1] == 1.0
@@ -99,6 +108,21 @@ def test_update_tracks_follows_box_when_order_swaps() -> None:
 	assert track_ids == [ 2, 1 ]
 
 
+def test_update_tracks_embedding_rescue() -> None:
+	embedding = numpy.array([ 1.0, 0.0 ])
+	update_tracks([ numpy.array([ 0.0, 0.0, 100.0, 100.0 ]) ], [ embedding ])
+	track_ids = update_tracks([ numpy.array([ 500.0, 0.0, 600.0, 100.0 ]) ], [ embedding ])
+
+	assert track_ids == [ 1 ]
+
+
+def test_update_tracks_embedding_rejects_mismatch() -> None:
+	update_tracks([ numpy.array([ 0.0, 0.0, 100.0, 100.0 ]) ], [ numpy.array([ 1.0, 0.0 ]) ])
+	track_ids = update_tracks([ numpy.array([ 500.0, 0.0, 600.0, 100.0 ]) ], [ numpy.array([ -1.0, 0.0 ]) ])
+
+	assert track_ids == [ 2 ]
+
+
 def test_assign_frame_tracks() -> None:
 	vision_frame = numpy.zeros((4, 4, 3), dtype = numpy.uint8)
 	assign_frame_tracks(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])), create_face(numpy.array([ 300.0, 0.0, 400.0, 100.0 ])) ])
@@ -120,3 +144,21 @@ def test_order_faces_by_track() -> None:
 
 	assert numpy.array_equal(ordered_faces[0].bounding_box, face_left.bounding_box)
 	assert numpy.array_equal(ordered_faces[1].bounding_box, face_right.bounding_box)
+
+
+def test_bridge_reference_by_track() -> None:
+	reference_frame = numpy.zeros((4, 4, 3), dtype = numpy.uint8)
+	target_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	reference_face = create_face(numpy.array([ 100.0, 100.0, 200.0, 200.0 ]))
+	target_face_a = create_face(numpy.array([ 100.0, 100.0, 200.0, 200.0 ]))
+	target_face_b = create_face(numpy.array([ 400.0, 100.0, 500.0, 200.0 ]))
+	assign_frame_tracks(reference_frame, [ reference_face ])
+	assign_frame_tracks(target_frame, [ target_face_a, target_face_b ])
+
+	bridged_faces = bridge_reference_by_track(reference_frame, reference_face, target_frame, [ target_face_a, target_face_b ], [])
+	assert len(bridged_faces) == 1
+	assert numpy.array_equal(bridged_faces[0].bounding_box, target_face_a.bounding_box)
+
+	bridged_faces = bridge_reference_by_track(reference_frame, reference_face, target_frame, [ target_face_a, target_face_b ], [ target_face_b ])
+	assert len(bridged_faces) == 1
+	assert numpy.array_equal(bridged_faces[0].bounding_box, target_face_b.bounding_box)

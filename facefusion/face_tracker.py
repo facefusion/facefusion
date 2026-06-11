@@ -5,11 +5,14 @@ import scipy.linalg
 import scipy.optimize
 
 from facefusion.hash_helper import create_hash
-from facefusion.types import BoundingBox, Covariance, Face, Mean, Measurement, Track, TrackStore, VisionFrame
+from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, Track, TrackStore, VisionFrame
 
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
 TRACK_STORE : TrackStore = {}
+DEFAULT_IOU_THRESHOLD = 0.2
+DEFAULT_EMBEDDING_DISTANCE = 0.4
+DEFAULT_TRACK_BUFFER = 30
 
 
 def create_motion_matrix() -> numpy.ndarray:
@@ -115,6 +118,15 @@ def iou_distance(track_bounding_boxes : List[BoundingBox], detection_bounding_bo
 	return cost_matrix
 
 
+def embedding_distance(track_embeddings : List[Embedding], detection_embeddings : List[Embedding]) -> numpy.ndarray:
+	cost_matrix = numpy.ones((len(track_embeddings), len(detection_embeddings)))
+
+	for track_index, track_embedding in enumerate(track_embeddings):
+		for detection_index, detection_embedding in enumerate(detection_embeddings):
+			cost_matrix[track_index, detection_index] = numpy.interp(1.0 - numpy.dot(track_embedding, detection_embedding), [ 0, 2 ], [ 0, 1 ])
+	return cost_matrix
+
+
 def associate(cost_matrix : numpy.ndarray, max_distance : float) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
 	matches : List[Tuple[int, int]] = []
 	unmatched_tracks = list(range(cost_matrix.shape[0]))
@@ -140,11 +152,23 @@ def predict_track(track : Track) -> Track:
 	return track._replace(mean = mean, covariance = covariance)
 
 
-def update_tracks(detection_bounding_boxes : List[BoundingBox], iou_threshold : float = 0.2, track_buffer : int = 30) -> List[int]:
+def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embeddings : Optional[List[Embedding]] = None, iou_threshold : float = DEFAULT_IOU_THRESHOLD, embedding_max_distance : float = DEFAULT_EMBEDDING_DISTANCE, track_buffer : int = DEFAULT_TRACK_BUFFER) -> List[int]:
 	predicted_tracks = [ predict_track(track) for track in TRACK_STATE ]
 	track_bounding_boxes = [ measurement_to_bounding_box(track.mean) for track in predicted_tracks ]
-	cost_matrix = iou_distance(track_bounding_boxes, detection_bounding_boxes)
-	matches, unmatched_tracks, unmatched_detections = associate(cost_matrix, 1.0 - iou_threshold)
+	iou_cost = iou_distance(track_bounding_boxes, detection_bounding_boxes)
+	matches, unmatched_tracks, unmatched_detections = associate(iou_cost, 1.0 - iou_threshold)
+
+	if detection_embeddings:
+		track_embeddings = [ predicted_tracks[track_index].embedding for track_index in unmatched_tracks ]
+		leftover_embeddings = [ detection_embeddings[detection_index] for detection_index in unmatched_detections ]
+		embedding_cost = embedding_distance(track_embeddings, leftover_embeddings)
+		embedding_matches, residual_tracks, residual_detections = associate(embedding_cost, embedding_max_distance)
+
+		for sub_track_index, sub_detection_index in embedding_matches:
+			matches.append((unmatched_tracks[sub_track_index], unmatched_detections[sub_detection_index]))
+		unmatched_tracks = [ unmatched_tracks[sub_track_index] for sub_track_index in residual_tracks ]
+		unmatched_detections = [ unmatched_detections[sub_detection_index] for sub_detection_index in residual_detections ]
+
 	track_ids = [ 0 ] * len(detection_bounding_boxes)
 	next_tracks : List[Track] = []
 
@@ -152,7 +176,8 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], iou_threshold : 
 		track = predicted_tracks[track_index]
 		measurement = bounding_box_to_measurement(detection_bounding_boxes[detection_index])
 		mean, covariance = kalman_update(track.mean, track.covariance, measurement)
-		next_tracks.append(track._replace(mean = mean, covariance = covariance, state = 'tracked', hit_streak = track.hit_streak + 1, time_since_update = 0))
+		embedding = detection_embeddings[detection_index] if detection_embeddings else track.embedding
+		next_tracks.append(track._replace(mean = mean, covariance = covariance, state = 'tracked', hit_streak = track.hit_streak + 1, time_since_update = 0, embedding = embedding))
 		track_ids[detection_index] = track.track_id
 
 	for track_index in unmatched_tracks:
@@ -166,7 +191,8 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], iou_threshold : 
 		TRACK_ID_COUNTER[0] += 1
 		measurement = bounding_box_to_measurement(detection_bounding_boxes[detection_index])
 		mean, covariance = kalman_initiate(measurement)
-		next_tracks.append(Track(track_id = TRACK_ID_COUNTER[0], mean = mean, covariance = covariance, state = 'tracked', hit_streak = 1, time_since_update = 0))
+		embedding = detection_embeddings[detection_index] if detection_embeddings else None
+		next_tracks.append(Track(track_id = TRACK_ID_COUNTER[0], mean = mean, covariance = covariance, state = 'tracked', hit_streak = 1, time_since_update = 0, embedding = embedding))
 		track_ids[detection_index] = TRACK_ID_COUNTER[0]
 
 	TRACK_STATE[:] = next_tracks
@@ -175,7 +201,8 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], iou_threshold : 
 
 def assign_frame_tracks(vision_frame : VisionFrame, faces : List[Face]) -> None:
 	detection_bounding_boxes = [ face.bounding_box for face in faces ]
-	track_ids = update_tracks(detection_bounding_boxes)
+	detection_embeddings = [ face.embedding_norm for face in faces ]
+	track_ids = update_tracks(detection_bounding_boxes, detection_embeddings)
 	TRACK_STORE[create_hash(vision_frame.tobytes())] = list(zip(track_ids, detection_bounding_boxes))
 
 
