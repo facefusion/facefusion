@@ -2,7 +2,7 @@ import ctypes
 import threading
 from functools import partial
 from queue import Queue
-from typing import Tuple
+from typing import Callable, Tuple
 from unittest.mock import MagicMock, patch
 
 import numpy
@@ -14,7 +14,7 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module
-from facefusion.types import AudioCodec, AudioFrame, FrameHandler, RtcPeer, RtcPeerAudio
+from facefusion.types import AudioCodec, AudioFrame, RtcPeer, RtcPeerAudio
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -37,7 +37,7 @@ def before_each() -> None:
 	rtc_store.clear()
 
 
-def set_ready_event(ready_event : threading.Event, track : int, close_callback : FrameHandler) -> None:
+def set_ready_event(ready_event : threading.Event, track : int, close_callback : Callable[[int, ctypes.c_void_p], None]) -> None:
 	ready_event.set()
 
 

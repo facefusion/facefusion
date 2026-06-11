@@ -102,8 +102,6 @@ VideoCodec : TypeAlias = Literal['av1', 'vp8', 'vp9']
 AomVideoCodec : TypeAlias = Literal['av1']
 VxpVideoCodec : TypeAlias = Literal['vp8', 'vp9']
 
-FrameHandler : TypeAlias = Callable[..., None]
-
 AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 AomDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p

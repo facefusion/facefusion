@@ -4,7 +4,7 @@ import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
-from typing import Tuple
+from typing import Callable, Tuple
 from unittest.mock import MagicMock, patch
 
 import cv2
@@ -18,7 +18,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
-from facefusion.types import BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
+from facefusion.types import BufferPack, RtcPeer, RtcPeerVideo, Time, VideoCodec
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -44,7 +44,7 @@ def before_each() -> None:
 	rtc_store.clear()
 
 
-def set_ready_event(ready_event : threading.Event, track : int, close_callback : FrameHandler) -> None:
+def set_ready_event(ready_event : threading.Event, track : int, close_callback : Callable[[int, ctypes.c_void_p], None]) -> None:
 	ready_event.set()
 
 
