@@ -113,7 +113,7 @@ def test_handle_audio_frame() -> None:
 	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 300)
 
 	with patch('facefusion.apis.stream_audio.decode_audio_frame', return_value = audio_frame.tobytes()):
-		handle_audio_frame('opus', audio_decoder_mock, audio_queue, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+		handle_audio_frame('opus', audio_decoder_mock, audio_queue, bytes(), 0)
 
 	_, temp_audio_frame = audio_queue.get_nowait()
 

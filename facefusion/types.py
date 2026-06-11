@@ -116,6 +116,8 @@ BufferPack = TypedDict('BufferPack',
 	'resolution' : Resolution
 })
 
+FrameHandler : TypeAlias = Callable[[Buffer, int], None]
+
 Args : TypeAlias = Dict[str, Any]
 
 Choice : TypeAlias = Union[int | str]
