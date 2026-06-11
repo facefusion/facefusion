@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
 from typing import List
 
 import cv2
@@ -591,9 +592,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('frame_enhancer_blend', args.get('frame_enhancer_blend'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -615,10 +624,13 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
