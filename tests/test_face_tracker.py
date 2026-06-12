@@ -4,7 +4,7 @@ import pytest
 from facefusion import state_manager
 from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
 from facefusion.face_store import clear_faces, set_faces
-from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, track_frame, update_tracks
+from facefusion.face_tracker import assign_frame_tracks, match_cost_matrix, clear_tracks, calculate_embedding_cost_matrix, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, track_frame, update_tracks
 from facefusion.types import Face
 
 
@@ -55,14 +55,14 @@ def test_iou_distance() -> None:
 def test_embedding_distance() -> None:
 	embedding_a = numpy.array([ 1.0, 0.0 ])
 	embedding_b = numpy.array([ -1.0, 0.0 ])
-	cost_matrix = embedding_distance([ embedding_a ], [ embedding_a, embedding_b ])
+	cost_matrix = calculate_embedding_cost_matrix([embedding_a], [embedding_a, embedding_b])
 
 	assert cost_matrix[0][0] == 0.0
 	assert cost_matrix[0][1] == 1.0
 
 
 def test_associate() -> None:
-	matches, unmatched_tracks, unmatched_detections = associate(numpy.array([ [ 0.0, 1.0 ], [ 1.0, 0.1 ] ]), 0.8)
+	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(numpy.array([[0.0, 1.0], [1.0, 0.1]]), 0.8)
 
 	assert matches == [ (0, 0), (1, 1) ]
 	assert unmatched_tracks == []
@@ -70,7 +70,7 @@ def test_associate() -> None:
 
 
 def test_associate_rejects_above_distance() -> None:
-	matches, unmatched_tracks, unmatched_detections = associate(numpy.array([ [ 0.9 ] ]), 0.8)
+	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(numpy.array([[0.9]]), 0.8)
 
 	assert matches == []
 	assert unmatched_tracks == [ 0 ]

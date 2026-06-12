@@ -33,13 +33,13 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embedd
 	predicted_tracks = [ predict_track(track) for track in TRACK_STATE ]
 	track_bounding_boxes = [kalman_measurement_to_bounding_box(track.mean) for track in predicted_tracks]
 	iou_cost = iou_distance(track_bounding_boxes, detection_bounding_boxes)
-	matches, unmatched_tracks, unmatched_detections = associate(iou_cost, 1.0 - iou_threshold)
+	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(iou_cost, 1.0 - iou_threshold)
 
 	if detection_embeddings:
 		track_embeddings = [ predicted_tracks[track_index].embedding for track_index in unmatched_tracks ]
 		leftover_embeddings = [ detection_embeddings[detection_index] for detection_index in unmatched_detections ]
-		embedding_cost = embedding_distance(track_embeddings, leftover_embeddings)
-		embedding_matches, residual_tracks, residual_detections = associate(embedding_cost, embedding_max_distance)
+		embedding_cost = calculate_embedding_cost_matrix(track_embeddings, leftover_embeddings)
+		embedding_matches, residual_tracks, residual_detections = match_cost_matrix(embedding_cost, embedding_max_distance)
 
 		for sub_track_index, sub_detection_index in embedding_matches:
 			matches.append((unmatched_tracks[sub_track_index], unmatched_detections[sub_detection_index]))
@@ -96,23 +96,22 @@ def predict_track(track : Track) -> Track:
 
 
 def kalman_initiate(kalman_measurement : KalmanMeasurement) -> Tuple[KalmanMean, KalmanCovariance]:
-	mean = numpy.r_[kalman_measurement, numpy.zeros_like(kalman_measurement)]
-	height = kalman_measurement[3]
+	kalman_mean = numpy.r_[kalman_measurement, numpy.zeros_like(kalman_measurement)]
 	standard_weight_position = 1.0 / 20
 	standard_weight_velocity = 1.0 / 160
 	standard_deviation =\
 	[
-		2 * standard_weight_position * height,
-		2 * standard_weight_position * height,
+		2 * standard_weight_position * kalman_measurement[3],
+		2 * standard_weight_position * kalman_measurement[3],
 		1e-2,
-		2 * standard_weight_position * height,
-		10 * standard_weight_velocity * height,
-		10 * standard_weight_velocity * height,
+		2 * standard_weight_position * kalman_measurement[3],
+		10 * standard_weight_velocity * kalman_measurement[3],
+		10 * standard_weight_velocity * kalman_measurement[3],
 		1e-5,
-		10 * standard_weight_velocity * height
+		10 * standard_weight_velocity * kalman_measurement[3]
 	]
-	covariance = numpy.diag(numpy.square(standard_deviation))
-	return mean, covariance
+	kalman_covariance = numpy.diag(numpy.square(standard_deviation))
+	return kalman_mean, kalman_covariance
 
 
 def kalman_predict(kalman_mean : KalmanMean, kalman_covariance : KalmanCovariance) -> Tuple[KalmanMean, KalmanCovariance]:
@@ -129,9 +128,8 @@ def kalman_predict(kalman_mean : KalmanMean, kalman_covariance : KalmanCovarianc
 
 
 def kalman_project(kalman_mean : KalmanMean, kalman_covariance : KalmanCovariance) -> Tuple[KalmanMeasurement, KalmanCovariance]:
-	height = kalman_mean[3]
 	standard_weight_position = 1.0 / 20
-	standard_deviation = [ standard_weight_position * height, standard_weight_position * height, 1e-1, standard_weight_position * height ]
+	standard_deviation = [ standard_weight_position * kalman_mean[3], standard_weight_position * kalman_mean[3], 1e-1, standard_weight_position * kalman_mean[3] ]
 	innovation_covariance = numpy.diag(numpy.square(standard_deviation))
 	update_matrix = numpy.eye(4, 8)
 	projected_mean = numpy.dot(update_matrix, kalman_mean)
@@ -189,6 +187,7 @@ def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) ->
 
 	if union_area > 0:
 		return intersection_area / union_area
+
 	return 0.0
 
 
@@ -196,21 +195,25 @@ def iou_distance(track_bounding_boxes : List[BoundingBox], detection_bounding_bo
 	cost_matrix = numpy.ones((len(track_bounding_boxes), len(detection_bounding_boxes)))
 
 	for track_index, track_bounding_box in enumerate(track_bounding_boxes):
+
 		for detection_index, detection_bounding_box in enumerate(detection_bounding_boxes):
 			cost_matrix[track_index, detection_index] = 1.0 - calculate_iou(track_bounding_box, detection_bounding_box)
+
 	return cost_matrix
 
 
-def embedding_distance(track_embeddings : List[Embedding], detection_embeddings : List[Embedding]) -> numpy.ndarray:
+def calculate_embedding_cost_matrix(track_embeddings : List[Embedding], detection_embeddings : List[Embedding]) -> numpy.ndarray:
 	cost_matrix = numpy.ones((len(track_embeddings), len(detection_embeddings)))
 
 	for track_index, track_embedding in enumerate(track_embeddings):
+
 		for detection_index, detection_embedding in enumerate(detection_embeddings):
 			cost_matrix[track_index, detection_index] = numpy.interp(1.0 - numpy.dot(track_embedding, detection_embedding), [ 0, 2 ], [ 0, 1 ])
+
 	return cost_matrix
 
 
-def associate(cost_matrix : numpy.ndarray, max_distance : float) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
+def match_cost_matrix(cost_matrix : numpy.ndarray, max_distance : float) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
 	matches : List[Tuple[int, int]] = []
 	unmatched_tracks = list(range(cost_matrix.shape[0]))
 	unmatched_detections = list(range(cost_matrix.shape[1]))
@@ -223,4 +226,5 @@ def associate(cost_matrix : numpy.ndarray, max_distance : float) -> Tuple[List[T
 				matches.append((int(track_index), int(detection_index)))
 				unmatched_tracks.remove(int(track_index))
 				unmatched_detections.remove(int(detection_index))
+
 	return matches, unmatched_tracks, unmatched_detections
