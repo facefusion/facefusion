@@ -15,7 +15,7 @@ TRACK_FALLBACK_ORDER = 999999
 
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
-	target_faces = get_many_faces([ target_vision_frame ])
+	target_faces = resolve_target_faces(target_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		target_faces = sort_and_filter_faces(source_faces, target_faces)
@@ -42,6 +42,12 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 			return match_faces
 
 	return []
+
+
+def resolve_target_faces(target_vision_frame : VisionFrame) -> List[Face]:
+	if state_manager.get_item('face_tracking') and face_tracker.has_target_faces(target_vision_frame):
+		return face_tracker.get_target_faces(target_vision_frame)
+	return get_many_faces([ target_vision_frame ])
 
 
 def order_faces_by_track(target_vision_frame : VisionFrame, target_faces : List[Face]) -> List[Face]:

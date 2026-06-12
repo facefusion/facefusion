@@ -1,8 +1,9 @@
 import numpy
 import pytest
 
-from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track
-from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, update_tracks
+from facefusion import state_manager
+from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
+from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, get_target_faces, has_target_faces, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, set_target_faces, update_tracks
 from facefusion.types import Face
 
 
@@ -133,6 +134,41 @@ def test_assign_frame_tracks() -> None:
 
 def test_lookup_frame_tracks() -> None:
 	assert lookup_frame_tracks(numpy.ones((4, 4, 3), dtype = numpy.uint8)) is None
+
+
+def test_has_target_faces() -> None:
+	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	set_target_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+
+	assert has_target_faces(vision_frame) is True
+	assert has_target_faces(numpy.full((4, 4, 3), 2, dtype = numpy.uint8)) is False
+	assert has_target_faces(numpy.zeros((4, 4, 3), dtype = numpy.uint8)) is False
+
+
+def test_get_target_faces() -> None:
+	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	assert get_target_faces(vision_frame) is None
+
+	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
+	set_target_faces(vision_frame, faces)
+	assert get_target_faces(vision_frame) is faces
+
+
+def test_set_target_faces() -> None:
+	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
+	set_target_faces(vision_frame, faces)
+
+	assert get_target_faces(vision_frame) is faces
+
+
+def test_resolve_target_faces() -> None:
+	state_manager.init_item('face_tracking', True)
+	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
+	set_target_faces(vision_frame, faces)
+
+	assert resolve_target_faces(vision_frame) is faces
 
 
 def test_order_faces_by_track() -> None:

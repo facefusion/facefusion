@@ -163,6 +163,7 @@ def build_face_tracks(temp_frame_paths : List[str]) -> None:
 		if not is_process_stopping():
 			target_vision_frame = read_static_image(temp_frame_path, 'rgba')
 			target_faces = get_many_faces([ target_vision_frame[:, :, :3] ])
+			face_tracker.set_target_faces(target_vision_frame[:, :, :3], target_faces)
 			face_tracker.assign_frame_tracks(target_vision_frame[:, :, :3], target_faces)
 
 

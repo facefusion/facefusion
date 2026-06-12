@@ -5,11 +5,12 @@ import scipy.linalg
 import scipy.optimize
 
 from facefusion.hash_helper import create_hash
-from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, Track, TrackStore, VisionFrame
+from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, TargetFaceStore, Track, TrackStore, VisionFrame
 
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
 TRACK_STORE : TrackStore = {}
+TARGET_FACE_STORE : TargetFaceStore = {}
 DEFAULT_IOU_THRESHOLD = 0.2
 DEFAULT_EMBEDDING_DISTANCE = 0.4
 DEFAULT_TRACK_BUFFER = 30
@@ -210,7 +211,29 @@ def lookup_frame_tracks(vision_frame : VisionFrame) -> Optional[List[Tuple[int, 
 	return TRACK_STORE.get(create_hash(vision_frame.tobytes()))
 
 
+def has_target_faces(vision_frame : VisionFrame) -> bool:
+	if numpy.any(vision_frame):
+		return create_hash(vision_frame.tobytes()) in TARGET_FACE_STORE
+	return False
+
+
+def get_target_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
+	if numpy.any(vision_frame):
+		return TARGET_FACE_STORE.get(create_hash(vision_frame.tobytes()))
+	return None
+
+
+def set_target_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
+	if numpy.any(vision_frame):
+		TARGET_FACE_STORE[create_hash(vision_frame.tobytes())] = faces
+
+
+def clear_target_faces() -> None:
+	TARGET_FACE_STORE.clear()
+
+
 def clear_tracks() -> None:
 	TRACK_STORE.clear()
 	TRACK_STATE.clear()
 	TRACK_ID_COUNTER[0] = 0
+	clear_target_faces()
