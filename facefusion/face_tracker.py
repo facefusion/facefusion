@@ -240,23 +240,8 @@ def track_frame(vision_frame : VisionFrame) -> None:
 	assign_frame_tracks(vision_frame, faces)
 
 
-def clear_target_faces() -> None:
-	TARGET_FACE_STORE.clear()
-
-
-def keep_target_faces(vision_frames : List[VisionFrame]) -> None:
-	keep_hashes = { create_hash(vision_frame.tobytes()) for vision_frame in vision_frames if numpy.any(vision_frame) }
-	kept_store = { vision_hash : faces for vision_hash, faces in TARGET_FACE_STORE.items() if vision_hash in keep_hashes }
-	clear_target_faces()
-	TARGET_FACE_STORE.update(kept_store)
-
-
-def clear_track_state() -> None:
+def clear_tracks() -> None:
 	TRACK_STORE.clear()
 	TRACK_STATE.clear()
 	TRACK_ID_COUNTER[0] = 0
-
-
-def clear_tracks() -> None:
-	clear_track_state()
-	clear_target_faces()
+	TARGET_FACE_STORE.clear()
