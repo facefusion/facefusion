@@ -66,7 +66,6 @@ Track = namedtuple('Track',
 	'embedding'
 ])
 TrackStore : TypeAlias = Dict[str, List[Tuple[int, BoundingBox]]]
-TargetFaceStore : TypeAlias = Dict[str, List[Face]]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]

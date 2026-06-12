@@ -45,8 +45,8 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 
 
 def resolve_target_faces(target_vision_frame : VisionFrame) -> List[Face]:
-	if state_manager.get_item('face_tracking') and face_tracker.has_target_faces(target_vision_frame):
-		return face_tracker.get_target_faces(target_vision_frame)
+	if state_manager.get_item('face_tracking'):
+		return get_static_faces([ target_vision_frame ])
 	return get_many_faces([ target_vision_frame ])
 
 

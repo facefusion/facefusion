@@ -3,13 +3,15 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
-from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, get_target_faces, has_target_faces, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, set_target_faces, track_frame, update_tracks
+from facefusion.face_store import clear_faces, set_faces
+from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, track_frame, update_tracks
 from facefusion.types import Face
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	clear_tracks()
+	clear_faces()
 
 
 def moving_bounding_box(left : float, speed : float, frame_number : int) -> numpy.ndarray:
@@ -136,35 +138,9 @@ def test_lookup_frame_tracks() -> None:
 	assert lookup_frame_tracks(numpy.ones((4, 4, 3), dtype = numpy.uint8)) is None
 
 
-def test_has_target_faces() -> None:
-	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	set_target_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
-
-	assert has_target_faces(vision_frame) is True
-	assert has_target_faces(numpy.full((4, 4, 3), 2, dtype = numpy.uint8)) is False
-	assert has_target_faces(numpy.zeros((4, 4, 3), dtype = numpy.uint8)) is False
-
-
-def test_get_target_faces() -> None:
-	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	assert get_target_faces(vision_frame) is None
-
-	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
-	set_target_faces(vision_frame, faces)
-	assert get_target_faces(vision_frame) is faces
-
-
-def test_set_target_faces() -> None:
-	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
-	set_target_faces(vision_frame, faces)
-
-	assert get_target_faces(vision_frame) is faces
-
-
 def test_track_frame() -> None:
 	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	set_target_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+	set_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
 	track_frame(vision_frame)
 
 	assert [ track_id for track_id, _ in lookup_frame_tracks(vision_frame) ] == [ 1 ]
@@ -172,21 +148,19 @@ def test_track_frame() -> None:
 
 def test_clear_tracks() -> None:
 	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	set_target_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
 	assign_frame_tracks(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
 	clear_tracks()
 
 	assert lookup_frame_tracks(vision_frame) is None
-	assert has_target_faces(vision_frame) is False
 
 
 def test_resolve_target_faces() -> None:
 	state_manager.init_item('face_tracking', True)
 	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
-	faces = [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ]
-	set_target_faces(vision_frame, faces)
+	face = create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ]))
+	set_faces(vision_frame, [ face ])
 
-	assert resolve_target_faces(vision_frame) is faces
+	assert numpy.array_equal(resolve_target_faces(vision_frame)[0].bounding_box, face.bounding_box)
 
 
 def test_order_faces_by_track() -> None:

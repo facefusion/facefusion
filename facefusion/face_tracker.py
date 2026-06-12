@@ -4,14 +4,13 @@ import numpy
 import scipy.linalg
 import scipy.optimize
 
-from facefusion.face_analyser import get_many_faces
+from facefusion.face_analyser import get_static_faces
 from facefusion.hash_helper import create_hash
-from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, TargetFaceStore, Track, TrackStore, VisionFrame
+from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, Track, TrackStore, VisionFrame
 
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
 TRACK_STORE : TrackStore = {}
-TARGET_FACE_STORE : TargetFaceStore = {}
 DEFAULT_IOU_THRESHOLD = 0.2
 DEFAULT_EMBEDDING_DISTANCE = 0.4
 DEFAULT_TRACK_BUFFER = 30
@@ -212,31 +211,8 @@ def lookup_frame_tracks(vision_frame : VisionFrame) -> Optional[List[Tuple[int, 
 	return TRACK_STORE.get(create_hash(vision_frame.tobytes()))
 
 
-def has_target_faces(vision_frame : VisionFrame) -> bool:
-	if numpy.any(vision_frame):
-		return create_hash(vision_frame.tobytes()) in TARGET_FACE_STORE
-	return False
-
-
-def get_target_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
-	if numpy.any(vision_frame):
-		return TARGET_FACE_STORE.get(create_hash(vision_frame.tobytes()))
-	return None
-
-
-def set_target_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
-	if numpy.any(vision_frame):
-		TARGET_FACE_STORE[create_hash(vision_frame.tobytes())] = faces
-
-
 def track_frame(vision_frame : VisionFrame) -> None:
-	faces = get_target_faces(vision_frame)
-
-	if not faces:
-		faces = get_many_faces([ vision_frame ])
-
-		if faces:
-			set_target_faces(vision_frame, faces)
+	faces = get_static_faces([ vision_frame ])
 	assign_frame_tracks(vision_frame, faces)
 
 
@@ -244,4 +220,3 @@ def clear_tracks() -> None:
 	TRACK_STORE.clear()
 	TRACK_STATE.clear()
 	TRACK_ID_COUNTER[0] = 0
-	TARGET_FACE_STORE.clear()
