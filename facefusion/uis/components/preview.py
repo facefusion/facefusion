@@ -5,7 +5,7 @@ import cv2
 import gradio
 import numpy
 
-from facefusion import logger, process_manager, state_manager, translator
+from facefusion import face_tracker, logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
@@ -21,6 +21,7 @@ from facefusion.uis.types import ComponentOptions, PreviewMode
 from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
+PREVIEW_TRACK_WINDOW = face_tracker.DEFAULT_TRACK_BUFFER
 
 
 def render() -> None:
@@ -211,6 +212,9 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		temp_vision_mask = extract_vision_mask(temp_vision_frame)
 		temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
+
+		if state_manager.get_item('face_tracking'):
+			build_preview_tracks(frame_number, preview_resolution)
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
@@ -220,6 +224,19 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
 	clear_faces()
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
+
+
+def build_preview_tracks(frame_number : int, preview_resolution : str) -> None:
+	face_tracker.clear_tracks()
+
+	for window_frame_number in range(max(0, frame_number - PREVIEW_TRACK_WINDOW), frame_number + 1):
+		window_vision_frame = read_video_frame(state_manager.get_item('target_path'), window_frame_number)
+
+		if numpy.any(window_vision_frame):
+			window_vision_mask = extract_vision_mask(window_vision_frame)
+			window_vision_frame = merge_vision_mask(window_vision_frame, window_vision_mask)
+			window_vision_frame = restrict_frame(window_vision_frame, unpack_resolution(preview_resolution))
+			face_tracker.track_frame(window_vision_frame[:, :, :3])
 
 
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
