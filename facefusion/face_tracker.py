@@ -129,7 +129,13 @@ def kalman_predict(kalman_mean : KalmanMean, kalman_covariance : KalmanCovarianc
 
 def kalman_project(kalman_mean : KalmanMean, kalman_covariance : KalmanCovariance) -> Tuple[KalmanMeasurement, KalmanCovariance]:
 	standard_weight_position = 1.0 / 20
-	standard_deviation = [ standard_weight_position * kalman_mean[3], standard_weight_position * kalman_mean[3], 1e-1, standard_weight_position * kalman_mean[3] ]
+	standard_deviation =\
+	[
+		standard_weight_position * kalman_mean[3],
+	  	standard_weight_position * kalman_mean[3],
+		1e-1,
+		standard_weight_position * kalman_mean[3]
+	]
 	innovation_covariance = numpy.diag(numpy.square(standard_deviation))
 	update_matrix = numpy.eye(4, 8)
 	projected_mean = numpy.dot(update_matrix, kalman_mean)
