@@ -101,6 +101,8 @@ def process_video() -> ErrorCode:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
+		face_tracker.clear_tracks()
+
 		if is_process_stopping():
 			return 4
 	else:
