@@ -15,6 +15,7 @@ LOCALES : Locales =\
 		'analysing': 'analysing',
 		'extracting': 'extracting',
 		'streaming': 'streaming',
+		'tracking': 'tracking',
 		'processing': 'processing',
 		'merging': 'merging',
 		'downloading': 'downloading',
