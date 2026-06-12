@@ -3,7 +3,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
-from facefusion.face_tracker import assign_frame_tracks, associate, clear_tracks, embedding_distance, get_target_faces, has_target_faces, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, set_target_faces, track_frame, update_tracks
+from facefusion.face_tracker import assign_frame_tracks, associate, clear_track_state, clear_tracks, embedding_distance, get_target_faces, has_target_faces, iou_distance, kalman_initiate, kalman_predict, kalman_update, keep_target_faces, lookup_frame_tracks, set_target_faces, track_frame, update_tracks
 from facefusion.types import Face
 
 
@@ -168,6 +168,27 @@ def test_track_frame() -> None:
 	track_frame(vision_frame)
 
 	assert [ track_id for track_id, _ in lookup_frame_tracks(vision_frame) ] == [ 1 ]
+
+
+def test_keep_target_faces() -> None:
+	frame_a = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	frame_b = numpy.full((4, 4, 3), 2, dtype = numpy.uint8)
+	set_target_faces(frame_a, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+	set_target_faces(frame_b, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+	keep_target_faces([ frame_a ])
+
+	assert has_target_faces(frame_a) is True
+	assert has_target_faces(frame_b) is False
+
+
+def test_clear_track_state() -> None:
+	vision_frame = numpy.ones((4, 4, 3), dtype = numpy.uint8)
+	set_target_faces(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+	assign_frame_tracks(vision_frame, [ create_face(numpy.array([ 0.0, 0.0, 100.0, 100.0 ])) ])
+	clear_track_state()
+
+	assert lookup_frame_tracks(vision_frame) is None
+	assert has_target_faces(vision_frame) is True
 
 
 def test_resolve_target_faces() -> None:

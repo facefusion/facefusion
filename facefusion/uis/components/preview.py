@@ -227,7 +227,8 @@ def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolutio
 
 
 def build_preview_tracks(frame_number : int, preview_resolution : str) -> None:
-	face_tracker.clear_tracks()
+	face_tracker.clear_track_state()
+	window_vision_frames = []
 
 	for window_frame_number in range(max(0, frame_number - PREVIEW_TRACK_WINDOW), frame_number + 1):
 		window_vision_frame = read_video_frame(state_manager.get_item('target_path'), window_frame_number)
@@ -236,7 +237,9 @@ def build_preview_tracks(frame_number : int, preview_resolution : str) -> None:
 			window_vision_mask = extract_vision_mask(window_vision_frame)
 			window_vision_frame = merge_vision_mask(window_vision_frame, window_vision_mask)
 			window_vision_frame = restrict_frame(window_vision_frame, unpack_resolution(preview_resolution))
+			window_vision_frames.append(window_vision_frame[:, :, :3])
 			face_tracker.track_frame(window_vision_frame[:, :, :3])
+	face_tracker.keep_target_faces(window_vision_frames)
 
 
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
