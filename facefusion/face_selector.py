@@ -7,6 +7,7 @@ import facefusion.choices
 from facefusion import face_tracker, state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
+from facefusion.face_helper import calculate_iou
 from facefusion.types import BoundingBox, Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
@@ -60,7 +61,7 @@ def resolve_track_order(frame_tracks : List[Tuple[int, BoundingBox]], face : Fac
 	temp_track_id = 999999
 
 	for track_id, bounding_box in frame_tracks:
-		current_iou = face_tracker.calculate_iou(face.bounding_box, bounding_box)
+		current_iou = calculate_iou(face.bounding_box, bounding_box)
 
 		if current_iou > temp_iou:
 			temp_iou = current_iou
@@ -100,7 +101,7 @@ def find_face_by_bounding_box(target_faces : List[Face], bounding_box : Bounding
 	temp_face = None
 
 	for face in target_faces:
-		current_iou = face_tracker.calculate_iou(face.bounding_box, bounding_box)
+		current_iou = calculate_iou(face.bounding_box, bounding_box)
 
 		if current_iou > temp_iou:
 			temp_iou = current_iou

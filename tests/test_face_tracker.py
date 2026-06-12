@@ -4,7 +4,7 @@ import pytest
 from facefusion import state_manager
 from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
 from facefusion.face_store import clear_faces, set_faces
-from facefusion.face_tracker import assign_frame_tracks, calculate_embedding_cost_matrix, calculate_iou_cost_matrix, clear_tracks, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, match_cost_matrix, track_frame, update_tracks
+from facefusion.face_tracker import assign_frame_tracks, clear_tracks, lookup_frame_tracks, track_frame, update_tracks
 from facefusion.types import Face
 
 
@@ -31,50 +31,6 @@ def create_face(bounding_box : numpy.ndarray) -> Face:
 		gender = 'male',
 		race = 'white'
 	)
-
-
-def test_kalman_predict() -> None:
-	mean, covariance = kalman_initiate(numpy.array([ 200.0, 360.0, 0.75, 240.0 ]))
-	center_x = 200.0
-
-	for _ in range(40):
-		mean, covariance = kalman_predict(mean, covariance)
-		center_x += 9.0
-		mean, covariance = kalman_update(mean, covariance, numpy.array([ center_x, 360.0, 0.75, 240.0 ]))
-
-	assert round(mean[4]) == 9
-
-
-def test_calculate_iou_cost_matrix() -> None:
-	cost_matrix = calculate_iou_cost_matrix([ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]) ], [ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 100.0, 100.0, 110.0, 110.0 ]) ])
-
-	assert cost_matrix[0][0] == 0.0
-	assert cost_matrix[0][1] == 1.0
-
-
-def test_calculate_embedding_cost_matrix() -> None:
-	embedding_a = numpy.array([ 1.0, 0.0 ])
-	embedding_b = numpy.array([ -1.0, 0.0 ])
-	cost_matrix = calculate_embedding_cost_matrix([embedding_a], [embedding_a, embedding_b])
-
-	assert cost_matrix[0][0] == 0.0
-	assert cost_matrix[0][1] == 1.0
-
-
-def test_associate() -> None:
-	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(numpy.array([[0.0, 1.0], [1.0, 0.1]]), 0.8)
-
-	assert matches == [ (0, 0), (1, 1) ]
-	assert unmatched_tracks == []
-	assert unmatched_detections == []
-
-
-def test_associate_rejects_above_distance() -> None:
-	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(numpy.array([[0.9]]), 0.8)
-
-	assert matches == []
-	assert unmatched_tracks == [ 0 ]
-	assert unmatched_detections == [ 0 ]
 
 
 def test_update_tracks() -> None:

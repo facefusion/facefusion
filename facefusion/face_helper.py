@@ -254,3 +254,21 @@ def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
 		matrix = numpy.dot(temp_matrix, matrix)
 
 	return matrix[:2, :]
+
+
+def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) -> float:
+	intersection_left = max(bounding_box_1[0], bounding_box_2[0])
+	intersection_top = max(bounding_box_1[1], bounding_box_2[1])
+	intersection_right = min(bounding_box_1[2], bounding_box_2[2])
+	intersection_bottom = min(bounding_box_1[3], bounding_box_2[3])
+	intersection_width = max(intersection_right - intersection_left, 0)
+	intersection_height = max(intersection_bottom - intersection_top, 0)
+	intersection_area = intersection_width * intersection_height
+	area_1 = (bounding_box_1[2] - bounding_box_1[0]) * (bounding_box_1[3] - bounding_box_1[1])
+	area_2 = (bounding_box_2[2] - bounding_box_2[0]) * (bounding_box_2[3] - bounding_box_2[1])
+	union_area = area_1 + area_2 - intersection_area
+
+	if union_area > 0:
+		return intersection_area / union_area
+
+	return 0.0
