@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import List, Optional, Tuple
 
 import numpy
@@ -11,23 +12,15 @@ from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Mea
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
 TRACK_STORE : TrackStore = {}
-DEFAULT_IOU_THRESHOLD = 0.2
-DEFAULT_EMBEDDING_DISTANCE = 0.4
-DEFAULT_TRACK_BUFFER = 30
 
 
-def create_motion_matrix() -> numpy.ndarray:
+@lru_cache()
+def create_static_motion_matrix() -> numpy.ndarray:
 	motion_matrix = numpy.eye(8, 8)
 
 	for index in range(4):
 		motion_matrix[index, 4 + index] = 1.0
 	return motion_matrix
-
-
-MOTION_MATRIX = create_motion_matrix()
-UPDATE_MATRIX = numpy.eye(4, 8)
-STD_WEIGHT_POSITION = 1.0 / 20
-STD_WEIGHT_VELOCITY = 1.0 / 160
 
 
 def bounding_box_to_measurement(bounding_box : BoundingBox) -> Measurement:
@@ -49,16 +42,18 @@ def measurement_to_bounding_box(mean : Mean) -> BoundingBox:
 def kalman_initiate(measurement : Measurement) -> Tuple[Mean, Covariance]:
 	mean = numpy.r_[measurement, numpy.zeros_like(measurement)]
 	height = measurement[3]
+	standard_weight_position = 1.0 / 20
+	standard_weight_velocity = 1.0 / 160
 	standard_deviation =\
 	[
-		2 * STD_WEIGHT_POSITION * height,
-		2 * STD_WEIGHT_POSITION * height,
+		2 * standard_weight_position * height,
+		2 * standard_weight_position * height,
 		1e-2,
-		2 * STD_WEIGHT_POSITION * height,
-		10 * STD_WEIGHT_VELOCITY * height,
-		10 * STD_WEIGHT_VELOCITY * height,
+		2 * standard_weight_position * height,
+		10 * standard_weight_velocity * height,
+		10 * standard_weight_velocity * height,
 		1e-5,
-		10 * STD_WEIGHT_VELOCITY * height
+		10 * standard_weight_velocity * height
 	]
 	covariance = numpy.diag(numpy.square(standard_deviation))
 	return mean, covariance
@@ -66,27 +61,33 @@ def kalman_initiate(measurement : Measurement) -> Tuple[Mean, Covariance]:
 
 def kalman_predict(mean : Mean, covariance : Covariance) -> Tuple[Mean, Covariance]:
 	height = mean[3]
-	standard_deviation_position = [ STD_WEIGHT_POSITION * height, STD_WEIGHT_POSITION * height, 1e-2, STD_WEIGHT_POSITION * height ]
-	standard_deviation_velocity = [ STD_WEIGHT_VELOCITY * height, STD_WEIGHT_VELOCITY * height, 1e-5, STD_WEIGHT_VELOCITY * height ]
+	standard_weight_position = 1.0 / 20
+	standard_weight_velocity = 1.0 / 160
+	standard_deviation_position = [ standard_weight_position * height, standard_weight_position * height, 1e-2, standard_weight_position * height ]
+	standard_deviation_velocity = [ standard_weight_velocity * height, standard_weight_velocity * height, 1e-5, standard_weight_velocity * height ]
 	motion_covariance = numpy.diag(numpy.square(numpy.r_[standard_deviation_position, standard_deviation_velocity]))
-	mean = numpy.dot(mean, MOTION_MATRIX.T)
-	covariance = numpy.linalg.multi_dot((MOTION_MATRIX, covariance, MOTION_MATRIX.T)) + motion_covariance
+	motion_matrix = create_static_motion_matrix()
+	mean = numpy.dot(mean, motion_matrix.T)
+	covariance = numpy.linalg.multi_dot((motion_matrix, covariance, motion_matrix.T)) + motion_covariance
 	return mean, covariance
 
 
 def kalman_project(mean : Mean, covariance : Covariance) -> Tuple[Measurement, Covariance]:
 	height = mean[3]
-	standard_deviation = [ STD_WEIGHT_POSITION * height, STD_WEIGHT_POSITION * height, 1e-1, STD_WEIGHT_POSITION * height ]
+	standard_weight_position = 1.0 / 20
+	standard_deviation = [ standard_weight_position * height, standard_weight_position * height, 1e-1, standard_weight_position * height ]
 	innovation_covariance = numpy.diag(numpy.square(standard_deviation))
-	projected_mean = numpy.dot(UPDATE_MATRIX, mean)
-	projected_covariance = numpy.linalg.multi_dot((UPDATE_MATRIX, covariance, UPDATE_MATRIX.T))
+	update_matrix = numpy.eye(4, 8)
+	projected_mean = numpy.dot(update_matrix, mean)
+	projected_covariance = numpy.linalg.multi_dot((update_matrix, covariance, update_matrix.T))
 	return projected_mean, projected_covariance + innovation_covariance
 
 
 def kalman_update(mean : Mean, covariance : Covariance, measurement : Measurement) -> Tuple[Mean, Covariance]:
 	projected_mean, projected_covariance = kalman_project(mean, covariance)
 	chol_factor, lower = scipy.linalg.cho_factor(projected_covariance, lower = True, check_finite = False)
-	kalman_gain = scipy.linalg.cho_solve((chol_factor, lower), numpy.dot(covariance, UPDATE_MATRIX.T).T, check_finite = False).T
+	update_matrix = numpy.eye(4, 8)
+	kalman_gain = scipy.linalg.cho_solve((chol_factor, lower), numpy.dot(covariance, update_matrix.T).T, check_finite = False).T
 	innovation = measurement - projected_mean
 	mean = mean + numpy.dot(innovation, kalman_gain.T)
 	covariance = covariance - numpy.linalg.multi_dot((kalman_gain, projected_covariance, kalman_gain.T))
@@ -153,7 +154,10 @@ def predict_track(track : Track) -> Track:
 	return track._replace(mean = mean, covariance = covariance)
 
 
-def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embeddings : Optional[List[Embedding]] = None, iou_threshold : float = DEFAULT_IOU_THRESHOLD, embedding_max_distance : float = DEFAULT_EMBEDDING_DISTANCE, track_buffer : int = DEFAULT_TRACK_BUFFER) -> List[int]:
+def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embeddings : Optional[List[Embedding]] = None) -> List[int]:
+	iou_threshold = 0.2
+	embedding_max_distance = 0.4
+	track_buffer = 30
 	predicted_tracks = [ predict_track(track) for track in TRACK_STATE ]
 	track_bounding_boxes = [ measurement_to_bounding_box(track.mean) for track in predicted_tracks ]
 	iou_cost = iou_distance(track_bounding_boxes, detection_bounding_boxes)
