@@ -56,8 +56,8 @@ Face = namedtuple('Face',
 ])
 FaceStore : TypeAlias = Dict[str, List[Face]]
 
-FaceTrack = namedtuple('Track',
-					   [
+FaceTrack = namedtuple('FaceTrack',
+[
 	'track_id',
 	'mean',
 	'covariance',
