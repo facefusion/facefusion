@@ -4,6 +4,7 @@ import numpy
 import scipy.linalg
 import scipy.optimize
 
+from facefusion.face_analyser import get_many_faces
 from facefusion.hash_helper import create_hash
 from facefusion.types import BoundingBox, Covariance, Embedding, Face, Mean, Measurement, TargetFaceStore, Track, TrackStore, VisionFrame
 
@@ -226,6 +227,17 @@ def get_target_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 def set_target_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 	if numpy.any(vision_frame):
 		TARGET_FACE_STORE[create_hash(vision_frame.tobytes())] = faces
+
+
+def track_frame(vision_frame : VisionFrame) -> None:
+	faces = get_target_faces(vision_frame)
+
+	if not faces:
+		faces = get_many_faces([ vision_frame ])
+
+		if faces:
+			set_target_faces(vision_frame, faces)
+	assign_frame_tracks(vision_frame, faces)
 
 
 def clear_target_faces() -> None:

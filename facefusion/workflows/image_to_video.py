@@ -9,7 +9,6 @@ from facefusion import face_tracker, ffmpeg, logger, process_manager, state_mana
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video
-from facefusion.face_analyser import get_many_faces
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
@@ -164,9 +163,7 @@ def build_face_tracks(temp_frame_paths : List[str]) -> None:
 	for temp_frame_path in temp_frame_paths:
 		if not is_process_stopping():
 			target_vision_frame = read_static_image(temp_frame_path, 'rgba')
-			target_faces = get_many_faces([ target_vision_frame[:, :, :3] ])
-			face_tracker.set_target_faces(target_vision_frame[:, :, :3], target_faces)
-			face_tracker.assign_frame_tracks(target_vision_frame[:, :, :3], target_faces)
+			face_tracker.track_frame(target_vision_frame[:, :, :3])
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
