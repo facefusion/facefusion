@@ -7,7 +7,7 @@ import scipy.optimize
 
 from facefusion.face_analyser import get_static_faces
 from facefusion.hash_helper import create_hash
-from facefusion.types import BoundingBox, Embedding, Face, KalmanCovariance, KalmanMean, KalmanMeasurement, Track, TrackStore, VisionFrame
+from facefusion.types import BoundingBox, Embedding, Face, KalmanCostMatrix, KalmanCovariance, KalmanMean, KalmanMeasurement, Track, TrackStore, VisionFrame
 
 TRACK_STATE : List[Track] = []
 TRACK_ID_COUNTER : List[int] = [ 0 ]
@@ -32,7 +32,7 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embedd
 	track_buffer = 30
 	predicted_tracks = [ predict_track(track) for track in TRACK_STATE ]
 	track_bounding_boxes = [kalman_measurement_to_bounding_box(track.mean) for track in predicted_tracks]
-	iou_cost = iou_distance(track_bounding_boxes, detection_bounding_boxes)
+	iou_cost = calculate_iou_cost_matrix(track_bounding_boxes, detection_bounding_boxes)
 	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(iou_cost, 1.0 - iou_threshold)
 
 	if detection_embeddings:
@@ -197,7 +197,7 @@ def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) ->
 	return 0.0
 
 
-def iou_distance(track_bounding_boxes : List[BoundingBox], detection_bounding_boxes : List[BoundingBox]) -> numpy.ndarray:
+def calculate_iou_cost_matrix(track_bounding_boxes : List[BoundingBox], detection_bounding_boxes : List[BoundingBox]) -> KalmanCostMatrix:
 	cost_matrix = numpy.ones((len(track_bounding_boxes), len(detection_bounding_boxes)))
 
 	for track_index, track_bounding_box in enumerate(track_bounding_boxes):
@@ -208,7 +208,7 @@ def iou_distance(track_bounding_boxes : List[BoundingBox], detection_bounding_bo
 	return cost_matrix
 
 
-def calculate_embedding_cost_matrix(track_embeddings : List[Embedding], detection_embeddings : List[Embedding]) -> numpy.ndarray:
+def calculate_embedding_cost_matrix(track_embeddings : List[Embedding], detection_embeddings : List[Embedding]) -> KalmanCostMatrix:
 	cost_matrix = numpy.ones((len(track_embeddings), len(detection_embeddings)))
 
 	for track_index, track_embedding in enumerate(track_embeddings):
@@ -219,7 +219,7 @@ def calculate_embedding_cost_matrix(track_embeddings : List[Embedding], detectio
 	return cost_matrix
 
 
-def match_cost_matrix(cost_matrix : numpy.ndarray, max_distance : float) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
+def match_cost_matrix(cost_matrix : KalmanCostMatrix, max_distance : float) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
 	matches : List[Tuple[int, int]] = []
 	unmatched_tracks = list(range(cost_matrix.shape[0]))
 	unmatched_detections = list(range(cost_matrix.shape[1]))

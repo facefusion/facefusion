@@ -4,7 +4,7 @@ import pytest
 from facefusion import state_manager
 from facefusion.face_selector import bridge_reference_by_track, order_faces_by_track, resolve_target_faces
 from facefusion.face_store import clear_faces, set_faces
-from facefusion.face_tracker import assign_frame_tracks, match_cost_matrix, clear_tracks, calculate_embedding_cost_matrix, iou_distance, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, track_frame, update_tracks
+from facefusion.face_tracker import assign_frame_tracks, calculate_embedding_cost_matrix, calculate_iou_cost_matrix, clear_tracks, kalman_initiate, kalman_predict, kalman_update, lookup_frame_tracks, match_cost_matrix, track_frame, update_tracks
 from facefusion.types import Face
 
 
@@ -45,14 +45,14 @@ def test_kalman_predict() -> None:
 	assert round(mean[4]) == 9
 
 
-def test_iou_distance() -> None:
-	cost_matrix = iou_distance([ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]) ], [ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 100.0, 100.0, 110.0, 110.0 ]) ])
+def test_calculate_iou_cost_matrix() -> None:
+	cost_matrix = calculate_iou_cost_matrix([ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]) ], [ numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 100.0, 100.0, 110.0, 110.0 ]) ])
 
 	assert cost_matrix[0][0] == 0.0
 	assert cost_matrix[0][1] == 1.0
 
 
-def test_embedding_distance() -> None:
+def test_calculate_embedding_cost_matrix() -> None:
 	embedding_a = numpy.array([ 1.0, 0.0 ])
 	embedding_b = numpy.array([ -1.0, 0.0 ])
 	cost_matrix = calculate_embedding_cost_matrix([embedding_a], [embedding_a, embedding_b])

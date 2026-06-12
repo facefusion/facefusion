@@ -16,6 +16,7 @@ Prediction : TypeAlias = NDArray[Any]
 KalmanMeasurement : TypeAlias = NDArray[Any]
 KalmanMean : TypeAlias = NDArray[Any]
 KalmanCovariance : TypeAlias = NDArray[Any]
+KalmanCostMatrix : TypeAlias = NDArray[Any]
 
 BoundingBox : TypeAlias = NDArray[Any]
 FaceLandmark5 : TypeAlias = NDArray[Any]

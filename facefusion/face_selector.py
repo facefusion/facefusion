@@ -9,9 +9,6 @@ from facefusion.common_helper import get_first
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
 from facefusion.types import BoundingBox, Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
-TRACK_MATCH_IOU = 0.1
-TRACK_FALLBACK_ORDER = 999999
-
 
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
@@ -59,16 +56,17 @@ def order_faces_by_track(target_vision_frame : VisionFrame, target_faces : List[
 
 
 def resolve_track_order(frame_tracks : List[Tuple[int, BoundingBox]], face : Face) -> int:
-	best_iou = TRACK_MATCH_IOU
-	best_track_id = TRACK_FALLBACK_ORDER
+	temp_iou = 0.1
+	temp_track_id = 999999
 
 	for track_id, bounding_box in frame_tracks:
 		current_iou = face_tracker.calculate_iou(face.bounding_box, bounding_box)
 
-		if current_iou > best_iou:
-			best_iou = current_iou
-			best_track_id = track_id
-	return best_track_id
+		if current_iou > temp_iou:
+			temp_iou = current_iou
+			temp_track_id = track_id
+
+	return temp_track_id
 
 
 def bridge_reference_by_track(reference_vision_frame : VisionFrame, reference_face : Face, target_vision_frame : VisionFrame, target_faces : List[Face], match_faces : List[Face]) -> List[Face]:
@@ -76,12 +74,14 @@ def bridge_reference_by_track(reference_vision_frame : VisionFrame, reference_fa
 		return match_faces
 
 	reference_track_id = resolve_track_order(face_tracker.lookup_frame_tracks(reference_vision_frame) or [], reference_face)
+	track_fallback_order = 999999
 
-	if reference_track_id < TRACK_FALLBACK_ORDER:
+	if reference_track_id < track_fallback_order:
 		tracked_face = find_face_by_track_id(target_vision_frame, target_faces, reference_track_id)
 
 		if tracked_face:
 			return [ tracked_face ]
+
 	return match_faces
 
 
@@ -91,20 +91,22 @@ def find_face_by_track_id(target_vision_frame : VisionFrame, target_faces : List
 	for stored_track_id, bounding_box in frame_tracks:
 		if stored_track_id == track_id:
 			return find_face_by_bounding_box(target_faces, bounding_box)
+
 	return None
 
 
 def find_face_by_bounding_box(target_faces : List[Face], bounding_box : BoundingBox) -> Optional[Face]:
-	best_iou = TRACK_MATCH_IOU
-	best_face = None
+	temp_iou = 0.1
+	temp_face = None
 
 	for face in target_faces:
 		current_iou = face_tracker.calculate_iou(face.bounding_box, bounding_box)
 
-		if current_iou > best_iou:
-			best_iou = current_iou
-			best_face = face
-	return best_face
+		if current_iou > temp_iou:
+			temp_iou = current_iou
+			temp_face = face
+
+	return temp_face
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
