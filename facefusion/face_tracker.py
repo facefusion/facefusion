@@ -7,11 +7,11 @@ import scipy.optimize
 
 from facefusion.face_analyser import get_static_faces
 from facefusion.hash_helper import create_hash
-from facefusion.types import BoundingBox, Embedding, Face, KalmanCostMatrix, KalmanCovariance, KalmanMean, KalmanMeasurement, Track, TrackStore, VisionFrame
+from facefusion.types import BoundingBox, Embedding, Face, FaceTrack, FaceTrackStore, KalmanCostMatrix, KalmanCovariance, KalmanMean, KalmanMeasurement, VisionFrame
 
-TRACK_STATE : List[Track] = []
-TRACK_ID_COUNTER : List[int] = [ 0 ]
-TRACK_STORE : TrackStore = {}
+FACE_TRACK_STATE : List[FaceTrack] = []
+FACE_TRACK_ID_COUNTER : List[int] = [0]
+FACE_TRACK_STORE : FaceTrackStore = {}
 
 
 def track_frame(vision_frame : VisionFrame) -> None:
@@ -23,15 +23,15 @@ def assign_frame_tracks(vision_frame : VisionFrame, faces : List[Face]) -> None:
 	detection_bounding_boxes = [ face.bounding_box for face in faces ]
 	detection_embeddings = [ face.embedding_norm for face in faces ]
 	track_ids = update_tracks(detection_bounding_boxes, detection_embeddings)
-	TRACK_STORE[create_hash(vision_frame.tobytes())] = list(zip(track_ids, detection_bounding_boxes))
+	FACE_TRACK_STORE[create_hash(vision_frame.tobytes())] = list(zip(track_ids, detection_bounding_boxes))
 
 
 def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embeddings : Optional[List[Embedding]] = None) -> List[int]:
 	iou_threshold = 0.2
 	embedding_max_distance = 0.4
 	track_buffer = 30
-	predicted_tracks = [ predict_track(track) for track in TRACK_STATE ]
-	track_bounding_boxes = [kalman_measurement_to_bounding_box(track.mean) for track in predicted_tracks]
+	predicted_tracks = [ predict_track(track) for track in FACE_TRACK_STATE ]
+	track_bounding_boxes = [ kalman_measurement_to_bounding_box(track.mean) for track in predicted_tracks ]
 	iou_cost = calculate_iou_cost_matrix(track_bounding_boxes, detection_bounding_boxes)
 	matches, unmatched_tracks, unmatched_detections = match_cost_matrix(iou_cost, 1.0 - iou_threshold)
 
@@ -47,7 +47,7 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embedd
 		unmatched_detections = [ unmatched_detections[sub_detection_index] for sub_detection_index in residual_detections ]
 
 	track_ids = [ 0 ] * len(detection_bounding_boxes)
-	next_tracks : List[Track] = []
+	next_tracks : List[FaceTrack] = []
 
 	for track_index, detection_index in matches:
 		track = predicted_tracks[track_index]
@@ -65,28 +65,28 @@ def update_tracks(detection_bounding_boxes : List[BoundingBox], detection_embedd
 			next_tracks.append(track._replace(state = 'lost', time_since_update = time_since_update))
 
 	for detection_index in unmatched_detections:
-		TRACK_ID_COUNTER[0] += 1
+		FACE_TRACK_ID_COUNTER[0] += 1
 		measurement = bounding_box_to_kalman_measurement(detection_bounding_boxes[detection_index])
 		mean, covariance = kalman_initiate(measurement)
 		embedding = detection_embeddings[detection_index] if detection_embeddings else None
-		next_tracks.append(Track(track_id = TRACK_ID_COUNTER[0], mean = mean, covariance = covariance, state = 'tracked', hit_streak = 1, time_since_update = 0, embedding = embedding))
-		track_ids[detection_index] = TRACK_ID_COUNTER[0]
+		next_tracks.append(FaceTrack(track_id = FACE_TRACK_ID_COUNTER[0], mean = mean, covariance = covariance, state ='tracked', hit_streak = 1, time_since_update = 0, embedding = embedding))
+		track_ids[detection_index] = FACE_TRACK_ID_COUNTER[0]
 
-	TRACK_STATE[:] = next_tracks
+	FACE_TRACK_STATE[:] = next_tracks
 	return track_ids
 
 
 def lookup_frame_tracks(vision_frame : VisionFrame) -> Optional[List[Tuple[int, BoundingBox]]]:
-	return TRACK_STORE.get(create_hash(vision_frame.tobytes()))
+	return FACE_TRACK_STORE.get(create_hash(vision_frame.tobytes()))
 
 
 def clear_tracks() -> None:
-	TRACK_STORE.clear()
-	TRACK_STATE.clear()
-	TRACK_ID_COUNTER[0] = 0
+	FACE_TRACK_STORE.clear()
+	FACE_TRACK_STATE.clear()
+	FACE_TRACK_ID_COUNTER[0] = 0
 
 
-def predict_track(track : Track) -> Track:
+def predict_track(track : FaceTrack) -> FaceTrack:
 	mean = track.mean.copy()
 
 	if track.state == 'lost':
