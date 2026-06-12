@@ -10,7 +10,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import create_int_metavar
+from facefusion.common_helper import create_int_metavar, get_middle
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
@@ -285,10 +285,11 @@ def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
 def process_frame(inputs : AgeModifierInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
+	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:

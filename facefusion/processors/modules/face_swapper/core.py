@@ -10,7 +10,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import get_first, is_macos
+from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_one_face, get_static_faces, scale_face
@@ -777,11 +777,12 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
+	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if source_face and target_faces:
 		source_vision_frame = get_first(source_vision_frames)

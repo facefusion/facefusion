@@ -14,7 +14,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
+from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, pack_video_frames, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
 
 
@@ -158,9 +158,9 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	target_vision_frames = pack_video_frames(state_manager.get_item('target_path'), frame_number + 1)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	target_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = target_vision_frame.copy()
+	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
@@ -178,7 +178,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
-			'target_vision_frame': target_vision_frame[:, :, :3],
+			'target_vision_frames': target_vision_frames,
 			'temp_vision_frame': temp_vision_frame[:, :, :3],
 			'temp_vision_mask': temp_vision_mask
 		})

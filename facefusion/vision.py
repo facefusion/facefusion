@@ -104,6 +104,23 @@ def count_video_frame_total(video_path : str) -> int:
 	return 0
 
 
+def pack_video_frames(video_path : str, frame_number : int = 0) -> List[VisionFrame]:
+	vision_frames = []
+
+	if is_video(video_path):
+		video_frame_total = count_video_frame_total(video_path)
+
+		for __frame_number__ in range(frame_number - 5, frame_number + 6):
+			vision_frame = create_empty_vision_frame()
+
+			if 0 < __frame_number__ < video_frame_total + 1:
+				vision_frame = read_static_video_frame(video_path, __frame_number__)
+
+			vision_frames.append(vision_frame)
+
+	return vision_frames
+
+
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
 	if is_video(video_path):
 		video_fps = detect_video_fps(video_path)
@@ -305,6 +322,10 @@ def calculate_histogram_difference(source_vision_frame : VisionFrame, target_vis
 def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, blend_factor : float) -> VisionFrame:
 	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - blend_factor, target_vision_frame, blend_factor, 0)
 	return blend_vision_frame
+
+
+def create_empty_vision_frame() -> VisionFrame:
+	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:

@@ -10,7 +10,7 @@ from cv2.typing import Size
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import create_int_metavar
+from facefusion.common_helper import create_int_metavar, get_middle
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -419,10 +419,11 @@ def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 def process_frame(inputs : DeepSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
+	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:

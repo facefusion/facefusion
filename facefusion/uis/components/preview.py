@@ -251,7 +251,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
 				'source_vision_frames': source_vision_frames,
-				'target_vision_frame': target_vision_frame[:, :, :3],
+				'target_vision_frames': [ target_vision_frame[:, :, :3] ],
 				'temp_vision_frame': temp_vision_frame[:, :, :3],
 				'temp_vision_mask': temp_vision_mask
 			})
@@ -270,7 +270,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 
 
 def create_face_by_face(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
-	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, target_vision_frame[:, :, :3])
+	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, [ target_vision_frame[:, :, :3] ])
 	target_face = get_one_face(target_faces)
 
 	if target_face:
