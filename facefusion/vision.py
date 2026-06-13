@@ -1,6 +1,6 @@
 import math
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy
@@ -71,10 +71,12 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 
 
 @lru_cache(maxsize = 64)
+#todo - phase3: that might just use read_static_video_frames + frame number x + frame_offset 0
 def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	return read_video_frame(video_path, frame_number)
 
 
+#todo - phase3: that might just use read_video_frames + frame number x + frame_offset 0
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
@@ -92,6 +94,53 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
+#todo - phase1: needs to be named read_video_frames + have read_static_video_frames with the lru_cache
+#todo - phase2: try different max-size against benchmark suite
+@lru_cache(maxsize = 8)
+def read_video_frame_pack(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
+	video_frame_pack = {}
+
+	if is_video(video_path) and pack_number > -1:
+		video_capture = get_video_capture(video_path)
+
+		if video_capture and video_capture.isOpened():
+			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+			pack_start = pack_number * 40
+
+			video_capture.set(cv2.CAP_PROP_POS_FRAMES, pack_start)
+
+			for frame_number in range(pack_start, min(pack_start + 40, frame_total)):
+				has_vision_frame, vision_frame = video_capture.read()
+
+				if has_vision_frame:
+					video_frame_pack[frame_number] = vision_frame
+
+	return video_frame_pack
+
+
+def read_video_frames(video_path : str, frame_number_start : int, frame_number_end : int) -> List[VisionFrame]:
+	vision_frames = []
+	video_frame_pack = {}
+
+	# move semaphore to read_video_frame_pack method
+	with thread_semaphore():
+		# todo - phase1: the 40 needs to be an internal number or you even calc it from the frame_ranger * 2 or * 4
+		for pack_number in range(frame_number_start // 40, frame_number_end // 40 + 1):
+			video_frame_pack.update(read_video_frame_pack(video_path, pack_number))
+
+	#todo - phase2: try to have only one for loop in this method
+	for frame_number in range(frame_number_start, frame_number_end + 1):
+		if frame_number in video_frame_pack:
+			vision_frames.append(video_frame_pack.get(frame_number))
+
+	return vision_frames
+
+
+def pack_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
+	#todo - phase1: should contain the body of read_video_frames, but keep the args of this method as is
+	return read_video_frames(video_path, frame_number - frame_offset, frame_number + frame_offset)
+
+
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
@@ -102,23 +151,6 @@ def count_video_frame_total(video_path : str) -> int:
 				return video_frame_total
 
 	return 0
-
-
-def pack_video_frames(video_path : str, frame_number : int = 0) -> List[VisionFrame]:
-	vision_frames = []
-
-	if is_video(video_path):
-		video_frame_total = count_video_frame_total(video_path)
-
-		for __frame_number__ in range(frame_number - 5, frame_number + 6):
-			vision_frame = create_empty_vision_frame()
-
-			if 0 < __frame_number__ < video_frame_total + 1:
-				vision_frame = read_static_video_frame(video_path, __frame_number__)
-
-			vision_frames.append(vision_frame)
-
-	return vision_frames
 
 
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
