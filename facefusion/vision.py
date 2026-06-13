@@ -94,22 +94,26 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-#todo - phase1: needs to be named read_video_frames + have read_static_video_frames with the lru_cache
-#todo - phase2: try different max-size against benchmark suite
+#todo - phase1.1: try different max-size against benchmark suite
 @lru_cache(maxsize = 8)
-def read_video_frame_pack(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
+def read_static_video_frames(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
+	return read_video_frames(video_path, pack_number)
+
+
+def read_video_frames(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
 	video_frame_pack = {}
+	frame_range = 40
 
 	if is_video(video_path) and pack_number > -1:
 		video_capture = get_video_capture(video_path)
 
 		if video_capture and video_capture.isOpened():
 			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			pack_start = pack_number * 40
+			pack_start = pack_number * frame_range
 
 			video_capture.set(cv2.CAP_PROP_POS_FRAMES, pack_start)
 
-			for frame_number in range(pack_start, min(pack_start + 40, frame_total)):
+			for frame_number in range(pack_start, min(pack_start + frame_range, frame_total)):
 				has_vision_frame, vision_frame = video_capture.read()
 
 				if has_vision_frame:
@@ -118,15 +122,19 @@ def read_video_frame_pack(video_path : str, pack_number : int = 0) -> Dict[int, 
 	return video_frame_pack
 
 
-def read_video_frames(video_path : str, frame_number_start : int, frame_number_end : int) -> List[VisionFrame]:
+def pack_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
 	vision_frames = []
 	video_frame_pack = {}
+	frame_number_start = frame_number - frame_offset
+	frame_number_end = frame_number + frame_offset
+	# todo - phase1: the 40 needs to be an internal number or you even calc it from the frame_ranger * 2 or * 4
+	frame_range = 40
 
-	# move semaphore to read_video_frame_pack method
+	# todo - phase1: move semaphore to read_video_frames method
 	with thread_semaphore():
-		# todo - phase1: the 40 needs to be an internal number or you even calc it from the frame_ranger * 2 or * 4
-		for pack_number in range(frame_number_start // 40, frame_number_end // 40 + 1):
-			video_frame_pack.update(read_video_frame_pack(video_path, pack_number))
+		for pack_number in range(frame_number_start // frame_range, frame_number_end // frame_range + 1):
+			video_frames = read_static_video_frames(video_path, pack_number)
+			video_frame_pack.update(video_frames)
 
 	#todo - phase2: try to have only one for loop in this method
 	for frame_number in range(frame_number_start, frame_number_end + 1):
@@ -134,11 +142,6 @@ def read_video_frames(video_path : str, frame_number_start : int, frame_number_e
 			vision_frames.append(video_frame_pack.get(frame_number))
 
 	return vision_frames
-
-
-def pack_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
-	#todo - phase1: should contain the body of read_video_frames, but keep the args of this method as is
-	return read_video_frames(video_path, frame_number - frame_offset, frame_number + frame_offset)
 
 
 def count_video_frame_total(video_path : str) -> int:
