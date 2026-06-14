@@ -93,42 +93,42 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 
 
 @lru_cache(maxsize = 4)
-def read_static_video_frames(video_path : str, pack_number : int, frame_range : int) -> Dict[int, VisionFrame]:
-	return read_video_frames(video_path, pack_number, frame_range)
+def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+	return read_video_chunk(video_path, chunk_number, chunk_size)
 
 
-def read_video_frames(video_path : str, pack_number : int, frame_range : int) -> Dict[int, VisionFrame]:
-	video_frame_pack = {}
+def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+	video_frame_chunk = {}
 
-	if is_video(video_path) and pack_number > -1:
+	if is_video(video_path) and chunk_number > -1:
 		video_capture = get_video_capture(video_path)
 
 		if video_capture and video_capture.isOpened():
 			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			pack_start = pack_number * frame_range
+			chunk_start = chunk_number * chunk_size
 
 			with thread_semaphore():
-				video_capture.set(cv2.CAP_PROP_POS_FRAMES, pack_start)
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, chunk_start)
 
-				for frame_number in range(pack_start, min(pack_start + frame_range, frame_total)):
+				for frame_number in range(chunk_start, min(chunk_start + chunk_size, frame_total)):
 					has_vision_frame, vision_frame = video_capture.read()
 
 					if has_vision_frame:
-						video_frame_pack[frame_number] = vision_frame
+						video_frame_chunk[frame_number] = vision_frame
 
-	return video_frame_pack
+	return video_frame_chunk
 
 
-def pack_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
+def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
 	vision_frames = []
-	frame_range = (frame_offset * 2 + 1) * 4
+	chunk_size = (frame_offset * 2 + 1) * 4
 
 	with thread_lock():
 		for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
-			video_frame_pack = read_static_video_frames(video_path, current_number // frame_range, frame_range)
+			video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
 
-			if current_number in video_frame_pack:
-				vision_frames.append(video_frame_pack.get(current_number))
+			if current_number in video_frame_chunk:
+				vision_frames.append(video_frame_chunk.get(current_number))
 
 	return vision_frames
 

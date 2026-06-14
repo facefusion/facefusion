@@ -23,7 +23,7 @@ from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame, read_static_video_frames
+from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame, read_static_video_chunk
 
 
 @lru_cache()
@@ -320,7 +320,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
-	read_static_video_frames.cache_clear()
+	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
 
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
