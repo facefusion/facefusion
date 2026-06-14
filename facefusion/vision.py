@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
-from facefusion.thread_helper import thread_semaphore
+from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
@@ -71,12 +71,10 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 
 
 @lru_cache(maxsize = 64)
-#todo - phase3: that might just use read_static_video_frames + frame number x + frame_offset 0
 def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	return read_video_frame(video_path, frame_number)
 
 
-#todo - phase3: that might just use read_video_frames + frame number x + frame_offset 0
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
@@ -94,15 +92,13 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-#todo - phase1.1: try different max-size against benchmark suite
-@lru_cache(maxsize = 8)
-def read_static_video_frames(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
-	return read_video_frames(video_path, pack_number)
+@lru_cache(maxsize = 4)
+def read_static_video_frames(video_path : str, pack_number : int, frame_range : int) -> Dict[int, VisionFrame]:
+	return read_video_frames(video_path, pack_number, frame_range)
 
 
-def read_video_frames(video_path : str, pack_number : int = 0) -> Dict[int, VisionFrame]:
+def read_video_frames(video_path : str, pack_number : int, frame_range : int) -> Dict[int, VisionFrame]:
 	video_frame_pack = {}
-	frame_range = 40
 
 	if is_video(video_path) and pack_number > -1:
 		video_capture = get_video_capture(video_path)
@@ -111,35 +107,28 @@ def read_video_frames(video_path : str, pack_number : int = 0) -> Dict[int, Visi
 			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 			pack_start = pack_number * frame_range
 
-			video_capture.set(cv2.CAP_PROP_POS_FRAMES, pack_start)
+			with thread_semaphore():
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, pack_start)
 
-			for frame_number in range(pack_start, min(pack_start + frame_range, frame_total)):
-				has_vision_frame, vision_frame = video_capture.read()
+				for frame_number in range(pack_start, min(pack_start + frame_range, frame_total)):
+					has_vision_frame, vision_frame = video_capture.read()
 
-				if has_vision_frame:
-					video_frame_pack[frame_number] = vision_frame
+					if has_vision_frame:
+						video_frame_pack[frame_number] = vision_frame
 
 	return video_frame_pack
 
 
 def pack_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
 	vision_frames = []
-	video_frame_pack = {}
-	frame_number_start = frame_number - frame_offset
-	frame_number_end = frame_number + frame_offset
-	# todo - phase1: the 40 needs to be an internal number or you even calc it from the frame_ranger * 2 or * 4
-	frame_range = 40
+	frame_range = (frame_offset * 2 + 1) * 4
 
-	# todo - phase1: move semaphore to read_video_frames method
-	with thread_semaphore():
-		for pack_number in range(frame_number_start // frame_range, frame_number_end // frame_range + 1):
-			video_frames = read_static_video_frames(video_path, pack_number)
-			video_frame_pack.update(video_frames)
+	with thread_lock():
+		for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
+			video_frame_pack = read_static_video_frames(video_path, current_number // frame_range, frame_range)
 
-	#todo - phase2: try to have only one for loop in this method
-	for frame_number in range(frame_number_start, frame_number_end + 1):
-		if frame_number in video_frame_pack:
-			vision_frames.append(video_frame_pack.get(frame_number))
+			if current_number in video_frame_pack:
+				vision_frames.append(video_frame_pack.get(current_number))
 
 	return vision_frames
 
