@@ -21,15 +21,17 @@ def is_process_stopping() -> bool:
 
 
 def setup() -> ErrorCode:
-	create_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-	logger.debug(translator.get('creating_temp'), __name__)
-	return 0
+	if create_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path')):
+		logger.debug(translator.get('creating_temp'), __name__)
+		return 0
+	return 1
 
 
 def clear() -> ErrorCode:
-	clear_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-	logger.debug(translator.get('clearing_temp'), __name__)
-	return 0
+	if clear_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path')):
+		logger.debug(translator.get('clearing_temp'), __name__)
+		return 0
+	return 1
 
 
 def analyse_image() -> ErrorCode:
