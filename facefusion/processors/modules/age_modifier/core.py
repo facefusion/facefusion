@@ -290,7 +290,7 @@ def process_frame(inputs : AgeModifierInputs) -> ProcessorOutputs:
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
 
 	if target_faces:
 		for target_face in target_faces:
