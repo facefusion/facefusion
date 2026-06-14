@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoFormat, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -187,14 +187,16 @@ def copy_video_encoder() -> List[Command]:
 	return set_video_encoder('copy')
 
 
-def set_video_tag(video_encoder : VideoEncoder) -> List[Command]:
-	if video_encoder in [ 'libx265', 'hevc_nvenc', 'hevc_amf', 'hevc_qsv', 'hevc_videotoolbox' ]:
+def conditional_set_video_tag(video_encoder : VideoEncoder, video_format : VideoFormat) -> List[Command]:
+	if video_format in [ 'm4v', 'mov', 'mp4' ] and video_encoder in [ 'libx265', 'hevc_nvenc', 'hevc_amf', 'hevc_qsv', 'hevc_videotoolbox' ]:
 		return [ '-tag:v', 'hvc1' ]
 	return []
 
 
-def set_faststart() -> List[Command]:
-	return [ '-movflags', '+faststart' ]
+def conditional_set_faststart(video_format : VideoFormat) -> List[Command]:
+	if video_format in [ 'm4v', 'mov', 'mp4' ]:
+		return [ '-movflags', '+faststart' ]
+	return []
 
 
 def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> List[Command]:
