@@ -187,15 +187,15 @@ def copy_video_encoder() -> List[Command]:
 	return set_video_encoder('copy')
 
 
-def conditional_set_video_tag(video_encoder : VideoEncoder, video_format : VideoFormat) -> List[Command]:
-	if video_format in [ 'm4v', 'mov', 'mp4' ] and video_encoder in [ 'libx265', 'hevc_nvenc', 'hevc_amf', 'hevc_qsv', 'hevc_videotoolbox' ]:
-		return [ '-tag:v', 'hvc1' ]
+def set_faststart(video_format : VideoFormat) -> List[Command]:
+	if video_format in [ 'm4v', 'mov', 'mp4' ]:
+		return [ '-movflags', '+faststart' ]
 	return []
 
 
-def conditional_set_faststart(video_format : VideoFormat) -> List[Command]:
-	if video_format in [ 'm4v', 'mov', 'mp4' ]:
-		return [ '-movflags', '+faststart' ]
+def set_video_tag(video_encoder : VideoEncoder, video_format : VideoFormat) -> List[Command]:
+	if video_format in [ 'm4v', 'mov', 'mp4' ] and video_encoder in [ 'libx265', 'hevc_nvenc', 'hevc_amf', 'hevc_qsv', 'hevc_videotoolbox' ]:
+		return [ '-tag:v', 'hvc1' ]
 	return []
 
 
