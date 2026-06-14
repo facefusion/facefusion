@@ -19,7 +19,7 @@ from facefusion.processors.modules.face_debugger.types import FaceDebuggerInputs
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_frame, read_static_video_chunk
+from facefusion.vision import read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 def get_inference_pool() -> InferencePool:
@@ -242,9 +242,10 @@ def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frames = inputs.get('target_vision_frames')
-	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
+
+	target_vision_frame = get_middle(target_vision_frames)
 	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
 
 	if target_faces:

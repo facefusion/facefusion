@@ -20,7 +20,7 @@ from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame, read_static_video_chunk
+from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 @lru_cache()

@@ -23,7 +23,7 @@ from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import match_frame_color, read_static_image, read_static_video_frame, read_static_video_chunk
+from facefusion.vision import match_frame_color, read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 @lru_cache()
@@ -287,9 +287,10 @@ def process_frame(inputs : AgeModifierInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frames = inputs.get('target_vision_frames')
-	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
+
+	target_vision_frame = get_middle(target_vision_frames)
 	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
 
 	if target_faces:

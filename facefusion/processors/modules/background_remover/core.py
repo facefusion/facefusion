@@ -22,7 +22,7 @@ from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_frame, read_static_video_chunk
+from facefusion.vision import read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 @lru_cache()
