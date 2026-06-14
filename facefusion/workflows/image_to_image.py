@@ -38,10 +38,12 @@ def setup() -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 
-	logger.debug(translator.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(translator.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
+	if clear_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('clearing_temp'), __name__)
+
+	if create_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('creating_temp'), __name__)
+
 	return 0
 
 
