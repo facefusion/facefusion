@@ -5,7 +5,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
 from typing import Tuple
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import cv2
 import numpy
@@ -18,7 +18,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
-from facefusion.types import BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
+from facefusion.types import Buffer, BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -44,8 +44,11 @@ def before_each() -> None:
 	rtc_store.clear()
 
 
-def set_ready_event(ready_event : threading.Event, track : int, close_callback : FrameHandler) -> None:
+def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -> threading.Event:
+	frame_handler(buffer, 0)
+	ready_event = threading.Event()
 	ready_event.set()
+	return ready_event
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96), ('vp9', 98) ])
@@ -57,6 +60,12 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 	rtc_peer : RtcPeer =\
 	{
 		'peer_connection': peer_connection,
+		'audio':
+		{
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': 'opus'
+		},
 		'video':
 		{
 			'sender_track': video_sender_track,
@@ -101,12 +110,8 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
 
-	datachannel_mock = MagicMock()
-	ready_event = threading.Event()
-	datachannel_mock.rtcSetClosedCallback.side_effect = partial(set_ready_event, ready_event)
-
 	with ThreadPoolExecutor(max_workers = 1) as executor:
-		with patch('facefusion.libraries.datachannel.create_static_library', return_value = datachannel_mock):
+		with patch('facefusion.apis.stream_video.create_receive_event', side_effect = partial(dispatch_frame, bytes([ 0 ]))):
 			with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 				with patch('facefusion.apis.stream_video.process_video_frame', return_value = BufferPack(buffer = video_frame.tobytes(), resolution = (426, 226))):
 					rtc_peer_video : RtcPeerVideo =\
@@ -115,12 +120,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 						'receiver_track': 0,
 						'codec': video_codec
 					}
-					video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_queue, executor), daemon = True)
-					video_receiver_thread.start()
-					ready_event.wait(timeout = 5.0)
-					datachannel_mock.rtcSetFrameCallback.call_args[0][1](0, bytes([ 0 ]), 1, None, None)
-					datachannel_mock.rtcSetClosedCallback.call_args[0][1](0, None)
-					video_receiver_thread.join(timeout = 5.0)
+					receive_video_frames(rtc_peer_video, video_queue, executor)
 					_, video_future = video_queue.get_nowait()
 
 	video_buffer = video_future.result().get('buffer')
@@ -267,7 +267,7 @@ def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	with ThreadPoolExecutor(max_workers = 1) as executor:
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			with patch('facefusion.apis.stream_video.process_video_frame', return_value = BufferPack(buffer = video_frame.tobytes(), resolution = (426, 226))):
-				handle_video_frame(video_codec, video_decoder, video_queue, executor, 0, ctypes.c_void_p(), 1, ctypes.c_void_p(), ctypes.c_void_p())
+				handle_video_frame(video_codec, video_decoder, video_queue, executor, bytes(), 0)
 				_, video_future = video_queue.get_nowait()
 
 	video_buffer = video_future.result().get('buffer')

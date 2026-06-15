@@ -1,5 +1,3 @@
-import ctypes
-import time
 from functools import partial
 from queue import Queue
 from typing import Optional, Tuple
@@ -13,6 +11,7 @@ from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPee
 
 
 def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
+	audio_codec = rtc_peer.get('audio').get('codec')
 	temp_audio_time, temp_audio_frame = audio_queue.get()
 	audio_encoder = opus_encoder.create(48000, 2)
 
@@ -20,7 +19,7 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, Au
 		audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), 960)
 
 		if audio_buffer:
-			audio_timestamp = int(temp_audio_time * 48000)
+			audio_timestamp = rtc.convert_time_to_timestamp(audio_codec, temp_audio_time)
 			rtc.send_audio(rtc_peer, audio_buffer, audio_timestamp)
 
 		temp_audio_time, temp_audio_frame = audio_queue.get()
@@ -59,10 +58,10 @@ def destroy_audio_decoder(audio_codec : AudioCodec, audio_decoder : OpusDecoder)
 		opus_decoder.destroy(audio_decoder)
 
 
-def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:
-	audio_buffer = ctypes.string_at(data, size)
+def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], audio_buffer : Buffer, audio_timestamp : int) -> None:
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 
 	if audio_frame:
-		temp_audio_frame = numpy.frombuffer(audio_frame, dtype = numpy.float32)
-		audio_queue.put((time.monotonic(), temp_audio_frame))
+		audio_frame = numpy.frombuffer(audio_frame, dtype = numpy.float32)
+		audio_time = rtc.convert_timestamp_to_time(audio_codec, audio_timestamp)
+		audio_queue.put((audio_time, audio_frame))
