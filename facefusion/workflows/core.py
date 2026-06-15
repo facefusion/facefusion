@@ -54,7 +54,7 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 	return create_empty_audio_frame()
 
 
-def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
+def conditional_get_source_voice_frame(frame_number : int) -> AudioFrame:
 	if state_manager.get_item('workflow') in [ 'audio-to-image:frames', 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		temp_fps = state_manager.get_item('output_audio_fps')

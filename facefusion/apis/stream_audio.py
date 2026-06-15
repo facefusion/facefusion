@@ -16,8 +16,7 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, Au
 	audio_encoder = opus_encoder.create(48000, 2)
 
 	while numpy.any(temp_audio_frame):
-		audio_frame_size = len(temp_audio_frame) // 2
-		audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), audio_frame_size)
+		audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), 2)
 
 		if audio_buffer:
 			audio_timestamp = rtc.convert_time_to_timestamp(audio_codec, temp_audio_time)
@@ -44,7 +43,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tupl
 
 def decode_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, input_buffer : Buffer) -> Optional[Buffer]:
 	if audio_codec == 'opus':
-		return opus_decoder.decode(audio_decoder, input_buffer, 960, 2)
+		return opus_decoder.decode(audio_decoder, input_buffer, 2)
 	return None
 
 

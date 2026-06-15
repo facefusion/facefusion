@@ -14,17 +14,19 @@ def create(sample_rate : int, channel_total : int) -> Optional[OpusDecoder]:
 	return None
 
 
-def decode(opus_decoder : OpusDecoder, input_buffer : Buffer, frame_size : int, channel_total : int) -> Buffer:
+def decode(opus_decoder : OpusDecoder, input_buffer : Buffer, channel_total : int) -> Buffer:
 	opus_library = opus_module.create_static_library()
 	output_buffer = bytes()
 
 	if opus_library:
 		input_total = len(input_buffer)
-		decode_buffer = (ctypes.c_float * (frame_size * channel_total))()
-		decode_length = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, decode_buffer, frame_size, 0)
+		sample_size = ctypes.sizeof(ctypes.c_float)
+		sample_total = opus_library.opus_decoder_get_nb_samples(opus_decoder, input_buffer, input_total)
+		sample_buffer = (ctypes.c_float * (sample_total * channel_total))()
+		output_total = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, sample_buffer, sample_total, 0)
 
-		if decode_length:
-			output_buffer = ctypes.string_at(ctypes.addressof(decode_buffer), decode_length * channel_total * ctypes.sizeof(ctypes.c_float))
+		if output_total:
+			output_buffer = ctypes.string_at(ctypes.addressof(sample_buffer), output_total * channel_total * sample_size)
 
 	return output_buffer
 
