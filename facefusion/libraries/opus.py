@@ -115,6 +115,9 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.opus_decode_float.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int ]
 	library.opus_decode_float.restype = ctypes.c_int
 
+	library.opus_decoder_get_nb_samples.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int ]
+	library.opus_decoder_get_nb_samples.restype = ctypes.c_int
+
 	library.opus_decoder_destroy.argtypes = [ ctypes.c_void_p ]
 	library.opus_decoder_destroy.restype = None
 

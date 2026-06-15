@@ -14,13 +14,14 @@ def create(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
 	return None
 
 
-def encode(opus_encoder : OpusEncoder, input_buffer : Buffer, frame_size : int) -> Buffer:
+def encode(opus_encoder : OpusEncoder, input_buffer : Buffer, channel_total : int) -> Buffer:
 	opus_library = opus_module.create_static_library()
 	output_buffer = bytes()
 
 	if opus_library:
+		frame_size = len(input_buffer) // (ctypes.sizeof(ctypes.c_float) * channel_total)
+		encode_buffer = (ctypes.c_float * (frame_size * channel_total)).from_buffer_copy(input_buffer)
 		temp_buffer = ctypes.create_string_buffer(2048)
-		encode_buffer = ctypes.cast(ctypes.create_string_buffer(input_buffer), ctypes.POINTER(ctypes.c_float))
 		encode_length = opus_library.opus_encode_float(opus_encoder, encode_buffer, frame_size, temp_buffer, 2048)
 
 		if encode_length:
