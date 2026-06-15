@@ -74,8 +74,8 @@ def test_read_video_chunk() -> None:
 
 def test_select_video_frames() -> None:
 	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 50, 5)) == 11
-	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 1, 5)) == 7
-	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 269, 5)) == 6
+	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 1, 5)) == 11
+	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 269, 5)) == 11
 	assert select_video_frames('invalid', 50, 5) == []
 
 

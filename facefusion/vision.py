@@ -126,9 +126,8 @@ def select_video_frames(video_path : str, frame_number : int = 0, frame_offset :
 	with thread_lock():
 		for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
 			video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
-
-			if current_number in video_frame_chunk:
-				vision_frames.append(video_frame_chunk.get(current_number))
+			vision_frame = video_frame_chunk.get(current_number, create_empty_vision_frame())
+			vision_frames.append(vision_frame)
 
 	return vision_frames
 
