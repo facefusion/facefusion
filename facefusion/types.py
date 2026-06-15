@@ -1,6 +1,7 @@
+import ctypes
 from collections import namedtuple
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
 import numpy
@@ -555,3 +556,68 @@ State = TypedDict('State',
 })
 ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
+
+BitRate : TypeAlias = int
+
+AudioCodec : TypeAlias = Literal['opus']
+VideoCodec : TypeAlias = Literal['av1', 'vp8', 'vp9']
+
+AomVideoCodec : TypeAlias = Literal['av1']
+VxpVideoCodec : TypeAlias = Literal['vp8', 'vp9']
+
+FrameHandler : TypeAlias = Callable[..., None]
+
+AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
+AomDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
+OpusEncoder : TypeAlias = ctypes.c_void_p
+OpusDecoder : TypeAlias = ctypes.c_void_p
+VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
+VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
+
+AomPointer = TypedDict('AomPointer',
+{
+	'buffer' : bytes,
+	'resolution' : Resolution
+})
+VpxPointer = TypedDict('VpxPointer',
+{
+	'buffer' : bytes,
+	'resolution' : Resolution
+})
+
+PeerConnection : TypeAlias = int
+SdpOffer : TypeAlias = str
+SdpAnswer : TypeAlias = str
+MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv']
+
+RtcTrackInit : TypeAlias = Any
+
+RtcVideoTrack : TypeAlias = int
+RtcAudioTrack : TypeAlias = int
+
+RtcPeerAudio = TypedDict('RtcPeerAudio',
+{
+	'sender_track': RtcAudioTrack,
+	'receiver_track': RtcAudioTrack,
+	'codec': AudioCodec,
+})
+
+RtcPeerVideo = TypedDict('RtcPeerVideo',
+{
+	'sender_track': RtcVideoTrack,
+	'receiver_track': RtcVideoTrack,
+	'codec': VideoCodec,
+})
+
+RtcPeer = TypedDict('RtcPeer',
+{
+	'peer_connection': PeerConnection,
+	'audio': NotRequired[RtcPeerAudio],
+	'video': RtcPeerVideo,
+	'sender_bitrate': ctypes.c_uint,
+	'receiver_bitrate': ctypes.c_uint
+})
+RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
+
+LibraryOptions : TypeAlias = Dict[str, Any]
+LibrarySet : TypeAlias = Dict[str, LibraryOptions]

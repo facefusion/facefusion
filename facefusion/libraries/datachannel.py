@@ -1,0 +1,294 @@
+import ctypes
+from functools import lru_cache
+from typing import Optional
+
+from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
+from facefusion.filesystem import resolve_relative_path
+from facefusion.types import LibrarySet
+
+
+@lru_cache
+def create_static_library_set() -> Optional[LibrarySet]:
+	if is_linux():
+		return\
+		{
+			'hashes':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libcrypto.hash'),
+					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libssl.hash'),
+					'path': resolve_relative_path('../.libraries/libssl.hash')
+				}
+			},
+			'sources':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libcrypto.so'),
+					'path': resolve_relative_path('../.libraries/libcrypto.so')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.so'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.so')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libssl.so'),
+					'path': resolve_relative_path('../.libraries/libssl.so')
+				}
+			}
+		}
+	if is_macos():
+		return\
+		{
+			'hashes':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libcrypto.hash'),
+					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libssl.hash'),
+					'path': resolve_relative_path('../.libraries/libssl.hash')
+				}
+			},
+			'sources':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libcrypto.dylib'),
+					'path': resolve_relative_path('../.libraries/libcrypto.dylib')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.dylib'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.dylib')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libssl.dylib'),
+					'path': resolve_relative_path('../.libraries/libssl.dylib')
+				}
+			}
+		}
+	if is_windows():
+		return\
+		{
+			'hashes':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/crypto.hash'),
+					'path': resolve_relative_path('../.libraries/crypto.hash')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.hash')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/ssl.hash'),
+					'path': resolve_relative_path('../.libraries/ssl.hash')
+				}
+			},
+			'sources':
+			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/crypto.dll'),
+					'path': resolve_relative_path('../.libraries/crypto.dll')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.dll'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.dll')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/ssl.dll'),
+					'path': resolve_relative_path('../.libraries/ssl.dll')
+				}
+			}
+		}
+
+	return None
+
+
+def pre_check() -> bool:
+	library_hash_set = create_static_library_set().get('hashes')
+	library_source_set = create_static_library_set().get('sources')
+
+	return conditional_download_hashes(library_hash_set) and conditional_download_sources(library_source_set)
+
+
+@lru_cache
+def create_static_library() -> Optional[ctypes.CDLL]:
+	crypto_source_path = create_static_library_set().get('sources').get('crypto').get('path')
+	datachannel_source_path = create_static_library_set().get('sources').get('datachannel').get('path')
+	ssl_source_path = create_static_library_set().get('sources').get('ssl').get('path')
+
+	if crypto_source_path and datachannel_source_path and ssl_source_path:
+		if is_windows():
+			ctypes.CDLL(crypto_source_path, winmode = 0)
+			ctypes.CDLL(ssl_source_path, winmode = 0)
+			library = ctypes.CDLL(datachannel_source_path, winmode = 0)
+		else:
+			ctypes.CDLL(crypto_source_path)
+			ctypes.CDLL(ssl_source_path)
+			library = ctypes.CDLL(datachannel_source_path)
+
+		if library:
+			return init_ctypes(library)
+
+	return None
+
+
+def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
+	library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
+	library.rtcInitLogger.restype = None
+	library.rtcInitLogger(2, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
+
+	library.rtcCreatePeerConnection.restype = ctypes.c_int
+
+	library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
+	library.rtcDeletePeerConnection.restype = ctypes.c_int
+
+	library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	library.rtcSetLocalDescription.restype = ctypes.c_int
+
+	library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
+	library.rtcSetRemoteDescription.restype = ctypes.c_int
+
+	library.rtcAddTrackEx.restype = ctypes.c_int
+
+	library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
+	library.rtcSendMessage.restype = ctypes.c_int
+
+	library.rtcSetAV1Packetizer.restype = ctypes.c_int
+	library.rtcSetVP8Packetizer.restype = ctypes.c_int
+	library.rtcSetVP9Packetizer.restype = ctypes.c_int
+
+	library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
+	library.rtcChainRtcpSrReporter.restype = ctypes.c_int
+
+	library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
+	library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
+
+	library.rtcIsOpen.argtypes = [ ctypes.c_int ]
+	library.rtcIsOpen.restype = ctypes.c_bool
+
+	library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	library.rtcChainRtcpNackResponder.restype = ctypes.c_int
+
+	library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
+	library.rtcGetLocalDescription.restype = ctypes.c_int
+
+	library.rtcSetOpusPacketizer.restype = ctypes.c_int
+
+	library.rtcGetPayloadTypesForCodec.argtypes = [ ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.c_int ]
+	library.rtcGetPayloadTypesForCodec.restype = ctypes.c_int
+
+	library.rtcSetAV1Depacketizer.argtypes = [ ctypes.c_int, ctypes.c_int ]
+	library.rtcSetAV1Depacketizer.restype = ctypes.c_int
+	library.rtcSetVP8Depacketizer.restype = ctypes.c_int
+	library.rtcSetVP9Depacketizer.restype = ctypes.c_int
+	library.rtcSetOpusDepacketizer.restype = ctypes.c_int
+
+	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]
+	library.rtcChainRtcpReceivingSession.restype = ctypes.c_int
+
+	library.rtcSetFrameCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p) ]
+	library.rtcSetFrameCallback.restype = ctypes.c_int
+
+	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
+	library.rtcSetUserPointer.restype = None
+
+	library.rtcChainRembHandler.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p) ]
+	library.rtcChainRembHandler.restype = ctypes.c_int
+
+	library.rtcRequestBitrate.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	library.rtcRequestBitrate.restype = ctypes.c_int
+
+	library.rtcSetClosedCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetClosedCallback.restype = ctypes.c_int
+
+	return library
+
+
+def define_rtc_configuration() -> ctypes.Structure:
+	return type('RTC_CONFIGURATION', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('iceServers', ctypes.POINTER(ctypes.c_char_p)),
+			('iceServersCount', ctypes.c_int),
+			('proxyServer', ctypes.c_char_p),
+			('bindAddress', ctypes.c_char_p),
+			('certificateType', ctypes.c_int),
+			('iceTransportPolicy', ctypes.c_int),
+			('enableIceTcp', ctypes.c_bool),
+			('enableIceUdpMux', ctypes.c_bool),
+			('disableAutoNegotiation', ctypes.c_bool),
+			('forceMediaTransport', ctypes.c_bool),
+			('portRangeBegin', ctypes.c_ushort),
+			('portRangeEnd', ctypes.c_ushort),
+			('mtu', ctypes.c_int),
+			('maxMessageSize', ctypes.c_int)
+		]
+	})()
+
+
+def define_rtc_track_init() -> ctypes.Structure:
+	return type('RTC_TRACK_INIT', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('direction', ctypes.c_int),
+			('codec', ctypes.c_int),
+			('payloadType', ctypes.c_int),
+			('ssrc', ctypes.c_uint32),
+			('mid', ctypes.c_char_p),
+			('name', ctypes.c_char_p),
+			('msid', ctypes.c_char_p),
+			('trackId', ctypes.c_char_p),
+			('profile', ctypes.c_char_p)
+		]
+	})()
+
+
+def define_rtc_packetizer_init() -> ctypes.Structure:
+	return type('RTC_PACKETIZER_INIT', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('ssrc', ctypes.c_uint32),
+			('cname', ctypes.c_char_p),
+			('payloadType', ctypes.c_uint8),
+			('clockRate', ctypes.c_uint32),
+			('sequenceNumber', ctypes.c_uint16),
+			('timestamp', ctypes.c_uint32),
+			('maxFragmentSize', ctypes.c_uint16),
+			('nalSeparator', ctypes.c_int),
+			('obuPacketization', ctypes.c_int)
+		]
+	})()

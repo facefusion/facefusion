@@ -16,6 +16,7 @@ from facefusion.filesystem import get_file_extension, get_file_name, resolve_fil
 from facefusion.filesystem import has_audio, has_image, has_video
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
+from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -101,13 +102,17 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	common_modules =\
 	[
+		aom_module,
+		datachannel_module,
 		content_analyser,
 		face_classifier,
 		face_detector,
 		face_landmarker,
 		face_masker,
 		face_recognizer,
-		voice_extractor
+		opus_module,
+		voice_extractor,
+		vpx_module
 	]
 
 	content_analyser_content = inspect.getsource(content_analyser).encode()

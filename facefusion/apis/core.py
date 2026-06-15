@@ -8,8 +8,8 @@ from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_as
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, create_session_guard, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
+from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
 from facefusion.apis.metrics import websocket_metrics
-from facefusion.apis.process import webrtc_offer, webrtc_stream_offer, websocket_process
 from facefusion.apis.remote import remote
 from facefusion.apis.timeline import get_timeline
 from facefusion.apis.version import create_version_guard
@@ -34,11 +34,11 @@ def create_api() -> Starlette:
 		Route('/choices', get_choices, methods = [ 'GET' ], middleware = [ version_guard, session_guard ]),
 		Route('/remote', remote, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
 		Route('/timeline/{count:int}', get_timeline, methods = [ 'GET' ], middleware = [ version_guard, session_guard ]),
-		Route('/webrtc/offer', webrtc_offer, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
-		Route('/stream/webrtc/offer', webrtc_stream_offer, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
+		Route('/stream', post_stream, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
+		Route('/stream', delete_stream, methods = [ 'DELETE' ], middleware = [ version_guard, session_guard ]),
+		WebSocketRoute('/stream', websocket_stream, middleware = [ version_guard, session_guard ]),
 		WebSocketRoute('/metrics', websocket_metrics, middleware = [ version_guard, session_guard ]),
-		WebSocketRoute('/ping', websocket_ping, middleware = [ version_guard, session_guard ]),
-		WebSocketRoute('/process', websocket_process, middleware = [ version_guard, session_guard ])
+		WebSocketRoute('/ping', websocket_ping, middleware = [ version_guard, session_guard ])
 	]
 
 	api = Starlette(routes = routes)
