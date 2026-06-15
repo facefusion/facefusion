@@ -32,10 +32,11 @@ def test_create() -> None:
 def test_encode() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_sample = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
+	audio_frame = audio_sample.reshape(-1, 2)[:960]
 	opus_encoder = create(48000, 2)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode(opus_encoder, audio_sample.tobytes(), 960)) == '8abe71cf'
+		assert create_hash(encode(opus_encoder, audio_frame.tobytes(), 2)) == '8abe71cf'
 
 	if is_macos():
 		pytest.skip()
