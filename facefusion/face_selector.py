@@ -1,17 +1,17 @@
-from typing import List
+from typing import List, Optional
 
 import numpy
 
 import facefusion.choices
 from facefusion import state_manager
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, get_middle
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
-from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
+from facefusion.types import BoundingBox, Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[Face]:
+def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
-	target_faces = get_many_faces([ target_vision_frame ])
+	target_faces = get_many_faces([ get_middle(target_vision_frames) ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
@@ -28,9 +28,77 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 
 		if reference_face:
 			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
-			return match_faces
+			if match_faces:
+				return match_faces
+			return propagate_reference_face(reference_face, reference_faces, target_vision_frames, state_manager.get_item('reference_face_distance'))
 
 	return []
+
+
+def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame], face_distance : float) -> List[Face]:
+	negative_faces = [ face for face in reference_faces if face is not reference_face ]
+	window_faces = [ get_static_faces([ target_vision_frame ]) for target_vision_frame in target_vision_frames ]
+	center_index = len(window_faces) // 2
+	anchor_face = None
+	anchor_index = center_index
+	anchor_distance = 2.0
+
+	for index, target_faces in enumerate(window_faces):
+		for target_face in target_faces:
+			current_distance = calculate_face_distance(target_face, reference_face)
+			if current_distance < anchor_distance and is_reference_identity(target_face, reference_face, negative_faces, face_distance):
+				anchor_face = target_face
+				anchor_index = index
+				anchor_distance = current_distance
+
+	center_face = anchor_face
+	step = 1 if anchor_index < center_index else -1
+
+	for index in range(anchor_index + step, center_index + step, step):
+		if center_face:
+			center_face = find_face_by_iou(window_faces[index], center_face.bounding_box)
+
+	if center_face:
+		return [ center_face ]
+
+	return []
+
+
+def is_reference_identity(target_face : Face, reference_face : Face, negative_faces : List[Face], face_distance : float) -> bool:
+	if negative_faces:
+		identity_margin = 0.1
+		reference_distance = calculate_face_distance(target_face, reference_face)
+		negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
+		return reference_distance + identity_margin < negative_distance
+
+	return compare_faces(target_face, reference_face, face_distance)
+
+
+def find_face_by_iou(target_faces : List[Face], bounding_box : BoundingBox) -> Optional[Face]:
+	match_face = None
+	match_iou = 0.3
+
+	for target_face in target_faces:
+		current_iou = calculate_iou(target_face.bounding_box, bounding_box)
+		if current_iou > match_iou:
+			match_iou = current_iou
+			match_face = target_face
+
+	return match_face
+
+
+def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) -> float:
+	x1 = max(bounding_box_1[0], bounding_box_2[0])
+	y1 = max(bounding_box_1[1], bounding_box_2[1])
+	x2 = min(bounding_box_1[2], bounding_box_2[2])
+	y2 = min(bounding_box_1[3], bounding_box_2[3])
+	intersection = max(0, x2 - x1) * max(0, y2 - y1)
+	union = (bounding_box_1[2] - bounding_box_1[0]) * (bounding_box_1[3] - bounding_box_1[1]) + (bounding_box_2[2] - bounding_box_2[0]) * (bounding_box_2[3] - bounding_box_2[1]) - intersection
+
+	if union > 0:
+		return intersection / union
+
+	return 0
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:

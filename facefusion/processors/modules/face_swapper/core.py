@@ -784,7 +784,7 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 
 	target_vision_frame = get_middle(target_vision_frames)
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if source_face and target_faces:
 		source_vision_frame = get_first(source_vision_frames)
