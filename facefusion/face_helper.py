@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.types import Anchors, Angle, BoundingBox, Distance, Face, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
@@ -267,10 +267,4 @@ def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) ->
 	if union > 0:
 		return intersection / union
 
-	return 0
-
-
-def calculate_face_distance(face : Face, reference_face : Face) -> float:
-	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
-		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
 	return 0

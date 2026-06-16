@@ -7,7 +7,6 @@ from facefusion import state_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
 from facefusion.face_bridger import propagate_reference_face
-from facefusion.face_helper import calculate_face_distance
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
@@ -53,6 +52,12 @@ def compare_faces(face : Face, reference_face : Face, face_distance : float) -> 
 	current_face_distance = calculate_face_distance(face, reference_face)
 	current_face_distance = float(numpy.interp(current_face_distance, [ 0, 2 ], [ 0, 1 ]))
 	return current_face_distance < face_distance
+
+
+def calculate_face_distance(face : Face, reference_face : Face) -> float:
+	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
+		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
+	return 0
 
 
 def sort_and_filter_faces(source_faces : List[Face], target_faces : List[Face]) -> List[Face]:
