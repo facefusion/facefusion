@@ -24,6 +24,7 @@ FACE_SELECTOR_RACE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_AGE_RANGE_SLIDER : Optional[RangeSlider] = None
 REFERENCE_FACE_POSITION_GALLERY : Optional[gradio.Gallery] = None
 REFERENCE_FACE_DISTANCE_SLIDER : Optional[gradio.Slider] = None
+FRAME_PACK_OFFSET_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
@@ -34,6 +35,7 @@ def render() -> None:
 	global FACE_SELECTOR_AGE_RANGE_SLIDER
 	global REFERENCE_FACE_POSITION_GALLERY
 	global REFERENCE_FACE_DISTANCE_SLIDER
+	global FRAME_PACK_OFFSET_SLIDER
 
 	reference_face_gallery_options : ComponentOptions =\
 	{
@@ -92,6 +94,13 @@ def render() -> None:
 		maximum = facefusion.choices.reference_face_distance_range[-1],
 		visible = 'reference' in state_manager.get_item('face_selector_mode')
 	)
+	FRAME_PACK_OFFSET_SLIDER = gradio.Slider(
+		label = translator.get('uis.frame_pack_offset_slider'),
+		value = state_manager.get_item('frame_pack_offset'),
+		step = calculate_int_step(facefusion.choices.frame_pack_offset_range),
+		minimum = facefusion.choices.frame_pack_offset_range[0],
+		maximum = facefusion.choices.frame_pack_offset_range[-1]
+	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)
 	register_ui_component('face_selector_order_dropdown', FACE_SELECTOR_ORDER_DROPDOWN)
 	register_ui_component('face_selector_gender_dropdown', FACE_SELECTOR_GENDER_DROPDOWN)
@@ -99,6 +108,7 @@ def render() -> None:
 	register_ui_component('face_selector_age_range_slider', FACE_SELECTOR_AGE_RANGE_SLIDER)
 	register_ui_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
 	register_ui_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
+	register_ui_component('frame_pack_offset_slider', FRAME_PACK_OFFSET_SLIDER)
 
 
 def listen() -> None:
@@ -108,6 +118,7 @@ def listen() -> None:
 	FACE_SELECTOR_RACE_DROPDOWN.change(update_face_selector_race, inputs = FACE_SELECTOR_RACE_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	FACE_SELECTOR_AGE_RANGE_SLIDER.release(update_face_selector_age_range, inputs = FACE_SELECTOR_AGE_RANGE_SLIDER, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	REFERENCE_FACE_DISTANCE_SLIDER.release(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
+	FRAME_PACK_OFFSET_SLIDER.release(update_frame_pack_offset, inputs = FRAME_PACK_OFFSET_SLIDER)
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
@@ -184,6 +195,10 @@ def clear_reference_face_position() -> None:
 
 def update_reference_face_distance(reference_face_distance : float) -> None:
 	state_manager.set_item('reference_face_distance', reference_face_distance)
+
+
+def update_frame_pack_offset(frame_pack_offset : int) -> None:
+	state_manager.set_item('frame_pack_offset', int(frame_pack_offset))
 
 
 def update_reference_frame_number(reference_frame_number : int = 0) -> None:

@@ -134,6 +134,7 @@ def listen() -> None:
 		'lip_syncer_weight_slider',
 		'reference_face_distance_slider',
 		'face_selector_age_range_slider',
+		'frame_pack_offset_slider',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
 		'face_mask_padding_bottom_slider',

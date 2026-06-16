@@ -33,6 +33,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('reference_face_position', args.get('reference_face_position'))
 	apply_state_item('reference_face_distance', args.get('reference_face_distance'))
 	apply_state_item('reference_frame_number', args.get('reference_frame_number'))
+	apply_state_item('frame_pack_offset', args.get('frame_pack_offset'))
 	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
 	apply_state_item('face_parser_model', args.get('face_parser_model'))
 	apply_state_item('face_mask_types', args.get('face_mask_types'))

@@ -162,6 +162,7 @@ face_landmarker_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.0
 face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
 face_selector_age_range : Sequence[int] = create_int_range(0, 100, 1)
+frame_pack_offset_range : Sequence[int] = create_int_range(0, 10, 1)
 reference_face_distance_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
 output_image_scale_range : Sequence[float] = create_float_range(0.25, 8.0, 0.25)

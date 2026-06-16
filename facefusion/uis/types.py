@@ -80,6 +80,7 @@ ComponentName = Literal\
 	'preview_mode_dropdown',
 	'preview_resolution_dropdown',
 	'processors_checkbox_group',
+	'frame_pack_offset_slider',
 	'reference_face_distance_slider',
 	'reference_face_position_gallery',
 	'source_audio',
