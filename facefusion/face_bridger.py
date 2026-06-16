@@ -6,24 +6,41 @@ from facefusion.types import BoundingBox, Face, VisionFrame
 
 
 def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame]) -> List[Face]:
-	reference_negatives = [ face for face in reference_faces if face is not reference_face ]
-	window_faces = [ get_static_faces([ target_vision_frame ]) for target_vision_frame in target_vision_frames ]
+	reference_negatives = exclude_face(reference_faces, reference_face)
+	window_faces = []
+
+	for target_vision_frame in target_vision_frames:
+		window_faces.append(get_static_faces([ target_vision_frame ]))
+
 	center_index = len(window_faces) // 2
 	center_face = None
 	center_distance = 2.0
 
 	for target_face in window_faces[center_index]:
 		for track_index, tracked_face in track_face(target_face, window_faces, center_index):
-			negative_faces = reference_negatives + [ face for face in window_faces[track_index] if face is not tracked_face ]
 			current_distance = calculate_face_distance(tracked_face, reference_face)
-			if current_distance < center_distance and is_reference_identity(tracked_face, reference_face, negative_faces):
-				center_face = target_face
-				center_distance = current_distance
+
+			if current_distance < center_distance:
+				negative_faces = reference_negatives + exclude_face(window_faces[track_index], tracked_face)
+
+				if is_reference_identity(tracked_face, reference_face, negative_faces):
+					center_face = target_face
+					center_distance = current_distance
 
 	if center_face:
 		return [ center_face ]
 
 	return []
+
+
+def exclude_face(faces : List[Face], excluded_face : Face) -> List[Face]:
+	other_faces = []
+
+	for face in faces:
+		if face is not excluded_face:
+			other_faces.append(face)
+
+	return other_faces
 
 
 def track_face(target_face : Face, window_faces : List[List[Face]], center_index : int) -> List[Tuple[int, Face]]:
@@ -35,6 +52,7 @@ def track_face(target_face : Face, window_faces : List[List[Face]], center_index
 
 		while face and 0 <= index < len(window_faces):
 			face = find_face_by_iou(window_faces[index], face.bounding_box)
+
 			if face:
 				track.append((index, face))
 			index += step
@@ -48,6 +66,7 @@ def is_reference_identity(target_face : Face, reference_face : Face, negative_fa
 	reference_distance = calculate_face_distance(target_face, reference_face)
 
 	if reference_distance < bridge_distance:
+
 		if negative_faces:
 			negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
 			return reference_distance + identity_margin < negative_distance
@@ -62,6 +81,7 @@ def find_face_by_iou(target_faces : List[Face], bounding_box : BoundingBox) -> O
 
 	for target_face in target_faces:
 		current_iou = calculate_iou(target_face.bounding_box, bounding_box)
+
 		if current_iou > match_iou:
 			match_iou = current_iou
 			match_face = target_face
