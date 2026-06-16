@@ -55,6 +55,10 @@ def set_output(output_path : str) -> List[Command]:
 	return [ output_path ]
 
 
+def set_frame_start_number(frame_number : int) -> List[Command]:
+	return [ '-start_number', str(frame_number) ]
+
+
 def force_output(output_path : str) -> List[Command]:
 	return [ '-y', output_path ]
 

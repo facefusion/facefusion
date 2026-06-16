@@ -83,7 +83,7 @@ def process_video() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
-				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
+				for frame_number, temp_frame_path in temp_frame_paths.items():
 					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
