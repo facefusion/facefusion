@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List
 
 import numpy
 
@@ -6,7 +6,9 @@ import facefusion.choices
 from facefusion import state_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
-from facefusion.types import BoundingBox, Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
+from facefusion.face_bridger import propagate_reference_face
+from facefusion.face_helper import calculate_face_distance
+from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
@@ -35,84 +37,6 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 	return []
 
 
-def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame]) -> List[Face]:
-	reference_negatives = [ face for face in reference_faces if face is not reference_face ]
-	window_faces = [ get_static_faces([ target_vision_frame ]) for target_vision_frame in target_vision_frames ]
-	center_index = len(window_faces) // 2
-	center_face = None
-	center_distance = 2.0
-
-	for target_face in window_faces[center_index]:
-		for track_index, tracked_face in track_face(target_face, window_faces, center_index):
-			negative_faces = reference_negatives + [ face for face in window_faces[track_index] if face is not tracked_face ]
-			current_distance = calculate_face_distance(tracked_face, reference_face)
-			if current_distance < center_distance and is_reference_identity(tracked_face, reference_face, negative_faces):
-				center_face = target_face
-				center_distance = current_distance
-
-	if center_face:
-		return [ center_face ]
-
-	return []
-
-
-def track_face(target_face : Face, window_faces : List[List[Face]], center_index : int) -> List[Tuple[int, Face]]:
-	track = [ (center_index, target_face) ]
-
-	for step in (1, -1):
-		face = target_face
-		index = center_index + step
-
-		while face and 0 <= index < len(window_faces):
-			face = find_face_by_iou(window_faces[index], face.bounding_box)
-			if face:
-				track.append((index, face))
-			index += step
-
-	return track
-
-
-def is_reference_identity(target_face : Face, reference_face : Face, negative_faces : List[Face]) -> bool:
-	identity_margin = 0.1
-	bridge_distance = 1.0
-	reference_distance = calculate_face_distance(target_face, reference_face)
-
-	if reference_distance < bridge_distance:
-		if negative_faces:
-			negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
-			return reference_distance + identity_margin < negative_distance
-		return True
-
-	return False
-
-
-def find_face_by_iou(target_faces : List[Face], bounding_box : BoundingBox) -> Optional[Face]:
-	match_face = None
-	match_iou = 0.3
-
-	for target_face in target_faces:
-		current_iou = calculate_iou(target_face.bounding_box, bounding_box)
-		if current_iou > match_iou:
-			match_iou = current_iou
-			match_face = target_face
-
-	return match_face
-
-
-def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) -> float:
-	x1 = max(bounding_box_1[0], bounding_box_2[0])
-	y1 = max(bounding_box_1[1], bounding_box_2[1])
-	x2 = min(bounding_box_1[2], bounding_box_2[2])
-	y2 = min(bounding_box_1[3], bounding_box_2[3])
-	intersection = max(0, x2 - x1) * max(0, y2 - y1)
-	union = (bounding_box_1[2] - bounding_box_1[0]) * (bounding_box_1[3] - bounding_box_1[1]) + (bounding_box_2[2] - bounding_box_2[0]) * (bounding_box_2[3] - bounding_box_2[1]) - intersection
-
-	if union > 0:
-		return intersection / union
-
-	return 0
-
-
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
 	match_faces : List[Face] = []
 
@@ -129,12 +53,6 @@ def compare_faces(face : Face, reference_face : Face, face_distance : float) -> 
 	current_face_distance = calculate_face_distance(face, reference_face)
 	current_face_distance = float(numpy.interp(current_face_distance, [ 0, 2 ], [ 0, 1 ]))
 	return current_face_distance < face_distance
-
-
-def calculate_face_distance(face : Face, reference_face : Face) -> float:
-	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
-		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
-	return 0
 
 
 def sort_and_filter_faces(source_faces : List[Face], target_faces : List[Face]) -> List[Face]:

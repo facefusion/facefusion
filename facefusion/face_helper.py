@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.types import Anchors, Angle, BoundingBox, Distance, Face, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
@@ -254,3 +254,23 @@ def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
 		matrix = numpy.dot(temp_matrix, matrix)
 
 	return matrix[:2, :]
+
+
+def calculate_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) -> float:
+	x1 = max(bounding_box_1[0], bounding_box_2[0])
+	y1 = max(bounding_box_1[1], bounding_box_2[1])
+	x2 = min(bounding_box_1[2], bounding_box_2[2])
+	y2 = min(bounding_box_1[3], bounding_box_2[3])
+	intersection = max(0, x2 - x1) * max(0, y2 - y1)
+	union = (bounding_box_1[2] - bounding_box_1[0]) * (bounding_box_1[3] - bounding_box_1[1]) + (bounding_box_2[2] - bounding_box_2[0]) * (bounding_box_2[3] - bounding_box_2[1]) - intersection
+
+	if union > 0:
+		return intersection / union
+
+	return 0
+
+
+def calculate_face_distance(face : Face, reference_face : Face) -> float:
+	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
+		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
+	return 0
