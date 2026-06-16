@@ -36,7 +36,7 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 
 
 def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame], face_distance : float) -> List[Face]:
-	negative_faces = [ face for face in reference_faces if face is not reference_face ]
+	reference_negatives = [ face for face in reference_faces if face is not reference_face ]
 	window_faces = [ get_static_faces([ target_vision_frame ]) for target_vision_frame in target_vision_frames ]
 	center_index = len(window_faces) // 2
 	anchor_face = None
@@ -45,6 +45,7 @@ def propagate_reference_face(reference_face : Face, reference_faces : List[Face]
 
 	for index, target_faces in enumerate(window_faces):
 		for target_face in target_faces:
+			negative_faces = reference_negatives + [ face for face in target_faces if face is not target_face ]
 			current_distance = calculate_face_distance(target_face, reference_face)
 			if current_distance < anchor_distance and is_reference_identity(target_face, reference_face, negative_faces, face_distance):
 				anchor_face = target_face
@@ -65,13 +66,17 @@ def propagate_reference_face(reference_face : Face, reference_faces : List[Face]
 
 
 def is_reference_identity(target_face : Face, reference_face : Face, negative_faces : List[Face], face_distance : float) -> bool:
-	if negative_faces:
-		identity_margin = 0.1
-		reference_distance = calculate_face_distance(target_face, reference_face)
-		negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
-		return reference_distance + identity_margin < negative_distance
+	identity_margin = 0.1
+	bridge_distance = 1.0
+	reference_distance = calculate_face_distance(target_face, reference_face)
 
-	return compare_faces(target_face, reference_face, face_distance)
+	if reference_distance < bridge_distance:
+		if negative_faces:
+			negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
+			return reference_distance + identity_margin < negative_distance
+		return compare_faces(target_face, reference_face, face_distance)
+
+	return False
 
 
 def find_face_by_iou(target_faces : List[Face], bounding_box : BoundingBox) -> Optional[Face]:
