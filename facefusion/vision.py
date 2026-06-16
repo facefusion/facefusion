@@ -119,7 +119,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 	return video_frame_chunk
 
 
-def select_video_frames(video_path : str, frame_number : int, frame_offset : int, trim_frame_start : int, trim_frame_end : int) -> List[VisionFrame]:
+def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
 	vision_frames = []
 	chunk_size = (frame_offset * 2 + 1) * 4
 
@@ -129,7 +129,7 @@ def select_video_frames(video_path : str, frame_number : int, frame_offset : int
 				video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
 				vision_frame = create_empty_vision_frame()
 
-				if current_number in video_frame_chunk and trim_frame_start <= current_number < trim_frame_end:
+				if current_number in video_frame_chunk:
 					vision_frame = video_frame_chunk.get(current_number)
 
 				vision_frames.append(vision_frame)

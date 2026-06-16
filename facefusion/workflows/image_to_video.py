@@ -74,6 +74,7 @@ def extract_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
+	trim_frame_start = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))[0]
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 
 	if temp_frame_paths:
@@ -83,7 +84,7 @@ def process_video() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
-				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
+				for frame_number, temp_frame_path in enumerate(temp_frame_paths, trim_frame_start):
 					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
@@ -155,17 +156,17 @@ def restore_audio() -> ErrorCode:
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
-	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))[0]
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), trim_frame_start + frame_number, 5, trim_frame_start, trim_frame_end)
+	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, 5)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
-	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
+	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
 
 	if not numpy.any(source_audio_frame):
 		source_audio_frame = create_empty_audio_frame()
