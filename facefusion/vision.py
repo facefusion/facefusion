@@ -1,6 +1,6 @@
 import math
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy
@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
-from facefusion.thread_helper import thread_semaphore
+from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
@@ -90,6 +90,51 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 				return vision_frame
 
 	return None
+
+
+@lru_cache(maxsize = 4)
+def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+	return read_video_chunk(video_path, chunk_number, chunk_size)
+
+
+def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+	video_frame_chunk = {}
+
+	if is_video(video_path) and chunk_number > -1:
+		video_capture = get_video_capture(video_path)
+
+		if video_capture and video_capture.isOpened():
+			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+			chunk_start = chunk_number * chunk_size
+
+			with thread_semaphore():
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, chunk_start)
+
+				for frame_number in range(chunk_start, min(chunk_start + chunk_size, frame_total)):
+					has_vision_frame, vision_frame = video_capture.read()
+
+					if has_vision_frame:
+						video_frame_chunk[frame_number] = vision_frame
+
+	return video_frame_chunk
+
+
+def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
+	vision_frames = []
+	chunk_size = (frame_offset * 2 + 1) * 4
+
+	if is_video(video_path):
+		with thread_lock():
+			for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
+				video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
+				vision_frame = create_empty_vision_frame()
+
+				if current_number in video_frame_chunk:
+					vision_frame = video_frame_chunk.get(current_number)
+
+				vision_frames.append(vision_frame)
+
+	return vision_frames
 
 
 def count_video_frame_total(video_path : str) -> int:
@@ -305,6 +350,10 @@ def calculate_histogram_difference(source_vision_frame : VisionFrame, target_vis
 def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, blend_factor : float) -> VisionFrame:
 	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - blend_factor, target_vision_frame, blend_factor, 0)
 	return blend_vision_frame
+
+
+def create_empty_vision_frame() -> VisionFrame:
+	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:

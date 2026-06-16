@@ -78,6 +78,12 @@ def get_first(__list__ : Any) -> Any:
 	return None
 
 
+def get_middle(__list__ : Any) -> Any:
+	if isinstance(__list__, Sequence) and __list__:
+		return __list__[len(__list__) // 2]
+	return None
+
+
 def get_last(__list__ : Any) -> Any:
 	if isinstance(__list__, Reversible):
 		return next(reversed(__list__), None)

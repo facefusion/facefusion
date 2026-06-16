@@ -60,7 +60,7 @@ def process_stream_frame(source_vision_frames : List[VisionFrame], target_vision
 				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
-				'target_vision_frame': target_vision_frame,
+				'target_vision_frames': [ target_vision_frame ],
 				'temp_vision_frame': temp_vision_frame,
 				'temp_vision_mask': temp_vision_mask
 			})
