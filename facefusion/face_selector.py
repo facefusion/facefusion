@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -30,34 +30,25 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
 			if match_faces:
 				return match_faces
-			return propagate_reference_face(reference_face, reference_faces, target_vision_frames, state_manager.get_item('reference_face_distance'))
+			return propagate_reference_face(reference_face, reference_faces, target_vision_frames)
 
 	return []
 
 
-def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame], face_distance : float) -> List[Face]:
+def propagate_reference_face(reference_face : Face, reference_faces : List[Face], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	reference_negatives = [ face for face in reference_faces if face is not reference_face ]
 	window_faces = [ get_static_faces([ target_vision_frame ]) for target_vision_frame in target_vision_frames ]
 	center_index = len(window_faces) // 2
-	anchor_face = None
-	anchor_index = center_index
-	anchor_distance = 2.0
+	center_face = None
+	center_distance = 2.0
 
-	for index, target_faces in enumerate(window_faces):
-		for target_face in target_faces:
-			negative_faces = reference_negatives + [ face for face in target_faces if face is not target_face ]
-			current_distance = calculate_face_distance(target_face, reference_face)
-			if current_distance < anchor_distance and is_reference_identity(target_face, reference_face, negative_faces, face_distance):
-				anchor_face = target_face
-				anchor_index = index
-				anchor_distance = current_distance
-
-	center_face = anchor_face
-	step = 1 if anchor_index < center_index else -1
-
-	for index in range(anchor_index + step, center_index + step, step):
-		if center_face:
-			center_face = find_face_by_iou(window_faces[index], center_face.bounding_box)
+	for target_face in window_faces[center_index]:
+		for track_index, tracked_face in track_face(target_face, window_faces, center_index):
+			negative_faces = reference_negatives + [ face for face in window_faces[track_index] if face is not tracked_face ]
+			current_distance = calculate_face_distance(tracked_face, reference_face)
+			if current_distance < center_distance and is_reference_identity(tracked_face, reference_face, negative_faces):
+				center_face = target_face
+				center_distance = current_distance
 
 	if center_face:
 		return [ center_face ]
@@ -65,7 +56,23 @@ def propagate_reference_face(reference_face : Face, reference_faces : List[Face]
 	return []
 
 
-def is_reference_identity(target_face : Face, reference_face : Face, negative_faces : List[Face], face_distance : float) -> bool:
+def track_face(target_face : Face, window_faces : List[List[Face]], center_index : int) -> List[Tuple[int, Face]]:
+	track = [ (center_index, target_face) ]
+
+	for step in (1, -1):
+		face = target_face
+		index = center_index + step
+
+		while face and 0 <= index < len(window_faces):
+			face = find_face_by_iou(window_faces[index], face.bounding_box)
+			if face:
+				track.append((index, face))
+			index += step
+
+	return track
+
+
+def is_reference_identity(target_face : Face, reference_face : Face, negative_faces : List[Face]) -> bool:
 	identity_margin = 0.1
 	bridge_distance = 1.0
 	reference_distance = calculate_face_distance(target_face, reference_face)
@@ -74,7 +81,7 @@ def is_reference_identity(target_face : Face, reference_face : Face, negative_fa
 		if negative_faces:
 			negative_distance = min(calculate_face_distance(target_face, negative_face) for negative_face in negative_faces)
 			return reference_distance + identity_margin < negative_distance
-		return compare_faces(target_face, reference_face, face_distance)
+		return True
 
 	return False
 
