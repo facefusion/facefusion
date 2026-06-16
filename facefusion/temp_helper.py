@@ -21,7 +21,8 @@ def resolve_temp_frame_paths(target_path : str) -> Dict[int, str]:
 	temp_frame_paths = {}
 
 	for temp_frame_path in resolve_file_pattern(temp_frames_pattern):
-		temp_frame_paths[int(get_file_name(temp_frame_path))] = temp_frame_path
+		frame_number = int(get_file_name(temp_frame_path))
+		temp_frame_paths[frame_number] = temp_frame_path
 
 	return temp_frame_paths
 
