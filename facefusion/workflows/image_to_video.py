@@ -11,7 +11,7 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
@@ -74,16 +74,16 @@ def extract_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
+	temp_frame_set = resolve_temp_frame_set(state_manager.get_item('target_path'))
 
-	if temp_frame_paths:
-		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	if temp_frame_set:
+		with tqdm(total = len(temp_frame_set), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
-				for frame_number, temp_frame_path in temp_frame_paths.items():
+				for frame_number, temp_frame_path in temp_frame_set.items():
 					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
