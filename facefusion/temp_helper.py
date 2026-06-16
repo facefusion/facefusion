@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import Dict
 
 from facefusion import state_manager
 from facefusion.filesystem import create_directory, get_file_extension, get_file_name, move_file, remove_directory, resolve_file_pattern
@@ -16,9 +16,14 @@ def move_temp_file(file_path : str, move_path : str) -> bool:
 	return move_file(temp_file_path, move_path)
 
 
-def resolve_temp_frame_paths(target_path : str) -> List[str]:
+def resolve_temp_frame_paths(target_path : str) -> Dict[int, str]:
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '*')
-	return resolve_file_pattern(temp_frames_pattern)
+	temp_frame_paths = {}
+
+	for temp_frame_path in resolve_file_pattern(temp_frames_pattern):
+		temp_frame_paths[int(get_file_name(temp_frame_path))] = temp_frame_path
+
+	return temp_frame_paths
 
 
 def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
