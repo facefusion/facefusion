@@ -29,7 +29,7 @@ def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) 
 
 			if face_track:
 				face_track[frame_index] = face
-			if not face_track:
+			else:
 				face_tracks.append({ frame_index : face })
 
 	return face_tracks
