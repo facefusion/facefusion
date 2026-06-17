@@ -54,12 +54,12 @@ def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index
 def get_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
 	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
 
-	if anchor_index_previous >= 0 and anchor_index_next >= 0:
-		if target_index - anchor_index_previous <= anchor_index_next - target_index:
-			return anchor_index_previous
-		return anchor_index_next
+	if anchor_index_previous > -1 and anchor_index_next > -1:
+		if anchor_index_next - target_index < target_index - anchor_index_previous:
+			return anchor_index_next
+		return anchor_index_previous
 
-	if anchor_index_previous >= 0:
+	if anchor_index_previous > -1:
 		return anchor_index_previous
 
 	return anchor_index_next
@@ -85,7 +85,7 @@ def resolve_track_face(face_track : FaceTrack, target_index : int) -> Optional[F
 
 	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
 
-	if anchor_index_previous >= 0 and anchor_index_next >= 0:
+	if anchor_index_previous > -1 and anchor_index_next > -1:
 		anchor_face_previous = face_track.get(anchor_index_previous)
 		anchor_face_next = face_track.get(anchor_index_next)
 		ratio = (target_index - anchor_index_previous) / (anchor_index_next - anchor_index_previous)

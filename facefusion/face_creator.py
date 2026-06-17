@@ -11,10 +11,10 @@ def interpolate_face(anchor_face_before : Face, anchor_face_after : Face, ratio 
 		'68': interpolate_points(anchor_face_before.landmark_set.get('68'), anchor_face_after.landmark_set.get('68'), ratio),
 		'68/5': interpolate_points(anchor_face_before.landmark_set.get('68/5'), anchor_face_after.landmark_set.get('68/5'), ratio)
 	}
-	anchor_face = anchor_face_before
+	anchor_face = anchor_face_after
 
-	if ratio >= 0.5:
-		anchor_face = anchor_face_after
+	if ratio < 0.5:
+		anchor_face = anchor_face_before
 
 	return anchor_face._replace(
 		bounding_box = bounding_box,
