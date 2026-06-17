@@ -1,6 +1,3 @@
-import numpy
-
-from facefusion.face_helper import calculate_bounding_box_iou
 from facefusion.face_tracker import get_anchor_indices, match_face_track, resolve_track_face
 from .helper import create_face_from_bounding_box
 
@@ -14,14 +11,6 @@ def test_match_face_track() -> None:
 	assert match_face_track([ face_track ], create_face_from_bounding_box([12, 12, 52, 52]), 1, 0.3) is face_track
 	assert match_face_track([ face_track ], create_face_from_bounding_box([200, 200, 240, 240]), 1, 0.3) == {}
 	assert match_face_track([ face_track ], create_face_from_bounding_box([12, 12, 52, 52]), 0, 0.3) == {}
-
-
-def test_calculate_bounding_box_iou() -> None:
-	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 0.0, 0.0, 10.0, 10.0 ])) == 1.0
-	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 100.0, 100.0, 110.0, 110.0 ])) == 0.0
-	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 20.0, 0.0, 30.0, 10.0 ])) == 0.0
-	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 0.0, 20.0, 10.0, 30.0 ])) == 0.0
-	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 0.0, 0.0, 10.0, 20.0 ])) == 0.5
 
 
 def test_get_anchor_indices() -> None:

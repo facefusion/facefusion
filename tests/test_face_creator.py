@@ -5,8 +5,8 @@ from .helper import create_face_from_bounding_box
 
 
 def test_interpolate_face() -> None:
-	face_before = create_face_from_bounding_box([0, 0, 10, 10])
-	face_after = create_face_from_bounding_box([80, 80, 90, 90])
+	face_before = create_face_from_bounding_box([ 0, 0, 10, 10 ])
+	face_after = create_face_from_bounding_box([ 80, 80, 90, 90 ])
 
 	assert interpolate_face(face_before, face_after, 0.5).bounding_box.tolist() == [ 40.0, 40.0, 50.0, 50.0 ]
 	assert interpolate_face(face_before, face_after, 0.5).angle == 0
