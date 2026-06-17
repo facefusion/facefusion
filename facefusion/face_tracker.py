@@ -25,7 +25,7 @@ def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) 
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
-			face_track = match_face_track(face_tracks, face, frame_index, iou_threshold)
+			face_track = find_best_face_track(face_tracks, face, frame_index, iou_threshold)
 
 			if face_track:
 				face_track[frame_index] = face
@@ -35,7 +35,7 @@ def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) 
 	return face_tracks
 
 
-def match_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : int, iou_threshold : float) -> FaceTrack:
+def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : int, iou_threshold : float) -> FaceTrack:
 	best_track : FaceTrack = {}
 	best_iou = iou_threshold
 

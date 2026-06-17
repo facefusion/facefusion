@@ -1,4 +1,4 @@
-from facefusion.face_tracker import get_anchor_indices, match_face_track, resolve_track_face
+from facefusion.face_tracker import find_best_face_track, get_anchor_indices, resolve_track_face
 from .helper import create_face_from_bounding_box
 
 
@@ -8,9 +8,9 @@ def test_match_face_track() -> None:
 		0 : create_face_from_bounding_box([ 10, 10, 50, 50 ])
 	}
 
-	assert match_face_track([ face_track ], create_face_from_bounding_box([ 12, 12, 52, 52 ]), 1, 0.3) is face_track
-	assert match_face_track([ face_track ], create_face_from_bounding_box([ 200, 200, 240, 240 ]), 1, 0.3) == {}
-	assert match_face_track([ face_track ], create_face_from_bounding_box([ 12, 12, 52, 52 ]), 0, 0.3) == {}
+	assert find_best_face_track([face_track], create_face_from_bounding_box([12, 12, 52, 52]), 1, 0.3) is face_track
+	assert find_best_face_track([face_track], create_face_from_bounding_box([200, 200, 240, 240]), 1, 0.3) == {}
+	assert find_best_face_track([face_track], create_face_from_bounding_box([12, 12, 52, 52]), 0, 0.3) == {}
 
 
 def test_get_anchor_indices() -> None:
