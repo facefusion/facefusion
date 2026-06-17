@@ -12,6 +12,7 @@ from facefusion.content_analyser import analyse_frame
 from facefusion.face_analyser import get_one_face
 from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_faces
+from facefusion.face_tracker import track_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, Mask, VisionFrame
@@ -270,7 +271,8 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 
 
 def create_face_by_face(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
-	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, [ target_vision_frame[:, :, :3] ])
+	target_faces = track_faces([ target_vision_frame[:, :, :3] ])
+	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, target_faces)
 	target_face = get_one_face(target_faces)
 
 	if target_face:

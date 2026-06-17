@@ -16,6 +16,7 @@ from facefusion.face_analyser import scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
+from facefusion.face_tracker import track_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
 from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
@@ -425,7 +426,8 @@ def process_frame(inputs : DeepSwapperInputs) -> ProcessorOutputs:
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
 	target_vision_frame = get_middle(target_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
+	target_faces = track_faces(target_vision_frames)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_faces)
 
 	if target_faces:
 		for target_face in target_faces:

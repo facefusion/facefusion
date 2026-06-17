@@ -17,6 +17,7 @@ from facefusion.face_analyser import get_average_face, get_one_face, get_static_
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
+from facefusion.face_tracker import track_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
@@ -784,7 +785,8 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 
 	target_vision_frame = get_middle(target_vision_frames)
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
+	target_faces = track_faces(target_vision_frames)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_faces)
 
 	if source_face and target_faces:
 		source_vision_frame = get_first(source_vision_frames)
