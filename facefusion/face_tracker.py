@@ -2,8 +2,9 @@ from bisect import bisect_left
 from typing import Dict, List, Optional, Tuple
 
 from facefusion.face_analyser import get_static_faces
-from facefusion.face_helper import estimate_face_angle
-from facefusion.types import BoundingBox, Face, FaceLandmarkSet, Points, VisionFrame
+from facefusion.face_creator import interpolate_face
+from facefusion.face_helper import calculate_bounding_box_iou
+from facefusion.types import Face, VisionFrame
 
 
 def track_faces(vision_frames : List[VisionFrame], target_index : int, iou_threshold : float) -> List[Face]:
@@ -50,24 +51,6 @@ def match_face_track(face_tracks : List[Dict[int, Face]], face : Face, frame_ind
 	return best_track
 
 
-def calculate_bounding_box_iou(bounding_box : BoundingBox, anchor_bounding_box : BoundingBox) -> float:
-	box_x1, box_y1, box_x2, box_y2 = bounding_box
-	anchor_x1, anchor_y1, anchor_x2, anchor_y2 = anchor_bounding_box
-	intersection_x1 = max(box_x1, anchor_x1)
-	intersection_y1 = max(box_y1, anchor_y1)
-	intersection_x2 = min(box_x2, anchor_x2)
-	intersection_y2 = min(box_y2, anchor_y2)
-	intersection = max(0, intersection_x2 - intersection_x1) * max(0, intersection_y2 - intersection_y1)
-	bounding_box_area = (box_x2 - box_x1) * (box_y2 - box_y1)
-	anchor_bounding_box_area = (anchor_x2 - anchor_x1) * (anchor_y2 - anchor_y1)
-	union = bounding_box_area + anchor_bounding_box_area - intersection
-
-	if union > 0:
-		return intersection / union
-
-	return 0.0
-
-
 def get_nearest_track_index(face_track : Dict[int, Face], target_index : int) -> int:
 	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, target_index)
 
@@ -109,28 +92,3 @@ def resolve_track_face(face_track : Dict[int, Face], target_index : int) -> Opti
 		return interpolate_face(anchor_face_before, anchor_face_after, ratio)
 
 	return None
-
-
-def interpolate_face(anchor_face_before : Face, anchor_face_after : Face, ratio : float) -> Face:
-	bounding_box = interpolate_array(anchor_face_before.bounding_box, anchor_face_after.bounding_box, ratio)
-	landmark_set : FaceLandmarkSet =\
-	{
-		'5': interpolate_array(anchor_face_before.landmark_set.get('5'), anchor_face_after.landmark_set.get('5'), ratio),
-		'5/68': interpolate_array(anchor_face_before.landmark_set.get('5/68'), anchor_face_after.landmark_set.get('5/68'), ratio),
-		'68': interpolate_array(anchor_face_before.landmark_set.get('68'), anchor_face_after.landmark_set.get('68'), ratio),
-		'68/5': interpolate_array(anchor_face_before.landmark_set.get('68/5'), anchor_face_after.landmark_set.get('68/5'), ratio)
-	}
-	anchor_face = anchor_face_before
-
-	if ratio >= 0.5:
-		anchor_face = anchor_face_after
-
-	return anchor_face._replace(
-		bounding_box = bounding_box,
-		landmark_set = landmark_set,
-		angle = estimate_face_angle(landmark_set.get('68/5'))
-	)
-
-
-def interpolate_array(array_before : Points, array_after : Points, ratio : float) -> Points:
-	return array_before * (1 - ratio) + array_after * ratio
