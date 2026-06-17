@@ -6,12 +6,13 @@ import facefusion.choices
 from facefusion import state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_analyser import get_many_faces, get_one_face, get_static_faces
+from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[Face]:
+def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
-	target_faces = get_many_faces([ target_vision_frame ])
+	target_faces = resolve_target_faces(target_vision_frames)
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
@@ -31,6 +32,14 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 			return match_faces
 
 	return []
+
+
+def resolve_target_faces(target_vision_frames : List[VisionFrame]) -> List[Face]:
+	if len(target_vision_frames) > 1:
+		target_index = len(target_vision_frames) // 2
+		return track_faces(target_vision_frames, target_index, 0.3)
+
+	return get_many_faces(target_vision_frames)
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
