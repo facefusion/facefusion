@@ -52,43 +52,43 @@ def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index
 
 
 def get_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
-	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, target_index)
+	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
 
-	if anchor_index_before >= 0 and anchor_index_after >= 0:
-		if target_index - anchor_index_before <= anchor_index_after - target_index:
-			return anchor_index_before
-		return anchor_index_after
+	if anchor_index_previous >= 0 and anchor_index_next >= 0:
+		if target_index - anchor_index_previous <= anchor_index_next - target_index:
+			return anchor_index_previous
+		return anchor_index_next
 
-	if anchor_index_before >= 0:
-		return anchor_index_before
+	if anchor_index_previous >= 0:
+		return anchor_index_previous
 
-	return anchor_index_after
+	return anchor_index_next
 
 
 def get_anchor_indices(face_track : FaceTrack, target_index : int) -> Tuple[int, int]:
 	track_indices = sorted(face_track.keys())
 	position = bisect_left(track_indices, target_index)
-	anchor_index_before = -1
-	anchor_index_after = -1
+	anchor_index_previous = -1
+	anchor_index_next = -1
 
 	if position > 0:
-		anchor_index_before = track_indices[position - 1]
+		anchor_index_previous = track_indices[position - 1]
 	if position < len(track_indices):
-		anchor_index_after = track_indices[position]
+		anchor_index_next = track_indices[position]
 
-	return anchor_index_before, anchor_index_after
+	return anchor_index_previous, anchor_index_next
 
 
 def resolve_track_face(face_track : FaceTrack, target_index : int) -> Optional[Face]:
 	if target_index in face_track:
 		return face_track.get(target_index)
 
-	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, target_index)
+	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
 
-	if anchor_index_before >= 0 and anchor_index_after >= 0:
-		anchor_face_before = face_track.get(anchor_index_before)
-		anchor_face_after = face_track.get(anchor_index_after)
-		ratio = (target_index - anchor_index_before) / (anchor_index_after - anchor_index_before)
-		return interpolate_face(anchor_face_before, anchor_face_after, ratio)
+	if anchor_index_previous >= 0 and anchor_index_next >= 0:
+		anchor_face_previous = face_track.get(anchor_index_previous)
+		anchor_face_next = face_track.get(anchor_index_next)
+		ratio = (target_index - anchor_index_previous) / (anchor_index_next - anchor_index_previous)
+		return interpolate_face(anchor_face_previous, anchor_face_next, ratio)
 
 	return None
