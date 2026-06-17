@@ -1,5 +1,5 @@
 from bisect import bisect_left
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from facefusion.face_analyser import get_static_faces
 from facefusion.face_helper import estimate_face_angle
@@ -11,7 +11,10 @@ def track_faces(vision_frames : List[VisionFrame], target_index : int, iou_thres
 	tracked_faces = []
 
 	for face_track in face_tracks:
-		tracked_faces.append(resolve_track_face(face_track, target_index))
+		tracked_face = resolve_track_face(face_track, target_index)
+
+		if tracked_face:
+			tracked_faces.append(tracked_face)
 
 	return tracked_faces
 
@@ -37,8 +40,8 @@ def match_face_track(face_tracks : List[Dict[int, Face]], face : Face, frame_ind
 
 	for face_track in face_tracks:
 		if frame_index not in face_track:
-			anchor_face = get_nearest_track_face(face_track, frame_index)
-			current_iou = calculate_bounding_box_iou(face.bounding_box, anchor_face.bounding_box)
+			anchor_index = get_nearest_track_index(face_track, frame_index)
+			current_iou = calculate_bounding_box_iou(face.bounding_box, face_track.get(anchor_index).bounding_box)
 
 			if current_iou > best_iou:
 				best_iou = current_iou
@@ -65,18 +68,18 @@ def calculate_bounding_box_iou(bounding_box : BoundingBox, anchor_bounding_box :
 	return 0.0
 
 
-def get_nearest_track_face(face_track : Dict[int, Face], frame_index : int) -> Face:
-	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, frame_index)
+def get_nearest_track_index(face_track : Dict[int, Face], target_index : int) -> int:
+	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, target_index)
 
 	if anchor_index_before >= 0 and anchor_index_after >= 0:
-		if frame_index - anchor_index_before <= anchor_index_after - frame_index:
-			return face_track.get(anchor_index_before)
-		return face_track.get(anchor_index_after)
+		if target_index - anchor_index_before <= anchor_index_after - target_index:
+			return anchor_index_before
+		return anchor_index_after
 
 	if anchor_index_before >= 0:
-		return face_track.get(anchor_index_before)
+		return anchor_index_before
 
-	return face_track.get(anchor_index_after)
+	return anchor_index_after
 
 
 def get_anchor_indices(face_track : Dict[int, Face], target_index : int) -> Tuple[int, int]:
@@ -93,7 +96,7 @@ def get_anchor_indices(face_track : Dict[int, Face], target_index : int) -> Tupl
 	return anchor_index_before, anchor_index_after
 
 
-def resolve_track_face(face_track : Dict[int, Face], target_index : int) -> Face:
+def resolve_track_face(face_track : Dict[int, Face], target_index : int) -> Optional[Face]:
 	if target_index in face_track:
 		return face_track.get(target_index)
 
@@ -105,10 +108,7 @@ def resolve_track_face(face_track : Dict[int, Face], target_index : int) -> Face
 		ratio = (target_index - anchor_index_before) / (anchor_index_after - anchor_index_before)
 		return interpolate_face(anchor_face_before, anchor_face_after, ratio)
 
-	if anchor_index_before >= 0:
-		return face_track.get(anchor_index_before)
-
-	return face_track.get(anchor_index_after)
+	return None
 
 
 def interpolate_face(anchor_face_before : Face, anchor_face_after : Face, ratio : float) -> Face:

@@ -2,7 +2,7 @@ from typing import List
 
 import numpy
 
-from facefusion.face_tracker import calculate_bounding_box_iou, get_anchor_indices, get_nearest_track_face, interpolate_array, interpolate_face, match_face_track, resolve_track_face
+from facefusion.face_tracker import calculate_bounding_box_iou, get_anchor_indices, interpolate_array, interpolate_face, match_face_track, resolve_track_face
 from facefusion.types import Face, FaceLandmarkSet
 
 
@@ -63,24 +63,6 @@ def test_calculate_bounding_box_iou() -> None:
 	assert calculate_bounding_box_iou(numpy.array([ 0.0, 0.0, 10.0, 10.0 ]), numpy.array([ 0.0, 0.0, 10.0, 20.0 ])) == 0.5
 
 
-def test_get_nearest_track_face() -> None:
-	face_before = create_face([ 0, 0, 10, 10 ])
-	face_after = create_face([ 90, 90, 100, 100 ])
-	face_track =\
-	{
-		2 : face_before,
-		8 : face_after
-	}
-
-	assert get_nearest_track_face(face_track, 3) is face_before
-	assert get_nearest_track_face(face_track, 7) is face_after
-	assert get_nearest_track_face(face_track, 5) is face_before
-	assert get_nearest_track_face(
-	{
-		2 : face_before
-	}, 9) is face_before
-
-
 def test_get_anchor_indices() -> None:
 	face_track =\
 	{
@@ -109,14 +91,6 @@ def test_resolve_track_face() -> None:
 		0 : face_before,
 		10 : face_after
 	}, 5).bounding_box.tolist() == [ 40.0, 40.0, 50.0, 50.0 ]
-	assert resolve_track_face(
-	{
-		0 : face_before
-	}, 5) is face_before
-	assert resolve_track_face(
-	{
-		10 : face_after
-	}, 5) is face_after
 
 
 def test_interpolate_face() -> None:
