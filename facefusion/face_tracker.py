@@ -1,4 +1,3 @@
-from bisect import bisect_left
 from typing import List, Optional, Tuple
 
 from facefusion.face_analyser import get_static_faces
@@ -66,15 +65,17 @@ def find_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
 
 
 def get_anchor_indices(face_track : FaceTrack, target_index : int) -> Tuple[int, int]:
-	track_indices = sorted(face_track.keys())
-	position = bisect_left(track_indices, target_index)
+	track_indices = sorted(face_track)
 	anchor_index_previous = -1
 	anchor_index_next = -1
 
-	if position > 0:
-		anchor_index_previous = track_indices[position - 1]
-	if position < len(track_indices):
-		anchor_index_next = track_indices[position]
+	for track_index in track_indices:
+		if track_index < target_index:
+			anchor_index_previous = track_index
+
+	for track_index in reversed(track_indices):
+		if track_index > target_index:
+			anchor_index_next = track_index
 
 	return anchor_index_previous, anchor_index_next
 
