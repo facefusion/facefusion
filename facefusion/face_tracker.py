@@ -9,15 +9,15 @@ from facefusion.types import Face, FaceTrack, VisionFrame
 
 def track_faces(vision_frames : List[VisionFrame], target_index : int, iou_threshold : float) -> List[Face]:
 	face_tracks = build_face_tracks(vision_frames, iou_threshold)
-	tracked_faces = []
+	track_faces = []
 
 	for face_track in face_tracks:
 		tracked_face = resolve_track_face(face_track, target_index)
 
 		if tracked_face:
-			tracked_faces.append(tracked_face)
+			track_faces.append(tracked_face)
 
-	return tracked_faces
+	return track_faces
 
 
 def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) -> List[FaceTrack]:
