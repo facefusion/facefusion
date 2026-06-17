@@ -41,7 +41,7 @@ def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index
 
 	for face_track in face_tracks:
 		if frame_index not in face_track:
-			anchor_index = get_nearest_track_index(face_track, frame_index)
+			anchor_index = find_nearest_track_index(face_track, frame_index)
 			temp_iou = calculate_bounding_box_iou(face.bounding_box, face_track.get(anchor_index).bounding_box)
 
 			if temp_iou > best_iou:
@@ -51,7 +51,7 @@ def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index
 	return best_track
 
 
-def get_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
+def find_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
 	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
 
 	if anchor_index_previous > -1 and anchor_index_next > -1:
