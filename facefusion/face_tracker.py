@@ -1,7 +1,8 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
+from facefusion.common_helper import get_first, get_last
 from facefusion.face_analyser import get_static_faces
-from facefusion.face_creator import interpolate_face
+from facefusion.face_creator import interpolate_faces
 from facefusion.face_helper import calculate_bounding_box_iou
 from facefusion.types import Face, FaceTrack, VisionFrame
 
@@ -12,10 +13,18 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	tracked_faces = []
 
 	for face_track in face_tracks:
-		tracked_face = resolve_track_face(face_track, target_index)
+		track_indices = sorted(face_track)
+		anchor_index_first = get_first(track_indices)
+		anchor_index_last = get_last(track_indices)
+		track_range = range(anchor_index_first, anchor_index_last + 1)
 
-		if tracked_face:
-			tracked_faces.append(tracked_face)
+		if target_index in track_range:
+			dense_faces = []
+
+			for index in track_range:
+				dense_faces.append(face_track.get(index))
+
+			tracked_faces.append(interpolate_faces(dense_faces)[target_index - anchor_index_first])
 
 	return tracked_faces
 
@@ -79,18 +88,3 @@ def get_anchor_indices(face_track : FaceTrack, target_index : int) -> Tuple[int,
 			anchor_index_next = track_index
 
 	return anchor_index_previous, anchor_index_next
-
-
-def resolve_track_face(face_track : FaceTrack, target_index : int) -> Optional[Face]:
-	if target_index in face_track:
-		return face_track.get(target_index)
-
-	anchor_index_previous, anchor_index_next = get_anchor_indices(face_track, target_index)
-
-	if anchor_index_previous > -1 and anchor_index_next > -1:
-		anchor_face_previous = face_track.get(anchor_index_previous)
-		anchor_face_next = face_track.get(anchor_index_next)
-		ratio = (target_index - anchor_index_previous) / (anchor_index_next - anchor_index_previous)
-		return interpolate_face(anchor_face_previous, anchor_face_next, ratio)
-
-	return None
