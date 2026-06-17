@@ -42,10 +42,10 @@ def match_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : i
 	for face_track in face_tracks:
 		if frame_index not in face_track:
 			anchor_index = get_nearest_track_index(face_track, frame_index)
-			current_iou = calculate_bounding_box_iou(face.bounding_box, face_track.get(anchor_index).bounding_box)
+			temp_iou = calculate_bounding_box_iou(face.bounding_box, face_track.get(anchor_index).bounding_box)
 
-			if current_iou > best_iou:
-				best_iou = current_iou
+			if temp_iou > best_iou:
+				best_iou = temp_iou
 				best_track = face_track
 
 	return best_track
