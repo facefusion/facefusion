@@ -1,6 +1,6 @@
 import numpy
 
-from facefusion.face_creator import interpolate_array, interpolate_face
+from facefusion.face_creator import interpolate_face, interpolate_points
 from .helper import create_face_from_bounding_box
 
 
@@ -15,6 +15,6 @@ def test_interpolate_face() -> None:
 
 
 def test_interpolate_array() -> None:
-	assert interpolate_array(numpy.array([ 0.0, 0.0 ]), numpy.array([ 10.0, 20.0 ]), 0.5).tolist() == [ 5.0, 10.0 ]
-	assert interpolate_array(numpy.array([ 0.0, 0.0 ]), numpy.array([ 10.0, 20.0 ]), 0.0).tolist() == [ 0.0, 0.0 ]
-	assert interpolate_array(numpy.array([ 0.0, 0.0 ]), numpy.array([ 10.0, 20.0 ]), 1.0).tolist() == [ 10.0, 20.0 ]
+	assert interpolate_points(numpy.array([0.0, 0.0]), numpy.array([10.0, 20.0]), 0.5).tolist() == [5.0, 10.0]
+	assert interpolate_points(numpy.array([0.0, 0.0]), numpy.array([10.0, 20.0]), 0.0).tolist() == [0.0, 0.0]
+	assert interpolate_points(numpy.array([0.0, 0.0]), numpy.array([10.0, 20.0]), 1.0).tolist() == [10.0, 20.0]
