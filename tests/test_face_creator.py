@@ -1,7 +1,7 @@
 import numpy
 
 from facefusion.face_creator import interpolate_array, interpolate_face
-from tests.helper import create_face_from_bounding_box
+from .helper import create_face_from_bounding_box
 
 
 def test_interpolate_face() -> None:

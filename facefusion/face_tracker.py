@@ -1,10 +1,10 @@
 from bisect import bisect_left
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from facefusion.face_analyser import get_static_faces
 from facefusion.face_creator import interpolate_face
 from facefusion.face_helper import calculate_bounding_box_iou
-from facefusion.types import Face, VisionFrame
+from facefusion.types import Face, FaceTrack, VisionFrame
 
 
 def track_faces(vision_frames : List[VisionFrame], target_index : int, iou_threshold : float) -> List[Face]:
@@ -20,8 +20,8 @@ def track_faces(vision_frames : List[VisionFrame], target_index : int, iou_thres
 	return tracked_faces
 
 
-def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) -> List[Dict[int, Face]]:
-	face_tracks : List[Dict[int, Face]] = []
+def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) -> List[FaceTrack]:
+	face_tracks : List[FaceTrack] = []
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
@@ -35,8 +35,8 @@ def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) 
 	return face_tracks
 
 
-def match_face_track(face_tracks : List[Dict[int, Face]], face : Face, frame_index : int, iou_threshold : float) -> Dict[int, Face]:
-	best_track : Dict[int, Face] = {}
+def match_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : int, iou_threshold : float) -> FaceTrack:
+	best_track : FaceTrack = {}
 	best_iou = iou_threshold
 
 	for face_track in face_tracks:
@@ -51,7 +51,7 @@ def match_face_track(face_tracks : List[Dict[int, Face]], face : Face, frame_ind
 	return best_track
 
 
-def get_nearest_track_index(face_track : Dict[int, Face], target_index : int) -> int:
+def get_nearest_track_index(face_track : FaceTrack, target_index : int) -> int:
 	anchor_index_before, anchor_index_after = get_anchor_indices(face_track, target_index)
 
 	if anchor_index_before >= 0 and anchor_index_after >= 0:
@@ -65,7 +65,7 @@ def get_nearest_track_index(face_track : Dict[int, Face], target_index : int) ->
 	return anchor_index_after
 
 
-def get_anchor_indices(face_track : Dict[int, Face], target_index : int) -> Tuple[int, int]:
+def get_anchor_indices(face_track : FaceTrack, target_index : int) -> Tuple[int, int]:
 	track_indices = sorted(face_track.keys())
 	position = bisect_left(track_indices, target_index)
 	anchor_index_before = -1
@@ -79,7 +79,7 @@ def get_anchor_indices(face_track : Dict[int, Face], target_index : int) -> Tupl
 	return anchor_index_before, anchor_index_after
 
 
-def resolve_track_face(face_track : Dict[int, Face], target_index : int) -> Optional[Face]:
+def resolve_track_face(face_track : FaceTrack, target_index : int) -> Optional[Face]:
 	if target_index in face_track:
 		return face_track.get(target_index)
 

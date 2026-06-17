@@ -49,6 +49,7 @@ Face = namedtuple('Face',
 	'gender',
 	'race'
 ])
+FaceTrack : TypeAlias = Dict[int, Face]
 FaceStore : TypeAlias = Dict[str, List[Face]]
 
 Language = Literal['en']

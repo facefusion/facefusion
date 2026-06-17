@@ -2,7 +2,7 @@ import numpy
 
 from facefusion.face_helper import calculate_bounding_box_iou
 from facefusion.face_tracker import get_anchor_indices, match_face_track, resolve_track_face
-from tests.helper import create_face_from_bounding_box
+from .helper import create_face_from_bounding_box
 
 
 def test_match_face_track() -> None:
