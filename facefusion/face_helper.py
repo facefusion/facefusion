@@ -270,3 +270,7 @@ def calculate_bounding_box_overlap(bounding_box_a : BoundingBox, bounding_box_b 
 		return intersection / union
 
 	return 0.0
+
+
+def average_points(points_previous : Points, points_next : Points, average_factor : float) -> Points:
+	return points_previous * (1 - average_factor) + points_next * average_factor

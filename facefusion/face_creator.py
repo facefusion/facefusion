@@ -3,13 +3,13 @@ from typing import List, Optional
 import numpy
 
 from facefusion import face_store, state_manager
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, get_middle
 from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_faces_by_angle
-from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
+from facefusion.face_helper import apply_nms, average_points, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
 from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
 from facefusion.face_recognizer import calculate_face_embedding
-from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Points, Score, VisionFrame
+from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_scores : List[Score], face_landmarks_5 : List[FaceLandmark5]) -> List[Face]:
@@ -67,48 +67,6 @@ def get_one_face(faces : List[Face], position : int = 0) -> Optional[Face]:
 	return None
 
 
-def get_average_face(faces : List[Face]) -> Optional[Face]:
-	face_embeddings = []
-	face_embeddings_norm = []
-
-	if faces:
-		first_face = get_first(faces)
-
-		for face in faces:
-			face_embeddings.append(face.embedding)
-			face_embeddings_norm.append(face.embedding_norm)
-
-		return Face(
-			bounding_box = first_face.bounding_box,
-			score_set = first_face.score_set,
-			landmark_set = first_face.landmark_set,
-			angle = first_face.angle,
-			embedding = numpy.mean(face_embeddings, axis = 0),
-			embedding_norm = numpy.mean(face_embeddings_norm, axis = 0),
-			gender = first_face.gender,
-			age = first_face.age,
-			race = first_face.race
-		)
-	return None
-
-
-def get_static_faces(vision_frames : List[VisionFrame]) -> List[Face]:
-	many_faces : List[Face] = []
-
-	for vision_frame in vision_frames:
-		faces = face_store.get_faces(vision_frame)
-
-		if not faces:
-			faces = get_many_faces([ vision_frame ])
-
-			if faces:
-				face_store.set_faces(vision_frame, faces)
-
-		many_faces.extend(faces)
-
-	return many_faces
-
-
 def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	many_faces : List[Face] = []
 
@@ -136,6 +94,93 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return many_faces
 
 
+def get_static_faces(vision_frames : List[VisionFrame]) -> List[Face]:
+	many_faces : List[Face] = []
+
+	for vision_frame in vision_frames:
+		faces = face_store.get_faces(vision_frame)
+
+		if not faces:
+			faces = get_many_faces([ vision_frame ])
+
+			if faces:
+				face_store.set_faces(vision_frame, faces)
+
+		many_faces.extend(faces)
+
+	return many_faces
+
+
+def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
+	fill_faces = []
+	anchor_index_previous = -1
+
+	for index, face in enumerate(faces):
+		if face:
+			for gap_index in range(anchor_index_previous + 1, index):
+				average_factor = (gap_index - anchor_index_previous) / (index - anchor_index_previous)
+				fill_faces.append(average_face_coordinates([ faces[anchor_index_previous], face ], average_factor))
+
+			fill_faces.append(face)
+			anchor_index_previous = index
+
+	return fill_faces
+
+
+def average_face_coordinates(faces : List[Face], average_factor : float) -> Face:
+	face_first = get_first(faces)
+	face_middle = get_middle(faces)
+	face_anchor = face_middle
+
+	if average_factor < 0.5:
+		face_anchor = face_first
+
+	landmark_set : FaceLandmarkSet =\
+	{
+		'5': average_points(face_first.landmark_set.get('5'), face_middle.landmark_set.get('5'), average_factor),
+		'5/68': average_points(face_first.landmark_set.get('5/68'), face_middle.landmark_set.get('5/68'), average_factor),
+		'68': average_points(face_first.landmark_set.get('68'), face_middle.landmark_set.get('68'), average_factor),
+		'68/5': average_points(face_first.landmark_set.get('68/5'), face_middle.landmark_set.get('68/5'), average_factor)
+	}
+
+	return Face(
+		bounding_box = average_points(face_first.bounding_box, face_middle.bounding_box, average_factor),
+		score_set = face_anchor.score_set,
+		landmark_set = landmark_set,
+		angle = estimate_face_angle(landmark_set.get('68/5')),
+		embedding = face_anchor.embedding,
+		embedding_norm = face_anchor.embedding_norm,
+		gender = face_anchor.gender,
+		age = face_anchor.age,
+		race = face_anchor.race
+	)
+
+
+def average_face_identity(faces : List[Face]) -> Optional[Face]:
+	face_embeddings = []
+	face_embeddings_norm = []
+
+	if faces:
+		first_face = get_first(faces)
+
+		for face in faces:
+			face_embeddings.append(face.embedding)
+			face_embeddings_norm.append(face.embedding_norm)
+
+		return Face(
+			bounding_box = first_face.bounding_box,
+			score_set = first_face.score_set,
+			landmark_set = first_face.landmark_set,
+			angle = first_face.angle,
+			embedding = numpy.mean(face_embeddings, axis = 0),
+			embedding_norm = numpy.mean(face_embeddings_norm, axis = 0),
+			gender = first_face.gender,
+			age = first_face.age,
+			race = first_face.race
+		)
+	return None
+
+
 def scale_face(target_face : Face, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Face:
 	scale_x = temp_vision_frame.shape[1] / target_vision_frame.shape[1]
 	scale_y = temp_vision_frame.shape[0] / target_vision_frame.shape[0]
@@ -153,50 +198,3 @@ def scale_face(target_face : Face, target_vision_frame : VisionFrame, temp_visio
 		bounding_box = bounding_box,
 		landmark_set = landmark_set
 	)
-
-
-def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
-	fill_faces = []
-	anchor_index_previous = -1
-
-	for index, face in enumerate(faces):
-		if face:
-			for gap_index in range(anchor_index_previous + 1, index):
-				average_factor = (gap_index - anchor_index_previous) / (index - anchor_index_previous)
-				fill_faces.append(average_face(faces[anchor_index_previous], face, average_factor))
-
-			fill_faces.append(face)
-			anchor_index_previous = index
-
-	return fill_faces
-
-
-def average_face(face_previous : Face, face_next : Face, average_factor : float) -> Face:
-	face_anchor = face_next
-
-	if average_factor < 0.5:
-		face_anchor = face_previous
-
-	landmark_set : FaceLandmarkSet =\
-	{
-		'5': average_points(face_previous.landmark_set.get('5'), face_next.landmark_set.get('5'), average_factor),
-		'5/68': average_points(face_previous.landmark_set.get('5/68'), face_next.landmark_set.get('5/68'), average_factor),
-		'68': average_points(face_previous.landmark_set.get('68'), face_next.landmark_set.get('68'), average_factor),
-		'68/5': average_points(face_previous.landmark_set.get('68/5'), face_next.landmark_set.get('68/5'), average_factor)
-	}
-
-	return Face(
-		bounding_box = average_points(face_previous.bounding_box, face_next.bounding_box, average_factor),
-		score_set = face_anchor.score_set,
-		landmark_set = landmark_set,
-		angle = estimate_face_angle(landmark_set.get('68/5')),
-		embedding = face_anchor.embedding,
-		embedding_norm = face_anchor.embedding_norm,
-		gender = face_anchor.gender,
-		age = face_anchor.age,
-		race = face_anchor.race
-	)
-
-
-def average_points(points_previous : Points, points_next : Points, average_factor : float) -> Points:
-	return points_previous * (1 - average_factor) + points_next * average_factor
