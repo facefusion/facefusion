@@ -16,7 +16,6 @@ from facefusion.face_creator import scale_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
-from facefusion.face_tracker import track_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
 from facefusion.processors.modules.lip_syncer import choices as lip_syncer_choices
 from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
@@ -298,8 +297,7 @@ def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
 	target_vision_frame = get_middle(target_vision_frames)
-	target_faces = track_faces(target_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_faces)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:
