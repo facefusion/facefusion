@@ -46,11 +46,11 @@ def before_each() -> None:
 def test_find_best_face_track() -> None:
 	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
 	face = get_one_face(get_many_faces([ source_vision_frame ]))
-	face_overlap = face._replace(bounding_box = numpy.array([ 12, 12, 52, 52 ], dtype = numpy.float64))
-	face_distant = face._replace(bounding_box = numpy.array([ 200, 200, 240, 240 ], dtype = numpy.float64))
+	face_overlap = face._replace(bounding_box = numpy.array([ 12, 12, 52, 52 ]))
+	face_distant = face._replace(bounding_box = numpy.array([ 200, 200, 240, 240 ]))
 	face_track =\
 	{
-		0 : face._replace(bounding_box = numpy.array([ 10, 10, 50, 50 ], dtype = numpy.float64))
+		0 : face._replace(bounding_box = numpy.array([ 10, 10, 50, 50 ]))
 	}
 
 	assert find_best_face_track([ face_track ], face_overlap, 1, 0.3) is face_track
