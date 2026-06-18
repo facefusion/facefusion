@@ -12,7 +12,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.audio import read_static_voice
 from facefusion.common_helper import create_float_metavar, get_middle
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.face_analyser import scale_face
+from facefusion.face_creator import scale_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
@@ -297,7 +297,7 @@ def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
 	target_vision_frame = get_middle(target_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:

@@ -13,7 +13,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_analyser import get_average_face, get_one_face, get_static_faces, scale_face
+from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
@@ -772,7 +772,7 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 			if temp_faces:
 				source_faces.append(get_first(temp_faces))
 
-	return get_average_face(source_faces)
+	return average_face_identity(source_faces)
 
 
 def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
@@ -784,7 +784,7 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 
 	target_vision_frame = get_middle(target_vision_frames)
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if source_face and target_faces:
 		source_vision_frame = get_first(source_vision_frames)

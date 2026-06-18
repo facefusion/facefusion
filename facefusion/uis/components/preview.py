@@ -9,7 +9,7 @@ from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
-from facefusion.face_analyser import get_one_face
+from facefusion.face_creator import get_one_face
 from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
@@ -270,7 +270,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 
 
 def create_face_by_face(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
-	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, target_vision_frame[:, :, :3])
+	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, [ target_vision_frame[:, :, :3] ])
 	target_face = get_one_face(target_faces)
 
 	if target_face:
