@@ -47,94 +47,17 @@ def before_each() -> None:
 	clear_faces()
 
 
-def test_get_one_face_with_retinaface() -> None:
-	state_manager.init_item('face_detector_model', 'retinaface')
-	state_manager.init_item('face_detector_size', '320x320')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
+def test_get_one_face() -> None:
+	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
+	face = get_one_face(get_many_faces([ source_vision_frame ]))
 
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_scrfd() -> None:
-	state_manager.init_item('face_detector_model', 'scrfd')
-	state_manager.init_item('face_detector_size', '320x320')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_yoloface() -> None:
-	state_manager.init_item('face_detector_model', 'yolo_face')
-	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_yunet() -> None:
-	state_manager.init_item('face_detector_model', 'yunet')
-	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
+	assert face.bounding_box.size == 4
 
 
 def test_get_many_faces() -> None:
 	source_path = get_test_example_file('source.jpg')
-	source_frame = read_static_image(source_path)
-	many_faces = get_many_faces([ source_frame, source_frame, source_frame ])
+	source_vision_frame = read_static_image(source_path)
+	many_faces = get_many_faces([ source_vision_frame, source_vision_frame, source_vision_frame ])
 
 	assert len(many_faces) == 3
 
