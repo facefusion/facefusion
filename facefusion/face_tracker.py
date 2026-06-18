@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from facefusion.common_helper import get_first, get_last
 from facefusion.face_analyser import get_static_faces
-from facefusion.face_creator import interpolate_faces
+from facefusion.face_creator import refill_faces
 from facefusion.face_helper import calculate_bounding_box_iou
 from facefusion.types import Face, FaceTrack, VisionFrame
 
@@ -10,7 +10,7 @@ from facefusion.types import Face, FaceTrack, VisionFrame
 def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	target_index = len(vision_frames) // 2
 	face_tracks = build_face_tracks(vision_frames, 0.3)
-	tracked_faces = []
+	track_faces = []
 
 	for face_track in face_tracks:
 		track_indices = sorted(face_track)
@@ -19,14 +19,14 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 		track_range = range(anchor_index_first, anchor_index_last + 1)
 
 		if target_index in track_range:
-			dense_faces = []
+			fill_faces = []
 
 			for index in track_range:
-				dense_faces.append(face_track.get(index))
+				fill_faces.append(face_track.get(index))
 
-			tracked_faces.append(interpolate_faces(dense_faces)[target_index - anchor_index_first])
+			track_faces.append(refill_faces(fill_faces)[target_index - anchor_index_first])
 
-	return tracked_faces
+	return track_faces
 
 
 def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) -> List[FaceTrack]:
