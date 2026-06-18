@@ -1,8 +1,7 @@
 from typing import List, Tuple
 
 from facefusion.common_helper import get_first, get_last
-from facefusion.face_analyser import get_static_faces
-from facefusion.face_creator import refill_faces
+from facefusion.face_creator import get_static_faces, refill_faces
 from facefusion.face_helper import calculate_bounding_box_overlap
 from facefusion.types import Face, FaceTrack, VisionFrame
 

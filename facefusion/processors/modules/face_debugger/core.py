@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_middle
-from facefusion.face_analyser import scale_face
+from facefusion.face_creator import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces

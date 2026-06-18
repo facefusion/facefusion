@@ -1,10 +1,11 @@
+import subprocess
+
 import numpy
 import pytest
 
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_creator import average_face, average_points, refill_faces
+from facefusion.face_creator import average_face, average_points, get_many_faces, get_one_face, refill_faces
 from facefusion.face_store import clear_faces
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
@@ -16,20 +17,20 @@ def before_all() -> None:
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
 	])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
-	state_manager.init_item('face_detector_model', 'yolo_face')
-	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	state_manager.init_item('face_detector_model', 'many')
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_landmarker_model', 'many')
 	state_manager.init_item('face_landmarker_score', 0.5)
 
 	face_classifier.pre_check()
-	face_detector.pre_check()
 	face_landmarker.pre_check()
 	face_recognizer.pre_check()
 
@@ -41,6 +42,98 @@ def before_each() -> None:
 	face_landmarker.clear_inference_pool()
 	face_recognizer.clear_inference_pool()
 	clear_faces()
+
+
+def test_get_one_face_with_retinaface() -> None:
+	state_manager.init_item('face_detector_model', 'retinaface')
+	state_manager.init_item('face_detector_size', '320x320')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	face_detector.pre_check()
+
+	source_paths =\
+	[
+		get_test_example_file('source.jpg'),
+		get_test_example_file('source-80crop.jpg'),
+		get_test_example_file('source-70crop.jpg'),
+		get_test_example_file('source-60crop.jpg')
+	]
+
+	for source_path in source_paths:
+		source_frame = read_static_image(source_path)
+		many_faces = get_many_faces([ source_frame ])
+
+		assert len(many_faces) == 1
+
+
+def test_get_one_face_with_scrfd() -> None:
+	state_manager.init_item('face_detector_model', 'scrfd')
+	state_manager.init_item('face_detector_size', '320x320')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	face_detector.pre_check()
+
+	source_paths =\
+	[
+		get_test_example_file('source.jpg'),
+		get_test_example_file('source-80crop.jpg'),
+		get_test_example_file('source-70crop.jpg'),
+		get_test_example_file('source-60crop.jpg')
+	]
+
+	for source_path in source_paths:
+		source_frame = read_static_image(source_path)
+		many_faces = get_many_faces([ source_frame ])
+
+		assert len(many_faces) == 1
+
+
+def test_get_one_face_with_yoloface() -> None:
+	state_manager.init_item('face_detector_model', 'yolo_face')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	face_detector.pre_check()
+
+	source_paths =\
+	[
+		get_test_example_file('source.jpg'),
+		get_test_example_file('source-80crop.jpg'),
+		get_test_example_file('source-70crop.jpg'),
+		get_test_example_file('source-60crop.jpg')
+	]
+
+	for source_path in source_paths:
+		source_frame = read_static_image(source_path)
+		many_faces = get_many_faces([ source_frame ])
+
+		assert len(many_faces) == 1
+
+
+def test_get_one_face_with_yunet() -> None:
+	state_manager.init_item('face_detector_model', 'yunet')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	face_detector.pre_check()
+
+	source_paths =\
+	[
+		get_test_example_file('source.jpg'),
+		get_test_example_file('source-80crop.jpg'),
+		get_test_example_file('source-70crop.jpg'),
+		get_test_example_file('source-60crop.jpg')
+	]
+
+	for source_path in source_paths:
+		source_frame = read_static_image(source_path)
+		many_faces = get_many_faces([ source_frame ])
+
+		assert len(many_faces) == 1
+
+
+def test_get_many_faces() -> None:
+	source_path = get_test_example_file('source.jpg')
+	source_frame = read_static_image(source_path)
+	many_faces = get_many_faces([ source_frame, source_frame, source_frame ])
+
+	assert len(many_faces) == 3
 
 
 def test_refill_faces() -> None:
@@ -56,7 +149,7 @@ def test_refill_faces() -> None:
 	assert fill_faces[1].bounding_box.tolist() == [ 40.0, 40.0, 50.0, 50.0 ]
 	assert fill_faces[2].bounding_box.tolist() == [ 80.0, 80.0, 90.0, 90.0 ]
 
-	fill_faces = refill_faces([face_first, None, None, None, face_last])
+	fill_faces = refill_faces([ face_first, None, None, None, face_last ])
 
 	assert fill_faces[0].bounding_box.tolist() == [ 0.0, 0.0, 10.0, 10.0 ]
 	assert fill_faces[1].bounding_box.tolist() == [ 20.0, 20.0, 30.0, 30.0 ]
@@ -64,7 +157,7 @@ def test_refill_faces() -> None:
 	assert fill_faces[3].bounding_box.tolist() == [ 60.0, 60.0, 70.0, 70.0 ]
 	assert fill_faces[4].bounding_box.tolist() == [ 80.0, 80.0, 90.0, 90.0 ]
 
-	fill_faces = refill_faces([face_first, None, face_middle, None, face_last])
+	fill_faces = refill_faces([ face_first, None, face_middle, None, face_last ])
 
 	assert fill_faces[0].bounding_box.tolist() == [ 0.0, 0.0, 10.0, 10.0 ]
 	assert fill_faces[1].bounding_box.tolist() == [ 20.0, 20.0, 30.0, 30.0 ]

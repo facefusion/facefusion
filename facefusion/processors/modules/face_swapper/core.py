@@ -13,7 +13,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_analyser import get_average_face, get_one_face, get_static_faces, scale_face
+from facefusion.face_creator import get_average_face, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order

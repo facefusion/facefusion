@@ -5,7 +5,7 @@ import numpy
 import facefusion.choices
 from facefusion import state_manager
 from facefusion.common_helper import get_first
-from facefusion.face_analyser import get_one_face, get_static_faces
+from facefusion.face_creator import get_one_face, get_static_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 

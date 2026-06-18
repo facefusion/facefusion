@@ -7,7 +7,7 @@ from gradio_rangeslider import RangeSlider
 import facefusion.choices
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step, calculate_int_step
-from facefusion.face_analyser import get_many_faces
+from facefusion.face_creator import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_faces
 from facefusion.filesystem import filter_image_paths, is_image, is_video

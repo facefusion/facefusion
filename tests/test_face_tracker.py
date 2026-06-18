@@ -3,7 +3,7 @@ import pytest
 
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.face_creator import get_many_faces, get_one_face
 from facefusion.face_store import clear_faces
 from facefusion.face_tracker import find_best_face_track, get_anchor_indices
 from facefusion.vision import read_static_image

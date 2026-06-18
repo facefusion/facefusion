@@ -9,7 +9,7 @@ from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
-from facefusion.face_analyser import get_one_face
+from facefusion.face_creator import get_one_face
 from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_faces
 from facefusion.face_tracker import track_faces
