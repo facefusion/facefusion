@@ -3,7 +3,7 @@ from typing import List, Tuple
 from facefusion.common_helper import get_first, get_last
 from facefusion.face_analyser import get_static_faces
 from facefusion.face_creator import refill_faces
-from facefusion.face_helper import calculate_bounding_box_iou
+from facefusion.face_helper import calculate_bounding_box_overlap
 from facefusion.types import Face, FaceTrack, VisionFrame
 
 
@@ -29,12 +29,12 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return track_faces
 
 
-def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) -> List[FaceTrack]:
+def build_face_tracks(vision_frames : List[VisionFrame], overlap_threshold : float) -> List[FaceTrack]:
 	face_tracks : List[FaceTrack] = []
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
-			face_track = find_best_face_track(face_tracks, face, frame_index, iou_threshold)
+			face_track = find_best_face_track(face_tracks, face, frame_index, overlap_threshold)
 
 			if face_track:
 				face_track[frame_index] = face
@@ -44,17 +44,17 @@ def build_face_tracks(vision_frames : List[VisionFrame], iou_threshold : float) 
 	return face_tracks
 
 
-def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : int, iou_threshold : float) -> FaceTrack:
+def find_best_face_track(face_tracks : List[FaceTrack], face : Face, frame_index : int, overlap_threshold : float) -> FaceTrack:
 	best_track : FaceTrack = {}
-	best_iou = iou_threshold
+	best_overlap_threshold = overlap_threshold
 
 	for face_track in face_tracks:
 		if frame_index not in face_track:
 			anchor_index = find_nearest_track_index(face_track, frame_index)
-			temp_iou = calculate_bounding_box_iou(face.bounding_box, face_track.get(anchor_index).bounding_box)
+			temp_bounding_box_overlap = calculate_bounding_box_overlap(face.bounding_box, face_track.get(anchor_index).bounding_box)
 
-			if temp_iou > best_iou:
-				best_iou = temp_iou
+			if temp_bounding_box_overlap > best_overlap_threshold:
+				best_overlap_threshold = temp_bounding_box_overlap
 				best_track = face_track
 
 	return best_track

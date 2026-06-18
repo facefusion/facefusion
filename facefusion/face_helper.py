@@ -256,14 +256,14 @@ def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
 	return matrix[:2, :]
 
 
-def calculate_bounding_box_iou(bounding_box_1 : BoundingBox, bounding_box_2 : BoundingBox) -> float:
-	intersection_x1 = max(bounding_box_1[0], bounding_box_2[0])
-	intersection_y1 = max(bounding_box_1[1], bounding_box_2[1])
-	intersection_x2 = min(bounding_box_1[2], bounding_box_2[2])
-	intersection_y2 = min(bounding_box_1[3], bounding_box_2[3])
+def calculate_bounding_box_overlap(bounding_box_a : BoundingBox, bounding_box_b : BoundingBox) -> float:
+	intersection_x1 = max(bounding_box_a[0], bounding_box_b[0])
+	intersection_y1 = max(bounding_box_a[1], bounding_box_b[1])
+	intersection_x2 = min(bounding_box_a[2], bounding_box_b[2])
+	intersection_y2 = min(bounding_box_a[3], bounding_box_b[3])
 	intersection = max(0, intersection_x2 - intersection_x1) * max(0, intersection_y2 - intersection_y1)
-	bounding_box_area = (bounding_box_1[2] - bounding_box_1[0]) * (bounding_box_1[3] - bounding_box_1[1])
-	reference_bounding_box_area = (bounding_box_2[2] - bounding_box_2[0]) * (bounding_box_2[3] - bounding_box_2[1])
+	bounding_box_area = (bounding_box_a[2] - bounding_box_a[0]) * (bounding_box_a[3] - bounding_box_a[1])
+	reference_bounding_box_area = (bounding_box_b[2] - bounding_box_b[0]) * (bounding_box_b[3] - bounding_box_b[1])
 	union = bounding_box_area + reference_bounding_box_area - intersection
 
 	if union > 0:
