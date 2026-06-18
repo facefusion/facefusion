@@ -14,9 +14,9 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 
 	for face_track in face_tracks:
 		track_indices = sorted(face_track)
-		anchor_index_first = get_first(track_indices)
-		anchor_index_last = get_last(track_indices)
-		track_range = range(anchor_index_first, anchor_index_last + 1)
+		track_index_first = get_first(track_indices)
+		track_index_last = get_last(track_indices)
+		track_range = range(track_index_first, track_index_last + 1)
 
 		if target_index in track_range:
 			fill_faces = []
@@ -24,7 +24,7 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 			for index in track_range:
 				fill_faces.append(face_track.get(index))
 
-			track_faces.append(refill_faces(fill_faces)[target_index - anchor_index_first])
+			track_faces.append(refill_faces(fill_faces)[target_index - track_index_first])
 
 	return track_faces
 
