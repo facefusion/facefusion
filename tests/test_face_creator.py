@@ -43,16 +43,16 @@ def before_each() -> None:
 
 
 def test_get_one_face() -> None:
-	source_frame = read_static_image(get_test_example_file('source.jpg'))
-	face = get_one_face(get_many_faces([ source_frame ]))
+	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
+	face = get_one_face(get_many_faces([ source_vision_frame ]))
 
 	assert face.bounding_box.size == 4
 
 
 def test_get_many_faces() -> None:
 	source_path = get_test_example_file('source.jpg')
-	source_frame = read_static_image(source_path)
-	many_faces = get_many_faces([ source_frame, source_frame, source_frame ])
+	source_vision_frame = read_static_image(source_path)
+	many_faces = get_many_faces([ source_vision_frame, source_vision_frame, source_vision_frame ])
 
 	assert len(many_faces) == 3
 
