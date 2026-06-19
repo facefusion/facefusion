@@ -39,6 +39,7 @@ FaceSelectorRace = Literal['auto', 'white', 'black', 'latino', 'asian', 'indian'
 
 Face = namedtuple('Face',
 [
+	'origin',
 	'bounding_box',
 	'score_set',
 	'landmark_set',
