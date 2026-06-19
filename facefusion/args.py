@@ -45,6 +45,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('trim_frame_end', args.get('trim_frame_end'))
 	apply_state_item('temp_frame_format', args.get('temp_frame_format'))
 	apply_state_item('keep_temp', args.get('keep_temp'))
+	apply_state_item('target_frame_amount', args.get('target_frame_amount'))
 	apply_state_item('output_image_quality', args.get('output_image_quality'))
 	apply_state_item('output_image_scale', args.get('output_image_scale'))
 	apply_state_item('output_audio_encoder', args.get('output_audio_encoder'))

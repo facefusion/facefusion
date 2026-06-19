@@ -166,6 +166,14 @@ def create_frame_extraction_program() -> ArgumentParser:
 	return program
 
 
+def create_frame_process_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_frame_process = program.add_argument_group('frame process')
+	group_frame_process.add_argument('--target-frame-amount', help = translator.get('help.target_frame_amount'), type = int, default = config.get_int_value('frame_process', 'target_frame_amount', '5'), choices = facefusion.choices.target_frame_amount_range, metavar = create_int_metavar(facefusion.choices.target_frame_amount_range))
+	job_store.register_step_keys([ 'target_frame_amount' ])
+	return program
+
+
 def create_output_creation_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_encoder_set = get_available_encoder_set()
@@ -284,7 +292,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_frame_process_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
