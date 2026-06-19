@@ -70,10 +70,12 @@ def test_create_face_tracks() -> None:
 	multi_face_vision_frame = numpy.hstack([ target_vision_frame, target_vision_frame ])
 
 	face_tracks = create_face_tracks([ target_vision_frame, target_vision_frame ], 0.3)
+
 	assert len(face_tracks) == 1
 	assert sorted(get_first(face_tracks)) == [ 0, 1 ]
 
 	face_tracks = create_face_tracks([ multi_face_vision_frame, multi_face_vision_frame ], 0.3)
+
 	assert len(face_tracks) == 2
 	assert sorted(get_first(face_tracks)) == [ 0, 1 ]
 	assert sorted(get_last(face_tracks)) == [ 0, 1 ]
