@@ -82,6 +82,7 @@ ComponentName = Literal\
 	'processors_checkbox_group',
 	'reference_face_distance_slider',
 	'reference_face_position_gallery',
+	'target_frame_amount_slider',
 	'source_audio',
 	'source_image',
 	'target_image',
