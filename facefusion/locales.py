@@ -258,6 +258,7 @@ LOCALES : Locales =\
 			'start_button': 'START',
 			'stop_button': 'STOP',
 			'target_file': 'TARGET',
+			'target_frame_amount_slider': 'TARGET FRAME AMOUNT',
 			'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
 			'terminal_textbox': 'TERMINAL',
 			'trim_frame_slider': 'TRIM FRAME',
