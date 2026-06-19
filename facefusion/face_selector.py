@@ -4,7 +4,7 @@ import numpy
 
 import facefusion.choices
 from facefusion import state_manager
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, get_middle
 from facefusion.face_creator import get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
@@ -12,7 +12,11 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, Visio
 
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
-	target_faces = track_faces(target_vision_frames)
+
+	if state_manager.get_item('target_frame_amount') > 0:
+		target_faces = track_faces(target_vision_frames)
+	else:
+		target_faces = get_static_faces(get_middle(target_vision_frames))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
