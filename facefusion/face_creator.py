@@ -121,7 +121,7 @@ def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
 		if face:
 			for gap_index in range(anchor_index_previous + 1, index):
 				average_factor = (gap_index - anchor_index_previous) / (index - anchor_index_previous)
-				average_face = average_face_coordinates([ faces[anchor_index_previous], face ], average_factor)
+				average_face = average_face_geometry([faces[anchor_index_previous], face], average_factor)
 				fill_faces.append(average_face)
 
 			fill_faces.append(face)
@@ -130,7 +130,7 @@ def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
 	return fill_faces
 
 
-def average_face_coordinates(faces : List[Face], average_factor : float) -> Face:
+def average_face_geometry(faces : List[Face], average_factor : float) -> Face:
 	face_first = get_first(faces)
 	face_middle = get_middle(faces)
 	face_anchor = face_middle
