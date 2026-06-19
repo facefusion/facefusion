@@ -5,6 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
+from facefusion.uis.core import register_ui_component
 
 TARGET_FRAME_AMOUNT_SLIDER : Optional[gradio.Slider] = None
 
@@ -19,6 +20,7 @@ def render() -> None:
 		minimum = facefusion.choices.target_frame_amount_range[0],
 		maximum = facefusion.choices.target_frame_amount_range[-1]
 	)
+	register_ui_component('target_frame_amount_slider', TARGET_FRAME_AMOUNT_SLIDER)
 
 
 def listen() -> None:
