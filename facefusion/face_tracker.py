@@ -8,7 +8,7 @@ from facefusion.types import Face, FaceTrack, VisionFrame
 
 def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	target_index = len(vision_frames) // 2
-	face_tracks = build_face_tracks(vision_frames, 0.3)
+	face_tracks = create_face_tracks(vision_frames, 0.3)
 	temp_faces = []
 
 	for face_track in face_tracks:
@@ -28,12 +28,12 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return temp_faces
 
 
-def build_face_tracks(vision_frames : List[VisionFrame], overlap_threshold : float) -> List[FaceTrack]:
+def create_face_tracks(vision_frames : List[VisionFrame], overlap_threshold : float) -> List[FaceTrack]:
 	face_tracks : List[FaceTrack] = []
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
-			face_track = find_best_face_track(face_tracks, face, overlap_threshold)
+			face_track = select_face_track(face_tracks, face, overlap_threshold)
 
 			if face_track:
 				face_track[frame_index] = face
@@ -43,7 +43,7 @@ def build_face_tracks(vision_frames : List[VisionFrame], overlap_threshold : flo
 	return face_tracks
 
 
-def find_best_face_track(face_tracks : List[FaceTrack], face : Face, overlap_threshold : float) -> FaceTrack:
+def select_face_track(face_tracks : List[FaceTrack], face : Face, overlap_threshold : float) -> FaceTrack:
 	best_track : FaceTrack = {}
 	best_overlap_threshold = overlap_threshold
 
