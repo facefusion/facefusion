@@ -108,6 +108,9 @@ def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> Vi
 	border_scale = calculate_scale(temp_vision_frame)
 	border_color = 100, 100, 255
 
+	if target_face.origin == 'refill':
+		box_color = 0, 165, 255
+
 	cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), box_color, border_scale)
 
 	if target_face.angle == 0:
@@ -136,6 +139,9 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 
 	if numpy.array_equal(face_landmark_5, face_landmark_5_68):
 		mask_color = 255, 255, 0
+
+	if target_face.origin == 'refill':
+		mask_color = 0, 165, 255
 
 	if 'box' in state_manager.get_item('face_mask_types'):
 		box_mask = create_box_mask(crop_vision_frame, 0, state_manager.get_item('face_mask_padding'))
@@ -170,6 +176,9 @@ def draw_face_landmark_5(target_face : Face, temp_vision_frame : VisionFrame) ->
 	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 0, 0, 255
 
+	if target_face.origin == 'refill':
+		point_color = 0, 165, 255
+
 	if numpy.any(face_landmark_5):
 		face_landmark_5 = face_landmark_5.astype(numpy.int32)
 
@@ -188,6 +197,9 @@ def draw_face_landmark_5_68(target_face : Face, temp_vision_frame : VisionFrame)
 
 	if numpy.array_equal(face_landmark_5, face_landmark_5_68):
 		point_color = 255, 255, 0
+
+	if target_face.origin == 'refill':
+		point_color = 0, 165, 255
 
 	if numpy.any(face_landmark_5_68):
 		face_landmark_5_68 = face_landmark_5_68.astype(numpy.int32)
@@ -208,6 +220,9 @@ def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -
 	if numpy.array_equal(face_landmark_68, face_landmark_68_5):
 		point_color = 255, 255, 0
 
+	if target_face.origin == 'refill':
+		point_color = 0, 165, 255
+
 	if numpy.any(face_landmark_68):
 		face_landmark_68 = face_landmark_68.astype(numpy.int32)
 
@@ -222,6 +237,9 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 	face_landmark_68_5 = target_face.landmark_set.get('68/5')
 	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 255, 255, 0
+
+	if target_face.origin == 'refill':
+		point_color = 0, 165, 255
 
 	if numpy.any(face_landmark_68_5):
 		face_landmark_68_5 = face_landmark_68_5.astype(numpy.int32)

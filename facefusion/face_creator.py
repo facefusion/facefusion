@@ -46,7 +46,9 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		}
 		face_embedding, face_embedding_norm = calculate_face_embedding(vision_frame, face_landmark_set.get('5/68'))
 		gender, age, race = classify_face(vision_frame, face_landmark_set.get('5/68'))
+
 		faces.append(Face(
+			origin = 'detect',
 			bounding_box = bounding_box,
 			score_set = face_score_set,
 			landmark_set = face_landmark_set,
@@ -119,7 +121,8 @@ def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
 		if face:
 			for gap_index in range(anchor_index_previous + 1, index):
 				average_factor = (gap_index - anchor_index_previous) / (index - anchor_index_previous)
-				fill_faces.append(average_face_coordinates([ faces[anchor_index_previous], face ], average_factor))
+				average_face = average_face_coordinates([ faces[anchor_index_previous], face ], average_factor)
+				fill_faces.append(average_face)
 
 			fill_faces.append(face)
 			anchor_index_previous = index
@@ -144,6 +147,7 @@ def average_face_coordinates(faces : List[Face], average_factor : float) -> Face
 	}
 
 	return Face(
+		origin = 'refill',
 		bounding_box = average_points(face_first.bounding_box, face_middle.bounding_box, average_factor),
 		score_set = face_anchor.score_set,
 		landmark_set = landmark_set,
@@ -168,6 +172,7 @@ def average_face_identity(faces : List[Face]) -> Optional[Face]:
 			face_embeddings_norm.append(face.embedding_norm)
 
 		return Face(
+			origin = first_face.origin,
 			bounding_box = first_face.bounding_box,
 			score_set = first_face.score_set,
 			landmark_set = first_face.landmark_set,
