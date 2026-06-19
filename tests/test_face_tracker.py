@@ -2,11 +2,12 @@ import numpy
 import pytest
 
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
+from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
 from facefusion.face_creator import get_many_faces, get_one_face
 from facefusion.face_store import clear_faces
-from facefusion.face_tracker import find_best_face_track, get_anchor_indices
-from facefusion.vision import read_static_image
+from facefusion.face_tracker import build_face_tracks, find_best_face_track, track_faces
+from facefusion.vision import read_static_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -14,7 +15,7 @@ from .helper import get_test_example_file, get_test_examples_directory
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
@@ -43,30 +44,38 @@ def before_each() -> None:
 	clear_faces()
 
 
+def test_track_faces() -> None:
+	target_path = get_test_example_file('target-240p.mp4')
+	target_vision_frames = [ read_static_video_frame(target_path, frame_number) for frame_number in range(3) ]
+
+	assert len(track_faces(target_vision_frames)) == 1
+
+	target_vision_frames[1] = numpy.zeros_like(get_first(target_vision_frames))
+	assert len(track_faces(target_vision_frames)) == 1
+
+
+def test_build_face_tracks() -> None:
+	target_vision_frame = read_static_video_frame(get_test_example_file('target-240p.mp4'), 18)
+
+	face_tracks = build_face_tracks([ target_vision_frame, target_vision_frame ], 0.3)
+	assert len(face_tracks) == 1
+	assert sorted(get_first(face_tracks)) == [ 0, 1 ]
+
+	assert len(build_face_tracks([ target_vision_frame, target_vision_frame ], 1.0)) == 2
+
+
 def test_find_best_face_track() -> None:
-	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
-	face = get_one_face(get_many_faces([ source_vision_frame ]))
+	face = get_one_face(get_many_faces([ read_static_video_frame(get_test_example_file('target-240p.mp4'), 18) ]))
 	face_overlap = face._replace(bounding_box = numpy.array([ 12, 12, 52, 52 ]))
 	face_distant = face._replace(bounding_box = numpy.array([ 200, 200, 240, 240 ]))
-	face_track =\
+	face_track_overlap =\
 	{
 		0 : face._replace(bounding_box = numpy.array([ 10, 10, 50, 50 ]))
 	}
-
-	assert find_best_face_track([ face_track ], face_overlap, 1, 0.3) is face_track
-	assert find_best_face_track([ face_track ], face_distant, 1, 0.3) == {}
-	assert find_best_face_track([ face_track ], face_overlap, 0, 0.3) == {}
-
-
-def test_get_anchor_indices() -> None:
-	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
-	face = get_one_face(get_many_faces([ source_vision_frame ]))
-	face_track =\
+	face_track_distant =\
 	{
-		2 : face,
-		8 : face
+		0 : face._replace(bounding_box = numpy.array([ 100, 100, 140, 140 ]))
 	}
 
-	assert get_anchor_indices(face_track, 5) == (2, 8)
-	assert get_anchor_indices(face_track, 1) == (-1, 2)
-	assert get_anchor_indices(face_track, 9) == (8, -1)
+	assert find_best_face_track([ face_track_overlap, face_track_distant ], face_overlap, 0.3) is face_track_overlap
+	assert find_best_face_track([ face_track_overlap, face_track_distant ], face_distant, 0.3) == {}
