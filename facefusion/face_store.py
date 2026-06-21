@@ -10,14 +10,14 @@ FACE_STORE : FaceStore = {}
 
 def get_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	if numpy.any(vision_frame):
-		vision_hash = create_hash(vision_frame.tobytes())
+		vision_hash = create_hash(vision_frame.tobytes(), 1024)
 		return FACE_STORE.get(vision_hash)
 	return None
 
 
 def set_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 	if numpy.any(vision_frame):
-		vision_hash = create_hash(vision_frame.tobytes())
+		vision_hash = create_hash(vision_frame.tobytes(), 1024)
 		FACE_STORE[vision_hash] = faces
 
 
