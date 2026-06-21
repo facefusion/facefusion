@@ -28,31 +28,34 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return temp_faces
 
 
-def create_face_tracks(vision_frames : List[VisionFrame], overlap_threshold : float) -> List[FaceTrack]:
+def create_face_tracks(vision_frames : List[VisionFrame], overlap : float) -> List[FaceTrack]:
 	face_tracks : List[FaceTrack] = []
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
-			face_track = select_face_track(face_tracks, face, overlap_threshold)
+			face_track = select_face_track(face_tracks, face, overlap)
 
 			if face_track:
 				face_track[frame_index] = face
 			else:
-				face_tracks.append({ frame_index : face })
+				face_tracks.append(
+				{
+					frame_index : face
+				})
 
 	return face_tracks
 
 
-def select_face_track(face_tracks : List[FaceTrack], face : Face, overlap_threshold : float) -> FaceTrack:
-	best_track : FaceTrack = {}
-	best_overlap_threshold = overlap_threshold
+def select_face_track(face_tracks : List[FaceTrack], face : Face, overlap : float) -> FaceTrack:
+	select_track : FaceTrack = {}
+	select_overlap = overlap
 
 	for face_track in face_tracks:
-		track_face = face_track.get(get_last(sorted(face_track)))
+		track_face = face_track.get(get_last(face_track))
 		track_overlap = calculate_bounding_box_overlap(face.bounding_box, track_face.bounding_box)
 
-		if track_overlap > best_overlap_threshold:
-			best_overlap_threshold = track_overlap
-			best_track = face_track
+		if track_overlap > select_overlap:
+			select_overlap = track_overlap
+			select_track = face_track
 
-	return best_track
+	return select_track
