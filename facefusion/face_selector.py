@@ -13,7 +13,7 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, Visio
 def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
 
-	if state_manager.get_item('target_frame_amount') > 0:
+	if state_manager.get_item('face_tracker_score') > 0:
 		target_faces = track_faces(target_vision_frames)
 	else:
 		target_faces = get_static_faces([ get_middle(target_vision_frames) ])

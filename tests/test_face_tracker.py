@@ -28,6 +28,7 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_landmarker_model', 'many')
 	state_manager.init_item('face_landmarker_score', 0.5)
+	state_manager.init_item('face_tracker_score', 0.3)
 
 	face_classifier.pre_check()
 	face_detector.pre_check()

@@ -1,14 +1,15 @@
 from typing import List
 
+from facefusion import state_manager
 from facefusion.common_helper import get_first, get_last
 from facefusion.face_creator import get_static_faces, refill_faces
 from facefusion.face_helper import calculate_bounding_box_overlap
-from facefusion.types import Face, FaceTrack, VisionFrame
+from facefusion.types import Face, FaceTrack, Score, VisionFrame
 
 
 def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	target_index = len(vision_frames) // 2
-	face_tracks = create_face_tracks(vision_frames, 0.3)
+	face_tracks = create_face_tracks(vision_frames, state_manager.get_item('face_tracker_score'))
 	temp_faces = []
 
 	for face_track in face_tracks:
@@ -28,12 +29,12 @@ def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return temp_faces
 
 
-def create_face_tracks(vision_frames : List[VisionFrame], overlap : float) -> List[FaceTrack]:
+def create_face_tracks(vision_frames : List[VisionFrame], score : Score) -> List[FaceTrack]:
 	face_tracks : List[FaceTrack] = []
 
 	for frame_index, vision_frame in enumerate(vision_frames):
 		for face in get_static_faces([ vision_frame ]):
-			face_track = select_face_track(face_tracks, face, overlap)
+			face_track = select_face_track(face_tracks, face, score)
 
 			if face_track:
 				face_track[frame_index] = face
@@ -46,16 +47,16 @@ def create_face_tracks(vision_frames : List[VisionFrame], overlap : float) -> Li
 	return face_tracks
 
 
-def select_face_track(face_tracks : List[FaceTrack], face : Face, overlap : float) -> FaceTrack:
+def select_face_track(face_tracks : List[FaceTrack], face : Face, score : Score) -> FaceTrack:
 	select_track : FaceTrack = {}
-	select_overlap = overlap
+	select_score = score
 
 	for face_track in face_tracks:
 		track_face = face_track.get(get_last(face_track))
-		track_overlap = calculate_bounding_box_overlap(face.bounding_box, track_face.bounding_box)
+		track_score = calculate_bounding_box_overlap(face.bounding_box, track_face.bounding_box)
 
-		if track_overlap > select_overlap:
-			select_overlap = track_overlap
+		if track_score > select_score:
+			select_score = track_score
 			select_track = face_track
 
 	return select_track
