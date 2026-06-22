@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+import numpy
 import pytest
 
 from facefusion.common_helper import is_linux
@@ -63,7 +64,12 @@ def test_restrict_image_resolution() -> None:
 
 
 def test_read_video_frame() -> None:
-	assert hasattr(read_video_frame(get_test_example_file('target-240p-25fps.mp4')), '__array_interface__')
+	target_path = get_test_example_file('target-240p-25fps.mp4')
+
+	assert read_video_frame(target_path).shape == (226, 426, 3)
+	assert numpy.array_equal(read_video_frame(target_path, 49), select_video_frames(target_path, 49, 5)[5])
+	assert numpy.array_equal(read_video_frame(target_path, 50), select_video_frames(target_path, 50, 5)[5])
+	assert numpy.array_equal(read_video_frame(target_path, 51), select_video_frames(target_path, 51, 5)[5])
 	assert read_video_frame('invalid') is None
 
 

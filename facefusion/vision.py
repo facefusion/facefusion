@@ -81,9 +81,10 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 
 		if video_capture and video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
+			frame_position = min(frame_total, frame_number)
 
 			with thread_semaphore():
-				video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
 				has_vision_frame, vision_frame = video_capture.read()
 
 			if has_vision_frame:
