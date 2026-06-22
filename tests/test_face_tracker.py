@@ -91,6 +91,24 @@ def test_create_face_tracks() -> None:
 	assert len(create_face_tracks([ target_vision_frame, target_vision_frame ], 1.0)) == 2
 
 
+def test_track_multiple_faces() -> None:
+	target_vision_frame = read_static_video_frame(get_test_example_file('target-240p.mp4'), 0)
+	multi_face_vision_frame = numpy.hstack([ target_vision_frame, target_vision_frame ])
+
+	tracked_faces = track_faces([ multi_face_vision_frame, multi_face_vision_frame ])
+
+	assert len(tracked_faces) == 2
+	assert [ face.origin for face in tracked_faces ] == [ 'detect', 'detect' ]
+
+
+def test_create_face_tracks_without_faces() -> None:
+	target_vision_frame = read_static_video_frame(get_test_example_file('target-240p.mp4'), 0)
+	empty_vision_frame = numpy.zeros_like(target_vision_frame)
+
+	assert create_face_tracks([], 0.3) == []
+	assert create_face_tracks([ empty_vision_frame, empty_vision_frame ], 0.3) == []
+
+
 def test_create_face_tracks_across_gap() -> None:
 	target_path = get_test_example_file('target-240p.mp4')
 	video_frame_chunk = read_static_video_chunk(target_path, 0, 7)
