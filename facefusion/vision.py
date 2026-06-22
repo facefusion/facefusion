@@ -93,7 +93,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-@lru_cache(maxsize = 4)
+@lru_cache(maxsize = 2)
 def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
@@ -106,12 +106,12 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 
 		if video_capture and video_capture.isOpened():
 			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			chunk_start = chunk_number * chunk_size
+			frame_position = chunk_number * chunk_size
 
 			with thread_semaphore():
-				video_capture.set(cv2.CAP_PROP_POS_FRAMES, chunk_start)
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
 
-				for frame_number in range(chunk_start, min(chunk_start + chunk_size, frame_total)):
+				for frame_number in range(frame_position, min(frame_position + chunk_size, frame_total)):
 					has_vision_frame, vision_frame = video_capture.read()
 
 					if has_vision_frame:
