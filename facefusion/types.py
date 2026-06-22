@@ -1,5 +1,6 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from threading import Lock
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
 import numpy
@@ -51,7 +52,12 @@ Face = namedtuple('Face',
 	'race'
 ])
 FaceTrack : TypeAlias = Dict[int, Face]
-FaceStore : TypeAlias = Dict[str, List[Face]]
+FaceSet = TypedDict('FaceSet',
+{
+	'lock': Lock,
+	'faces': NotRequired[List[Face]]
+})
+FaceStore : TypeAlias = Dict[str, FaceSet]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
