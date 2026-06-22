@@ -50,12 +50,20 @@ def test_track_faces() -> None:
 	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk) ]
 	empty_vision_frame = numpy.zeros_like(get_first(target_vision_frames))
 
+	tracked_faces = track_faces(target_vision_frames)
+
+	assert len(tracked_faces) == 1
+	assert tracked_faces[0].origin == 'detect'
+
 	target_vision_frames[2] = empty_vision_frame
 	target_vision_frames[3] = empty_vision_frame
 	target_vision_frames[4] = empty_vision_frame
 	target_vision_frames[5] = empty_vision_frame
 
-	assert len(track_faces(target_vision_frames)) == 1
+	tracked_faces = track_faces(target_vision_frames)
+
+	assert len(tracked_faces) == 1
+	assert tracked_faces[0].origin == 'refill'
 
 	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk)[:5] ]
 	target_vision_frames[0] = empty_vision_frame
@@ -83,6 +91,21 @@ def test_create_face_tracks() -> None:
 	assert len(create_face_tracks([ target_vision_frame, target_vision_frame ], 1.0)) == 2
 
 
+def test_create_face_tracks_across_gap() -> None:
+	target_path = get_test_example_file('target-240p.mp4')
+	video_frame_chunk = read_static_video_chunk(target_path, 0, 7)
+	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk) ]
+	empty_vision_frame = numpy.zeros_like(get_first(target_vision_frames))
+
+	target_vision_frames[2] = empty_vision_frame
+	target_vision_frames[3] = empty_vision_frame
+
+	face_tracks = create_face_tracks(target_vision_frames, 0.3)
+
+	assert len(face_tracks) == 1
+	assert sorted(get_first(face_tracks)) == [ 0, 1, 4, 5, 6 ]
+
+
 def test_select_face_track() -> None:
 	target_vision_frame = read_static_video_frame(get_test_example_file('target-240p.mp4'), 0)
 	face = get_one_face(get_many_faces([ target_vision_frame ]))
@@ -99,3 +122,15 @@ def test_select_face_track() -> None:
 
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_overlap, 0.3) is face_track_overlap
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_distant, 0.3) == {}
+	assert select_face_track([], face_overlap, 0.3) == {}
+
+	face_track_weak =\
+	{
+		0 : face._replace(bounding_box = numpy.array([ 22, 22, 62, 62 ]))
+	}
+
+	assert select_face_track([ face_track_weak, face_track_overlap ], face_overlap, 0.3) is face_track_overlap
+
+	face_exact = face._replace(bounding_box = numpy.array([ 10, 10, 50, 50 ]))
+
+	assert select_face_track([ face_track_overlap ], face_exact, 1.0) == {}
