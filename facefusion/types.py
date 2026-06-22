@@ -51,13 +51,13 @@ Face = namedtuple('Face',
 	'gender',
 	'race'
 ])
-FaceTrack : TypeAlias = Dict[int, Face]
 FaceSet = TypedDict('FaceSet',
 {
 	'lock': Lock,
 	'faces': NotRequired[List[Face]]
 })
 FaceStore : TypeAlias = Dict[str, FaceSet]
+FaceTrack : TypeAlias = Dict[int, Face]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]

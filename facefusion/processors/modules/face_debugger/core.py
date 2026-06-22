@@ -108,9 +108,6 @@ def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> Vi
 	border_scale = calculate_scale(temp_vision_frame)
 	border_color = 100, 100, 255
 
-	if target_face.origin == 'refill':
-		box_color = 0, 165, 255
-
 	cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), box_color, border_scale)
 
 	if target_face.angle == 0:
