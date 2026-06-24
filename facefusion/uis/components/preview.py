@@ -191,10 +191,10 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 	source_voice_frame = create_empty_audio_frame()
 
 	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
-		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
+		audio_frame_number = state_manager.get_item('reference_frame_number')
 		if state_manager.get_item('trim_frame_start'):
-			reference_audio_frame_number -= state_manager.get_item('trim_frame_start')
-		temp_voice_frame = get_voice_frame(source_audio_path, state_manager.get_item('output_video_fps'), reference_audio_frame_number)
+			audio_frame_number -= state_manager.get_item('trim_frame_start')
+		temp_voice_frame = get_voice_frame(source_audio_path, state_manager.get_item('output_video_fps'), audio_frame_number)
 		if numpy.any(temp_voice_frame):
 			source_voice_frame = temp_voice_frame
 
