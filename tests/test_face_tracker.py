@@ -8,10 +8,10 @@ from facefusion.face_creator import get_many_faces, get_one_face, get_static_fac
 from facefusion.face_store import clear_faces
 from facefusion.face_tracker import create_face_tracks, select_face_track, track_faces
 from facefusion.filesystem import is_file
-from facefusion.vision import read_static_video_chunk, read_static_video_frame
+from facefusion.vision import read_static_video_chunk, read_static_video_frame, restrict_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
-TRACKER_VIDEO_PATH = '.assets/examples/dance-360p.mp4'
+TRACKER_VIDEO_PATH = '/home/hari/Desktop/tracker-tester/dance.mp4'
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -108,6 +108,29 @@ def test_select_face_track() -> None:
 
 
 @pytest.mark.skipif(is_file(TRACKER_VIDEO_PATH) is False, reason = 'tracker example clip is missing')
+def test_select_face_track_holds_identity_on_crossing() -> None:
+	state_manager.init_item('face_detector_model', 'many')
+	state_manager.init_item('face_detector_score', 0.5)
+
+	video_frame_chunk = read_static_video_chunk(TRACKER_VIDEO_PATH, 0, 512)
+	target_vision_frame = restrict_frame(video_frame_chunk.get(240), (1280, 360))
+	faces = get_many_faces([ target_vision_frame ])
+	face_first = faces[0]
+	face_second = faces[1]
+	face_track_first =\
+	{
+		0 : face_first._replace(bounding_box = numpy.array([ 10, 10, 50, 50 ]))
+	}
+	face_track_second =\
+	{
+		0 : face_second._replace(bounding_box = numpy.array([ 35, 10, 75, 50 ]))
+	}
+	face_first_crossing = face_first._replace(bounding_box = numpy.array([ 25, 10, 65, 50 ]))
+
+	assert select_face_track([ face_track_first, face_track_second ], face_first_crossing, 0.3) is face_track_first
+
+
+@pytest.mark.skipif(is_file(TRACKER_VIDEO_PATH) is False, reason = 'tracker example clip is missing')
 @pytest.mark.parametrize('face_detector_model, face_detector_score, face_count',
 [
 	('many', 0.5, 3),
@@ -118,7 +141,7 @@ def test_track_faces_missing_detection(face_detector_model : str, face_detector_
 	state_manager.init_item('face_detector_score', face_detector_score)
 
 	video_frame_chunk = read_static_video_chunk(TRACKER_VIDEO_PATH, 0, 512)
-	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in range(233, 254) ]
+	target_vision_frames = [ restrict_frame(video_frame_chunk.get(frame_number), (1280, 360)) for frame_number in range(233, 254) ]
 
 	assert len(get_static_faces([ get_middle(target_vision_frames) ])) == face_count
 	assert len(track_faces(target_vision_frames)) == 3
@@ -130,7 +153,7 @@ def test_track_faces_never_extrapolate() -> None:
 	state_manager.init_item('face_detector_score', 0.5)
 
 	video_frame_chunk = read_static_video_chunk(TRACKER_VIDEO_PATH, 0, 512)
-	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in range(230, 251) ]
+	target_vision_frames = [ restrict_frame(video_frame_chunk.get(frame_number), (1280, 360)) for frame_number in range(230, 251) ]
 	face_count = len(get_static_faces([ get_middle(target_vision_frames) ]))
 
 	for index in range(10, 21):
