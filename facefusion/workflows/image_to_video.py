@@ -155,6 +155,7 @@ def restore_audio() -> ErrorCode:
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
+	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
@@ -163,8 +164,8 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
-	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
+	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
 
 	if not numpy.any(source_audio_frame):
 		source_audio_frame = create_empty_audio_frame()
