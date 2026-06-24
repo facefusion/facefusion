@@ -1,5 +1,7 @@
 from typing import List
 
+import numpy
+
 from facefusion import state_manager
 from facefusion.common_helper import get_first, get_last
 from facefusion.face_creator import get_static_faces, refill_faces
@@ -49,14 +51,17 @@ def create_face_tracks(vision_frames : List[VisionFrame], score : Score) -> List
 
 def select_face_track(face_tracks : List[FaceTrack], face : Face, score : Score) -> FaceTrack:
 	select_track : FaceTrack = {}
-	select_score = score
+	select_distance = 2.0
 
 	for face_track in face_tracks:
 		track_face = face_track.get(get_last(face_track))
 		track_score = calculate_bounding_box_overlap(face.bounding_box, track_face.bounding_box)
 
-		if track_score > select_score:
-			select_score = track_score
-			select_track = face_track
+		if track_score > score:
+			track_distance = 1 - numpy.dot(face.embedding_norm, track_face.embedding_norm)
+
+			if track_distance < select_distance:
+				select_distance = track_distance
+				select_track = face_track
 
 	return select_track
