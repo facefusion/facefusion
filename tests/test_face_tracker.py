@@ -2,13 +2,16 @@ import numpy
 import pytest
 
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
-from facefusion.common_helper import get_first, get_last
+from facefusion.common_helper import get_first, get_last, get_middle
 from facefusion.download import conditional_download
-from facefusion.face_creator import get_many_faces, get_one_face
+from facefusion.face_creator import get_many_faces, get_one_face, get_static_faces
 from facefusion.face_store import clear_faces
 from facefusion.face_tracker import create_face_tracks, select_face_track, track_faces
+from facefusion.filesystem import is_file
 from facefusion.vision import read_static_video_chunk, read_static_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
+
+TRACKER_VIDEO_PATH = '.assets/examples/dance-360p.mp4'
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -22,7 +25,7 @@ def before_all() -> None:
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
-	state_manager.init_item('face_detector_model', 'yolo_face')
+	state_manager.init_item('face_detector_model', 'many')
 	state_manager.init_item('face_detector_size', '640x640')
 	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	state_manager.init_item('face_detector_score', 0.5)
@@ -34,6 +37,8 @@ def before_all() -> None:
 	face_detector.pre_check()
 	face_landmarker.pre_check()
 	face_recognizer.pre_check()
+
+	state_manager.init_item('face_detector_model', 'yolo_face')
 
 
 @pytest.fixture(autouse = True)
@@ -100,3 +105,37 @@ def test_select_face_track() -> None:
 
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_overlap, 0.3) is face_track_overlap
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_distant, 0.3) == {}
+
+
+@pytest.mark.skipif(is_file(TRACKER_VIDEO_PATH) is False, reason = 'tracker example clip is missing')
+@pytest.mark.parametrize('face_detector_model, face_detector_score, face_count',
+[
+	('many', 0.5, 3),
+	('yolo_face', 0.75, 2)
+])
+def test_track_faces_missing_detection(face_detector_model : str, face_detector_score : float, face_count : int) -> None:
+	state_manager.init_item('face_detector_model', face_detector_model)
+	state_manager.init_item('face_detector_score', face_detector_score)
+
+	video_frame_chunk = read_static_video_chunk(TRACKER_VIDEO_PATH, 0, 512)
+	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in range(233, 254) ]
+
+	assert len(get_static_faces([ get_middle(target_vision_frames) ])) == face_count
+	assert len(track_faces(target_vision_frames)) == 3
+
+
+@pytest.mark.skipif(is_file(TRACKER_VIDEO_PATH) is False, reason = 'tracker example clip is missing')
+def test_track_faces_never_extrapolate() -> None:
+	state_manager.init_item('face_detector_model', 'many')
+	state_manager.init_item('face_detector_score', 0.5)
+
+	video_frame_chunk = read_static_video_chunk(TRACKER_VIDEO_PATH, 0, 512)
+	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in range(230, 251) ]
+	face_count = len(get_static_faces([ get_middle(target_vision_frames) ]))
+
+	for index in range(10, 21):
+		target_vision_frames[index] = target_vision_frames[index].copy()
+		target_vision_frames[index][40:200, 495:610] = 0
+
+	assert face_count == 3
+	assert len(track_faces(target_vision_frames)) == 2
