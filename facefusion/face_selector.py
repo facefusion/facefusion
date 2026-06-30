@@ -14,7 +14,7 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 	source_faces = get_static_faces(source_vision_frames)
 
 	if state_manager.get_item('face_tracker_score') > 0:
-		target_faces = track_faces(target_vision_frames)
+		target_faces = track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
 	else:
 		target_faces = get_static_faces([ get_middle(target_vision_frames) ])
 

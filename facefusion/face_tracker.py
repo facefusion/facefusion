@@ -1,15 +1,14 @@
 from typing import List
 
-from facefusion import state_manager
 from facefusion.common_helper import get_first, get_last
 from facefusion.face_creator import get_static_faces, refill_faces
 from facefusion.face_helper import calculate_bounding_box_overlap
 from facefusion.types import Face, FaceTrack, Score, VisionFrame
 
 
-def track_faces(vision_frames : List[VisionFrame]) -> List[Face]:
+def track_faces(vision_frames : List[VisionFrame], score : Score) -> List[Face]:
 	target_index = len(vision_frames) // 2
-	face_tracks = create_face_tracks(vision_frames, state_manager.get_item('face_tracker_score'))
+	face_tracks = create_face_tracks(vision_frames, score)
 	temp_faces = []
 
 	for face_track in face_tracks:

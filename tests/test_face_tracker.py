@@ -56,14 +56,14 @@ def test_track_faces() -> None:
 	target_vision_frames[4] = empty_vision_frame
 	target_vision_frames[5] = empty_vision_frame
 
-	assert len(track_faces(target_vision_frames)) == 1
+	assert len(track_faces(target_vision_frames, 0.3)) == 1
 
 	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk)[:5] ]
 	target_vision_frames[0] = empty_vision_frame
 	target_vision_frames[1] = empty_vision_frame
 	target_vision_frames[2] = empty_vision_frame
 
-	assert len(track_faces(target_vision_frames)) == 0
+	assert len(track_faces(target_vision_frames, 0.3)) == 0
 
 
 def test_create_face_tracks() -> None:
