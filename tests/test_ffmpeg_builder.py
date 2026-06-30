@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality
+from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -69,6 +69,24 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 0) == []
 	assert set_audio_quality('flac', 50) == []
 	assert set_audio_quality('flac', 100) == []
+
+
+def test_set_faststart() -> None:
+	assert set_faststart('m4v') == [ '-movflags', '+faststart' ]
+	assert set_faststart('mov') == [ '-movflags', '+faststart' ]
+	assert set_faststart('mp4') == [ '-movflags', '+faststart' ]
+	assert set_faststart('mkv') == []
+	assert set_faststart('webm') == []
+
+
+def test_set_video_tag() -> None:
+	assert set_video_tag('libx265', 'm4v') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_nvenc', 'mov') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('hevc_videotoolbox', 'mp4') == [ '-tag:v', 'hvc1' ]
+	assert set_video_tag('libx265', 'mkv') == []
+	assert set_video_tag('libx265', 'webm') == []
+	assert set_video_tag('libx264', 'mp4') == []
+	assert set_video_tag('h264_nvenc', 'mp4') == []
 
 
 def test_set_video_quality() -> None:

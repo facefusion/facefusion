@@ -1,9 +1,12 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
+from typing import List
 
 import cv2
 import numpy
 
+import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
@@ -16,8 +19,8 @@ from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerInpu
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 @lru_cache()
@@ -156,6 +159,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/real_esrgan_x2_fp16.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'size': (256, 16, 8),
 			'scale': 2
 		},
@@ -210,6 +214,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/real_esrgan_x4_fp16.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'size': (256, 16, 8),
 			'scale': 4
 		},
@@ -264,6 +269,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/real_esrgan_x8_fp16.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'size': (256, 16, 8),
 			'scale': 8
 		},
@@ -541,33 +547,36 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ get_frame_enhancer_model() ]
+	model_names = [ state_manager.get_item('frame_enhancer_model') ]
 	model_source_set = get_model_options().get('sources')
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ get_frame_enhancer_model() ]
+	model_names = [ state_manager.get_item('frame_enhancer_model') ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
+def resolve_inference_providers() -> List[InferenceProvider]:
+	model_precision = get_model_options().get('precision')
+
+	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
+		return\
+		[
+			(facefusion.choices.execution_provider_set.get('coreml'),
+			{
+				'ModelFormat': 'MLProgram',
+				'SpecializationStrategy': 'FastPrediction'
+			})
+		]
+
+	return []
+
+
 def get_model_options() -> ModelOptions:
-	model_name = get_frame_enhancer_model()
+	model_name = state_manager.get_item('frame_enhancer_model')
 	return create_static_model_set('full').get(model_name)
-
-
-def get_frame_enhancer_model() -> str:
-	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
-
-	if is_macos() and has_execution_provider('coreml'):
-		if frame_enhancer_model == 'real_esrgan_x2_fp16':
-			return 'real_esrgan_x2'
-		if frame_enhancer_model == 'real_esrgan_x4_fp16':
-			return 'real_esrgan_x4'
-		if frame_enhancer_model == 'real_esrgan_x8_fp16':
-			return 'real_esrgan_x8'
-	return frame_enhancer_model
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -583,9 +592,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('frame_enhancer_blend', args.get('frame_enhancer_blend'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -606,11 +623,15 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
+	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:

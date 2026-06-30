@@ -38,10 +38,12 @@ def setup() -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 
-	logger.debug(translator.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(translator.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
+	if clear_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('clearing_temp'), __name__)
+
+	if create_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('creating_temp'), __name__)
+
 	return 0
 
 
@@ -65,8 +67,7 @@ def process_image() -> ErrorCode:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
-	target_vision_frame = read_static_image(temp_image_path, 'rgba')
-	temp_vision_frame = target_vision_frame.copy()
+	temp_vision_frame = read_static_image(temp_image_path, 'rgba')
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -78,7 +79,7 @@ def process_image() -> ErrorCode:
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
-			'target_vision_frame': target_vision_frame[:, :, :3],
+			'target_vision_frames': [ temp_vision_frame[:, :, :3] ],
 			'temp_vision_frame': temp_vision_frame[:, :, :3],
 			'temp_vision_mask': temp_vision_mask
 		})

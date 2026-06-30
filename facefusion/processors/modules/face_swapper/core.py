@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
 from typing import List, Optional, Tuple
 
 import cv2
@@ -9,10 +10,10 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import get_first, is_macos
+from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face, scale_face
+from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
@@ -24,8 +25,8 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import read_static_image, read_static_images, read_static_video_chunk, read_static_video_frame, unpack_resolution
 
 
 @lru_cache()
@@ -246,6 +247,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -276,6 +278,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 						'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.onnx')
 					}
 				},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -306,6 +309,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -366,6 +370,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'inswapper',
 			'template': 'arcface_128',
 			'size': (128, 128),
@@ -486,28 +491,38 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ get_model_name() ]
+	model_names = [ state_manager.get_item('face_swapper_model') ]
 	model_source_set = get_model_options().get('sources')
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ get_model_name() ]
+	model_names = [ state_manager.get_item('face_swapper_model') ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
+def resolve_inference_providers() -> List[InferenceProvider]:
+	model_precision = get_model_options().get('precision')
+	model_type = get_model_options().get('type')
+
+	if is_macos() and has_execution_provider('coreml'):
+		if model_type in [ 'ghost', 'uniface' ] or model_precision == 'fp16':
+			return\
+			[
+				(facefusion.choices.execution_provider_set.get('coreml'),
+				{
+					'ModelFormat': 'MLProgram',
+					'SpecializationStrategy': 'FastPrediction'
+				})
+			]
+
+	return []
+
+
 def get_model_options() -> ModelOptions:
-	model_name = get_model_name()
-	return create_static_model_set('full').get(model_name)
-
-
-def get_model_name() -> str:
 	model_name = state_manager.get_item('face_swapper_model')
-
-	if is_macos() and has_execution_provider('coreml') and model_name == 'inswapper_128_fp16':
-		return 'inswapper_128'
-	return model_name
+	return create_static_model_set('full').get(model_name)
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -527,9 +542,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -541,7 +564,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_vision_frames = read_static_images(source_image_paths)
-	source_faces = get_many_faces(source_vision_frames)
+	source_faces = get_static_faces(source_vision_frames)
 
 	if not get_one_face(source_faces):
 		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
@@ -565,20 +588,19 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
+	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		get_static_model_initializer.cache_clear()
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
-		face_classifier.clear_inference_pool()
-		face_detector.clear_inference_pool()
-		face_landmarker.clear_inference_pool()
-		face_masker.clear_inference_pool()
-		face_recognizer.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
-def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def swap_face(source_face : Face, target_face : Face, source_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
@@ -598,7 +620,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
-		pixel_boost_vision_frame = forward_swap_face(source_face, target_face, pixel_boost_vision_frame)
+		pixel_boost_vision_frame = forward_swap_face(source_face, target_face, source_vision_frame, pixel_boost_vision_frame)
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
@@ -617,18 +639,15 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	return paste_vision_frame
 
 
-def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward_swap_face(source_face : Face, target_face : Face, source_vision_frame : VisionFrame, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
 
-	if is_macos() and has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
-		face_swapper.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
-
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':
 			if model_type in [ 'blendswap', 'uniface' ]:
-				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
+				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face, source_vision_frame)
 			else:
 				source_embedding = prepare_source_embedding(source_face)
 				source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
@@ -654,9 +673,8 @@ def forward_convert_embedding(face_embedding : Embedding) -> Embedding:
 	return face_embedding
 
 
-def prepare_source_frame(source_face : Face) -> VisionFrame:
+def prepare_source_frame(source_face : Face, source_vision_frame : VisionFrame) -> VisionFrame:
 	model_type = get_model_options().get('type')
-	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
 
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))
@@ -748,27 +766,31 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 	if source_vision_frames:
 		for source_vision_frame in source_vision_frames:
-			temp_faces = get_many_faces([source_vision_frame])
+			temp_faces = get_static_faces([ source_vision_frame ])
 			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 
 			if temp_faces:
 				source_faces.append(get_first(temp_faces))
 
-	return get_average_face(source_faces)
+	return average_face_identity(source_faces)
 
 
 def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
+
+	target_vision_frame = get_middle(target_vision_frames)
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frame, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if source_face and target_faces:
+		source_vision_frame = get_first(source_vision_frames)
+
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
-			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
+			temp_vision_frame = swap_face(source_face, target_face, source_vision_frame, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask

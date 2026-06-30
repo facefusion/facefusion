@@ -1,11 +1,12 @@
 import os
 import subprocess
 
+import numpy
 import pytest
 
 from facefusion.common_helper import is_linux
 from facefusion.download import conditional_download
-from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_chunk, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -63,8 +64,25 @@ def test_restrict_image_resolution() -> None:
 
 
 def test_read_video_frame() -> None:
-	assert hasattr(read_video_frame(get_test_example_file('target-240p-25fps.mp4')), '__array_interface__')
+	target_path = get_test_example_file('target-240p-25fps.mp4')
+
+	assert read_video_frame(target_path).shape == (226, 426, 3)
+	assert numpy.array_equal(read_video_frame(target_path, 49), select_video_frames(target_path, 49, 5)[5])
+	assert numpy.array_equal(read_video_frame(target_path, 50), select_video_frames(target_path, 50, 5)[5])
+	assert numpy.array_equal(read_video_frame(target_path, 51), select_video_frames(target_path, 51, 5)[5])
 	assert read_video_frame('invalid') is None
+
+
+def test_read_video_chunk() -> None:
+	assert len(read_video_chunk(get_test_example_file('target-240p-25fps.mp4'), 1, 40)) == 40
+	assert read_video_chunk('invalid', 1, 40) == {}
+
+
+def test_select_video_frames() -> None:
+	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 50, 5)) == 11
+	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 1, 5)) == 11
+	assert len(select_video_frames(get_test_example_file('target-240p-25fps.mp4'), 269, 5)) == 11
+	assert select_video_frames('invalid', 50, 5) == []
 
 
 def test_count_video_frame_total() -> None:

@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -16,8 +16,10 @@ face_detector_models : List[FaceDetectorModel] = list(get_args(FaceDetectorModel
 face_landmarker_models : List[FaceLandmarkerModel] = list(get_args(FaceLandmarkerModel))
 face_selector_modes : List[FaceSelectorMode] = list(get_args(FaceSelectorMode))
 face_selector_orders : List[FaceSelectorOrder] = list(get_args(FaceSelectorOrder))
-face_selector_genders : List[Gender] = list(get_args(Gender))
-face_selector_races : List[Race] = list(get_args(Race))
+genders : List[Gender] = list(get_args(Gender))
+races : List[Race] = list(get_args(Race))
+face_selector_genders : List[FaceSelectorGender] = list(get_args(FaceSelectorGender))
+face_selector_races : List[FaceSelectorRace] = list(get_args(FaceSelectorRace))
 face_occluder_models : List[FaceOccluderModel] = list(get_args(FaceOccluderModel))
 face_parser_models : List[FaceParserModel] = list(get_args(FaceParserModel))
 face_mask_types : List[FaceMaskType] = list(get_args(FaceMaskType))
@@ -153,7 +155,6 @@ job_statuses : List[JobStatus] = list(get_args(JobStatus))
 
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
-system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
 face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)
 face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
@@ -162,6 +163,8 @@ face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
 face_selector_age_range : Sequence[int] = create_int_range(0, 100, 1)
 reference_face_distance_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
+face_tracker_score_range : Sequence[Score] = create_float_range(0.0, 0.5, 0.05)
+target_frame_amount_range : Sequence[int] = create_int_range(0, 10, 1)
 output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
 output_image_scale_range : Sequence[float] = create_float_range(0.25, 8.0, 0.25)
 output_audio_quality_range : Sequence[int] = create_int_range(0, 100, 1)

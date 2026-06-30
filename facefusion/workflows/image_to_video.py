@@ -11,10 +11,10 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
+from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 from facefusion.workflows.core import is_process_stopping
 
 
@@ -47,10 +47,12 @@ def setup() -> ErrorCode:
 	if analyse_video(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end):
 		return 3
 
-	logger.debug(translator.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(translator.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
+	if clear_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('clearing_temp'), __name__)
+
+	if create_temp_directory(state_manager.get_item('target_path')):
+		logger.debug(translator.get('creating_temp'), __name__)
+
 	return 0
 
 
@@ -72,16 +74,16 @@ def extract_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
+	temp_frame_set = resolve_temp_frame_set(state_manager.get_item('target_path'))
 
-	if temp_frame_paths:
-		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	if temp_frame_set:
+		with tqdm(total = len(temp_frame_set), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
-				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
+				for frame_number, temp_frame_path in temp_frame_set.items():
 					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
@@ -153,16 +155,17 @@ def restore_audio() -> ErrorCode:
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
+	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	target_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = target_vision_frame.copy()
+	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
-	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
+	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number - trim_frame_start)
 
 	if not numpy.any(source_audio_frame):
 		source_audio_frame = create_empty_audio_frame()
@@ -176,7 +179,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
-			'target_vision_frame': target_vision_frame[:, :, :3],
+			'target_vision_frames': target_vision_frames,
 			'temp_vision_frame': temp_vision_frame[:, :, :3],
 			'temp_vision_mask': temp_vision_mask
 		})

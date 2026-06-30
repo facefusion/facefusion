@@ -9,6 +9,7 @@ def sanitize_job_id(job_id : str) -> str:
 
 	if __job_id__.isalnum():
 		return job_id
+
 	return hashlib.sha1(job_id.encode()).hexdigest()
 
 

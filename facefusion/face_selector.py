@@ -2,26 +2,35 @@ from typing import List
 
 import numpy
 
+import facefusion.choices
 from facefusion import state_manager
-from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.common_helper import get_first, get_middle
+from facefusion.face_creator import get_one_face, get_static_faces
+from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def select_faces(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> List[Face]:
-	target_faces = get_many_faces([ target_vision_frame ])
+def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
+	source_faces = get_static_faces(source_vision_frames)
+
+	if state_manager.get_item('face_tracker_score') > 0:
+		target_faces = track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
+	else:
+		target_faces = get_static_faces([ get_middle(target_vision_frames) ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
-		return sort_and_filter_faces(target_faces)
+		return sort_and_filter_faces(source_faces, target_faces)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(sort_and_filter_faces(target_faces))
+		target_face = get_one_face(sort_and_filter_faces(source_faces, target_faces))
 		if target_face:
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = get_many_faces([ reference_vision_frame ])
-		reference_faces = sort_and_filter_faces(reference_faces)
+		reference_faces = get_static_faces([ reference_vision_frame ])
+		reference_faces = sort_and_filter_faces(source_faces, reference_faces)
 		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+
 		if reference_face:
 			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
 			return match_faces
@@ -53,17 +62,33 @@ def calculate_face_distance(face : Face, reference_face : Face) -> float:
 	return 0
 
 
-def sort_and_filter_faces(faces : List[Face]) -> List[Face]:
-	if faces:
+def sort_and_filter_faces(source_faces : List[Face], target_faces : List[Face]) -> List[Face]:
+	if target_faces:
 		if state_manager.get_item('face_selector_order'):
-			faces = sort_faces_by_order(faces, state_manager.get_item('face_selector_order'))
-		if state_manager.get_item('face_selector_gender'):
-			faces = filter_faces_by_gender(faces, state_manager.get_item('face_selector_gender'))
-		if state_manager.get_item('face_selector_race'):
-			faces = filter_faces_by_race(faces, state_manager.get_item('face_selector_race'))
+			target_faces = sort_faces_by_order(target_faces, state_manager.get_item('face_selector_order'))
+
+		face_selector_gender = state_manager.get_item('face_selector_gender')
+		face_selector_race = state_manager.get_item('face_selector_race')
+
+		if source_faces and face_selector_gender == 'auto' or face_selector_race == 'auto':
+			source_face = get_first(sort_faces_by_order(source_faces, 'large-small'))
+
+			if source_face:
+				if face_selector_gender == 'auto':
+					face_selector_gender = source_face.gender
+				if face_selector_race == 'auto':
+					face_selector_race = source_face.race
+
+		if face_selector_gender in facefusion.choices.genders:
+			target_faces = filter_faces_by_gender(target_faces, face_selector_gender)
+
+		if face_selector_race in facefusion.choices.races:
+			target_faces = filter_faces_by_race(target_faces, face_selector_race)
+
 		if state_manager.get_item('face_selector_age_start') or state_manager.get_item('face_selector_age_end'):
-			faces = filter_faces_by_age(faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
-	return faces
+			target_faces = filter_faces_by_age(target_faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
+
+	return target_faces
 
 
 def sort_faces_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:

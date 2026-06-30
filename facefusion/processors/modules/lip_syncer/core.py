@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
+from typing import List
 
 import cv2
 import numpy
@@ -8,9 +10,9 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.audio import read_static_voice
-from facefusion.common_helper import create_float_metavar
+from facefusion.common_helper import create_float_metavar, get_middle
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.face_analyser import scale_face
+from facefusion.face_creator import scale_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
@@ -21,7 +23,7 @@ from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_frame
+from facefusion.vision import read_static_image, read_static_video_chunk, read_static_video_frame
 
 
 @lru_cache()
@@ -142,9 +144,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('lip_syncer_weight', args.get('lip_syncer_weight'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, voice_extractor ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -159,18 +169,16 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
+	read_static_video_chunk.cache_clear()
 	read_static_voice.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
-		face_classifier.clear_inference_pool()
-		face_detector.clear_inference_pool()
-		face_landmarker.clear_inference_pool()
-		face_masker.clear_inference_pool()
-		face_recognizer.clear_inference_pool()
-		voice_extractor.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
 def sync_lip(target_face : Face, source_voice_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
@@ -282,11 +290,14 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
+	source_vision_frames = inputs.get('source_vision_frames')
 	source_voice_frame = inputs.get('source_voice_frame')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	target_faces = select_faces(reference_vision_frame, target_vision_frame)
+
+	target_vision_frame = get_middle(target_vision_frames)
+	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:

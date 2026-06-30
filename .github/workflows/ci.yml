@@ -33,7 +33,7 @@ jobs:
     uses: actions/setup-python@v5
     with:
      python-version: '3.12'
-  - run: python install.py --onnxruntime default --skip-conda
+  - run: python install.py default --skip-conda
   - run: pip install pytest
   - run: pytest
  report:
@@ -48,7 +48,7 @@ jobs:
     uses: actions/setup-python@v5
     with:
      python-version: '3.12'
-  - run: python install.py --onnxruntime default --skip-conda
+  - run: python install.py default --skip-conda
   - run: pip install coveralls
   - run: pip install pytest
   - run: pip install pytest-cov

@@ -58,6 +58,7 @@ ComponentName = Literal\
 	'face_selector_mode_dropdown',
 	'face_selector_order_dropdown',
 	'face_selector_race_dropdown',
+	'face_tracker_score_slider',
 	'face_swapper_model_dropdown',
 	'face_swapper_pixel_boost_dropdown',
 	'face_swapper_weight_slider',

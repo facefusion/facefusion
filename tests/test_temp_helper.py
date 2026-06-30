@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.download import conditional_download
-from facefusion.temp_helper import get_temp_directory_path, get_temp_file_path, get_temp_frames_pattern
+from facefusion.temp_helper import get_temp_directory_path, get_temp_file_path, get_temp_frame_pattern
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -29,6 +29,6 @@ def test_get_temp_directory_path() -> None:
 	assert get_temp_directory_path(get_test_example_file('target-240p.mp4')) == os.path.join(temp_directory, 'facefusion', 'target-240p')
 
 
-def test_get_temp_frames_pattern() -> None:
+def test_get_temp_frame_pattern() -> None:
 	temp_directory = tempfile.gettempdir()
-	assert get_temp_frames_pattern(get_test_example_file('target-240p.mp4'), '%04d') == os.path.join(temp_directory, 'facefusion', 'target-240p', '%04d.png')
+	assert get_temp_frame_pattern(get_test_example_file('target-240p.mp4'), '%04d') == os.path.join(temp_directory, 'facefusion', 'target-240p', '%04d.png')

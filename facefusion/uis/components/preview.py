@@ -7,18 +7,18 @@ import numpy
 
 from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, get_middle
 from facefusion.content_analyser import analyse_frame
-from facefusion.face_analyser import get_one_face
+from facefusion.face_creator import get_one_face
 from facefusion.face_selector import select_faces
-from facefusion.face_store import clear_static_faces
+from facefusion.face_store import clear_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, select_video_frames, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -36,7 +36,7 @@ def render() -> None:
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
 
-	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
+	if source_audio_path and state_manager.get_item('output_video_fps'):
 		temp_voice_frame = get_voice_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('reference_frame_number'))
 		if numpy.any(temp_voice_frame):
 			source_voice_frame = temp_voice_frame
@@ -44,14 +44,14 @@ def render() -> None:
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, [ target_vision_frame ], uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
 		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
+		target_vision_frames = select_video_frames(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'), state_manager.get_item('target_frame_amount'))
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frames, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
 		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 		preview_image_options['visible'] = True
@@ -134,6 +134,7 @@ def listen() -> None:
 		'lip_syncer_weight_slider',
 		'reference_face_distance_slider',
 		'face_selector_age_range_slider',
+		'face_tracker_score_slider',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
 		'face_mask_padding_bottom_slider',
@@ -189,43 +190,42 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
 
-	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
-		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
+	if source_audio_path and state_manager.get_item('output_video_fps'):
+		audio_frame_number = frame_number
 		if state_manager.get_item('trim_frame_start'):
-			reference_audio_frame_number -= state_manager.get_item('trim_frame_start')
-		temp_voice_frame = get_voice_frame(source_audio_path, state_manager.get_item('output_video_fps'), reference_audio_frame_number)
+			audio_frame_number -= state_manager.get_item('trim_frame_start')
+		temp_voice_frame = get_voice_frame(source_audio_path, state_manager.get_item('output_video_fps'), audio_frame_number)
 		if numpy.any(temp_voice_frame):
 			source_voice_frame = temp_voice_frame
 
 	if is_image(state_manager.get_item('target_path')):
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'), 'rgba')
-		target_vision_mask = extract_vision_mask(target_vision_frame)
-		target_vision_frame = merge_vision_mask(target_vision_frame, target_vision_mask)
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, preview_mode, preview_resolution)
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, [ target_vision_frame ], preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 
 	if is_video(state_manager.get_item('target_path')):
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		temp_vision_mask = extract_vision_mask(temp_vision_frame)
-		temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, preview_mode, preview_resolution)
+		target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frames, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
 
 
 def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
-	clear_static_faces()
+	clear_faces()
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
-def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
+def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frames : List[VisionFrame], preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
+	target_vision_frame = get_middle(target_vision_frames)
 	target_vision_frame = restrict_frame(target_vision_frame, unpack_resolution(preview_resolution))
+	temp_vision_mask = extract_vision_mask(target_vision_frame)
+	target_vision_frame = merge_vision_mask(target_vision_frame, temp_vision_mask)
+	target_vision_frames = [ restrict_frame(vision_frame, unpack_resolution(preview_resolution))[:, :, :3] for vision_frame in target_vision_frames ]
 	temp_vision_frame = target_vision_frame.copy()
-	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	if analyse_frame(target_vision_frame[:, :, :3]):
 		if preview_mode == 'frame-by-frame':
@@ -233,7 +233,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			return numpy.hstack((temp_vision_frame, temp_vision_frame))
 
 		if preview_mode == 'face-by-face':
-			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
+			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, source_vision_frames, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
 			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
 			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
 			return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
@@ -251,7 +251,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
 				'source_vision_frames': source_vision_frames,
-				'target_vision_frame': target_vision_frame[:, :, :3],
+				'target_vision_frames': target_vision_frames,
 				'temp_vision_frame': temp_vision_frame[:, :, :3],
 				'temp_vision_mask': temp_vision_mask
 			})
@@ -263,14 +263,14 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 		return numpy.hstack((target_vision_frame, temp_vision_frame))
 
 	if preview_mode == 'face-by-face':
-		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame, temp_vision_frame)
+		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, source_vision_frames, target_vision_frame, temp_vision_frame)
 		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 	return temp_vision_frame
 
 
-def create_face_by_face(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
-	target_faces = select_faces(reference_vision_frame[:, :, :3], target_vision_frame[:, :, :3])
+def create_face_by_face(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
+	target_faces = select_faces(reference_vision_frame[:, :, :3], source_vision_frames, [ target_vision_frame[:, :, :3] ])
 	target_face = get_one_face(target_faces)
 
 	if target_face:

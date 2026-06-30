@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from types import ModuleType
 from typing import List
 
 import cv2
 import numpy
 
+import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
@@ -17,8 +19,8 @@ from facefusion.processors.modules.frame_colorizer.types import FrameColorizerIn
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import blend_frame, read_static_image, read_static_video_chunk, read_static_video_frame, unpack_resolution
 
 
 @lru_cache()
@@ -170,10 +172,11 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_execution_providers() -> List[ExecutionProvider]:
+def resolve_inference_providers() -> List[InferenceProvider]:
 	if is_macos() and has_execution_provider('coreml'):
-		return [ 'cpu' ]
-	return state_manager.get_item('execution_providers')
+		return [ facefusion.choices.execution_provider_set.get('cpu') ]
+
+	return []
 
 
 def get_model_options() -> ModelOptions:
@@ -196,9 +199,17 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('frame_colorizer_size', args.get('frame_colorizer_size'))
 
 
+def get_common_modules() -> List[ModuleType]:
+	return [ content_analyser ]
+
+
 def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
+
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -219,11 +230,15 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
+	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
+
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
+
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		content_analyser.clear_inference_pool()
+		for common_module in get_common_modules():
+			common_module.clear_inference_pool()
 
 
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:

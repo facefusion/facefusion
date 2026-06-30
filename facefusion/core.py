@@ -5,14 +5,13 @@ import signal
 import sys
 from time import time
 
-from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
+from facefusion import benchmarker, cli_helper, content_analyser, hash_helper, logger, state_manager, translator
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.memory import limit_system_memory
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -41,11 +40,6 @@ def cli() -> None:
 
 
 def route(args : Args) -> None:
-	system_memory_limit = state_manager.get_item('system_memory_limit')
-
-	if system_memory_limit and system_memory_limit > 0:
-		limit_system_memory(system_memory_limit)
-
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		hard_exit(error_code)
@@ -107,21 +101,9 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	common_modules =\
-	[
-		content_analyser,
-		face_classifier,
-		face_detector,
-		face_landmarker,
-		face_masker,
-		face_recognizer,
-		voice_extractor
-	]
-
 	content_analyser_content = inspect.getsource(content_analyser).encode()
-	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
 
-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == 'b14e7b92'
+	return hash_helper.create_hash(content_analyser_content) == '975d67d6'
 
 
 def processors_pre_check() -> bool:
@@ -132,22 +114,19 @@ def processors_pre_check() -> bool:
 
 
 def force_download() -> ErrorCode:
-	common_modules =\
-	[
-		content_analyser,
-		face_classifier,
-		face_detector,
-		face_landmarker,
-		face_masker,
-		face_recognizer,
-		voice_extractor
-	]
+	download_scope = state_manager.get_item('download_scope')
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	processor_modules = get_processors_modules(available_processors)
+	common_modules = []
+
+	for processor_module in processor_modules:
+		for common_module in processor_module.get_common_modules():
+			if common_module not in common_modules:
+				common_modules.append(common_module)
 
 	for module in common_modules + processor_modules:
 		if hasattr(module, 'create_static_model_set'):
-			for model in module.create_static_model_set(state_manager.get_item('download_scope')).values():
+			for model in module.create_static_model_set(download_scope).values():
 				model_hash_set = model.get('hashes')
 				model_source_set = model.get('sources')
 

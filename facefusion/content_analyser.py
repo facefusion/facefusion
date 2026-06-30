@@ -1,16 +1,14 @@
 from functools import lru_cache
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy
 from tqdm import tqdm
 
 from facefusion import inference_manager, state_manager, translator
-from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import Detection, DownloadScope, DownloadSet, ExecutionProvider, Fps, InferencePool, ModelSet, VisionFrame
+from facefusion.types import Detection, DownloadScope, DownloadSet, Fps, InferencePool, ModelSet, VisionFrame
 from facefusion.vision import detect_video_fps, fit_contain_frame, read_image, read_video_frame
 
 STREAM_COUNTER = 0
@@ -119,12 +117,6 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_execution_providers() -> List[ExecutionProvider]:
-	if is_macos() and has_execution_provider('coreml'):
-		return [ 'cpu' ]
-	return state_manager.get_item('execution_providers')
-
-
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_set = create_static_model_set('full')
 	model_hash_set = {}
@@ -175,10 +167,12 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
 				vision_frame = read_video_frame(video_path, frame_number)
-				total += 1
 
-				if analyse_frame(vision_frame):
-					counter += 1
+				if numpy.any(vision_frame):
+					total += 1
+
+					if analyse_frame(vision_frame):
+						counter += 1
 
 			if counter > 0 and total > 0:
 				rate = counter / total * 100

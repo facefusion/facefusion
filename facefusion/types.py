@@ -1,5 +1,6 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from threading import Lock
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
 import numpy
@@ -29,26 +30,34 @@ FaceScoreSet = TypedDict('FaceScoreSet',
 	'landmarker' : Score
 })
 Embedding : TypeAlias = NDArray[numpy.float64]
-Gender = Literal['female', 'male']
+
 Age : TypeAlias = range
+Gender = Literal['female', 'male']
 Race = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
+FaceSelectorGender = Literal['auto', 'female', 'male']
+FaceSelectorRace = Literal['auto', 'white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
 Face = namedtuple('Face',
 [
+	'origin',
 	'bounding_box',
 	'score_set',
 	'landmark_set',
 	'angle',
 	'embedding',
 	'embedding_norm',
-	'gender',
 	'age',
+	'gender',
 	'race'
 ])
-FaceSet : TypeAlias = Dict[str, List[Face]]
-FaceStore = TypedDict('FaceStore',
+FaceSet = TypedDict('FaceSet',
 {
-	'static_faces' : FaceSet
+	'lock': Lock,
+	'faces': NotRequired[List[Face]]
 })
+FaceStore : TypeAlias = Dict[str, FaceSet]
+FaceTrack : TypeAlias = Dict[int, Face]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
@@ -59,12 +68,12 @@ VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoPoolSet = TypedDict('VideoPoolSet',
 {
-	'capture': VideoCaptureSet,
-	'writer': VideoWriterSet
+	'capture' : VideoCaptureSet,
+	'writer' : VideoWriterSet
 })
 CameraPoolSet = TypedDict('CameraPoolSet',
 {
-	'capture': CameraCaptureSet
+	'capture' : CameraCaptureSet
 })
 
 ColorMode = Literal['rgb', 'rgba']
@@ -137,6 +146,8 @@ TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
 ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
 VideoTypeSet : TypeAlias = Dict[VideoFormat, str]
+
+FrameSet : TypeAlias = Dict[int, str]
 
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
@@ -290,6 +301,7 @@ StateKey = Literal\
 	'reference_face_position',
 	'reference_face_distance',
 	'reference_frame_number',
+	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
 	'face_mask_types',
@@ -302,6 +314,7 @@ StateKey = Literal\
 	'trim_frame_end',
 	'temp_frame_format',
 	'keep_temp',
+	'target_frame_amount',
 	'output_image_quality',
 	'output_image_scale',
 	'output_audio_encoder',
@@ -320,7 +333,6 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'video_memory_strategy',
-	'system_memory_limit',
 	'log_level',
 	'halt_on_error',
 	'job_id',
@@ -346,20 +358,21 @@ State = TypedDict('State',
 	'benchmark_cycle_count' : int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
-	'face_detector_margin': Margin,
+	'face_detector_margin' : Margin,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_landmarker_model' : FaceLandmarkerModel,
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_race' : Race,
-	'face_selector_gender' : Gender,
+	'face_selector_race' : FaceSelectorRace,
+	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'reference_face_position' : int,
 	'reference_face_distance' : float,
 	'reference_frame_number' : int,
+	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
@@ -367,11 +380,12 @@ State = TypedDict('State',
 	'face_mask_regions' : List[FaceMaskRegion],
 	'face_mask_blur' : float,
 	'face_mask_padding' : Padding,
-	'voice_extractor_model': VoiceExtractorModel,
+	'voice_extractor_model' : VoiceExtractorModel,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
 	'keep_temp' : bool,
+	'target_frame_amount' : int,
 	'output_image_quality' : int,
 	'output_image_scale' : Scale,
 	'output_audio_encoder' : AudioEncoder,
@@ -390,7 +404,6 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'video_memory_strategy' : VideoMemoryStrategy,
-	'system_memory_limit' : int,
 	'log_level' : LogLevel,
 	'halt_on_error' : bool,
 	'job_id' : str,
