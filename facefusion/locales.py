@@ -124,7 +124,7 @@ LOCALES : Locales =\
 			'reference_face_position': 'specify the position used to create the reference face',
 			'reference_face_distance': 'specify the similarity between the reference face and target face',
 			'reference_frame_number': 'specify the frame used to create the reference face',
-			'face_tracker_score': 'specify the minimum score to track a face',
+			'face_tracker_score': 'specify the overlap score used to match the tracked faces',
 			'face_occluder_model': 'choose the model responsible for the occlusion mask',
 			'face_parser_model': 'choose the model responsible for the region mask',
 			'face_mask_types': 'mix and match different face mask types (choices: {choices})',
