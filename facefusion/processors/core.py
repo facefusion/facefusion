@@ -12,6 +12,7 @@ PROCESSORS_METHODS =\
 	'clear_inference_pool',
 	'register_args',
 	'apply_args',
+	'get_common_modules',
 	'pre_check',
 	'pre_process',
 	'post_process',

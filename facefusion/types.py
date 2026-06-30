@@ -1,6 +1,7 @@
 import ctypes
 from collections import namedtuple
 from datetime import datetime
+from threading import Lock
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import cv2
@@ -31,22 +32,34 @@ FaceScoreSet = TypedDict('FaceScoreSet',
 	'landmarker' : Score
 })
 Embedding : TypeAlias = NDArray[numpy.float64]
-Gender = Literal['female', 'male']
+
 Age : TypeAlias = range
+Gender = Literal['female', 'male']
 Race = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
+FaceSelectorGender = Literal['auto', 'female', 'male']
+FaceSelectorRace = Literal['auto', 'white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
 Face = namedtuple('Face',
 [
+	'origin',
 	'bounding_box',
 	'score_set',
 	'landmark_set',
 	'angle',
 	'embedding',
 	'embedding_norm',
-	'gender',
 	'age',
+	'gender',
 	'race'
 ])
-FaceStore : TypeAlias = Dict[str, List[Face]]
+FaceSet = TypedDict('FaceSet',
+{
+	'lock': Lock,
+	'faces': NotRequired[List[Face]]
+})
+FaceStore : TypeAlias = Dict[str, FaceSet]
+FaceTrack : TypeAlias = Dict[int, Face]
 
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
@@ -184,6 +197,8 @@ AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
+
+FrameSet : TypeAlias = Dict[int, str]
 
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
 ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
@@ -491,6 +506,7 @@ StateKey = Literal\
 	'reference_face_position',
 	'reference_face_distance',
 	'reference_frame_number',
+	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
 	'face_mask_types',
@@ -503,6 +519,7 @@ StateKey = Literal\
 	'trim_frame_end',
 	'temp_frame_format',
 	'keep_temp',
+	'target_frame_amount',
 	'output_image_quality',
 	'output_image_scale',
 	'output_audio_encoder',
@@ -556,13 +573,14 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_race' : Race,
-	'face_selector_gender' : Gender,
+	'face_selector_race' : FaceSelectorRace,
+	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'reference_face_position' : int,
 	'reference_face_distance' : float,
 	'reference_frame_number' : int,
+	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
@@ -575,6 +593,7 @@ State = TypedDict('State',
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
 	'keep_temp' : bool,
+	'target_frame_amount' : int,
 	'output_image_quality' : int,
 	'output_image_scale' : Scale,
 	'output_audio_encoder' : AudioEncoder,

@@ -421,6 +421,27 @@ def create_face_selector_program() -> ArgumentParser:
 	return program
 
 
+def create_face_tracker_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_face_tracker = program.add_argument_group('face tracker')
+
+	capability_store.register_capability_set(
+		[
+			group_face_tracker.add_argument(
+				'--face-tracker-score',
+				help = translator.get('help.face_tracker_score'),
+				type = float,
+				default = config.get_float_value('face_tracker', 'face_tracker_score', '0.0'),
+				choices = facefusion.choices.face_tracker_score_range,
+				metavar = create_float_metavar(facefusion.choices.face_tracker_score_range)
+			)
+		],
+		scopes = [ 'api', 'cli' ]
+	)
+
+	return program
+
+
 def create_face_masker_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_masker = program.add_argument_group('face masker')
@@ -567,6 +588,27 @@ def create_frame_extraction_program() -> ArgumentParser:
 				help = translator.get('help.temp_frame_format'),
 				default = config.get_str_value('frame_extraction', 'temp_frame_format', 'png'),
 				choices = facefusion.choices.temp_frame_formats
+			)
+		],
+		scopes = [ 'api', 'cli' ]
+	)
+
+	return program
+
+
+def create_frame_distribution_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_frame_distribution = program.add_argument_group('frame distribution')
+
+	capability_store.register_capability_set(
+		[
+			group_frame_distribution.add_argument(
+				'--target-frame-amount',
+				help = translator.get('help.target_frame_amount'),
+				type = int,
+				default = config.get_int_value('frame_distribution', 'target_frame_amount', '5'),
+				choices = facefusion.choices.target_frame_amount_range,
+				metavar = create_int_metavar(facefusion.choices.target_frame_amount_range)
 			)
 		],
 		scopes = [ 'api', 'cli' ]
@@ -985,9 +1027,11 @@ def collect_step_program() -> ArgumentParser:
 			create_face_detector_program(),
 			create_face_landmarker_program(),
 			create_face_selector_program(),
+			create_face_tracker_program(),
 			create_face_masker_program(),
 			create_voice_extractor_program(),
 			create_frame_extraction_program(),
+			create_frame_distribution_program(),
 			create_output_creation_program(),
 			create_processors_program()
 		],
