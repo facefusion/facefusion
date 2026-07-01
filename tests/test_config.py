@@ -1,14 +1,13 @@
-from configparser import ConfigParser
-
 import pytest
 
-from facefusion import config
+from facefusion import config, state_manager
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	config.CONFIG_PARSER = ConfigParser()
-	config.CONFIG_PARSER.read_dict(
+	state_manager.init_item('config_path', 'facefusion.ini')
+	config_parser = config.get_static_config_parser()
+	config_parser.read_dict(
 	{
 		'str':
 		{
