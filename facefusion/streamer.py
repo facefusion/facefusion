@@ -2,7 +2,7 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import Deque, Iterator, List
+from typing import Deque, Iterator
 
 import cv2
 import numpy
@@ -20,7 +20,6 @@ from facefusion.vision import extract_vision_mask, read_static_images
 
 def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Iterator[VisionFrame]:
 	capture_deque : Deque[VisionFrame] = deque()
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
 	with tqdm(desc = translator.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
@@ -33,7 +32,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 
 				if numpy.any(capture_frame):
 					audio_frame = create_empty_audio_frame()
-					future = executor.submit(process_frame, source_vision_frames, audio_frame, capture_frame)
+					future = executor.submit(process_frame, audio_frame, capture_frame)
 					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
@@ -46,7 +45,8 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					yield capture_deque.popleft()
 
 
-def process_frame(source_vision_frames : List[VisionFrame], stream_audio_frame : AudioFrame, stream_vision_frame : VisionFrame) -> VisionFrame:
+def process_frame(stream_audio_frame : AudioFrame, stream_vision_frame : VisionFrame) -> VisionFrame:
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_voice_frame = create_empty_audio_frame()
 	temp_vision_frame = stream_vision_frame.copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
