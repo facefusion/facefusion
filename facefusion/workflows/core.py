@@ -86,9 +86,9 @@ def conditional_get_target_vision_frames(temp_frame_path : str, frame_number : i
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	reference_vision_frame = conditional_get_reference_vision_frame()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	target_vision_frames = conditional_get_target_vision_frames(temp_frame_path, frame_number)
 	source_audio_frame = conditional_get_source_audio_frame(frame_number)
 	source_voice_frame = conditional_get_source_voice_frame(frame_number)
+	target_vision_frames = conditional_get_target_vision_frames(temp_frame_path, frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba').copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
