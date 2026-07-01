@@ -6,11 +6,11 @@ from typing import Optional, Tuple
 import cv2
 import numpy
 
-from facefusion import rtc, streamer
+from facefusion import rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event
-from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.vision import read_static_images
 
 
 def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
@@ -72,7 +72,8 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 
 
 def process_video_frame(input_vision_frame : VisionFrame) -> BufferPack:
-	output_vision_frame = streamer.process_frame(create_empty_audio_frame(), input_vision_frame)
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+	output_vision_frame = streamer.process_stream_frame(source_vision_frames, input_vision_frame)
 	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 	output_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	return BufferPack(buffer = output_buffer, resolution = output_resolution)

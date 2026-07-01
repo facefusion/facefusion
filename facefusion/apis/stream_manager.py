@@ -12,16 +12,17 @@ from starlette.websockets import WebSocket
 from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
-from facefusion.audio import create_empty_audio_frame
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, Time, VideoCodec, VisionFrame
+from facefusion.vision import read_static_images
 
 
 async def process_image(websocket : WebSocket) -> None:
 	capture_vision_frame = await anext(receive_vision_frames(websocket), None)
 
 	if numpy.any(capture_vision_frame):
-		output_vision_frame = streamer.process_frame(create_empty_audio_frame(), capture_vision_frame)
+		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
 		is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
 
 		if is_success:
