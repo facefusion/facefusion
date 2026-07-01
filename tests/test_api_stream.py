@@ -8,10 +8,9 @@ from starlette.testclient import TestClient
 from facefusion import metadata, rtc, rtc_store, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
-from facefusion.libraries import datachannel as datachannel_module
+from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.types import VideoCodec
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -24,7 +23,10 @@ def before_all() -> None:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('processors', [])
 
-	common_pre_check()
+	aom_module.pre_check()
+	datachannel_module.pre_check()
+	opus_module.pre_check()
+	vpx_module.pre_check()
 
 	conditional_download(get_test_examples_directory(),
 	[
