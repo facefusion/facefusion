@@ -7,8 +7,8 @@ from time import time
 
 import uvicorn
 
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
-from facefusion.apis.core import create_api
+import facefusion.apis.core
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, hash_helper, logger, state_manager, translator
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -16,7 +16,6 @@ from facefusion.filesystem import get_file_extension, has_audio, has_image, has_
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -55,11 +54,11 @@ def route(args : Args) -> None:
 		benchmarker.render()
 
 	if state_manager.get_item('command') == 'api':
-		if not common_pre_check() or not processors_pre_check():
+		if not common_pre_check() or not processors_pre_check() or not facefusion.apis.core.pre_check():
 			hard_exit(2)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
-		uvicorn.run(create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
+		uvicorn.run(facefusion.apis.core.create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
 		hard_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
@@ -103,25 +102,9 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	common_modules =\
-	[
-		aom_module,
-		datachannel_module,
-		content_analyser,
-		face_classifier,
-		face_detector,
-		face_landmarker,
-		face_masker,
-		face_recognizer,
-		opus_module,
-		voice_extractor,
-		vpx_module
-	]
-
 	content_analyser_content = inspect.getsource(content_analyser).encode()
-	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
 
-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '320ef969'
+	return hash_helper.create_hash(content_analyser_content) == 'a0a5ae57'
 
 
 def processors_pre_check() -> bool:
@@ -132,22 +115,19 @@ def processors_pre_check() -> bool:
 
 
 def force_download() -> ErrorCode:
-	common_modules =\
-	[
-		content_analyser,
-		face_classifier,
-		face_detector,
-		face_landmarker,
-		face_masker,
-		face_recognizer,
-		voice_extractor
-	]
+	download_scope = state_manager.get_item('download_scope')
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	processor_modules = get_processors_modules(available_processors)
+	common_modules = []
+
+	for processor_module in processor_modules:
+		for common_module in processor_module.get_common_modules():
+			if common_module not in common_modules:
+				common_modules.append(common_module)
 
 	for module in common_modules + processor_modules:
 		if hasattr(module, 'create_static_model_set'):
-			for model in module.create_static_model_set(state_manager.get_item('download_scope')).values():
+			for model in module.create_static_model_set(download_scope).values():
 				model_hash_set = model.get('hashes')
 				model_source_set = model.get('sources')
 

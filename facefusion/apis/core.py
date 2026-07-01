@@ -1,3 +1,6 @@
+from types import ModuleType
+from typing import List
+
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -11,6 +14,19 @@ from facefusion.apis.endpoints.session import create_session, destroy_session, g
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
 from facefusion.apis.middlewares.session import create_session_guard
+from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
+
+
+def get_common_modules() -> List[ModuleType]:
+	return [ aom_module, datachannel_module, opus_module, vpx_module ]
+
+
+def pre_check() -> bool:
+	for common_module in get_common_modules():
+		if not common_module.pre_check():
+			return False
+
+	return True
 
 
 def create_api() -> Starlette:
