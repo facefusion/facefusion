@@ -132,6 +132,7 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		ffmpeg_builder.enforce_pixel_format('rgb24'),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.prevent_frame_drop(),
+		ffmpeg_builder.set_start_number(trim_frame_start),
 		ffmpeg_builder.set_output(temp_frames_pattern)
 	)
 
@@ -207,6 +208,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	temp_video_path = get_temp_file_path(state_manager.get_temp_path(), output_path)
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
+	output_video_format = cast(VideoFormat, get_file_format(output_path))
 
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
@@ -220,6 +222,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.select_media_stream('0:v:0'),
 		ffmpeg_builder.select_media_stream('1:a:0'),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
+		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -232,6 +235,7 @@ def replace_audio(audio_path : str, output_path : str) -> bool:
 	temp_video_path = get_temp_file_path(state_manager.get_temp_path(), output_path)
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
+	output_video_format = cast(VideoFormat, get_file_format(output_path))
 
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
@@ -242,6 +246,7 @@ def replace_audio(audio_path : str, output_path : str) -> bool:
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
 		ffmpeg_builder.set_audio_volume(output_audio_volume),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
+		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -259,9 +264,11 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input_fps(temp_video_fps),
+		ffmpeg_builder.set_start_number(trim_frame_start),
 		ffmpeg_builder.set_input(temp_frames_pattern),
 		ffmpeg_builder.set_media_resolution(pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
+		ffmpeg_builder.set_video_tag(output_video_encoder, temp_video_format),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.concat(
@@ -288,11 +295,13 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		concat_video_file.close()
 
 	output_path = os.path.abspath(output_path)
+	output_video_format = cast(VideoFormat, get_file_format(output_path))
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.unsafe_concat(),
 		ffmpeg_builder.set_input(concat_video_file.name),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
+		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
 	process = run_ffmpeg(commands)

@@ -254,3 +254,23 @@ def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
 		matrix = numpy.dot(temp_matrix, matrix)
 
 	return matrix[:2, :]
+
+
+def calculate_bounding_box_overlap(bounding_box_a : BoundingBox, bounding_box_b : BoundingBox) -> float:
+	intersection_x1 = max(bounding_box_a[0], bounding_box_b[0])
+	intersection_y1 = max(bounding_box_a[1], bounding_box_b[1])
+	intersection_x2 = min(bounding_box_a[2], bounding_box_b[2])
+	intersection_y2 = min(bounding_box_a[3], bounding_box_b[3])
+	intersection = max(0, intersection_x2 - intersection_x1) * max(0, intersection_y2 - intersection_y1)
+	bounding_box_area = (bounding_box_a[2] - bounding_box_a[0]) * (bounding_box_a[3] - bounding_box_a[1])
+	reference_bounding_box_area = (bounding_box_b[2] - bounding_box_b[0]) * (bounding_box_b[3] - bounding_box_b[1])
+	union = bounding_box_area + reference_bounding_box_area - intersection
+
+	if union > 0:
+		return intersection / union
+
+	return 0.0
+
+
+def average_points(points_previous : Points, points_next : Points, average_factor : float) -> Points:
+	return points_previous * (1 - average_factor) + points_next * average_factor

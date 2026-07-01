@@ -60,7 +60,7 @@ def process_frame(stream_audio_frame : AudioFrame, stream_vision_frame : VisionF
 				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': stream_audio_frame,
 				'source_voice_frame': source_voice_frame,
-				'target_vision_frame': stream_vision_frame,
+				'target_vision_frames': [ stream_vision_frame ],
 				'temp_vision_frame': temp_vision_frame,
 				'temp_vision_mask': temp_vision_mask
 			})
