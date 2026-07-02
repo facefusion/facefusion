@@ -251,7 +251,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_float_metavar(face_editor_choices.face_editor_head_roll_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'face_editor' ]
 		)
 
 

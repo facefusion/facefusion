@@ -598,7 +598,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_int_metavar(frame_enhancer_choices.frame_enhancer_blend_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'frame_enhancer' ]
 		)
 
 

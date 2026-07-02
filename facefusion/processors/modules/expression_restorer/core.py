@@ -125,7 +125,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = 'EXPRESSION_RESTORER_AREAS'
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'expression_restorer' ]
 		)
 
 

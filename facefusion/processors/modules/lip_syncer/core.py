@@ -151,7 +151,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'lip_syncer' ]
 		)
 
 
