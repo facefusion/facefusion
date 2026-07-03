@@ -177,7 +177,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 def create_frame_distribution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_frame_distribution = program.add_argument_group('frame distribution')
-	group_frame_distribution.add_argument('--target-frame-amount', help = translator.get('help.target_frame_amount'), type = int, default = config.get_int_value('frame_distribution', 'target_frame_amount', '5'), choices = facefusion.choices.target_frame_amount_range, metavar = create_int_metavar(facefusion.choices.target_frame_amount_range))
+	group_frame_distribution.add_argument('--target-frame-amount', help = translator.get('help.target_frame_amount'), type = int, default = config.get_int_value('frame_distribution', 'target_frame_amount', '2'), choices = facefusion.choices.target_frame_amount_range, metavar = create_int_metavar(facefusion.choices.target_frame_amount_range))
 	job_store.register_step_keys([ 'target_frame_amount' ])
 	return program
 
