@@ -10,7 +10,7 @@ from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
-from facefusion.video_manager import conditional_set_video_capture_position, get_video_capture
+from facefusion.video_manager import conditional_set_frame_position, get_video_capture
 
 
 def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
@@ -84,7 +84,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 			frame_position = min(frame_total, frame_number)
 
 			with thread_semaphore():
-				video_capture = conditional_set_video_capture_position(video_capture, frame_position)
+				conditional_set_frame_position(video_capture, frame_position)
 				has_vision_frame, vision_frame = video_capture.read()
 
 			if has_vision_frame:
@@ -109,7 +109,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 			frame_position = chunk_number * chunk_size
 
 			with thread_semaphore():
-				video_capture = conditional_set_video_capture_position(video_capture, frame_position)
+				conditional_set_frame_position(video_capture, frame_position)
 
 				for frame_number in range(frame_position, min(frame_position + chunk_size, frame_total)):
 					has_vision_frame, vision_frame = video_capture.read()
