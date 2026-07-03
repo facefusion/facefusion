@@ -19,6 +19,13 @@ def get_video_capture(video_path : str) -> cv2.VideoCapture:
 	return VIDEO_POOL_SET.get('capture').get(video_path)
 
 
+def conditional_set_video_capture_position(video_capture : cv2.VideoCapture, frame_position : int) -> cv2.VideoCapture:
+	if not video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_position:
+		video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
+
+	return video_capture
+
+
 def get_video_writer(video_path : str) -> cv2.VideoWriter:
 	if video_path not in VIDEO_POOL_SET.get('writer'):
 		video_writer = cv2.VideoWriter()

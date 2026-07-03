@@ -10,7 +10,7 @@ from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
-from facefusion.video_manager import get_video_capture
+from facefusion.video_manager import conditional_set_video_capture_position, get_video_capture
 
 
 def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
@@ -80,11 +80,11 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 		video_capture = get_video_capture(video_path)
 
 		if video_capture and video_capture.isOpened():
-			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
+			frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 			frame_position = min(frame_total, frame_number)
 
 			with thread_semaphore():
-				video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
+				video_capture = conditional_set_video_capture_position(video_capture, frame_position)
 				has_vision_frame, vision_frame = video_capture.read()
 
 			if has_vision_frame:
@@ -93,7 +93,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-@lru_cache(maxsize = 2)
+@lru_cache(maxsize = 4)
 def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
@@ -109,7 +109,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 			frame_position = chunk_number * chunk_size
 
 			with thread_semaphore():
-				video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
+				video_capture = conditional_set_video_capture_position(video_capture, frame_position)
 
 				for frame_number in range(frame_position, min(frame_position + chunk_size, frame_total)):
 					has_vision_frame, vision_frame = video_capture.read()
@@ -120,9 +120,9 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 	return video_frame_chunk
 
 
-def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 5) -> List[VisionFrame]:
+def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
-	chunk_size = (frame_offset * 2 + 1) * 4
+	chunk_size = frame_offset * 2 + 1
 
 	if is_video(video_path):
 		with thread_lock():
