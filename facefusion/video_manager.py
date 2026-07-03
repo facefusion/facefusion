@@ -19,7 +19,7 @@ def get_video_capture(video_path : str) -> cv2.VideoCapture:
 	return VIDEO_POOL_SET.get('capture').get(video_path)
 
 
-def conditional_set_frame_position(video_capture : cv2.VideoCapture, frame_position : int) -> bool:
+def conditional_set_video_frame_position(video_capture : cv2.VideoCapture, frame_position : int) -> bool:
 	if not video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_position:
 		return video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
 	return True
