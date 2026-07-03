@@ -93,7 +93,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-@lru_cache(maxsize = 4)
+@lru_cache(maxsize = 2)
 def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
