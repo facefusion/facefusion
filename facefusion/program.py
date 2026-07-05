@@ -606,7 +606,7 @@ def create_frame_distribution_program() -> ArgumentParser:
 				'--target-frame-amount',
 				help = translator.get('help.target_frame_amount'),
 				type = int,
-				default = config.get_int_value('frame_distribution', 'target_frame_amount', '5'),
+				default = config.get_int_value('frame_distribution', 'target_frame_amount', '2'),
 				choices = facefusion.choices.target_frame_amount_range,
 				metavar = create_int_metavar(facefusion.choices.target_frame_amount_range)
 			)

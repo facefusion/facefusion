@@ -77,10 +77,10 @@ def conditional_get_reference_vision_frame() -> VisionFrame:
 	return read_static_image(state_manager.get_item('target_path'))
 
 
-def conditional_get_target_vision_frames(temp_frame_path : str, frame_number : int) -> List[VisionFrame]:
+def conditional_get_target_vision_frames(frame_number : int) -> List[VisionFrame]:
 	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video:frames' ]:
 		return select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
-	return [ read_static_image(temp_frame_path) ]
+	return [ read_static_image(state_manager.get_item('target_path')) ]
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
@@ -88,7 +88,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = conditional_get_source_audio_frame(frame_number)
 	source_voice_frame = conditional_get_source_voice_frame(frame_number)
-	target_vision_frames = conditional_get_target_vision_frames(temp_frame_path, frame_number)
+	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba').copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
