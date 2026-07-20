@@ -23,7 +23,11 @@ def get(notation : str, module_name : str = 'facefusion') -> Optional[str]:
 	if module_name not in LOCALE_POOL_SET:
 		__autoload__(module_name)
 
-	current = LOCALE_POOL_SET.get(module_name).get(CURRENT_LANGUAGE)
+	locale_set = LOCALE_POOL_SET.get(module_name)
+	if locale_set is None:
+		return None
+
+	current = locale_set.get(CURRENT_LANGUAGE)
 
 	for fragment in notation.split('.'):
 		if fragment in current:

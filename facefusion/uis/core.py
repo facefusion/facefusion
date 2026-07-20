@@ -33,7 +33,7 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
 		logger.error(translator.get('ui_layout_not_loaded').format(ui_layout = ui_layout), __name__)
-		logger.debug(exception.msg, __name__)
+		logger.debug(str(exception), __name__)
 		hard_exit(1)
 	except NotImplementedError:
 		logger.error(translator.get('ui_layout_not_implemented').format(ui_layout = ui_layout), __name__)

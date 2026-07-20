@@ -28,7 +28,7 @@ def load_processor_module(processor : str) -> Any:
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
 		logger.error(translator.get('processor_not_loaded').format(processor = processor), __name__)
-		logger.debug(exception.msg, __name__)
+		logger.debug(str(exception), __name__)
 		hard_exit(1)
 	except NotImplementedError:
 		logger.error(translator.get('processor_not_implemented').format(processor = processor), __name__)
