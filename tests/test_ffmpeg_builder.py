@@ -41,11 +41,15 @@ def test_set_stream_mode() -> None:
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_input_seek() -> None:
 	assert set_input_seek(0.0) == [ '-ss', '0.0' ]
 	assert set_input_seek(4.2) == [ '-ss', '4.2' ]
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_output_format() -> None:
 	assert set_output_format('rawvideo') == [ '-f', 'rawvideo' ]
 
@@ -92,11 +96,15 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 100) == []
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_global_thread_count() -> None:
 	assert set_global_thread_count(8) == [ '-threads', '8' ]
 	assert set_global_thread_count(16) == [ '-threads', '16' ]
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_filter_thread_count() -> None:
 	assert set_filter_thread_count(8) == [ '-filter_threads', '8' ]
 	assert set_filter_thread_count(16) == [ '-filter_threads', '16' ]

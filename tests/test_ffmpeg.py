@@ -238,6 +238,8 @@ def test_replace_audio() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_fix_audio_encoder() -> None:
 	assert fix_audio_encoder('avi', 'libopus') == 'aac'
 	assert fix_audio_encoder('m4v', 'libopus') == 'aac'
@@ -251,6 +253,8 @@ def test_fix_audio_encoder() -> None:
 	assert fix_audio_encoder('avi', 'aac') == 'aac'
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_fix_video_encoder() -> None:
 	assert fix_video_encoder('m4v', 'libx265') == 'libx264'
 	assert fix_video_encoder('mpeg', 'libx265') == 'libx264'

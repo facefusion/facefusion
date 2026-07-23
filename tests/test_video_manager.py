@@ -41,6 +41,8 @@ def before_each() -> None:
 	clear_video_pool()
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_get_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	video_metadata = video_reader.get('metadata')
@@ -52,6 +54,8 @@ def test_get_reader() -> None:
 	assert get_reader(get_test_example_file('target-240p-25fps.mp4')) is video_reader
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_conditional_set_video_reader_position() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 
@@ -68,6 +72,8 @@ def test_conditional_set_video_reader_position() -> None:
 	assert video_reader.get('position') == 200
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_refresh_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	sequential_frames = {}
@@ -82,6 +88,8 @@ def test_refresh_video_reader() -> None:
 		assert numpy.array_equal(vision_frame, sequential_frames.get(frame_number)) is True
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_reader_frame() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	vision_frame = read_video_reader_frame(video_reader)
@@ -96,6 +104,8 @@ def test_read_video_reader_frame() -> None:
 	assert read_video_reader_frame(video_reader) is None
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_reader_window() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	frame_set = read_video_reader_window(video_reader, 0, 4)
@@ -111,6 +121,8 @@ def test_read_video_reader_window() -> None:
 	assert sorted(frame_set) == [ 268, 269 ]
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_evict_video_reader_buffer() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	read_video_reader_window(video_reader, 0, 4)
@@ -120,6 +132,8 @@ def test_evict_video_reader_buffer() -> None:
 	assert max(frame_set) == 25
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	video_metadata = extract_video_metadata(target_path)
@@ -129,6 +143,8 @@ def test_get_writer() -> None:
 	assert get_writer(target_path, video_metadata, 25.0, (426, 226), (426, 226), 25.0) is video_writer
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_write_video_writer_frame() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
@@ -150,6 +166,8 @@ def test_write_video_writer_frame() -> None:
 	assert video_metadata.get('color_transfer') == 'bt709'
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
 	create_temp_directory(target_path)
@@ -161,6 +179,8 @@ def test_close_video_writer() -> None:
 	assert close_video_writer(video_writer) is True
 
 
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
