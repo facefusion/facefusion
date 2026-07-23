@@ -1,9 +1,8 @@
-import subprocess
 
 import numpy
 import pytest
 
-from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
+from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_creator import average_face_geometry, get_many_faces, get_one_face, refill_faces
 from facefusion.face_store import clear_faces
@@ -13,13 +12,42 @@ from .helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
 	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
+			[
+				'-vf',
+				'crop=iw*0.8:ih*0.8'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('source-80crop.jpg'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
+			[
+				'-vf',
+				'crop=iw*0.7:ih*0.7'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('source-70crop.jpg'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
+			[
+				'-vf',
+				'crop=iw*0.6:ih*0.6'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('source-60crop.jpg'))
+		)
+	)
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
