@@ -1,8 +1,7 @@
-import subprocess
 
 import pytest
 
-from facefusion import process_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
 from .helper import get_test_example_file, get_test_examples_directory
@@ -18,9 +17,23 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-t', '1.9', '-ar', '48000', '-ac', '2', get_test_example_file('source-48000khz-2ch.wav') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', get_test_example_file('target-240p-1s.mkv') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', get_test_example_file('target-240p-1s.mov') ])
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			ffmpeg_builder.set_video_duration(1.9),
+			ffmpeg_builder.set_audio_sample_rate(48000),
+			ffmpeg_builder.set_audio_channel_total(2),
+			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch.wav'))
+		)
+	)
+	for video_format in [ 'mkv', 'mov' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_duration(1),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.' + video_format))
+			)
+		)
 
 
 def test_extract_audio_metadata() -> None:

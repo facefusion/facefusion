@@ -1,9 +1,9 @@
 import os
-import subprocess
 
 import numpy
 import pytest
 
+from facefusion import ffmpeg, ffmpeg_builder, process_manager
 from facefusion.common_helper import is_linux
 from facefusion.download import conditional_download
 from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_chunk, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
@@ -12,23 +12,88 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-1080p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('目标-240p.webp') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', get_test_example_file('target-1080p.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.mp4') ])
+
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vframes',
+					'1'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '.jpg'))
+			)
+		)
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-vframes',
+				'1'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('目标-240p.webp'))
+		)
+	)
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-vframes',
+				'1'
+			],
+			[
+				'-vf',
+				'hue=s=0'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-0sat.jpg'))
+		)
+	)
+
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vframes',
+					'1'
+				],
+				[
+					'-vf',
+					'transpose=0'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.jpg'))
+			)
+		)
+
+	for video_fps in [ 25, 30, 60 ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_fps(video_fps),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
+			)
+		)
+
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vf',
+					'transpose=0'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.mp4'))
+			)
+		)
 
 
 @pytest.fixture(scope = 'function', autouse = True)
