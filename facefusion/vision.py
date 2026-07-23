@@ -75,6 +75,7 @@ def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optiona
 	return read_video_frame(video_path, frame_number)
 
 
+#todo: needs review - [decoding] [critical: medium] cv2 capture replaced by the pooled ffmpeg reader, position clamped to the frame_total estimate
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_reader = video_manager.get_reader(video_path)
@@ -94,6 +95,7 @@ def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : i
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
 
+#todo: needs review - [decoding] [critical: medium] chunk end clamped by the ffprobe frame_total estimate
 def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> VisionFrameSet:
 	video_frame_chunk = {}
 
@@ -119,6 +121,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 	return video_frame_chunk
 
 
+#todo: needs review - [decoding] [critical: high] window read replaces the chunk cache, out of range frames fall back to empty vision frames
 def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
 	frame_start = frame_number - frame_offset

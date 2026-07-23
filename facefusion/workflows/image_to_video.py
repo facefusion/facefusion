@@ -34,6 +34,7 @@ def process(start_time : float) -> ErrorCode:
 			merge_frames
 		])
 
+	#todo: needs review - [workflow] [critical: medium] stream appends its single task, disk keeps extract process merge
 	if state_manager.get_item('workflow_strategy') == 'stream':
 		tasks.append(process_stream_frames)
 
@@ -81,6 +82,7 @@ def extract_frames() -> ErrorCode:
 	return 0
 
 
+#todo: needs review - [workflow] [critical: medium] warms the reference frame before the executor, neighbors come from temp frames
 def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_item('target_path'))
 
@@ -164,6 +166,7 @@ def restore_audio() -> ErrorCode:
 	return 0
 
 
+#todo: needs review - [workflow] [critical: medium] shared processing path for disk and stream, receives vision frames instead of paths
 def process_target_frame(frame_number : int, target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame) -> VisionFrame:
 	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
@@ -195,6 +198,7 @@ def process_target_frame(frame_number : int, target_vision_frames : List[VisionF
 	return conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
 
 
+#todo: needs review - [correctness] [critical: high] missing neighbor frames resolve to none paths and rely on read_static_image returning none
 def resolve_temp_vision_frames(frame_number : int, frame_amount : int, temp_frame_set : FrameSet) -> List[VisionFrame]:
 	temp_vision_frames = []
 	frame_range = range(frame_number - frame_amount, frame_number + frame_amount + 1)
@@ -205,6 +209,7 @@ def resolve_temp_vision_frames(frame_number : int, frame_amount : int, temp_fram
 	return temp_vision_frames
 
 
+#todo: needs review - [workflow] [critical: low] disk variant reads temp frame and neighbors from disk and writes back in place
 def process_disk_frame(temp_frame_path : str, frame_number : int, temp_frame_set : FrameSet) -> bool:
 	target_vision_frames = resolve_temp_vision_frames(frame_number, state_manager.get_item('target_frame_amount'), temp_frame_set)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
@@ -212,6 +217,7 @@ def process_disk_frame(temp_frame_path : str, frame_number : int, temp_frame_set
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
+#todo: needs review - [memory] [critical: high] frame look ahead bound by a hardcoded 3gb budget
 def calculate_frame_look_ahead(temp_video_resolution : Resolution) -> int:
 	width, height = temp_video_resolution
 	frame_memory_budget = 3 * 1024 ** 3
@@ -219,6 +225,7 @@ def calculate_frame_look_ahead(temp_video_resolution : Resolution) -> int:
 	return min(state_manager.get_item('execution_thread_count') * 2, max(2, frame_memory_budget // frame_memory_usage))
 
 
+#todo: needs review - [streaming] [critical: high] middle frame resized to temp resolution before processing, channels follow temp_pixel_format to match the writer pipe
 def process_stream_frame(frame_number : int, temp_video_resolution : Resolution) -> Tuple[int, VisionFrame]:
 	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
@@ -237,6 +244,7 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 	return frame_number, numpy.ascontiguousarray(temp_vision_frame)
 
 
+#todo: needs review - [streaming] [critical: high] ordered submit and drain keeps writes in order, failed close stops the process manager
 def process_stream_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
@@ -277,6 +285,7 @@ def process_stream_frames() -> ErrorCode:
 	return 0
 
 
+#todo: needs review - [streaming] [critical: medium] drains futures down to the look ahead, stopping skips writes without cancelling
 def write_stream_frames(video_writer : VideoWriter, futures : List[Future[Tuple[int, VisionFrame]]], frame_look_ahead : int, progress : tqdm) -> None:
 	for _ in range(len(futures) - frame_look_ahead + 1):
 		if not is_process_stopping():

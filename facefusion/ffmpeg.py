@@ -69,6 +69,7 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
+#todo: needs review - [decoding] [critical: medium] raw pipe reader with seek based start, spawn moved from the POC video_manager into ffmpeg
 def create_video_reader(video_path : str, frame_position : int, video_metadata : VideoMetadata) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input_seek(frame_position / video_metadata.get('fps')),
@@ -83,6 +84,7 @@ def create_video_reader(video_path : str, frame_position : int, video_metadata :
 	return open_ffmpeg(commands)
 
 
+#todo: needs review - [encoding] [critical: high] pipe writer always converts and tags bt709, temp_pixel_format drives the pipe channels, encoder_thread_count hardcoded to 16
 def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> subprocess.Popen[bytes]:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')

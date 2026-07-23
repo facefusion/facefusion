@@ -12,6 +12,7 @@ VIDEO_POOL_SET : VideoPoolSet =\
 }
 
 
+#todo: needs review - [lifecycle] [critical: medium] pooled reader per path is created without lock and only reaped via clear_video_pool
 def get_reader(video_path : str) -> VideoReader:
 	if video_path not in VIDEO_POOL_SET.get('reader'):
 		video_metadata = ffprobe.extract_static_video_metadata(video_path)
@@ -28,6 +29,7 @@ def get_reader(video_path : str) -> VideoReader:
 	return VIDEO_POOL_SET.get('reader').get(video_path)
 
 
+#todo: needs review - [seeking] [critical: high] forward skip up to 128 frames by draining the pipe, everything else refreshes the process
 def conditional_set_video_reader_position(video_reader : VideoReader, frame_position : int) -> None:
 	skip_margin = 128
 	skip_total = frame_position - video_reader.get('position')
@@ -40,6 +42,7 @@ def conditional_set_video_reader_position(video_reader : VideoReader, frame_posi
 		refresh_video_reader(video_reader, frame_position)
 
 
+#todo: needs review - [seeking] [critical: high] kill and respawn per out of order seek, frequent refreshes stack up on random access
 def refresh_video_reader(video_reader : VideoReader, frame_position : int) -> None:
 	video_reader.get('process').kill()
 	video_reader.get('process').wait()
@@ -48,6 +51,7 @@ def refresh_video_reader(video_reader : VideoReader, frame_position : int) -> No
 	video_reader['frame_set'].clear()
 
 
+#todo: needs review - [decoding] [critical: high] partial pipe read returns none and desyncs position from the actual stream
 def read_video_reader_frame(video_reader : VideoReader) -> Optional[VisionFrame]:
 	width, height = video_reader.get('metadata').get('resolution')
 	frame_size = width * height * 3
@@ -59,6 +63,7 @@ def read_video_reader_frame(video_reader : VideoReader) -> Optional[VisionFrame]
 	return None
 
 
+#todo: needs review - [memory] [critical: high] frame_set keeps decoded frames in ram, eviction only trims below frame_start minus buffer_margin
 def read_video_reader_window(video_reader : VideoReader, frame_start : int, frame_end : int) -> VisionFrameSet:
 	frame_set = video_reader.get('frame_set')
 	buffer_margin = 16
@@ -79,6 +84,7 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 	return frame_set
 
 
+#todo: needs review - [lifecycle] [critical: low] pooled writer keyed by target_path, metadata forwarded by the caller
 def get_writer(target_path : str, video_metadata : VideoMetadata, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
 	if target_path not in VIDEO_POOL_SET.get('writer'):
 		VIDEO_POOL_SET['writer'][target_path] =\
@@ -91,16 +97,19 @@ def get_writer(target_path : str, video_metadata : VideoMetadata, temp_video_fps
 	return VIDEO_POOL_SET.get('writer').get(target_path)
 
 
+#todo: needs review - [encoding] [critical: medium] blocking stdin write without backpressure or broken pipe handling
 def write_video_writer_frame(video_writer : VideoWriter, vision_frame : VisionFrame) -> None:
 	video_writer.get('process').stdin.write(vision_frame.tobytes())
 
 
+#todo: needs review - [encoding] [critical: medium] encoder failures only surface via returncode at close time
 def close_video_writer(video_writer : VideoWriter) -> bool:
 	video_writer.get('process').stdin.close()
 	video_writer.get('process').wait()
 	return video_writer.get('process').returncode == 0
 
 
+#todo: needs review - [lifecycle] [critical: high] kill over terminate, sigterm deadlocks while the pipe is full
 def clear_video_pool() -> None:
 	for video_reader in VIDEO_POOL_SET.get('reader').values():
 		video_reader.get('process').kill()

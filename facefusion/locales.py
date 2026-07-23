@@ -137,6 +137,7 @@ LOCALES : Locales =\
 			'trim_frame_start': 'specify the starting frame of the target video',
 			'trim_frame_end': 'specify the ending frame of the target video',
 			'temp_frame_format': 'specify the temporary resources format',
+			#todo: needs review - [ui] [critical: low] temp pixel format help text
 			'temp_pixel_format': 'specify the pixel format for the stream pipe (bgra keeps the alpha channel)',
 			'target_frame_amount': 'specify the amount of target frames forwarded to the processor',
 			'output_image_quality': 'specify the image quality which translates to the image compression',
@@ -204,6 +205,7 @@ LOCALES : Locales =\
 			'clear_button': 'CLEAR',
 			'download_providers_checkbox_group': 'DOWNLOAD PROVIDERS',
 			'execution_providers_checkbox_group': 'EXECUTION PROVIDERS',
+			#todo: needs review - [ui] [critical: low] workflow dropdown labels
 			'workflow_mode_dropdown': 'WORKFLOW MODE',
 			'workflow_strategy_dropdown': 'WORKFLOW STRATEGY',
 			'execution_thread_count_slider': 'EXECUTION THREAD COUNT',

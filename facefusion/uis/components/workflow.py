@@ -6,6 +6,7 @@ import facefusion.choices
 from facefusion import state_manager, translator
 from facefusion.types import WorkflowMode, WorkflowStrategy
 
+#todo: needs review - [ui] [critical: low] new workflow component with mode and strategy dropdowns
 WORKFLOW_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 WORKFLOW_STRATEGY_DROPDOWN : Optional[gradio.Dropdown] = None
 

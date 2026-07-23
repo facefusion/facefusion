@@ -65,6 +65,7 @@ Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
 WorkflowMode = Literal['auto', 'image-to-image', 'image-to-video']
+#todo: needs review - [workflow] [critical: medium] stream strategy skips extract and merge entirely
 WorkflowStrategy = Literal['disk', 'stream']
 
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
@@ -100,6 +101,7 @@ Fps : TypeAlias = float
 Duration : TypeAlias = float
 
 Buffer : TypeAlias = bytes
+#todo: needs review - [types] [critical: low] frame number to frame mapping, sibling of FrameSet
 VisionFrameSet : TypeAlias = Dict[int, VisionFrame]
 Color : TypeAlias = Tuple[int, int, int, int]
 Padding : TypeAlias = Tuple[int, int, int, int]
@@ -123,6 +125,7 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'bit_rate' : BitRate,
 	'color_transfer' : ColorTransfer
 })
+#todo: needs review - [types] [critical: low] reader and writer state around ffmpeg processes, metadata embedded whole
 VideoReader = TypedDict('VideoReader',
 {
 	'process' : subprocess.Popen[bytes],
@@ -185,6 +188,7 @@ AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
+#todo: needs review - [streaming] [critical: low] pixel formats match the ffmpeg choices, no mapping needed
 TempPixelFormat = Literal['bgr24', 'bgra']
 AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
 ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
