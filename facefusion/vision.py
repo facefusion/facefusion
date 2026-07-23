@@ -122,6 +122,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 
 
 #todo: needs review - [decoding] [critical: high] window read replaces the chunk cache, out of range frames fall back to empty vision frames
+#todo: question to restore the chunk_size approach over the window read
 def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
 	frame_start = frame_number - frame_offset

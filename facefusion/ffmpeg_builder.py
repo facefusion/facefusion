@@ -90,6 +90,7 @@ def set_input_seek(seek_time : float) -> List[Command]:
 
 
 #todo: needs review - [decoding] [critical: low] raw output format for pipe io
+#todo: question if set_output_format is needed
 def set_output_format(output_format : str) -> List[Command]:
 	return [ '-f', output_format ]
 
