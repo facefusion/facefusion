@@ -5,7 +5,7 @@ import tempfile
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.ffprobe import extract_video_metadata
@@ -34,12 +34,13 @@ def before_all() -> None:
 		[ '-vf', 'scale=out_transfer=smpte2084' ],
 		ffmpeg_builder.set_output(get_test_example_file('target-240p-smpte2084.mp4'))
 	)
-	subprocess.run(ffmpeg_builder.run(commands))
+	ffmpeg.run_ffmpeg(commands)
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
 		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
 
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
+
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
