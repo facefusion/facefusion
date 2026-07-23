@@ -126,6 +126,7 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'color_transfer' : ColorTransfer
 })
 #todo: needs review - [types] [critical: low] reader and writer state around ffmpeg processes, metadata embedded whole
+#todo: question if the body of VideoReader and VideoWriter needs all the keys
 VideoReader = TypedDict('VideoReader',
 {
 	'process' : subprocess.Popen[bytes],
