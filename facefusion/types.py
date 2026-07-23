@@ -63,6 +63,9 @@ Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
+WorkflowMode = Literal['auto', 'image-to-image', 'image-to-video']
+WorkflowStrategy = Literal['disk']
+
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
@@ -293,6 +296,8 @@ JobSet : TypeAlias = Dict[str, Job]
 StateKey = Literal\
 [
 	'command',
+	'workflow_mode',
+	'workflow_strategy',
 	'config_path',
 	'temp_path',
 	'jobs_path',
@@ -363,6 +368,8 @@ StateKey = Literal\
 State = TypedDict('State',
 {
 	'command' : str,
+	'workflow_mode' : WorkflowMode,
+	'workflow_strategy' : WorkflowStrategy,
 	'config_path' : str,
 	'temp_path' : str,
 	'jobs_path' : str,

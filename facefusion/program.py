@@ -21,6 +21,15 @@ def create_help_formatter_large(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 300)
 
 
+def create_workflow_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_workflow = program.add_argument_group('workflow')
+	group_workflow.add_argument('--workflow-mode', help = translator.get('help.workflow_mode'), default = config.get_str_value('workflow', 'workflow_mode', 'auto'), choices = facefusion.choices.workflow_modes)
+	group_workflow.add_argument('--workflow-strategy', help = translator.get('help.workflow_strategy'), default = config.get_str_value('workflow', 'workflow_strategy', 'disk'), choices = facefusion.choices.workflow_strategies)
+	job_store.register_step_keys([ 'workflow_mode', 'workflow_strategy' ])
+	return program
+
+
 def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
@@ -299,7 +308,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_tracker_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_frame_distribution_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_workflow_program(), create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_tracker_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_frame_distribution_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:

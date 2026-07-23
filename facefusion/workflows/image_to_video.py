@@ -21,14 +21,23 @@ def process(start_time : float) -> ErrorCode:
 	[
 		analyse_video,
 		clear,
-		setup,
-		extract_frames,
-		process_frames,
-		merge_frames,
+		setup
+	]
+
+	if state_manager.get_item('workflow_strategy') == 'disk':
+		tasks.extend(
+		[
+			extract_frames,
+			process_frames,
+			merge_frames
+		])
+
+	tasks.extend(
+	[
 		restore_audio,
 		partial(finalize_video, start_time),
 		clear
-	]
+	])
 	process_manager.start()
 
 	for task in tasks:
