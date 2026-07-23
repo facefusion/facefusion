@@ -95,13 +95,33 @@ MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
 
+BitRate : TypeAlias = int
+SampleRate : TypeAlias = int
 Fps : TypeAlias = float
 Duration : TypeAlias = float
+
+Buffer : TypeAlias = bytes
 Color : TypeAlias = Tuple[int, int, int, int]
 Padding : TypeAlias = Tuple[int, int, int, int]
 Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
+AudioMetadata = TypedDict('AudioMetadata',
+{
+	'duration' : Duration,
+	'frame_total' : int,
+	'channel_total' : int,
+	'sample_rate' : SampleRate,
+	'bit_rate' : BitRate
+})
+VideoMetadata = TypedDict('VideoMetadata',
+{
+	'duration' : Duration,
+	'frame_total' : int,
+	'fps' : Fps,
+	'resolution' : Resolution,
+	'bit_rate' : BitRate
+})
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 Args : TypeAlias = Dict[str, Any]
