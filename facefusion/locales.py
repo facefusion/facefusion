@@ -6,8 +6,7 @@ LOCALES : Locales =\
 	{
 		'conda_not_activated': 'conda is not activated',
 		'python_not_supported': 'python version is not supported, upgrade to {version} or higher',
-		'curl_not_installed': 'curl is not installed',
-		'ffmpeg_not_installed': 'ffmpeg is not installed',
+		'dependency_not_installed': '{dependency} is not installed',
 		'creating_temp': 'creating temporary resources',
 		'extracting_frames': 'extracting frames with a resolution of {resolution} and {fps} frames per second',
 		'extracting_frames_succeeded': 'extracting frames succeeded',

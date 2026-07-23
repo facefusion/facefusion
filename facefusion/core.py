@@ -90,13 +90,10 @@ def pre_check() -> bool:
 		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 
-	if not shutil.which('curl'):
-		logger.error(translator.get('curl_not_installed'), __name__)
-		return False
-
-	if not shutil.which('ffmpeg'):
-		logger.error(translator.get('ffmpeg_not_installed'), __name__)
-		return False
+	for dependency in [ 'curl', 'ffmpeg', 'ffprobe' ]:
+		if not shutil.which(dependency):
+			logger.error(translator.get('dependency_not_installed').format(dependency = dependency), __name__)
+			return False
 	return True
 
 
