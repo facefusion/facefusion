@@ -96,15 +96,11 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 100) == []
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_global_thread_count() -> None:
 	assert set_global_thread_count(8) == [ '-threads', '8' ]
 	assert set_global_thread_count(16) == [ '-threads', '16' ]
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_filter_thread_count() -> None:
 	assert set_filter_thread_count(8) == [ '-filter_threads', '8' ]
 	assert set_filter_thread_count(16) == [ '-filter_threads', '16' ]
