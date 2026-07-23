@@ -94,7 +94,7 @@ def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_reso
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_output_format('rawvideo'),
-		ffmpeg_builder.enforce_pixel_format('bgr24'),
+		ffmpeg_builder.enforce_pixel_format(state_manager.get_item('temp_pixel_format')),
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_input_fps(temp_video_fps),
 		ffmpeg_builder.set_input('pipe:0'),
