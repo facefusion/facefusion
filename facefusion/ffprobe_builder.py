@@ -13,7 +13,11 @@ def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 
 
-def show_entries(entries : List[str]) -> List[Command]:
+def select_stream(stream : str) -> List[Command]:
+	return [ '-select_streams', stream ]
+
+
+def show_stream_entries(entries : List[str]) -> List[Command]:
 	return [ '-show_entries', 'stream=' + ','.join(entries) ]
 
 

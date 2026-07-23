@@ -77,6 +77,7 @@ CameraPoolSet = TypedDict('CameraPoolSet',
 })
 
 ColorMode = Literal['rgb', 'rgba']
+ColorTransfer : TypeAlias = str
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
 Points : TypeAlias = NDArray[Any]
@@ -120,7 +121,8 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'frame_total' : int,
 	'fps' : Fps,
 	'resolution' : Resolution,
-	'bit_rate' : BitRate
+	'bit_rate' : BitRate,
+	'color_transfer' : ColorTransfer
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
