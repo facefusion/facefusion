@@ -84,6 +84,7 @@ def unsafe_concat() -> List[Command]:
 
 
 #todo: needs review - [seeking] [critical: low] seek based start for the pipe reader
+#todo: question to rename set_input_seek to just set_input
 def set_input_seek(seek_time : float) -> List[Command]:
 	return [ '-ss', str(seek_time) ]
 
