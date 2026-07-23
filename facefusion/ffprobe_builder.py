@@ -17,10 +17,6 @@ def show_entries(entries : List[str]) -> List[Command]:
 	return [ '-show_entries', 'stream=' + ','.join(entries) ]
 
 
-def format_to_value() -> List[Command]:
-	return [ '-of', 'default=noprint_wrappers=1:nokey=1' ]
-
-
 def format_to_key_value() -> List[Command]:
 	return [ '-of', 'default=noprint_wrappers=1' ]
 
