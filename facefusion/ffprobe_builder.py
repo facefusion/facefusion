@@ -13,8 +13,16 @@ def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 
 
-def show_entries(entries : List[str]) -> List[Command]:
+def select_stream(stream : str) -> List[Command]:
+	return [ '-select_streams', stream ]
+
+
+def show_stream_entries(entries : List[str]) -> List[Command]:
 	return [ '-show_entries', 'stream=' + ','.join(entries) ]
+
+
+def show_format_entries(entries : List[str]) -> List[Command]:
+	return [ '-show_entries', 'format=' + ','.join(entries) ]
 
 
 def format_to_key_value() -> List[Command]:
