@@ -83,6 +83,14 @@ def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
+def set_input_seek(seek_time : float) -> List[Command]:
+	return [ '-ss', str(seek_time) ]
+
+
+def set_output_format(output_format : str) -> List[Command]:
+	return [ '-f', output_format ]
+
+
 def enforce_pixel_format(pixel_format : str) -> List[Command]:
 	return [ '-pix_fmt', pixel_format ]
 
@@ -191,6 +199,14 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> List
 
 def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
+
+
+def set_codec_thread_count(thread_count : int) -> List[Command]:
+	return [ '-threads', str(thread_count) ]
+
+
+def set_filter_thread_count(thread_count : int) -> List[Command]:
+	return [ '-filter_threads', str(thread_count) ]
 
 
 def set_video_encoder(video_encoder : str) -> List[Command]:

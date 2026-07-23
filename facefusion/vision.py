@@ -1,17 +1,16 @@
 import math
 from functools import lru_cache
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion import ffprobe
+from facefusion import ffprobe, video_manager
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
-from facefusion.video_manager import conditional_set_video_frame_position, get_video_capture
+from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame, VisionFrameSet
 
 
 def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
@@ -78,15 +77,14 @@ def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optiona
 
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		video_capture = get_video_capture(video_path)
+		video_reader = video_manager.get_reader(video_path)
 
-		if video_capture and video_capture.isOpened():
-			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			video_frame_position = min(video_frame_total, frame_number)
+		if video_reader:
+			video_frame_position = min(video_reader.get('video_metadata').get('frame_total'), frame_number)
 
 			with thread_semaphore():
-				conditional_set_video_frame_position(video_capture, video_frame_position)
-				has_vision_frame, vision_frame = video_capture.read()
+				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
+				has_vision_frame, vision_frame = video_manager.read_video_reader_frame(video_reader)
 
 			if has_vision_frame:
 				return vision_frame
@@ -95,25 +93,28 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 
 
 @lru_cache(maxsize = 2)
-def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> VisionFrameSet:
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
 
-def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
+def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> VisionFrameSet:
 	video_frame_chunk = {}
 
 	if is_video(video_path) and chunk_number > -1:
-		video_capture = get_video_capture(video_path)
+		video_reader = video_manager.get_reader(video_path)
 
-		if video_capture and video_capture.isOpened():
-			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+		if video_reader:
 			video_frame_position = chunk_number * chunk_size
+			video_frame_end = video_frame_position + chunk_size
+
+			if video_reader.get('video_metadata').get('frame_total') > 0:
+				video_frame_end = min(video_frame_end, video_reader.get('video_metadata').get('frame_total'))
 
 			with thread_semaphore():
-				conditional_set_video_frame_position(video_capture, video_frame_position)
+				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
 
-				for frame_number in range(video_frame_position, min(video_frame_position + chunk_size, video_frame_total)):
-					has_vision_frame, vision_frame = video_capture.read()
+				for frame_number in range(video_frame_position, video_frame_end):
+					has_vision_frame, vision_frame = video_manager.read_video_reader_frame(video_reader)
 
 					if has_vision_frame:
 						video_frame_chunk[frame_number] = vision_frame
@@ -123,16 +124,19 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 
 def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
-	chunk_size = frame_offset * 2 + 1
+	frame_start = frame_number - frame_offset
+	frame_end = frame_number + frame_offset
 
 	if is_video(video_path):
 		with thread_lock():
-			for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
-				video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
+			video_reader = video_manager.get_reader(video_path)
+			frame_set = video_manager.read_video_reader_window(video_reader, frame_start, frame_end)
+
+			for current_number in range(frame_start, frame_end + 1):
 				vision_frame = create_empty_vision_frame()
 
-				if current_number in video_frame_chunk:
-					vision_frame = video_frame_chunk.get(current_number)
+				if current_number in frame_set:
+					vision_frame = frame_set.get(current_number)
 
 				vision_frames.append(vision_frame)
 

@@ -1,3 +1,4 @@
+import subprocess
 from collections import namedtuple
 from threading import Lock
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict
@@ -66,14 +67,7 @@ LocalePoolSet : TypeAlias = Dict[str, Locales]
 WorkflowMode = Literal['auto', 'image-to-image', 'image-to-video']
 WorkflowStrategy = Literal['disk']
 
-VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
-VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
-VideoPoolSet = TypedDict('VideoPoolSet',
-{
-	'capture' : VideoCaptureSet,
-	'writer' : VideoWriterSet
-})
 CameraPoolSet = TypedDict('CameraPoolSet',
 {
 	'capture' : CameraCaptureSet
@@ -106,6 +100,7 @@ Fps : TypeAlias = float
 Duration : TypeAlias = float
 
 Buffer : TypeAlias = bytes
+VisionFrameSet : TypeAlias = Dict[int, VisionFrame]
 Color : TypeAlias = Tuple[int, int, int, int]
 Padding : TypeAlias = Tuple[int, int, int, int]
 Margin : TypeAlias = Tuple[int, int, int, int]
@@ -127,6 +122,21 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'resolution' : Resolution,
 	'bit_rate' : BitRate,
 	'color_transfer' : ColorTransfer
+})
+VideoReader = TypedDict('VideoReader',
+{
+	'process' : subprocess.Popen[bytes],
+	'video_path' : str,
+	'video_metadata' : VideoMetadata,
+	'position' : int,
+	'frame_set' : VisionFrameSet
+})
+VideoReaderSet : TypeAlias = Dict[str, VideoReader]
+VideoWriterSet : TypeAlias = Dict[str, subprocess.Popen[bytes]]
+VideoPoolSet = TypedDict('VideoPoolSet',
+{
+	'reader' : VideoReaderSet,
+	'writer' : VideoWriterSet
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']

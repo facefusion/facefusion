@@ -6,7 +6,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffmpeg import concat_video, extract_frames, fix_video_encoder, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_set
@@ -236,3 +236,16 @@ def test_replace_audio() -> None:
 		clear_temp_directory(target_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
+
+
+def test_fix_video_encoder() -> None:
+	assert fix_video_encoder('m4v', 'libx265') == 'libx264'
+	assert fix_video_encoder('mpeg', 'libx265') == 'libx264'
+	assert fix_video_encoder('mxf', 'libx265') == 'libx264'
+	assert fix_video_encoder('wmv', 'libx265') == 'libx264'
+	assert fix_video_encoder('mkv', 'rawvideo') == 'libx264'
+	assert fix_video_encoder('mp4', 'rawvideo') == 'libx264'
+	assert fix_video_encoder('mov', 'libvpx-vp9') == 'libx264'
+	assert fix_video_encoder('webm', 'libx264') == 'libvpx-vp9'
+	assert fix_video_encoder('mp4', 'libx265') == 'libx265'
+	assert fix_video_encoder('avi', 'rawvideo') == 'rawvideo'
