@@ -178,7 +178,8 @@ def create_frame_extraction_program() -> ArgumentParser:
 	group_frame_extraction.add_argument('--trim-frame-start', help = translator.get('help.trim_frame_start'), type = int, default = facefusion.config.get_int_value('frame_extraction', 'trim_frame_start'))
 	group_frame_extraction.add_argument('--trim-frame-end', help = translator.get('help.trim_frame_end'), type = int, default = facefusion.config.get_int_value('frame_extraction', 'trim_frame_end'))
 	group_frame_extraction.add_argument('--temp-frame-format', help = translator.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction', 'temp_frame_format', 'png'), choices = facefusion.choices.temp_frame_formats)
-	job_store.register_step_keys([ 'trim_frame_start', 'trim_frame_end', 'temp_frame_format' ])
+	group_frame_extraction.add_argument('--temp-pixel-format', help = translator.get('help.temp_pixel_format'), default = config.get_str_value('frame_extraction', 'temp_pixel_format', 'rgb'), choices = facefusion.choices.temp_pixel_formats)
+	job_store.register_step_keys([ 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'temp_pixel_format' ])
 	return program
 
 

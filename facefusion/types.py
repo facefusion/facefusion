@@ -65,7 +65,7 @@ Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
 WorkflowMode = Literal['auto', 'image-to-image', 'image-to-video']
-WorkflowStrategy = Literal['disk']
+WorkflowStrategy = Literal['disk', 'stream']
 
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 CameraPoolSet = TypedDict('CameraPoolSet',
@@ -185,6 +185,7 @@ AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
+TempPixelFormat = Literal['rgb', 'rgba']
 AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
 ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
 VideoTypeSet : TypeAlias = Dict[VideoFormat, str]
@@ -357,6 +358,7 @@ StateKey = Literal\
 	'trim_frame_start',
 	'trim_frame_end',
 	'temp_frame_format',
+	'temp_pixel_format',
 	'target_frame_amount',
 	'output_image_quality',
 	'output_image_scale',
@@ -429,6 +431,7 @@ State = TypedDict('State',
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
+	'temp_pixel_format' : TempPixelFormat,
 	'target_frame_amount' : int,
 	'output_image_quality' : int,
 	'output_image_scale' : Scale,
