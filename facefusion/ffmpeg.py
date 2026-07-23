@@ -7,7 +7,7 @@ from typing import List, Optional, cast
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
+from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frame_pattern
 from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
@@ -108,6 +108,7 @@ def get_available_encoder_set() -> EncoderSet:
 
 
 def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	color_transfer = ffprobe.extract_static_video_metadata(target_path).get('color_transfer')
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frame_pattern = get_temp_frame_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
@@ -115,7 +116,10 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_frame_quality(0),
 		ffmpeg_builder.enforce_pixel_format('rgb24'),
-		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
+		ffmpeg_builder.concat(
+			ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
+			ffmpeg_builder.restrict_color_transfer(color_transfer)
+		),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_start_number(trim_frame_start),
 		ffmpeg_builder.set_output(temp_frame_pattern)
@@ -239,7 +243,8 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.concat(
 			ffmpeg_builder.set_video_fps(output_video_fps),
-			ffmpeg_builder.keep_video_alpha(output_video_encoder)
+			ffmpeg_builder.keep_video_alpha(output_video_encoder),
+			ffmpeg_builder.convert_color_space('bt709')
 		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.force_output(temp_video_path)

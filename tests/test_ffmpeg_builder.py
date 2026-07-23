@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -46,6 +46,18 @@ def test_select_frame_range() -> None:
 	assert select_frame_range(None, 100, 30) == [ '-vf', 'trim=end_frame=100,fps=30' ]
 	assert select_frame_range(0, 100, 30) == [ '-vf', 'trim=start_frame=0:end_frame=100,fps=30' ]
 	assert select_frame_range(None, None, 30) == [ '-vf', 'fps=30' ]
+
+
+def test_restrict_color_transfer() -> None:
+	assert restrict_color_transfer('smpte2084') == [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
+	assert restrict_color_transfer('arib-std-b67') == [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
+	assert restrict_color_transfer('invalid') == []
+
+
+def test_convert_color_space() -> None:
+	assert convert_color_space('bt601') == [ '-vf', 'scale=out_color_matrix=bt601:out_range=tv:out_primaries=bt601:out_transfer=bt601' ]
+	assert convert_color_space('bt709') == [ '-vf', 'scale=out_color_matrix=bt709:out_range=tv:out_primaries=bt709:out_transfer=bt709' ]
+	assert convert_color_space('bt2020') == [ '-vf', 'scale=out_color_matrix=bt2020:out_range=tv:out_primaries=bt2020:out_transfer=bt2020' ]
 
 
 def test_set_audio_sample_size() -> None:

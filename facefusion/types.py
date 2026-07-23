@@ -80,6 +80,7 @@ CameraPoolSet = TypedDict('CameraPoolSet',
 })
 
 ColorMode = Literal['rgb', 'rgba']
+ColorSpace = Literal['bt601', 'bt709', 'bt2020']
 ColorTransfer : TypeAlias = str
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
