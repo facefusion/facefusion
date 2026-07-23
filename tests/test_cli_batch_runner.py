@@ -17,26 +17,17 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			[
-				'-vframes',
-				'1'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-batch-1.jpg'))
+	for frame_number in [ 1, 2 ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				[
+					'-vframes',
+					str(frame_number)
+				],
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-batch-' + str(frame_number) + '.jpg'))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			[
-				'-vframes',
-				'2'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-batch-2.jpg'))
-		)
-	)
 
 
 @pytest.fixture(scope = 'function', autouse = True)

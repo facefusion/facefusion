@@ -20,16 +20,18 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-1080p.mp4'
 	])
 
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			[
-				'-vframes',
-				'1'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vframes',
+					'1'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '.jpg'))
+			)
 		)
-	)
+
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -40,16 +42,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('目标-240p.webp'))
 		)
 	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-1080p.mp4')),
-			[
-				'-vframes',
-				'1'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-1080p.jpg'))
-		)
-	)
+
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -64,75 +57,43 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-0sat.jpg'))
 		)
 	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			[
-				'-vframes',
-				'1'
-			],
-			[
-				'-vf',
-				'transpose=0'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-90deg.jpg'))
+
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vframes',
+					'1'
+				],
+				[
+					'-vf',
+					'transpose=0'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.jpg'))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-1080p.mp4')),
-			[
-				'-vframes',
-				'1'
-			],
-			[
-				'-vf',
-				'transpose=0'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-1080p-90deg.jpg'))
+
+	for video_fps in [ 25, 30, 60 ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_fps(video_fps),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_fps(25),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-25fps.mp4'))
+
+	for target_name in [ 'target-240p', 'target-1080p' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file(target_name + '.mp4')),
+				[
+					'-vf',
+					'transpose=0'
+				],
+				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.mp4'))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_fps(30),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-30fps.mp4'))
-		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_fps(60),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-60fps.mp4'))
-		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			[
-				'-vf',
-				'transpose=0'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-90deg.mp4'))
-		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-1080p.mp4')),
-			[
-				'-vf',
-				'transpose=0'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('target-1080p-90deg.mp4'))
-		)
-	)
 
 
 @pytest.fixture(scope = 'function', autouse = True)

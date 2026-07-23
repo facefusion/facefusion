@@ -17,36 +17,17 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
 	])
 
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
-			[
-				'-vf',
-				'crop=iw*0.8:ih*0.8'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('source-80crop.jpg'))
+	for crop_scale in [ 80, 70, 60 ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
+				[
+					'-vf',
+					'crop=iw*0.' + str(crop_scale) + ':ih*0.' + str(crop_scale)
+				],
+				ffmpeg_builder.set_output(get_test_example_file('source-' + str(crop_scale) + 'crop.jpg'))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
-			[
-				'-vf',
-				'crop=iw*0.7:ih*0.7'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('source-70crop.jpg'))
-		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
-			[
-				'-vf',
-				'crop=iw*0.6:ih*0.6'
-			],
-			ffmpeg_builder.set_output(get_test_example_file('source-60crop.jpg'))
-		)
-	)
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])

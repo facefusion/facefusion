@@ -26,20 +26,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch.wav'))
 		)
 	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_duration(1),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.mkv'))
+	for video_format in [ 'mkv', 'mov' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_duration(1),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.' + video_format))
+			)
 		)
-	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_duration(1),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.mov'))
-		)
-	)
 
 
 def test_extract_audio_metadata() -> None:
