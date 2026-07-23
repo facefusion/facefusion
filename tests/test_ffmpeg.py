@@ -5,7 +5,7 @@ import tempfile
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import process_manager, state_manager
+from facefusion import ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.ffprobe import extract_video_metadata
@@ -29,7 +29,12 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', '-vf', 'scale=out_transfer=smpte2084', get_test_example_file('target-240p-smpte2084.mp4') ])
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		[ '-vf', 'scale=out_transfer=smpte2084' ],
+		ffmpeg_builder.set_output(get_test_example_file('target-240p-smpte2084.mp4'))
+	)
+	subprocess.run(ffmpeg_builder.run(commands))
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
 		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
