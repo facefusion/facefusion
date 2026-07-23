@@ -1,11 +1,10 @@
-import subprocess
 from argparse import ArgumentParser
 from typing import Iterator
 
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import capability_store, metadata, session_manager, state_manager
+from facefusion import capability_store, ffmpeg, ffmpeg_builder, metadata, process_manager, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -14,6 +13,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	process_manager.start()
 	program = ArgumentParser()
 	capability_store.register_capability_set(
 		[
@@ -50,7 +50,16 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-vframes',
+				'1'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
+		)
+	)
 
 
 @pytest.fixture(scope = 'function', autouse = True)

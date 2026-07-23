@@ -1,11 +1,10 @@
 import os
-import subprocess
 import tempfile
 
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_entries
@@ -34,16 +33,44 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+	for video_fps in [ 25, 30, 60 ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_fps(video_fps),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
+			)
+		)
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
-		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_audio_sample_rate(16000),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-16khz.' + output_video_format))
+			)
+		)
 
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', '-movflags', '+faststart', get_test_example_file('target-240p-h265.mp4') ])
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			ffmpeg_builder.set_audio_sample_rate(48000),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-48khz.mp4'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			ffmpeg_builder.set_video_encoder('libx265'),
+			[
+				'-an'
+			],
+			ffmpeg_builder.set_faststart('mp4'),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-h265.mp4'))
+		)
+	)
 
 
 @pytest.fixture(scope = 'function', autouse = True)
