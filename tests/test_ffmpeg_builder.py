@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_codec_thread_count, set_faststart, set_filter_thread_count, set_input_seek, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, set_input_seek, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -92,9 +92,9 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 100) == []
 
 
-def test_set_codec_thread_count() -> None:
-	assert set_codec_thread_count(8) == [ '-threads', '8' ]
-	assert set_codec_thread_count(16) == [ '-threads', '16' ]
+def test_set_global_thread_count() -> None:
+	assert set_global_thread_count(8) == [ '-threads', '8' ]
+	assert set_global_thread_count(16) == [ '-threads', '16' ]
 
 
 def test_set_filter_thread_count() -> None:

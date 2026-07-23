@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frame_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat, VideoMetadata
 
 
 def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -69,13 +69,12 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
-def open_video_reader(video_path : str, frame_position : int, video_fps : Fps) -> subprocess.Popen[bytes]:
-	color_transfer = ffprobe.extract_static_video_metadata(video_path).get('color_transfer')
+def create_video_reader(video_path : str, frame_position : int, video_metadata : VideoMetadata) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input_seek(frame_position / video_fps),
+		ffmpeg_builder.set_input_seek(frame_position / video_metadata.get('fps')),
 		ffmpeg_builder.set_input(video_path),
 		ffmpeg_builder.set_filter_thread_count(4),
-		ffmpeg_builder.restrict_color_transfer(color_transfer),
+		ffmpeg_builder.restrict_color_transfer(video_metadata.get('color_transfer')),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.enforce_pixel_format('bgr24'),
 		ffmpeg_builder.set_output_format('rawvideo'),
@@ -84,7 +83,7 @@ def open_video_reader(video_path : str, frame_position : int, video_fps : Fps) -
 	return open_ffmpeg(commands)
 
 
-def open_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> subprocess.Popen[bytes]:
+def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> subprocess.Popen[bytes]:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
@@ -102,7 +101,7 @@ def open_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolu
 		ffmpeg_builder.set_filter_thread_count(4),
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
-		ffmpeg_builder.set_codec_thread_count(encoder_thread_count),
+		ffmpeg_builder.set_global_thread_count(encoder_thread_count),
 		ffmpeg_builder.set_video_tag(output_video_encoder, temp_video_format),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),

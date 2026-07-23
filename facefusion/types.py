@@ -126,13 +126,19 @@ VideoMetadata = TypedDict('VideoMetadata',
 VideoReader = TypedDict('VideoReader',
 {
 	'process' : subprocess.Popen[bytes],
-	'video_path' : str,
-	'video_metadata' : VideoMetadata,
+	'file_path' : str,
+	'metadata' : VideoMetadata,
 	'position' : int,
 	'frame_set' : VisionFrameSet
 })
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
-VideoWriterSet : TypeAlias = Dict[str, subprocess.Popen[bytes]]
+VideoWriter = TypedDict('VideoWriter',
+{
+	'process' : subprocess.Popen[bytes],
+	'file_path' : str,
+	'metadata' : VideoMetadata
+})
+VideoWriterSet : TypeAlias = Dict[str, VideoWriter]
 VideoPoolSet = TypedDict('VideoPoolSet',
 {
 	'reader' : VideoReaderSet,

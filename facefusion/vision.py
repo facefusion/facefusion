@@ -80,14 +80,11 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 		video_reader = video_manager.get_reader(video_path)
 
 		if video_reader:
-			video_frame_position = min(video_reader.get('video_metadata').get('frame_total'), frame_number)
+			video_frame_position = min(video_reader.get('metadata').get('frame_total'), frame_number)
 
 			with thread_semaphore():
 				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
-				has_vision_frame, vision_frame = video_manager.read_video_reader_frame(video_reader)
-
-			if has_vision_frame:
-				return vision_frame
+				return video_manager.read_video_reader_frame(video_reader)
 
 	return None
 
@@ -107,16 +104,16 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 			video_frame_position = chunk_number * chunk_size
 			video_frame_end = video_frame_position + chunk_size
 
-			if video_reader.get('video_metadata').get('frame_total') > 0:
-				video_frame_end = min(video_frame_end, video_reader.get('video_metadata').get('frame_total'))
+			if video_reader.get('metadata').get('frame_total') > 0:
+				video_frame_end = min(video_frame_end, video_reader.get('metadata').get('frame_total'))
 
 			with thread_semaphore():
 				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
 
 				for frame_number in range(video_frame_position, video_frame_end):
-					has_vision_frame, vision_frame = video_manager.read_video_reader_frame(video_reader)
+					vision_frame = video_manager.read_video_reader_frame(video_reader)
 
-					if has_vision_frame:
+					if numpy.any(vision_frame):
 						video_frame_chunk[frame_number] = vision_frame
 
 	return video_frame_chunk
@@ -130,13 +127,13 @@ def select_video_frames(video_path : str, frame_number : int = 0, frame_offset :
 	if is_video(video_path):
 		with thread_lock():
 			video_reader = video_manager.get_reader(video_path)
-			frame_set = video_manager.read_video_reader_window(video_reader, frame_start, frame_end)
+			frame_set = video_manager.read_video_reader_window(video_reader, max(frame_start, 0), frame_end)
 
-			for current_number in range(frame_start, frame_end + 1):
+			for frame_number in range(frame_start, frame_end + 1):
 				vision_frame = create_empty_vision_frame()
 
-				if current_number in frame_set:
-					vision_frame = frame_set.get(current_number)
+				if frame_number in frame_set:
+					vision_frame = frame_set.get(frame_number)
 
 				vision_frames.append(vision_frame)
 

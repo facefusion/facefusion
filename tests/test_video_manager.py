@@ -7,7 +7,7 @@ from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import VIDEO_POOL_SET, clear_video_pool, close_video_writer, conditional_set_video_reader_position, get_reader, get_writer, read_video_reader_frame, read_video_reader_window, restart_video_reader, write_video_writer_frame
+from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_set_video_reader_position, get_reader, get_writer, read_video_reader_frame, read_video_reader_window, refresh_video_reader, write_video_writer_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -42,7 +42,7 @@ def before_each() -> None:
 
 def test_get_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
-	video_metadata = video_reader.get('video_metadata')
+	video_metadata = video_reader.get('metadata')
 
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('fps') == 25.0
@@ -67,39 +67,32 @@ def test_conditional_set_video_reader_position() -> None:
 	assert video_reader.get('position') == 200
 
 
-def test_restart_video_reader() -> None:
+def test_refresh_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	sequential_frames = {}
 
 	for frame_number in range(30):
-		has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
-		sequential_frames[frame_number] = vision_frame
+		sequential_frames[frame_number] = read_video_reader_frame(video_reader)
 
 	for frame_number in [ 5, 17, 29 ]:
-		restart_video_reader(video_reader, frame_number)
-		has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
+		refresh_video_reader(video_reader, frame_number)
+		vision_frame = read_video_reader_frame(video_reader)
 
-		assert has_vision_frame is True
 		assert numpy.array_equal(vision_frame, sequential_frames.get(frame_number)) is True
 
 
 def test_read_video_reader_frame() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
-	has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
+	vision_frame = read_video_reader_frame(video_reader)
 
-	assert has_vision_frame is True
 	assert vision_frame.shape == (226, 426, 3)
 	assert video_reader.get('position') == 1
 
 	conditional_set_video_reader_position(video_reader, 269)
-	has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
+	vision_frame = read_video_reader_frame(video_reader)
 
-	assert has_vision_frame is True
-
-	has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
-
-	assert has_vision_frame is False
-	assert vision_frame is None
+	assert vision_frame.shape == (226, 426, 3)
+	assert read_video_reader_frame(video_reader) is None
 
 
 def test_read_video_reader_window() -> None:
@@ -141,7 +134,7 @@ def test_write_video_writer_frame() -> None:
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
 	for frame_number in range(25):
-		has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
+		vision_frame = read_video_reader_frame(video_reader)
 		write_video_writer_frame(video_writer, vision_frame)
 
 	assert close_video_writer(video_writer) is True
@@ -160,7 +153,7 @@ def test_close_video_writer() -> None:
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
 	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
-	has_vision_frame, vision_frame = read_video_reader_frame(video_reader)
+	vision_frame = read_video_reader_frame(video_reader)
 	write_video_writer_frame(video_writer, vision_frame)
 
 	assert close_video_writer(video_writer) is True
@@ -169,9 +162,9 @@ def test_close_video_writer() -> None:
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
-	get_reader(target_path)
-	get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	video_reader = get_reader(target_path)
+	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 	clear_video_pool()
 
-	assert VIDEO_POOL_SET.get('reader') == {}
-	assert VIDEO_POOL_SET.get('writer') == {}
+	assert video_reader.get('process').returncode == -9
+	assert video_writer.get('process').returncode == -9

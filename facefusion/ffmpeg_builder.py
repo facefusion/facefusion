@@ -201,7 +201,7 @@ def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
 
 
-def set_codec_thread_count(thread_count : int) -> List[Command]:
+def set_global_thread_count(thread_count : int) -> List[Command]:
 	return [ '-threads', str(thread_count) ]
 
 
