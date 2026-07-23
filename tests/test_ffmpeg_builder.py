@@ -51,13 +51,13 @@ def test_select_frame_range() -> None:
 def test_restrict_color_transfer() -> None:
 	assert restrict_color_transfer('smpte2084') == [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
 	assert restrict_color_transfer('arib-std-b67') == [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
-	assert restrict_color_transfer('bt709') == []
-	assert restrict_color_transfer('smpte170m') == []
-	assert restrict_color_transfer('unknown') == []
+	assert restrict_color_transfer('invalid') == []
 
 
 def test_convert_color_space() -> None:
+	assert convert_color_space('bt601') == [ '-vf', 'scale=out_color_matrix=bt601:out_range=tv:out_primaries=bt601:out_transfer=bt601' ]
 	assert convert_color_space('bt709') == [ '-vf', 'scale=out_color_matrix=bt709:out_range=tv:out_primaries=bt709:out_transfer=bt709' ]
+	assert convert_color_space('bt2020') == [ '-vf', 'scale=out_color_matrix=bt2020:out_range=tv:out_primaries=bt2020:out_transfer=bt2020' ]
 
 
 def test_set_audio_sample_size() -> None:

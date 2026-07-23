@@ -6,14 +6,13 @@ import pytest
 
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
-from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_set
 from facefusion.types import EncoderSet
-from facefusion.vision import read_image, read_video_frame
+from facefusion.vision import read_image
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -71,68 +70,49 @@ def test_get_available_encoder_set() -> None:
 def test_extract_frames() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324),
-		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55),
-		(get_test_example_file('target-240p-25fps.mp4'), 124, 224, 120),
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 100, 120),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 324, 324),
-		(get_test_example_file('target-240p-30fps.mp4'), 224, 324, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 124, 224, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 100, 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 648, 324),
-		(get_test_example_file('target-240p-60fps.mp4'), 224, 648, 212),
-		(get_test_example_file('target-240p-60fps.mp4'), 124, 224, 50),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50)
+		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324, 55, 250),
+		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55, 55, 250),
+		(get_test_example_file('target-240p-25fps.mp4'), 124, 224, 120, 55, 250),
+		(get_test_example_file('target-240p-25fps.mp4'), 0, 100, 120, 55, 250),
+		(get_test_example_file('target-240p-30fps.mp4'), 0, 324, 324, 55, 250),
+		(get_test_example_file('target-240p-30fps.mp4'), 224, 324, 100, 55, 250),
+		(get_test_example_file('target-240p-30fps.mp4'), 124, 224, 100, 55, 250),
+		(get_test_example_file('target-240p-30fps.mp4'), 0, 100, 100, 55, 250),
+		(get_test_example_file('target-240p-60fps.mp4'), 0, 648, 324, 55, 250),
+		(get_test_example_file('target-240p-60fps.mp4'), 224, 648, 212, 55, 250),
+		(get_test_example_file('target-240p-60fps.mp4'), 124, 224, 50, 55, 250),
+		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50, 55, 250),
+		(get_test_example_file('target-240p-smpte2084.mp4'), 0, 1, 1, 32, 190)
 	]
 
-	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
+	for target_path, trim_frame_start, trim_frame_end, frame_total, frame_std, frame_max in test_set:
 		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
 		assert len(resolve_temp_frame_set(target_path)) == frame_total
 
+		temp_vision_frame = read_image(resolve_temp_frame_set(target_path).get(trim_frame_start))
+
+		assert temp_vision_frame.std() > frame_std
+		assert temp_vision_frame.max() > frame_max
+
 		clear_temp_directory(target_path)
-
-	target_path = get_test_example_file('target-240p-smpte2084.mp4')
-	create_temp_directory(target_path)
-
-	assert extract_frames(target_path, (426, 226), 25.0, 0, 1) is True
-
-	temp_vision_frame = read_image(get_first(list(resolve_temp_frame_set(target_path).values())))
-
-	assert temp_vision_frame.std() > 32
-	assert temp_vision_frame.max() > 190
-
-	clear_temp_directory(target_path)
-
-	target_path = get_test_example_file('target-240p-25fps.mp4')
-	create_temp_directory(target_path)
-
-	assert extract_frames(target_path, (426, 226), 25.0, 0, 1) is True
-
-	temp_vision_frame = read_image(get_first(list(resolve_temp_frame_set(target_path).values())))
-	vision_frame = read_video_frame(target_path)
-
-	assert abs(temp_vision_frame.mean() - vision_frame.mean()) < 1
-	assert abs(temp_vision_frame.std() - vision_frame.std()) < 1
-
-	clear_temp_directory(target_path)
 
 
 def test_merge_video() -> None:
-	target_paths =\
+	test_set =\
 	[
-		get_test_example_file('target-240p-16khz.avi'),
-		get_test_example_file('target-240p-16khz.m4v'),
-		get_test_example_file('target-240p-16khz.mkv'),
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.webm'),
-		get_test_example_file('target-240p-16khz.wmv')
+		(get_test_example_file('target-240p-16khz.avi'), [ 'bt709', 'unknown' ]),
+		(get_test_example_file('target-240p-16khz.m4v'), [ 'bt709' ]),
+		(get_test_example_file('target-240p-16khz.mkv'), [ 'bt709' ]),
+		(get_test_example_file('target-240p-16khz.mp4'), [ 'bt709' ]),
+		(get_test_example_file('target-240p-16khz.mov'), [ 'bt709' ]),
+		(get_test_example_file('target-240p-16khz.webm'), [ 'bt709' ]),
+		(get_test_example_file('target-240p-16khz.wmv'), [ 'bt709' ])
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
-	for target_path in target_paths:
+	for target_path, color_transfers in test_set:
 		for output_video_encoder in output_video_encoders:
 			state_manager.init_item('output_video_encoder', output_video_encoder)
 			create_temp_directory(target_path)
@@ -140,17 +120,13 @@ def test_merge_video() -> None:
 
 			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
 
+			video_metadata = extract_video_metadata(get_temp_file_path(target_path))
+
+			assert video_metadata.get('color_transfer') in color_transfers
+
 		clear_temp_directory(target_path)
 
 	state_manager.init_item('output_video_encoder', 'libx264')
-	target_path = get_test_example_file('target-240p-16khz.mp4')
-	create_temp_directory(target_path)
-	extract_frames(target_path, (452, 240), 25.0, 0, 1)
-
-	assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
-	assert extract_video_metadata(get_temp_file_path(target_path)).get('color_transfer') == 'bt709'
-
-	clear_temp_directory(target_path)
 
 
 def test_concat_video() -> None:

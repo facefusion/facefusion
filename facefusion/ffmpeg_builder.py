@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, ColorTransfer, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoFormat, VideoPreset
+from facefusion.types import AudioEncoder, ColorSpace, ColorTransfer, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoFormat, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -119,7 +119,7 @@ def restrict_color_transfer(color_transfer : ColorTransfer) -> List[Command]:
 	return []
 
 
-def convert_color_space(color_space : str) -> List[Command]:
+def convert_color_space(color_space : ColorSpace) -> List[Command]:
 	return [ '-vf', 'scale=out_color_matrix=' + color_space + ':out_range=tv:out_primaries=' + color_space + ':out_transfer=' + color_space ]
 
 
