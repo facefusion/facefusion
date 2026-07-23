@@ -3,7 +3,8 @@ from functools import partial
 from facefusion import process_manager
 from facefusion.types import ErrorCode
 from facefusion.workflows.as_frames import copy_temp_frames, create_temp_frames, finalize_frames
-from facefusion.workflows.core import analyse_image, clear, process_frames, setup
+from facefusion.workflows.core import clear, process_frames, setup
+from facefusion.workflows.to_image import analyse_image
 
 
 def process(start_time : float) -> ErrorCode:
