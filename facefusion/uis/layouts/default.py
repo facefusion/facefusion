@@ -40,7 +40,6 @@ def render() -> gradio.Blocks:
 					lip_syncer_options.render()
 				with gradio.Blocks():
 					voice_extractor.render()
-				#todo: needs review - [ui] [critical: low] workflow component added
 				with gradio.Blocks():
 					workflow.render()
 				with gradio.Blocks():
@@ -122,7 +121,6 @@ def listen() -> None:
 	face_detector.listen()
 	face_landmarker.listen()
 	voice_extractor.listen()
-	#todo: needs review - [ui] [critical: low] workflow listener added
 	workflow.listen()
 
 
