@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
 from typing import List, Tuple
 
@@ -6,14 +6,14 @@ import cv2
 import numpy
 from tqdm import tqdm
 
-from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import content_analyser, ffmpeg, ffprobe, logger, process_manager, state_manager, translator, video_manager
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
-from facefusion.types import ErrorCode, FrameSet, Resolution, VisionFrame
+from facefusion.types import ErrorCode, FrameSet, Resolution, VideoWriter, VisionFrame
 from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 from facefusion.workflows.core import clear, is_process_stopping, setup
 
@@ -195,17 +195,18 @@ def process_target_frame(frame_number : int, target_vision_frames : List[VisionF
 	return conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
 
 
-def resolve_disk_target_frames(frame_number : int, frame_amount : int, temp_frame_set : FrameSet) -> List[VisionFrame]:
-	target_vision_frames = []
+def resolve_temp_vision_frames(frame_number : int, frame_amount : int, temp_frame_set : FrameSet) -> List[VisionFrame]:
+	temp_vision_frames = []
+	frame_range = range(frame_number - frame_amount, frame_number + frame_amount + 1)
 
-	for target_number in range(frame_number - frame_amount, frame_number + frame_amount + 1):
-		target_vision_frames.append(read_static_image(temp_frame_set.get(target_number)))
+	for temp_frame_number in frame_range:
+		temp_vision_frames.append(read_static_image(temp_frame_set.get(temp_frame_number)))
 
-	return target_vision_frames
+	return temp_vision_frames
 
 
 def process_disk_frame(temp_frame_path : str, frame_number : int, temp_frame_set : FrameSet) -> bool:
-	target_vision_frames = resolve_disk_target_frames(frame_number, state_manager.get_item('target_frame_amount'), temp_frame_set)
+	target_vision_frames = resolve_temp_vision_frames(frame_number, state_manager.get_item('target_frame_amount'), temp_frame_set)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_frame = process_target_frame(frame_number, target_vision_frames, temp_vision_frame)
 	return write_image(temp_frame_path, temp_vision_frame)
@@ -227,9 +228,10 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 	temp_vision_frame = process_target_frame(frame_number, target_vision_frames, temp_vision_frame)
 
-	if state_manager.get_item('temp_pixel_format') == 'rgba':
+	if state_manager.get_item('temp_pixel_format') == 'bgra':
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
-	if state_manager.get_item('temp_pixel_format') == 'rgb':
+
+	if state_manager.get_item('temp_pixel_format') == 'bgr24':
 		temp_vision_frame = temp_vision_frame[:, :, :3]
 
 	return frame_number, numpy.ascontiguousarray(temp_vision_frame)
@@ -243,7 +245,8 @@ def process_stream_frames() -> ErrorCode:
 	frame_range = range(trim_frame_start, trim_frame_end)
 
 	if frame_range:
-		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
+		video_metadata = ffprobe.extract_static_video_metadata(state_manager.get_item('target_path'))
+		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), video_metadata, temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 		frame_look_ahead = calculate_frame_look_ahead(temp_video_resolution)
 
 		with tqdm(total = len(frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -256,31 +259,30 @@ def process_stream_frames() -> ErrorCode:
 
 				for frame_number in frame_range:
 					futures.append(executor.submit(process_stream_frame, frame_number, temp_video_resolution))
+					write_stream_frames(video_writer, futures, frame_look_ahead, progress)
 
-					if len(futures) >= frame_look_ahead and is_process_stopping() is False:
-						_, temp_vision_frame = futures.pop(0).result()
-						video_manager.write_video_writer_frame(video_writer, temp_vision_frame)
-						progress.update()
+				write_stream_frames(video_writer, futures, 1, progress)
 
-				for future in futures:
-					if is_process_stopping() is False:
-						_, temp_vision_frame = future.result()
-						video_manager.write_video_writer_frame(video_writer, temp_vision_frame)
-						progress.update()
-
-		close_succeeded = video_manager.close_video_writer(video_writer)
+		if not video_manager.close_video_writer(video_writer):
+			process_manager.stop()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
 		if is_process_stopping():
 			return 4
-		if not close_succeeded:
-			return 1
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
 		return 1
 	return 0
+
+
+def write_stream_frames(video_writer : VideoWriter, futures : List[Future[Tuple[int, VisionFrame]]], frame_look_ahead : int, progress : tqdm) -> None:
+	for _ in range(len(futures) - frame_look_ahead + 1):
+		if not is_process_stopping():
+			_, temp_vision_frame = futures.pop(0).result()
+			video_manager.write_video_writer_frame(video_writer, temp_vision_frame)
+			progress.update()
 
 
 def finalize_video(start_time : float) -> ErrorCode:

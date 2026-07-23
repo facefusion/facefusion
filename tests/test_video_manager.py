@@ -33,6 +33,7 @@ def before_all() -> None:
 	state_manager.init_item('output_video_encoder', 'libx264')
 	state_manager.init_item('output_video_quality', 80)
 	state_manager.init_item('output_video_preset', 'veryfast')
+	state_manager.init_item('temp_pixel_format', 'bgr24')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -121,17 +122,18 @@ def test_evict_video_reader_buffer() -> None:
 
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
+	video_metadata = extract_video_metadata(target_path)
 	create_temp_directory(target_path)
-	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, video_metadata, 25.0, (426, 226), (426, 226), 25.0)
 
-	assert get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0) is video_writer
+	assert get_writer(target_path, video_metadata, 25.0, (426, 226), (426, 226), 25.0) is video_writer
 
 
 def test_write_video_writer_frame() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, video_reader.get('metadata'), 25.0, (426, 226), (426, 226), 25.0)
 
 	for frame_number in range(25):
 		vision_frame = read_video_reader_frame(video_reader)
@@ -152,7 +154,7 @@ def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
+	video_writer = get_writer(target_path, video_reader.get('metadata'), 30.0, (426, 226), (426, 226), 30.0)
 	vision_frame = read_video_reader_frame(video_reader)
 	write_video_writer_frame(video_writer, vision_frame)
 
@@ -163,7 +165,7 @@ def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, video_reader.get('metadata'), 25.0, (426, 226), (426, 226), 25.0)
 	clear_video_pool()
 
 	assert video_reader.get('process').returncode == -9
