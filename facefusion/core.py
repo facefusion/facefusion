@@ -19,7 +19,7 @@ from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode, WorkFlow
+from facefusion.types import Args, ErrorCode, WorkflowMode
 from facefusion.workflows import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
 
 
@@ -317,28 +317,28 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 
-	if state_manager.get_item('workflow') == 'auto':
-		state_manager.set_item('workflow', detect_workflow())
+	if state_manager.get_item('workflow_mode') == 'auto':
+		state_manager.set_item('workflow_mode', detect_workflow_mode())
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		if not processor_module.pre_process('output'):
 			return 2
 
-	if state_manager.get_item('workflow') == 'audio-to-image:video':
+	if state_manager.get_item('workflow_mode') == 'audio-to-image:video':
 		return audio_to_image.process(start_time)
-	if state_manager.get_item('workflow') == 'audio-to-image:frames':
+	if state_manager.get_item('workflow_mode') == 'audio-to-image:frames':
 		return audio_to_image_as_frames.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-image':
+	if state_manager.get_item('workflow_mode') == 'image-to-image':
 		return image_to_image.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-video':
+	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		return image_to_video.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-video:frames':
+	if state_manager.get_item('workflow_mode') == 'image-to-video:frames':
 		return image_to_video_as_frames.process(start_time)
 
 	return 0
 
 
-def detect_workflow() -> WorkFlow:
+def detect_workflow_mode() -> WorkflowMode:
 	if has_video([ state_manager.get_item('target_path') ]):
 		if get_file_extension(state_manager.get_item('output_path')):
 			return 'image-to-video'

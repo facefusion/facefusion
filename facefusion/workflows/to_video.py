@@ -94,23 +94,23 @@ def finalize_video(start_time : float) -> ErrorCode:
 
 
 def conditional_clear_video_pool() -> None:
-	if state_manager.get_item('workflow') == 'image-to-video':
+	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		video_manager.clear_video_pool()
 
 
 def conditional_restrict_video_fps() -> Fps:
-	if state_manager.get_item('workflow') == 'image-to-video':
+	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		return restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	return conditional_get_output_fps()
 
 
 def conditional_get_output_fps() -> Fps:
-	if state_manager.get_item('workflow') in [ 'audio-to-image:frames', 'audio-to-image:video' ]:
+	if state_manager.get_item('workflow_mode') in [ 'audio-to-image:frames', 'audio-to-image:video' ]:
 		return state_manager.get_item('output_audio_fps')
 	return state_manager.get_item('output_video_fps')
 
 
 def conditional_scale_resolution() -> Resolution:
-	if state_manager.get_item('workflow') == 'image-to-video':
+	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		return scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	return scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))

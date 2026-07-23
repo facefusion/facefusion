@@ -103,7 +103,7 @@ LOCALES : Locales =\
 		{
 			'install_dependency': 'choose the variant of {dependency} to install',
 			'skip_conda': 'skip the conda environment check',
-			'workflow': 'choose the workflow',
+			'workflow_mode': 'choose the workflow mode',
 			'config_path': 'choose the config file to override defaults',
 			'temp_path': 'specify the directory for the temporary resources',
 			'jobs_path': 'specify the directory to store jobs',

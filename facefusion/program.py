@@ -46,10 +46,10 @@ def create_workflow_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_paths.add_argument(
-				'--workflow',
-				help = translator.get('help.workflow'),
-				default = config.get_str_value('workflow', 'workflow', 'auto'),
-				choices = facefusion.choices.workflows
+				'--workflow-mode',
+				help = translator.get('help.workflow_mode'),
+				default = config.get_str_value('workflow', 'workflow_mode', 'auto'),
+				choices = facefusion.choices.workflow_modes
 			)
 		],
 		scopes = [ 'api', 'cli' ]
