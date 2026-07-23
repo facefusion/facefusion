@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoFormat, VideoPreset
+from facefusion.types import AudioEncoder, ColorTransfer, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoFormat, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -111,6 +111,16 @@ def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> L
 
 def prevent_frame_drop() -> List[Command]:
 	return [ '-vsync', '0' ]
+
+
+def restrict_color_transfer(color_transfer : ColorTransfer) -> List[Command]:
+	if color_transfer in [ 'smpte2084', 'arib-std-b67' ]:
+		return [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
+	return []
+
+
+def convert_color_space(color_space : str) -> List[Command]:
+	return [ '-vf', 'scale=out_color_matrix=' + color_space + ':out_range=tv:out_primaries=' + color_space + ':out_transfer=' + color_space ]
 
 
 def select_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> List[Command]:

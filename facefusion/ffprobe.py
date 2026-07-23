@@ -60,6 +60,11 @@ def probe_format_entries(media_path : str, entries : List[str]) -> Dict[str, str
 	return parse_entries(output)
 
 
+@lru_cache(maxsize = 128)
+def extract_static_audio_metadata(audio_path : str) -> AudioMetadata:
+	return extract_audio_metadata(audio_path)
+
+
 def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 	audio_entries = probe_audio_entries(audio_path, [ 'sample_rate', 'channels' ])
 	format_entries = probe_format_entries(audio_path, [ 'duration', 'bit_rate' ])
@@ -83,6 +88,10 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 
 
 @lru_cache(maxsize = 128)
+def extract_static_video_metadata(video_path : str) -> VideoMetadata:
+	return extract_video_metadata(video_path)
+
+
 def extract_video_metadata(video_path : str) -> VideoMetadata:
 	video_entries = probe_video_entries(video_path, [ 'width', 'height', 'r_frame_rate', 'color_transfer' ])
 	format_entries = probe_format_entries(video_path, [ 'duration', 'bit_rate' ])

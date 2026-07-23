@@ -6,11 +6,14 @@ import pytest
 
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
+from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffprobe import extract_video_metadata
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_set
 from facefusion.types import EncoderSet
+from facefusion.vision import read_image, read_video_frame
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -27,6 +30,7 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', '-vf', 'scale=out_transfer=smpte2084', get_test_example_file('target-240p-smpte2084.mp4') ])
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
 		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
@@ -89,6 +93,31 @@ def test_extract_frames() -> None:
 
 		clear_temp_directory(target_path)
 
+	target_path = get_test_example_file('target-240p-smpte2084.mp4')
+	create_temp_directory(target_path)
+
+	assert extract_frames(target_path, (426, 226), 25.0, 0, 1) is True
+
+	temp_vision_frame = read_image(get_first(list(resolve_temp_frame_set(target_path).values())))
+
+	assert temp_vision_frame.std() > 32
+	assert temp_vision_frame.max() > 190
+
+	clear_temp_directory(target_path)
+
+	target_path = get_test_example_file('target-240p-25fps.mp4')
+	create_temp_directory(target_path)
+
+	assert extract_frames(target_path, (426, 226), 25.0, 0, 1) is True
+
+	temp_vision_frame = read_image(get_first(list(resolve_temp_frame_set(target_path).values())))
+	vision_frame = read_video_frame(target_path)
+
+	assert abs(temp_vision_frame.mean() - vision_frame.mean()) < 1
+	assert abs(temp_vision_frame.std() - vision_frame.std()) < 1
+
+	clear_temp_directory(target_path)
+
 
 def test_merge_video() -> None:
 	target_paths =\
@@ -114,6 +143,14 @@ def test_merge_video() -> None:
 		clear_temp_directory(target_path)
 
 	state_manager.init_item('output_video_encoder', 'libx264')
+	target_path = get_test_example_file('target-240p-16khz.mp4')
+	create_temp_directory(target_path)
+	extract_frames(target_path, (452, 240), 25.0, 0, 1)
+
+	assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
+	assert extract_video_metadata(get_temp_file_path(target_path)).get('color_transfer') == 'bt709'
+
+	clear_temp_directory(target_path)
 
 
 def test_concat_video() -> None:
