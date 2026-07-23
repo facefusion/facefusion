@@ -28,28 +28,28 @@ def before_each() -> None:
 
 
 def test_sync_lip_to_image() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'audio-to-image:video', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test_sync_lip_to_image.mp4') ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'audio-to-image:video', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test_sync_lip_to_image.mp4') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test_sync_lip_to_image.mp4') is True
 
 
 def test_sync_lip_to_image_as_frames() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'audio-to-image:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test_sync_lip_to_image_as_frames') ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'audio-to-image:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test_sync_lip_to_image_as_frames') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_sequence(get_test_output_path('test_sync_lip_to_image_as_frames')) is True
 
 
 def test_sync_lip_to_video() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test_sync_lip_to_video.mp4'), '--trim-frame-end', '1' ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test_sync_lip_to_video.mp4'), '--trim-frame-end', '1' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test_sync_lip_to_video.mp4') is True
 
 
 def test_sync_lip_to_video_as_frames() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'image-to-video:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test_sync_lip_to_video_as_frames'), '--trim-frame-end', '1' ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'lip_syncer', '-s', get_test_example_file('source.mp3'), '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test_sync_lip_to_video_as_frames'), '--trim-frame-end', '1' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_sequence(get_test_output_path('test_sync_lip_to_video_as_frames')) is True
