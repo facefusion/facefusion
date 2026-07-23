@@ -19,6 +19,7 @@ def before_all() -> None:
 	])
 
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-t', '1.9', '-ar', '48000', '-ac', '2', get_test_example_file('source-48000khz-2ch.wav') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', get_test_example_file('target-240p-1s.mkv') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', get_test_example_file('target-240p-1s.mov') ])
 
 
@@ -35,7 +36,7 @@ def test_extract_audio_metadata() -> None:
 	assert audio_metadata.get('sample_rate') == 48000
 	assert audio_metadata.get('channel_total') == 2
 	assert audio_metadata.get('frame_total') == 91200
-	assert audio_metadata.get('bit_rate') == 1536000
+	assert audio_metadata.get('bit_rate') == 1536328
 
 
 def test_extract_video_metadata() -> None:
@@ -44,8 +45,15 @@ def test_extract_video_metadata() -> None:
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('duration') == 10.8
 	assert video_metadata.get('resolution') == (426, 226)
-	assert video_metadata.get('bit_rate') == 138754
+	assert video_metadata.get('bit_rate') == 141981
 	assert video_metadata.get('color_transfer') == 'smpte170m'
+
+	video_metadata = extract_video_metadata(get_test_example_file('target-240p-1s.mkv'))
+
+	assert video_metadata.get('fps') == 25.0
+	assert video_metadata.get('duration') == 1.0
+	assert video_metadata.get('frame_total') == 25
+	assert video_metadata.get('resolution') == (426, 226)
 
 	video_metadata = extract_video_metadata(get_test_example_file('target-240p-1s.mov'))
 

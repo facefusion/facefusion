@@ -49,14 +49,26 @@ def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]
 	return parse_entries(output)
 
 
-def extract_audio_metadata(audio_path : str) -> AudioMetadata:
-	audio_entries = probe_audio_entries(audio_path, [ 'duration', 'sample_rate', 'channels', 'bit_rate' ])
+def probe_format_entries(media_path : str, entries : List[str]) -> Dict[str, str]:
+	commands = ffprobe_builder.chain(
+		ffprobe_builder.show_format_entries(entries),
+		ffprobe_builder.format_to_key_value(),
+		ffprobe_builder.set_input(media_path)
+	)
+	output, _ = run_ffprobe(commands).communicate()
 
-	duration = float(audio_entries.get('duration'))
+	return parse_entries(output)
+
+
+def extract_audio_metadata(audio_path : str) -> AudioMetadata:
+	audio_entries = probe_audio_entries(audio_path, [ 'sample_rate', 'channels' ])
+	format_entries = probe_format_entries(audio_path, [ 'duration', 'bit_rate' ])
+
+	duration = float(format_entries.get('duration'))
 	sample_rate = int(audio_entries.get('sample_rate'))
 	frame_total = int(duration * sample_rate)
 	channel_total = int(audio_entries.get('channels'))
-	bit_rate = int(audio_entries.get('bit_rate'))
+	bit_rate = int(format_entries.get('bit_rate'))
 
 	audio_metadata : AudioMetadata =\
 	{
@@ -72,14 +84,15 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 
 @lru_cache(maxsize = 128)
 def extract_video_metadata(video_path : str) -> VideoMetadata:
-	video_entries = probe_video_entries(video_path, [ 'duration', 'width', 'height', 'r_frame_rate', 'bit_rate', 'color_transfer' ])
+	video_entries = probe_video_entries(video_path, [ 'width', 'height', 'r_frame_rate', 'color_transfer' ])
+	format_entries = probe_format_entries(video_path, [ 'duration', 'bit_rate' ])
 
-	duration = float(video_entries.get('duration'))
+	duration = float(format_entries.get('duration'))
 	fps = extract_video_fps(video_entries.get('r_frame_rate'))
 	frame_total = int(duration * fps)
 	width = int(video_entries.get('width'))
 	height = int(video_entries.get('height'))
-	bit_rate = int(video_entries.get('bit_rate'))
+	bit_rate = int(format_entries.get('bit_rate'))
 	color_transfer = video_entries.get('color_transfer', 'unknown')
 
 	video_metadata : VideoMetadata =\
