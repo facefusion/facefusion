@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, set_input_seek, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -39,6 +39,19 @@ def test_concat() -> None:
 def test_set_stream_mode() -> None:
 	assert set_stream_mode('udp') == [ '-f', 'mpegts' ]
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
+
+
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
+def test_set_input_seek() -> None:
+	assert set_input_seek(0.0) == [ '-ss', '0.0' ]
+	assert set_input_seek(4.2) == [ '-ss', '4.2' ]
+
+
+#todo: needs review - [testing] question if the assertions are good
+#todo: run mutation testing, strip down to the minimum, test with real data
+def test_set_output_format() -> None:
+	assert set_output_format('rawvideo') == [ '-f', 'rawvideo' ]
 
 
 def test_select_frame_range() -> None:
@@ -81,6 +94,16 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 0) == []
 	assert set_audio_quality('flac', 50) == []
 	assert set_audio_quality('flac', 100) == []
+
+
+def test_set_global_thread_count() -> None:
+	assert set_global_thread_count(8) == [ '-threads', '8' ]
+	assert set_global_thread_count(16) == [ '-threads', '16' ]
+
+
+def test_set_filter_thread_count() -> None:
+	assert set_filter_thread_count(8) == [ '-filter_threads', '8' ]
+	assert set_filter_thread_count(16) == [ '-filter_threads', '16' ]
 
 
 def test_set_faststart() -> None:

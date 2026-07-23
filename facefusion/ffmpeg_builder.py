@@ -83,6 +83,18 @@ def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
+#todo: needs review - [seeking] [critical: low] seek based start for the pipe reader
+#todo: question to rename set_input_seek to just set_input
+def set_input_seek(seek_time : float) -> List[Command]:
+	return [ '-ss', str(seek_time) ]
+
+
+#todo: needs review - [decoding] [critical: low] raw output format for pipe io
+#todo: question if set_output_format is needed
+def set_output_format(output_format : str) -> List[Command]:
+	return [ '-f', output_format ]
+
+
 def enforce_pixel_format(pixel_format : str) -> List[Command]:
 	return [ '-pix_fmt', pixel_format ]
 
@@ -191,6 +203,16 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> List
 
 def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
+
+
+#todo: needs review - [encoding] [critical: low] explicit ffmpeg thread cap
+def set_global_thread_count(thread_count : int) -> List[Command]:
+	return [ '-threads', str(thread_count) ]
+
+
+#todo: needs review - [decoding] [critical: low] threads the filter graph, new against the POC
+def set_filter_thread_count(thread_count : int) -> List[Command]:
+	return [ '-filter_threads', str(thread_count) ]
 
 
 def set_video_encoder(video_encoder : str) -> List[Command]:
