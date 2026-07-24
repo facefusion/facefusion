@@ -34,11 +34,11 @@ def conditional_set_video_reader_position(video_reader : VideoReader, frame_posi
 	skip_margin = 128
 	skip_total = frame_position - video_reader.get('position')
 
-	if skip_total > 0 and skip_total <= skip_margin:
+	if skip_total in range(1, skip_margin + 1):
 		for _ in range(skip_total):
 			read_video_reader_frame(video_reader)
 
-	if not video_reader.get('position') == frame_position:
+	if skip_total < 0 or skip_total > skip_margin:
 		refresh_video_reader(video_reader, frame_position)
 
 
