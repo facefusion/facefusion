@@ -3,20 +3,20 @@ from facefusion.types import FrameStoreSet, VisionFrame, VisionFrameSet
 FRAME_STORE_SET : FrameStoreSet = {}
 
 
-def get_frame_store(reader_id : str) -> VisionFrameSet:
-	if reader_id not in FRAME_STORE_SET:
-		FRAME_STORE_SET[reader_id] = {}
+def get_frame_store(id : str) -> VisionFrameSet:
+	if id not in FRAME_STORE_SET:
+		FRAME_STORE_SET[id] = {}
 
-	return FRAME_STORE_SET.get(reader_id)
+	return FRAME_STORE_SET.get(id)
 
 
-def store_frame(reader_id : str, frame_number : int, vision_frame : VisionFrame) -> None:
-	frame_store = get_frame_store(reader_id)
+def set_frame(id : str, frame_number : int, vision_frame : VisionFrame) -> None:
+	frame_store = get_frame_store(id)
 	frame_store[frame_number] = vision_frame
 
 
-def select_frame_range(reader_id : str, frame_start : int, frame_end : int) -> VisionFrameSet:
-	frame_store = get_frame_store(reader_id)
+def select_frame_set(id : str, frame_start : int, frame_end : int) -> VisionFrameSet:
+	frame_store = get_frame_store(id)
 	frame_set = {}
 
 	for frame_number in range(frame_start, frame_end + 1):
@@ -26,17 +26,9 @@ def select_frame_range(reader_id : str, frame_start : int, frame_end : int) -> V
 	return frame_set
 
 
-def flush_frames(reader_id : str, frame_min : int, frame_max : int) -> None:
-	frame_store = get_frame_store(reader_id)
-	keep_range = range(frame_min, frame_max + 1)
-	frame_set = {}
-
-	for frame_number in frame_store:
-		if frame_number in keep_range:
-			frame_set[frame_number] = frame_store.get(frame_number)
-
-	FRAME_STORE_SET[reader_id] = frame_set
+def reduce_frames(id : str, frame_min : int, frame_max : int) -> None:
+	FRAME_STORE_SET[id] = select_frame_set(id, frame_min, frame_max)
 
 
-def clear_frame_store() -> None:
+def clear_frames() -> None:
 	FRAME_STORE_SET.clear()
