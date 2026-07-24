@@ -130,8 +130,7 @@ VideoReader = TypedDict('VideoReader',
 	'process' : subprocess.Popen[bytes],
 	'file_path' : str,
 	'metadata' : VideoMetadata,
-	'position' : int,
-	'frame_set' : VisionFrameSet
+	'position' : int
 })
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
 VideoWriter = TypedDict('VideoWriter',
@@ -146,6 +145,7 @@ VideoPoolSet = TypedDict('VideoPoolSet',
 	'reader' : VideoReaderSet,
 	'writer' : VideoWriterSet
 })
+FrameStoreSet : TypeAlias = Dict[str, VisionFrameSet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 Args : TypeAlias = Dict[str, Any]
