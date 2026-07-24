@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 import numpy
@@ -20,6 +21,7 @@ def get_reader(video_path : str) -> VideoReader:
 
 		VIDEO_POOL_SET['reader'][video_path] =\
 		{
+			'id': uuid.uuid4().hex,
 			'process': ffmpeg.create_video_reader(video_path, 0, video_metadata),
 			'file_path': video_path,
 			'metadata': video_metadata,
@@ -64,7 +66,7 @@ def read_video_reader_frame(video_reader : VideoReader) -> Optional[VisionFrame]
 
 #todo: needs review - [memory] [critical: high] frame_set keeps decoded frames in ram, eviction only trims below frame_start minus buffer_margin
 def read_video_reader_window(video_reader : VideoReader, frame_start : int, frame_end : int) -> VisionFrameSet:
-	id = video_reader.get('file_path')
+	id = video_reader.get('id')
 	frame_set = frame_store.get_frame_store(id)
 	buffer_margin = 16
 	frame_gaps = []
@@ -95,6 +97,7 @@ def get_writer(target_path : str, video_metadata : VideoMetadata, temp_video_fps
 	if target_path not in VIDEO_POOL_SET.get('writer'):
 		VIDEO_POOL_SET['writer'][target_path] =\
 		{
+			'id': uuid.uuid4().hex,
 			'process': ffmpeg.create_video_writer(target_path, temp_video_fps, temp_video_resolution, output_video_resolution, output_video_fps),
 			'file_path': target_path,
 			'metadata': video_metadata
@@ -120,6 +123,7 @@ def clear_video_pool() -> None:
 	for video_reader in VIDEO_POOL_SET.get('reader').values():
 		video_reader.get('process').kill()
 		video_reader.get('process').wait()
+		frame_store.clear_frames(video_reader.get('id'))
 
 	for video_writer in VIDEO_POOL_SET.get('writer').values():
 		video_writer.get('process').kill()
@@ -127,4 +131,3 @@ def clear_video_pool() -> None:
 
 	VIDEO_POOL_SET['reader'].clear()
 	VIDEO_POOL_SET['writer'].clear()
-	frame_store.clear_frames()

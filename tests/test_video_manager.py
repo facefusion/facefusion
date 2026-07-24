@@ -131,8 +131,8 @@ def test_evict_video_reader_buffer() -> None:
 	read_video_reader_window(video_reader, 0, 4)
 	read_video_reader_window(video_reader, 21, 25)
 
-	assert min(get_frame_store(video_reader.get('file_path'))) == 5
-	assert max(get_frame_store(video_reader.get('file_path'))) == 25
+	assert min(get_frame_store(video_reader.get('id'))) == 5
+	assert max(get_frame_store(video_reader.get('id'))) == 25
 
 
 #todo: needs review - [testing] question if the assertions are good

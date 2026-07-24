@@ -127,6 +127,7 @@ VideoMetadata = TypedDict('VideoMetadata',
 #todo: question if the body of VideoReader and VideoWriter needs all the keys
 VideoReader = TypedDict('VideoReader',
 {
+	'id' : str,
 	'process' : subprocess.Popen[bytes],
 	'file_path' : str,
 	'metadata' : VideoMetadata,
@@ -135,6 +136,7 @@ VideoReader = TypedDict('VideoReader',
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
 VideoWriter = TypedDict('VideoWriter',
 {
+	'id' : str,
 	'process' : subprocess.Popen[bytes],
 	'file_path' : str,
 	'metadata' : VideoMetadata

@@ -18,7 +18,8 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	clear_frames()
+	clear_frames('reader-1')
+	clear_frames('reader-2')
 
 
 def test_get_frame_store() -> None:
@@ -65,6 +66,8 @@ def test_clear_frames() -> None:
 	target_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 0)
 
 	set_frame('reader-1', 0, target_frame)
-	clear_frames()
+	set_frame('reader-2', 0, target_frame)
+	clear_frames('reader-1')
 
 	assert get_frame_store('reader-1') == {}
+	assert get_frame_store('reader-2').get(0) is target_frame
