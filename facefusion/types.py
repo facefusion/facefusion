@@ -114,19 +114,20 @@ AudioMetadata = TypedDict('AudioMetadata',
 	'sample_rate' : SampleRate,
 	'bit_rate' : BitRate
 })
-VideoReaderMetadata = TypedDict('VideoReaderMetadata',
+VideoMetadata = TypedDict('VideoMetadata',
 {
-	'fps' : Fps,
-	'resolution' : Resolution
-})
-VideoWriterMetadata = TypedDict('VideoWriterMetadata',
-								{
 	'duration' : Duration,
 	'frame_total' : int,
 	'fps' : Fps,
 	'resolution' : Resolution,
 	'bit_rate' : BitRate,
 	'color_transfer' : ColorTransfer
+})
+VideoReaderMetadata : TypeAlias = VideoMetadata
+VideoWriterMetadata = TypedDict('VideoWriterMetadata',
+{
+	'fps' : Fps,
+	'resolution' : Resolution
 })
 VideoReader = TypedDict('VideoReader',
 {

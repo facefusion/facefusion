@@ -1,8 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.curl_builder import set_timeout
-from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, seek_to, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, seek_to, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:

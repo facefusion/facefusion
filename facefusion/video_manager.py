@@ -97,13 +97,13 @@ def close_video_reader(video_reader : VideoReader) -> None:
 	frame_store.clear_frames(video_reader.get('id'))
 
 
-def get_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
-	if target_path not in VIDEO_POOL_SET.get('writer'):
-		VIDEO_POOL_SET['writer'][target_path] =\
+def get_writer(video_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
+	if video_path not in VIDEO_POOL_SET.get('writer'):
+		VIDEO_POOL_SET['writer'][video_path] =\
 		{
 			'id': uuid.uuid4().hex,
-			'file_path': target_path,
-			'process': ffmpeg.create_video_writer(target_path, temp_video_fps, temp_video_resolution, output_video_resolution, output_video_fps),
+			'file_path': video_path,
+			'process': ffmpeg.create_video_writer(video_path, temp_video_fps, temp_video_resolution, output_video_resolution, output_video_fps),
 			'metadata':
 			{
 				'fps': output_video_fps,
@@ -111,7 +111,7 @@ def get_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : 
 			}
 		}
 
-	return VIDEO_POOL_SET.get('writer').get(target_path)
+	return VIDEO_POOL_SET.get('writer').get(video_path)
 
 
 def write_video_writer(video_writer : VideoWriter, vision_frame : VisionFrame) -> None:
