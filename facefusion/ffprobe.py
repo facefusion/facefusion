@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Dict, List
 
 from facefusion import ffprobe_builder
-from facefusion.types import AudioMetadata, Buffer, Command, Fps, VideoMetadata
+from facefusion.types import AudioMetadata, Buffer, Command, Fps, VideoWriterMetadata
 
 
 def run_ffprobe(commands : List[Command]) -> subprocess.Popen[Buffer]:
@@ -32,6 +32,7 @@ def probe_audio_entries(audio_path : str, entries : List[str]) -> Dict[str, str]
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
@@ -44,6 +45,7 @@ def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(video_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
@@ -55,6 +57,7 @@ def probe_format_entries(media_path : str, entries : List[str]) -> Dict[str, str
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(media_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
@@ -88,11 +91,11 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 
 
 @lru_cache(maxsize = 128)
-def extract_static_video_metadata(video_path : str) -> VideoMetadata:
+def extract_static_video_metadata(video_path : str) -> VideoWriterMetadata:
 	return extract_video_metadata(video_path)
 
 
-def extract_video_metadata(video_path : str) -> VideoMetadata:
+def extract_video_metadata(video_path : str) -> VideoWriterMetadata:
 	video_entries = probe_video_entries(video_path, [ 'width', 'height', 'r_frame_rate', 'color_transfer' ])
 	format_entries = probe_format_entries(video_path, [ 'duration', 'bit_rate' ])
 
@@ -104,7 +107,7 @@ def extract_video_metadata(video_path : str) -> VideoMetadata:
 	bit_rate = int(format_entries.get('bit_rate'))
 	color_transfer = video_entries.get('color_transfer', 'unknown')
 
-	video_metadata : VideoMetadata =\
+	video_metadata : VideoWriterMetadata =\
 	{
 		'duration' : duration,
 		'frame_total' : frame_total,

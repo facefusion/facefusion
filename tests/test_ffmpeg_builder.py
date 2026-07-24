@@ -1,7 +1,8 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, set_input_seek, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.curl_builder import set_timeout
+from facefusion.ffmpeg_builder import chain, concat, convert_color_space, keep_video_alpha, restrict_color_transfer, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_filter_thread_count, set_global_thread_count, seek_to, set_output_format, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -41,9 +42,9 @@ def test_set_stream_mode() -> None:
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
 
 
-def test_set_input_seek() -> None:
-	assert set_input_seek(0.0) == [ '-ss', '0.0' ]
-	assert set_input_seek(1.5) == [ '-ss', '1.5' ]
+def test_seek_to() -> None:
+	assert seek_to(0.0) == [ '-ss', '0.0' ]
+	assert seek_to(1.5) == [ '-ss', '1.5' ]
 
 
 def test_set_output_format() -> None:

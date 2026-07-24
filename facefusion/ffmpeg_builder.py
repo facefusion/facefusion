@@ -83,14 +83,10 @@ def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
-#todo: needs review - [seeking] [critical: low] seek based start for the pipe reader
-#todo: question to rename set_input_seek to just set_input
-def set_input_seek(seek_time : float) -> List[Command]:
-	return [ '-ss', str(seek_time) ]
+def seek_to(time : float) -> List[Command]:
+	return [ '-ss', str(time)]
 
 
-#todo: needs review - [decoding] [critical: low] raw output format for pipe io
-#todo: question if set_output_format is needed
 def set_output_format(output_format : str) -> List[Command]:
 	return [ '-f', output_format ]
 
