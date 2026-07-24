@@ -15,7 +15,6 @@ from facefusion.types import AudioFrame, ErrorCode, VisionFrame
 from facefusion.vision import conditional_merge_vision_mask, detect_video_resolution, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
 
 
-#todo: copy
 def is_process_stopping() -> bool:
 	if process_manager.is_stopping():
 		process_manager.end()
@@ -23,14 +22,12 @@ def is_process_stopping() -> bool:
 	return process_manager.is_pending()
 
 
-#todo: copy - create_temp_directory takes target_path
 def setup() -> ErrorCode:
 	if create_temp_directory(state_manager.get_item('target_path')):
 		logger.debug(translator.get('creating_temp'), __name__)
 	return 0
 
 
-#todo: copy - clear_temp_directory takes target_path
 def clear() -> ErrorCode:
 	if clear_temp_directory(state_manager.get_item('target_path')):
 		logger.debug(translator.get('clearing_temp'), __name__)
