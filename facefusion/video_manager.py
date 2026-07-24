@@ -111,13 +111,8 @@ def close_video_writer(video_writer : VideoWriter) -> bool:
 
 #todo: needs review - [lifecycle] [critical: high] kill over terminate, sigterm deadlocks while the pipe is full
 def clear_video_pool() -> None:
-	for video_reader in VIDEO_POOL_SET.get('reader').values():
-		video_reader.get('process').kill()
-		video_reader.get('process').wait()
-
-	for video_writer in VIDEO_POOL_SET.get('writer').values():
-		video_writer.get('process').kill()
-		video_writer.get('process').wait()
-
-	VIDEO_POOL_SET['reader'].clear()
-	VIDEO_POOL_SET['writer'].clear()
+	for video_pool in VIDEO_POOL_SET.values():
+		for video_pool_item in video_pool.values():
+			video_pool_item.get('process').kill()
+			video_pool_item.get('process').wait()
+		video_pool.clear()
