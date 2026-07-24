@@ -121,7 +121,7 @@ def test_read_video_reader_window() -> None:
 
 	read_video_reader_window(video_reader, 21, 25)
 
-	assert min(get_frame_store(video_reader.get('id'))) == 5
+	assert min(get_frame_store(video_reader.get('id'))) == 17
 	assert max(get_frame_store(video_reader.get('id'))) == 25
 
 	frame_set = read_video_reader_window(video_reader, 268, 275)

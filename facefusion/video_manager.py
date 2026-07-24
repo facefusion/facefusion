@@ -69,6 +69,7 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 	id = video_reader.get('id')
 	frame_set = frame_store.get_frame_store(id)
 	buffer_margin = 16
+	keep_margin = 4
 	frame_gaps = []
 
 	for frame_index in range(frame_start, frame_end + 1):
@@ -88,7 +89,7 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 			if numpy.any(vision_frame):
 				frame_store.set_frame(id, decode_index, vision_frame)
 
-	frame_store.reduce_frames(id, frame_start - buffer_margin, frame_end + buffer_margin)
+	frame_store.reduce_frames(id, frame_start - keep_margin, frame_end + keep_margin)
 	return frame_store.select_frame_set(id, frame_start, frame_end)
 
 
