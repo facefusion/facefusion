@@ -64,9 +64,9 @@ def test_restrict_color_transfer() -> None:
 
 
 def test_convert_color_space() -> None:
-	assert convert_color_space('bt601') == [ '-vf', 'scale=out_color_matrix=bt601:out_range=tv:out_primaries=bt601:out_transfer=bt601' ]
-	assert convert_color_space('bt709') == [ '-vf', 'scale=out_color_matrix=bt709:out_range=tv:out_primaries=bt709:out_transfer=bt709' ]
-	assert convert_color_space('bt2020') == [ '-vf', 'scale=out_color_matrix=bt2020:out_range=tv:out_primaries=bt2020:out_transfer=bt2020' ]
+	assert convert_color_space('bt601') == [ '-vf', 'scale=out_color_matrix=bt601:out_range=tv,setparams=colorspace=bt601:color_primaries=bt601:color_trc=bt601' ]
+	assert convert_color_space('bt709') == [ '-vf', 'scale=out_color_matrix=bt709:out_range=tv,setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709' ]
+	assert convert_color_space('bt2020') == [ '-vf', 'scale=out_color_matrix=bt2020:out_range=tv,setparams=colorspace=bt2020:color_primaries=bt2020:color_trc=bt2020' ]
 
 
 def test_set_audio_sample_size() -> None:

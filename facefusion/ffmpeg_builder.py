@@ -132,7 +132,7 @@ def restrict_color_transfer(color_transfer : ColorTransfer) -> List[Command]:
 
 
 def convert_color_space(color_space : ColorSpace) -> List[Command]:
-	return [ '-vf', 'scale=out_color_matrix=' + color_space + ':out_range=tv:out_primaries=' + color_space + ':out_transfer=' + color_space ]
+	return [ '-vf', 'scale=out_color_matrix=' + color_space + ':out_range=tv,setparams=colorspace=' + color_space + ':color_primaries=' + color_space + ':color_trc=' + color_space ]
 
 
 def select_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> List[Command]:
