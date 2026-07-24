@@ -30,5 +30,6 @@ def reduce_frames(id : str, frame_min : int, frame_max : int) -> None:
 	FRAME_STORE_SET[id] = select_frame_set(id, frame_min, frame_max)
 
 
-def clear_frames() -> None:
-	FRAME_STORE_SET.clear()
+def clear_frames(id : str) -> None:
+	if id in FRAME_STORE_SET:
+		del FRAME_STORE_SET[id]
