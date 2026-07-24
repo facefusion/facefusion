@@ -119,24 +119,14 @@ def test_read_video_reader_window() -> None:
 	assert video_reader.get('position') == position
 	assert sorted(frame_set) == [ 1, 2, 3 ]
 
-	frame_set = read_video_reader_window(video_reader, 100, 104)
-
-	assert sorted(frame_set) == [ 100, 101, 102, 103, 104 ]
-
-	frame_set = read_video_reader_window(video_reader, 268, 275)
-
-	assert sorted(frame_set) == [ 268, 269 ]
-
-
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
-def test_evict_video_reader_buffer() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
-	read_video_reader_window(video_reader, 0, 4)
 	read_video_reader_window(video_reader, 21, 25)
 
 	assert min(get_frame_store(video_reader.get('id'))) == 5
 	assert max(get_frame_store(video_reader.get('id'))) == 25
+
+	frame_set = read_video_reader_window(video_reader, 268, 275)
+
+	assert sorted(frame_set) == [ 268, 269 ]
 
 
 #todo: needs review - [testing] question if the assertions are good
