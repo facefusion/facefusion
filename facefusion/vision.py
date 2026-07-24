@@ -90,7 +90,6 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	return None
 
 
-@lru_cache(maxsize = 2)
 def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> VisionFrameSet:
 	return read_video_chunk(video_path, chunk_number, chunk_size)
 
@@ -110,13 +109,7 @@ def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> 
 				video_frame_end = min(video_frame_end, video_reader.get('metadata').get('frame_total'))
 
 			with thread_semaphore():
-				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
-
-				for frame_number in range(video_frame_position, video_frame_end):
-					vision_frame = video_manager.read_video_reader_frame(video_reader)
-
-					if numpy.any(vision_frame):
-						video_frame_chunk[frame_number] = vision_frame
+				video_frame_chunk = video_manager.read_video_reader_window(video_reader, video_frame_position, video_frame_end - 1)
 
 	return video_frame_chunk
 
