@@ -6,6 +6,7 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
+from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
 from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_set_video_reader_position, get_reader, get_writer, read_video_reader_frame, read_video_reader_window, refresh_video_reader, write_video_writer_frame
 from .helper import get_test_example_file, get_test_examples_directory
@@ -126,10 +127,10 @@ def test_read_video_reader_window() -> None:
 def test_evict_video_reader_buffer() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	read_video_reader_window(video_reader, 0, 4)
-	frame_set = read_video_reader_window(video_reader, 21, 25)
+	read_video_reader_window(video_reader, 21, 25)
 
-	assert min(frame_set) == 5
-	assert max(frame_set) == 25
+	assert min(get_frame_store(video_reader.get('file_path'))) == 5
+	assert max(get_frame_store(video_reader.get('file_path'))) == 25
 
 
 #todo: needs review - [testing] question if the assertions are good

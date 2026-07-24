@@ -26,12 +26,16 @@ def read_frame_range(source : str, frame_start : int, frame_end : int) -> Vision
 	return frame_set
 
 
-def evict_frames(source : str, frame_min : int) -> None:
+def evict_frames(source : str, frame_min : int, frame_max : int) -> None:
 	frame_store = get_frame_store(source)
+	keep_range = range(frame_min, frame_max + 1)
+	frame_set = {}
 
-	for frame_number in list(frame_store):
-		if frame_number < frame_min:
-			del frame_store[frame_number]
+	for frame_number in frame_store:
+		if frame_number in keep_range:
+			frame_set[frame_number] = frame_store.get(frame_number)
+
+	FRAME_STORE_SET[source] = frame_set
 
 
 def clear_frame_store() -> None:

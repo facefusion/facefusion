@@ -66,18 +66,22 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 	source = video_reader.get('file_path')
 	frame_set = frame_store.get_frame_store(source)
 	buffer_margin = 16
+	missing_numbers = [ frame_number for frame_number in range(frame_start, frame_end + 1) if frame_number not in frame_set ]
 
-	if frame_start not in frame_set and (frame_start < video_reader.get('position') or frame_start > video_reader.get('position') + buffer_margin):
-		refresh_video_reader(video_reader, frame_start)
+	if missing_numbers:
+		frame_position = missing_numbers[0]
 
-	for frame_number in range(video_reader.get('position'), frame_end + 1):
-		vision_frame = read_video_reader_frame(video_reader)
+		if frame_position < video_reader.get('position') or frame_position > video_reader.get('position') + buffer_margin:
+			refresh_video_reader(video_reader, frame_position)
 
-		if numpy.any(vision_frame):
-			frame_store.store_frame(source, frame_number, vision_frame)
+		for frame_number in range(video_reader.get('position'), missing_numbers[-1] + 1):
+			vision_frame = read_video_reader_frame(video_reader)
 
-	frame_store.evict_frames(source, frame_start - buffer_margin)
-	return frame_set
+			if numpy.any(vision_frame):
+				frame_store.store_frame(source, frame_number, vision_frame)
+
+	frame_store.evict_frames(source, frame_start - buffer_margin, frame_end + buffer_margin)
+	return frame_store.read_frame_range(source, frame_start, frame_end)
 
 
 #todo: needs review - [lifecycle] [critical: low] pooled writer keyed by target_path, metadata forwarded by the caller
