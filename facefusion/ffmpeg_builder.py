@@ -202,13 +202,8 @@ def set_audio_volume(audio_volume : int) -> List[Command]:
 
 
 #todo: needs review - [encoding] [critical: low] explicit ffmpeg thread cap
-def set_global_thread_count(thread_count : int) -> List[Command]:
+def set_thread_count(thread_count : int) -> List[Command]:
 	return [ '-threads', str(thread_count) ]
-
-
-#todo: needs review - [decoding] [critical: low] threads the filter graph, new against the POC
-def set_filter_thread_count(thread_count : int) -> List[Command]:
-	return [ '-filter_threads', str(thread_count) ]
 
 
 def set_video_encoder(video_encoder : str) -> List[Command]:

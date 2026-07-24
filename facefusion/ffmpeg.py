@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frame_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat, VideoWriterMetadata
+from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat, VideoReaderMetadata
 
 
 def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -69,11 +69,10 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
-def create_video_reader(video_path : str, frame_position : int, video_metadata : VideoWriterMetadata) -> subprocess.Popen[bytes]:
+def create_video_reader(video_path : str, frame_position : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.seek_to(frame_position / video_metadata.get('fps')),
 		ffmpeg_builder.set_input(video_path),
-		ffmpeg_builder.set_filter_thread_count(4),
 		ffmpeg_builder.restrict_color_transfer(video_metadata.get('color_transfer')),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.enforce_pixel_format('bgr24'),
@@ -98,10 +97,9 @@ def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_reso
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_input_fps(temp_video_fps),
 		ffmpeg_builder.set_input('pipe:0'),
-		ffmpeg_builder.set_filter_thread_count(4),
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
-		ffmpeg_builder.set_global_thread_count(16),
+		ffmpeg_builder.set_thread_count(16),
 		ffmpeg_builder.set_video_tag(output_video_encoder, temp_video_format),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
