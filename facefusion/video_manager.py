@@ -84,7 +84,6 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 	return frame_set
 
 
-#todo: needs review - [lifecycle] [critical: low] pooled writer keyed by target_path, metadata forwarded by the caller
 def get_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
 	if target_path not in VIDEO_POOL_SET.get('writer'):
 		VIDEO_POOL_SET['writer'][target_path] =\
