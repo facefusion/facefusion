@@ -2,7 +2,8 @@ from typing import Optional
 
 import numpy
 
-from facefusion import ffmpeg, ffprobe
+from facefusion import ffmpeg, ffprobe, frame_store
+from facefusion.common_helper import get_first, get_last
 from facefusion.types import Fps, Resolution, VideoMetadata, VideoPoolSet, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
 
 VIDEO_POOL_SET : VideoPoolSet =\
@@ -22,8 +23,7 @@ def get_reader(video_path : str) -> VideoReader:
 			'process': ffmpeg.create_video_reader(video_path, 0, video_metadata),
 			'file_path': video_path,
 			'metadata': video_metadata,
-			'position': 0,
-			'frame_set': {}
+			'position': 0
 		}
 
 	return VIDEO_POOL_SET.get('reader').get(video_path)
@@ -48,7 +48,6 @@ def refresh_video_reader(video_reader : VideoReader, frame_position : int) -> No
 	video_reader.get('process').wait()
 	video_reader['process'] = ffmpeg.create_video_reader(video_reader.get('file_path'), frame_position, video_reader.get('metadata'))
 	video_reader['position'] = frame_position
-	video_reader['frame_set'].clear()
 
 
 #todo: needs review - [decoding] [critical: high] partial pipe read returns none and desyncs position from the actual stream
@@ -65,23 +64,30 @@ def read_video_reader_frame(video_reader : VideoReader) -> Optional[VisionFrame]
 
 #todo: needs review - [memory] [critical: high] frame_set keeps decoded frames in ram, eviction only trims below frame_start minus buffer_margin
 def read_video_reader_window(video_reader : VideoReader, frame_start : int, frame_end : int) -> VisionFrameSet:
-	frame_set = video_reader.get('frame_set')
+	id = video_reader.get('file_path')
+	frame_set = frame_store.get_frame_store(id)
 	buffer_margin = 16
+	frame_gaps = []
 
-	if frame_start not in frame_set and (frame_start < video_reader.get('position') or frame_start > video_reader.get('position') + buffer_margin):
-		refresh_video_reader(video_reader, frame_start)
+	for frame_index in range(frame_start, frame_end + 1):
+		if frame_index not in frame_set:
+			frame_gaps.append(frame_index)
 
-	for frame_number in range(video_reader.get('position'), frame_end + 1):
-		vision_frame = read_video_reader_frame(video_reader)
+	if frame_gaps:
+		frame_position = get_first(frame_gaps)
+		skip_total = frame_position - video_reader.get('position')
 
-		if numpy.any(vision_frame):
-			frame_set[frame_number] = vision_frame
+		if skip_total < 0 or skip_total > buffer_margin:
+			refresh_video_reader(video_reader, frame_position)
 
-	for frame_number in list(frame_set):
-		if frame_number < frame_start - buffer_margin:
-			del frame_set[frame_number]
+		for decode_index in range(video_reader.get('position'), get_last(frame_gaps) + 1):
+			vision_frame = read_video_reader_frame(video_reader)
 
-	return frame_set
+			if numpy.any(vision_frame):
+				frame_store.set_frame(id, decode_index, vision_frame)
+
+	frame_store.reduce_frames(id, frame_start - buffer_margin, frame_end + buffer_margin)
+	return frame_store.select_frame_set(id, frame_start, frame_end)
 
 
 #todo: needs review - [lifecycle] [critical: low] pooled writer keyed by target_path, metadata forwarded by the caller
@@ -121,3 +127,4 @@ def clear_video_pool() -> None:
 
 	VIDEO_POOL_SET['reader'].clear()
 	VIDEO_POOL_SET['writer'].clear()
+	frame_store.clear_frames()
