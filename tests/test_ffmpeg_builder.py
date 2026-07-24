@@ -41,15 +41,11 @@ def test_set_stream_mode() -> None:
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_input_seek() -> None:
 	assert set_input_seek(0.0) == [ '-ss', '0.0' ]
-	assert set_input_seek(4.2) == [ '-ss', '4.2' ]
+	assert set_input_seek(1.5) == [ '-ss', '1.5' ]
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_set_output_format() -> None:
 	assert set_output_format('rawvideo') == [ '-f', 'rawvideo' ]
 

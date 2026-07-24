@@ -34,7 +34,6 @@ def process(start_time : float) -> ErrorCode:
 			merge_frames
 		])
 
-	#todo: needs review - [workflow] [critical: medium] stream appends its single task, disk keeps extract process merge
 	if state_manager.get_item('workflow_strategy') == 'stream':
 		tasks.append(process_stream_frames)
 

@@ -83,7 +83,6 @@ audio_formats : List[AudioFormat] = list(get_args(AudioFormat))
 image_formats : List[ImageFormat] = list(get_args(ImageFormat))
 video_formats : List[VideoFormat] = list(get_args(VideoFormat))
 temp_frame_formats : List[TempFrameFormat] = list(get_args(TempFrameFormat))
-#todo: needs review - [config] [critical: low] temp pixel format choices for the stream pipe
 temp_pixel_formats : List[TempPixelFormat] = list(get_args(TempPixelFormat))
 
 output_audio_encoders : List[AudioEncoder] = list(get_args(AudioEncoder))
