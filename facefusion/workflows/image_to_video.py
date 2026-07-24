@@ -6,7 +6,7 @@ import cv2
 import numpy
 from tqdm import tqdm
 
-from facefusion import content_analyser, ffmpeg, ffprobe, logger, process_manager, state_manager, translator, video_manager
+from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
@@ -253,8 +253,7 @@ def process_stream_frames() -> ErrorCode:
 	frame_range = range(trim_frame_start, trim_frame_end)
 
 	if frame_range:
-		video_metadata = ffprobe.extract_static_video_metadata(state_manager.get_item('target_path'))
-		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), video_metadata, temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
+		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 		frame_look_ahead = calculate_frame_look_ahead(temp_video_resolution)
 
 		with tqdm(total = len(frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:

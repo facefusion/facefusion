@@ -3,7 +3,7 @@ from typing import Optional
 import numpy
 
 from facefusion import ffmpeg, ffprobe
-from facefusion.types import Fps, Resolution, VideoMetadata, VideoPoolSet, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
+from facefusion.types import Fps, Resolution, VideoPoolSet, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
 
 VIDEO_POOL_SET : VideoPoolSet =\
 {
@@ -85,13 +85,11 @@ def read_video_reader_window(video_reader : VideoReader, frame_start : int, fram
 
 
 #todo: needs review - [lifecycle] [critical: low] pooled writer keyed by target_path, metadata forwarded by the caller
-def get_writer(target_path : str, video_metadata : VideoMetadata, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
+def get_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
 	if target_path not in VIDEO_POOL_SET.get('writer'):
 		VIDEO_POOL_SET['writer'][target_path] =\
 		{
-			'process': ffmpeg.create_video_writer(target_path, temp_video_fps, temp_video_resolution, output_video_resolution, output_video_fps),
-			'file_path': target_path,
-			'metadata': video_metadata
+			'process': ffmpeg.create_video_writer(target_path, temp_video_fps, temp_video_resolution, output_video_resolution, output_video_fps)
 		}
 
 	return VIDEO_POOL_SET.get('writer').get(target_path)
