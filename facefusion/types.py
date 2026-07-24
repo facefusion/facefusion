@@ -146,6 +146,7 @@ VideoPoolSet = TypedDict('VideoPoolSet',
 	'reader' : VideoReaderSet,
 	'writer' : VideoWriterSet
 })
+FrameStoreSet : TypeAlias = Dict[str, VisionFrameSet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 Args : TypeAlias = Dict[str, Any]
