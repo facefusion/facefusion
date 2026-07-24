@@ -4,6 +4,7 @@ import numpy
 import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
@@ -185,5 +186,10 @@ def test_clear_video_pool() -> None:
 	video_writer = get_writer(target_path, video_reader.get('metadata'), 25.0, (426, 226), (426, 226), 25.0)
 	clear_video_pool()
 
-	assert video_reader.get('process').returncode == -9
-	assert video_writer.get('process').returncode == -9
+	if is_windows():
+		assert video_reader.get('process').returncode == 1
+		assert video_writer.get('process').returncode == 1
+
+	if is_linux() or is_macos():
+		assert video_reader.get('process').returncode == -9
+		assert video_writer.get('process').returncode == -9
