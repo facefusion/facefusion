@@ -32,6 +32,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					curl_builder.set_timeout(5),
 					curl_builder.set_retry(5)
 				)
+
 				open_curl(commands)
 				current_size = initial_size
 				progress.set_postfix(download_providers = state_manager.get_item('download_providers'), file_name = download_file_name)
@@ -48,6 +49,7 @@ def get_static_download_size(url : str) -> int:
 		curl_builder.ping(url),
 		curl_builder.set_timeout(5)
 	)
+
 	process = open_curl(commands)
 	lines = reversed(process.stdout.readlines())
 
@@ -66,6 +68,7 @@ def ping_static_url(url : str) -> bool:
 		curl_builder.ping(url),
 		curl_builder.set_timeout(5)
 	)
+
 	process = open_curl(commands)
 	process.communicate()
 	return process.returncode == 0

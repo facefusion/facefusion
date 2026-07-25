@@ -123,23 +123,27 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'bit_rate' : BitRate,
 	'color_transfer' : ColorTransfer
 })
-#todo: needs review - [types] [critical: low] reader and writer state around ffmpeg processes, metadata embedded whole
-#todo: question if the body of VideoReader and VideoWriter needs all the keys
+VideoReaderMetadata : TypeAlias = VideoMetadata
+VideoWriterMetadata = TypedDict('VideoWriterMetadata',
+{
+	'fps' : Fps,
+	'resolution' : Resolution
+})
 VideoReader = TypedDict('VideoReader',
 {
 	'id' : str,
-	'process' : subprocess.Popen[bytes],
 	'file_path' : str,
-	'metadata' : VideoMetadata,
+	'process' : subprocess.Popen[bytes],
+	'metadata' : VideoReaderMetadata,
 	'position' : int
 })
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
 VideoWriter = TypedDict('VideoWriter',
 {
 	'id' : str,
-	'process' : subprocess.Popen[bytes],
 	'file_path' : str,
-	'metadata' : VideoMetadata
+	'process' : subprocess.Popen[bytes],
+	'metadata' : VideoWriterMetadata
 })
 VideoWriterSet : TypeAlias = Dict[str, VideoWriter]
 VideoPoolSet = TypedDict('VideoPoolSet',

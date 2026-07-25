@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_set_video_reader_position, get_reader, get_writer, read_video_reader_frame, read_video_reader_window, refresh_video_reader, write_video_writer_frame
+from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_set_video_reader_position, get_reader, get_writer, read_video_reader_frame, read_video_reader_window, refresh_video_reader, write_video_writer
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -134,24 +134,23 @@ def test_read_video_reader_window() -> None:
 #todo: run mutation testing, strip down to the minimum, test with real data
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
-	video_metadata = extract_video_metadata(target_path)
 	create_temp_directory(target_path)
-	video_writer = get_writer(target_path, video_metadata, 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
-	assert get_writer(target_path, video_metadata, 25.0, (426, 226), (426, 226), 25.0) is video_writer
+	assert get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0) is video_writer
 
 
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
-def test_write_video_writer_frame() -> None:
+def test_write_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, video_reader.get('metadata'), 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
 	for frame_number in range(25):
 		vision_frame = read_video_reader_frame(video_reader)
-		write_video_writer_frame(video_writer, vision_frame)
+		write_video_writer(video_writer, vision_frame)
 
 	assert close_video_writer(video_writer) is True
 
@@ -170,9 +169,9 @@ def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, video_reader.get('metadata'), 30.0, (426, 226), (426, 226), 30.0)
+	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
 	vision_frame = read_video_reader_frame(video_reader)
-	write_video_writer_frame(video_writer, vision_frame)
+	write_video_writer(video_writer, vision_frame)
 
 	assert close_video_writer(video_writer) is True
 
@@ -183,13 +182,15 @@ def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path)
-	video_writer = get_writer(target_path, video_reader.get('metadata'), 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	vision_frame = read_video_reader_frame(video_reader)
+	write_video_writer(video_writer, vision_frame)
 	clear_video_pool()
 
 	if is_windows():
 		assert video_reader.get('process').returncode == 1
-		assert video_writer.get('process').returncode == 1
 
 	if is_linux() or is_macos():
 		assert video_reader.get('process').returncode == -9
-		assert video_writer.get('process').returncode == -9
+
+	assert video_writer.get('process').returncode == 0

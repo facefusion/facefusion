@@ -32,6 +32,7 @@ def probe_audio_entries(audio_path : str, entries : List[str]) -> Dict[str, str]
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
@@ -44,6 +45,7 @@ def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(video_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
@@ -55,6 +57,7 @@ def probe_format_entries(media_path : str, entries : List[str]) -> Dict[str, str
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(media_path)
 	)
+
 	output, _ = run_ffprobe(commands).communicate()
 
 	return parse_entries(output)
