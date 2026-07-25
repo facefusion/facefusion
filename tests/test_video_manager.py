@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_seek_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear_video_pool, close_video_writer, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -46,38 +46,21 @@ def before_each() -> None:
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
 def test_get_reader() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	video_metadata = video_reader.get('metadata')
 
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('frame_total') == 270
 	assert video_reader.get('frame_number') == 0
-	assert get_reader(get_test_example_file('target-240p-25fps.mp4')) is video_reader
-
-
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
-def test_conditional_seek_video_reader() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
-
-	conditional_seek_video_reader(video_reader, 50)
-
-	assert video_reader.get('frame_number') == 50
-
-	conditional_seek_video_reader(video_reader, 10)
-
-	assert video_reader.get('frame_number') == 10
-
-	conditional_seek_video_reader(video_reader, 200)
-
-	assert video_reader.get('frame_number') == 200
+	assert get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame') is video_reader
+	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames').get('id') == video_reader.get('id')
 
 
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
 def test_seek_video_reader() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	sequential_frames = {}
 
 	for frame_number in range(30):
@@ -93,13 +76,13 @@ def test_seek_video_reader() -> None:
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_frame() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	vision_frame = read_video_frame(video_reader)
 
 	assert vision_frame.shape == (226, 426, 3)
 	assert video_reader.get('frame_number') == 1
 
-	conditional_seek_video_reader(video_reader, 269)
+	seek_video_reader(video_reader, 269)
 	vision_frame = read_video_frame(video_reader)
 
 	assert vision_frame.shape == (226, 426, 3)
@@ -109,7 +92,7 @@ def test_read_video_frame() -> None:
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_frames() -> None:
-	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	frame_set = read_video_frames(video_reader, 0, 4)
 
 	assert sorted(frame_set) == [ 0, 1, 2, 3, 4 ]
@@ -145,7 +128,7 @@ def test_get_writer() -> None:
 def test_write_video_frame() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
-	video_reader = get_reader(target_path)
+	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
 	for frame_number in range(25):
@@ -168,7 +151,7 @@ def test_write_video_frame() -> None:
 def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
 	create_temp_directory(target_path)
-	video_reader = get_reader(target_path)
+	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
 	vision_frame = read_video_frame(video_reader)
 	write_video_frame(video_writer, vision_frame)
@@ -181,7 +164,7 @@ def test_close_video_writer() -> None:
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
-	video_reader = get_reader(target_path)
+	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 	vision_frame = read_video_frame(video_reader)
 	write_video_frame(video_writer, vision_frame)

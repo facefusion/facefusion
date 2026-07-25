@@ -4,12 +4,12 @@ from typing import Tuple
 import numpy
 from tqdm import tqdm
 
-from facefusion import inference_manager, state_manager, translator
+from facefusion import inference_manager, state_manager, translator, video_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Detection, DownloadScope, DownloadSet, Fps, InferencePool, ModelSet, VisionFrame
-from facefusion.vision import detect_video_fps, fit_contain_frame, read_image, read_video_frame
+from facefusion.vision import detect_video_fps, fit_contain_frame, read_image
 
 STREAM_COUNTER = 0
 
@@ -161,13 +161,15 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	rate = 0.0
 	total = 0
 	counter = 0
+	video_reader = video_manager.get_reader(video_path, 'analyse_video')
+	video_manager.seek_video_reader(video_reader, trim_frame_start)
 
 	with tqdm(total = len(frame_range), desc = translator.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 
 		for frame_number in frame_range:
-			if frame_number % int(video_fps) == 0:
-				vision_frame = read_video_frame(video_path, frame_number)
+			vision_frame = video_manager.read_video_frame(video_reader)
 
+			if frame_number % int(video_fps) == 0:
 				if numpy.any(vision_frame):
 					total += 1
 
