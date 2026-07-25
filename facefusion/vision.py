@@ -80,7 +80,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 		video_reader = video_manager.get_reader(video_path, 'read_video_frame')
 
 		with thread_semaphore():
-			video_manager.seek_video_reader(video_reader, frame_number)
+			video_manager.conditional_seek_video_reader(video_reader, frame_number)
 			return video_manager.read_video_frame(video_reader)
 
 	return None

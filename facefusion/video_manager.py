@@ -33,16 +33,36 @@ def get_reader(video_path : str, context : str) -> VideoReader:
 	return VIDEO_POOL_SET.get('reader').get(reader_id)
 
 
-def seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
+def conditional_seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
 	frame_number = min(video_reader.get('metadata').get('frame_total'), frame_number)
+	skip_total = frame_number - video_reader.get('frame_number')
+	skip_margin = 128
+
+	if 0 < skip_total <= skip_margin:
+		drain_video_reader(video_reader, skip_total)
 
 	if not video_reader.get('frame_number') == frame_number:
-		close_video_reader(video_reader)
-		video_reader['process'] = ffmpeg.create_video_reader(video_reader.get('file_path'), frame_number, video_reader.get('metadata'))
-		video_reader['frame_number'] = frame_number
+		seek_video_reader(video_reader, frame_number)
 
 
-#todo: needs review - [decoding] [critical: high] partial pipe read returns none and desyncs position from the actual stream
+def seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
+	close_video_reader(video_reader)
+
+	video_reader['process'] = ffmpeg.create_video_reader(video_reader.get('file_path'), frame_number, video_reader.get('metadata'))
+	video_reader['frame_number'] = frame_number
+
+
+def drain_video_reader(video_reader : VideoReader, skip_total : int) -> None:
+	width, height = video_reader.get('metadata').get('resolution')
+	channel_total = 3
+	frame_size = width * height * channel_total
+
+	for _ in range(skip_total):
+		video_reader.get('process').stdout.read(frame_size)
+
+	video_reader['frame_number'] = video_reader.get('frame_number') + skip_total
+
+
 def read_video_frame(video_reader : VideoReader) -> Optional[VisionFrame]:
 	width, height = video_reader.get('metadata').get('resolution')
 	channel_total = 3

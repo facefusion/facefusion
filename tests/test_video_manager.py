@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, decode_video_frames, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, conditional_seek_video_reader, decode_video_frames, drain_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -54,6 +54,19 @@ def test_get_reader() -> None:
 	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames').get('id') == video_reader.get('id')
 
 
+def test_conditional_seek_video_reader() -> None:
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
+	sequential_frames = {}
+
+	for frame_number in range(30):
+		sequential_frames[frame_number] = read_video_frame(video_reader)
+
+	for frame_number in [ 5, 17, 29 ]:
+		conditional_seek_video_reader(video_reader, frame_number)
+
+		assert numpy.array_equal(read_video_frame(video_reader), sequential_frames.get(frame_number)) is True
+
+
 def test_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	sequential_frames = {}
@@ -65,6 +78,19 @@ def test_seek_video_reader() -> None:
 		seek_video_reader(video_reader, frame_number)
 
 		assert numpy.array_equal(read_video_frame(video_reader), sequential_frames.get(frame_number)) is True
+
+
+def test_drain_video_reader() -> None:
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
+
+	drain_video_reader(video_reader, 10)
+
+	assert video_reader.get('frame_number') == 10
+
+	vision_frame = read_video_frame(video_reader)
+	seek_video_reader(video_reader, 10)
+
+	assert numpy.array_equal(vision_frame, read_video_frame(video_reader)) is True
 
 
 def test_read_video_frame() -> None:
