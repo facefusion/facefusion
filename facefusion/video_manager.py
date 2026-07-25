@@ -1,6 +1,7 @@
 import hashlib
 import uuid
-from typing import Optional
+from io import BufferedReader
+from typing import Optional, cast
 
 import numpy
 
@@ -66,12 +67,12 @@ def drain_video_reader(video_reader : VideoReader, skip_total : int) -> None:
 def read_video_frame(video_reader : VideoReader) -> Optional[VisionFrame]:
 	width, height = video_reader.get('metadata').get('resolution')
 	channel_total = 3
-	frame_size = width * height * channel_total
-	frame_buffer = video_reader.get('process').stdout.read(frame_size)
+	video_stream = cast(BufferedReader, video_reader.get('process').stdout)
+	vision_frame = numpy.empty(width * height * channel_total, numpy.uint8)
 
-	if len(frame_buffer) == frame_size:
+	if video_stream.readinto(vision_frame) == vision_frame.size:
 		video_reader['frame_number'] = video_reader.get('frame_number') + 1
-		return numpy.frombuffer(frame_buffer, numpy.uint8).reshape(height, width, channel_total)
+		return vision_frame.reshape(height, width, channel_total)
 
 	return None
 
