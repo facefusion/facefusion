@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_writer, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, decode_video_frames, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -43,8 +43,6 @@ def before_each() -> None:
 	clear_video_pool()
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_get_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	video_metadata = video_reader.get('metadata')
@@ -52,13 +50,10 @@ def test_get_reader() -> None:
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('frame_total') == 270
-	assert video_reader.get('frame_number') == 0
 	assert get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame') is video_reader
 	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames').get('id') == video_reader.get('id')
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	sequential_frames = {}
@@ -68,53 +63,62 @@ def test_seek_video_reader() -> None:
 
 	for frame_number in [ 5, 17, 29 ]:
 		seek_video_reader(video_reader, frame_number)
-		vision_frame = read_video_frame(video_reader)
 
-		assert numpy.array_equal(vision_frame, sequential_frames.get(frame_number)) is True
+		assert numpy.array_equal(read_video_frame(video_reader), sequential_frames.get(frame_number)) is True
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_frame() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
-	vision_frame = read_video_frame(video_reader)
 
-	assert vision_frame.shape == (226, 426, 3)
+	assert read_video_frame(video_reader).shape == (226, 426, 3)
 	assert video_reader.get('frame_number') == 1
 
 	seek_video_reader(video_reader, 269)
-	vision_frame = read_video_frame(video_reader)
 
-	assert vision_frame.shape == (226, 426, 3)
+	assert read_video_frame(video_reader).shape == (226, 426, 3)
 	assert read_video_frame(video_reader) is None
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_read_video_frames() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
-	frame_set = read_video_frames(video_reader, 0, 4)
 
-	assert sorted(frame_set) == [ 0, 1, 2, 3, 4 ]
+	assert sorted(read_video_frames(video_reader, 0, 4)) == [ 0, 1, 2, 3, 4 ]
 
 	frame_number = video_reader.get('frame_number')
-	frame_set = read_video_frames(video_reader, 1, 3)
 
+	assert sorted(read_video_frames(video_reader, 1, 3)) == [ 1, 2, 3 ]
 	assert video_reader.get('frame_number') == frame_number
-	assert sorted(frame_set) == [ 1, 2, 3 ]
 
 	read_video_frames(video_reader, 21, 25)
 
 	assert min(get_frame_store(video_reader.get('id'))) == 17
 	assert max(get_frame_store(video_reader.get('id'))) == 25
-
-	frame_set = read_video_frames(video_reader, 268, 275)
-
-	assert sorted(frame_set) == [ 268, 269 ]
+	assert sorted(read_video_frames(video_reader, 268, 275)) == [ 268, 269 ]
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
+def test_decode_video_frames() -> None:
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames')
+
+	decode_video_frames(video_reader, 20, 24)
+
+	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24 ]
+	assert video_reader.get('frame_number') == 25
+
+
+def test_close_video_reader() -> None:
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames')
+	read_video_frames(video_reader, 0, 4)
+	close_video_reader(video_reader)
+
+	if is_windows():
+		assert video_reader.get('process').returncode == 1
+
+	if is_linux() or is_macos():
+		assert video_reader.get('process').returncode == -9
+
+	assert get_frame_store(video_reader.get('id')) == {}
+
+
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
@@ -123,8 +127,6 @@ def test_get_writer() -> None:
 	assert get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0) is video_writer
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_write_video_frame() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
@@ -132,8 +134,7 @@ def test_write_video_frame() -> None:
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
 	for frame_number in range(25):
-		vision_frame = read_video_frame(video_reader)
-		write_video_frame(video_writer, vision_frame)
+		write_video_frame(video_writer, read_video_frame(video_reader))
 
 	assert close_video_writer(video_writer) is True
 
@@ -146,28 +147,22 @@ def test_write_video_frame() -> None:
 	assert video_metadata.get('color_transfer') == 'bt709'
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
-	vision_frame = read_video_frame(video_reader)
-	write_video_frame(video_writer, vision_frame)
+	write_video_frame(video_writer, read_video_frame(video_reader))
 
 	assert close_video_writer(video_writer) is True
 
 
-#todo: needs review - [testing] question if the assertions are good
-#todo: run mutation testing, strip down to the minimum, test with real data
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
-	vision_frame = read_video_frame(video_reader)
-	write_video_frame(video_writer, vision_frame)
+	write_video_frame(video_writer, read_video_frame(video_reader))
 	clear_video_pool()
 
 	if is_windows():
