@@ -30,8 +30,7 @@ def get_reader(video_path : str) -> VideoReader:
 	return VIDEO_POOL_SET.get('reader').get(video_path)
 
 
-#todo: needs review - [seeking] [critical: high] forward skip up to 128 frames by draining the pipe, everything else refreshes the process
-def seek_video_reader(video_reader : VideoReader, frame_number : int) -> None:
+def conditional_seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
 	frame_number = min(video_reader.get('metadata').get('frame_total'), frame_number)
 	skip_total = frame_number - video_reader.get('frame_number')
 	skip_margin = 128
@@ -41,10 +40,10 @@ def seek_video_reader(video_reader : VideoReader, frame_number : int) -> None:
 			read_video_frame(video_reader)
 
 	if not video_reader.get('frame_number') == frame_number:
-		refresh_video_reader(video_reader, frame_number)
+		seek_video_reader(video_reader, frame_number)
 
 
-def refresh_video_reader(video_reader : VideoReader, frame_number : int) -> None:
+def seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
 	close_video_reader(video_reader)
 
 	video_reader['process'] = ffmpeg.create_video_reader(video_reader.get('file_path'), frame_number, video_reader.get('metadata'))
@@ -88,7 +87,7 @@ def decode_video_frames(video_reader : VideoReader, frame_start : int, frame_end
 	skip_margin = 16
 
 	if skip_total < 0 or skip_total > skip_margin:
-		refresh_video_reader(video_reader, frame_start)
+		seek_video_reader(video_reader, frame_start)
 
 	for frame_number in range(video_reader.get('frame_number'), frame_end + 1):
 		vision_frame = read_video_frame(video_reader)

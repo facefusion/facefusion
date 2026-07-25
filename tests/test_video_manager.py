@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_writer, get_reader, get_writer, read_video_frame, read_video_frames, refresh_video_reader, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear_video_pool, close_video_writer, conditional_seek_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -58,25 +58,25 @@ def test_get_reader() -> None:
 
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
-def test_seek_video_reader() -> None:
+def test_conditional_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 
-	seek_video_reader(video_reader, 50)
+	conditional_seek_video_reader(video_reader, 50)
 
 	assert video_reader.get('frame_number') == 50
 
-	seek_video_reader(video_reader, 10)
+	conditional_seek_video_reader(video_reader, 10)
 
 	assert video_reader.get('frame_number') == 10
 
-	seek_video_reader(video_reader, 200)
+	conditional_seek_video_reader(video_reader, 200)
 
 	assert video_reader.get('frame_number') == 200
 
 
 #todo: needs review - [testing] question if the assertions are good
 #todo: run mutation testing, strip down to the minimum, test with real data
-def test_refresh_video_reader() -> None:
+def test_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'))
 	sequential_frames = {}
 
@@ -84,7 +84,7 @@ def test_refresh_video_reader() -> None:
 		sequential_frames[frame_number] = read_video_frame(video_reader)
 
 	for frame_number in [ 5, 17, 29 ]:
-		refresh_video_reader(video_reader, frame_number)
+		seek_video_reader(video_reader, frame_number)
 		vision_frame = read_video_frame(video_reader)
 
 		assert numpy.array_equal(vision_frame, sequential_frames.get(frame_number)) is True
@@ -99,7 +99,7 @@ def test_read_video_frame() -> None:
 	assert vision_frame.shape == (226, 426, 3)
 	assert video_reader.get('frame_number') == 1
 
-	seek_video_reader(video_reader, 269)
+	conditional_seek_video_reader(video_reader, 269)
 	vision_frame = read_video_frame(video_reader)
 
 	assert vision_frame.shape == (226, 426, 3)
