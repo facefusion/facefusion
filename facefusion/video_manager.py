@@ -88,13 +88,13 @@ def read_video_frames(video_reader : VideoReader, frame_start : int, frame_end :
 			frame_gaps.append(frame_number)
 
 	if frame_gaps:
-		decode_video_frames(video_reader, get_first(frame_gaps), get_last(frame_gaps))
+		collect_video_frames(video_reader, get_first(frame_gaps), get_last(frame_gaps))
 
 	frame_store.reduce_frames(reader_id, frame_start - keep_margin, frame_end + keep_margin)
 	return frame_store.select_frame_set(reader_id, frame_start, frame_end)
 
 
-def decode_video_frames(video_reader : VideoReader, frame_start : int, frame_end : int) -> None:
+def collect_video_frames(video_reader : VideoReader, frame_start : int, frame_end : int) -> None:
 	reader_id = video_reader.get('id')
 	skip_total = frame_start - video_reader.get('frame_number')
 	skip_margin = 16

@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, conditional_seek_video_reader, decode_video_frames, drain_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, drain_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -122,10 +122,10 @@ def test_read_video_frames() -> None:
 	assert sorted(read_video_frames(video_reader, 268, 275)) == [ 268, 269 ]
 
 
-def test_decode_video_frames() -> None:
+def test_collect_video_frames() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames')
 
-	decode_video_frames(video_reader, 20, 24)
+	collect_video_frames(video_reader, 20, 24)
 
 	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24 ]
 	assert video_reader.get('frame_number') == 25
