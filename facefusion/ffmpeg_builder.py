@@ -201,7 +201,6 @@ def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
 
 
-#todo: needs review - [encoding] [critical: low] explicit ffmpeg thread cap
 def set_thread_count(thread_count : int) -> List[Command]:
 	return [ '-threads', str(thread_count) ]
 
