@@ -5,7 +5,6 @@ import cv2
 import numpy
 from tqdm import tqdm
 
-import facefusion.workflows.core as core
 from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
@@ -14,6 +13,7 @@ from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
 from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
+from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
 def analyse_video() -> ErrorCode:
@@ -34,7 +34,7 @@ def extract_frames() -> ErrorCode:
 	if ffmpeg.extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('extracting_frames_succeeded'), __name__)
 	else:
-		if core.is_process_stopping():
+		if is_process_stopping():
 			return 4
 		logger.error(translator.get('extracting_frames_failed'), __name__)
 		return 1
@@ -42,9 +42,9 @@ def extract_frames() -> ErrorCode:
 
 
 def process_disk_frame(temp_frame_path : str, frame_number : int) -> bool:
-	target_vision_frames = core.conditional_get_target_vision_frames(frame_number)
+	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = core.process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
@@ -65,7 +65,7 @@ def process_disk_frames() -> ErrorCode:
 					futures.append(future)
 
 				for future in as_completed(futures):
-					if core.is_process_stopping():
+					if is_process_stopping():
 						for pending_future in futures:
 							pending_future.cancel()
 
@@ -76,7 +76,7 @@ def process_disk_frames() -> ErrorCode:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
-		if core.is_process_stopping():
+		if is_process_stopping():
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
@@ -91,7 +91,8 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 
 	if not (target_vision_frame.shape[1], target_vision_frame.shape[0]) == temp_video_resolution:
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
-	temp_vision_frame = core.process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
+
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 
 	if state_manager.get_item('temp_pixel_format') == 'bgra':
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
@@ -107,12 +108,12 @@ def process_stream_frames() -> ErrorCode:
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	frame_range = range(trim_frame_start, trim_frame_end)
+	temp_frame_range = range(trim_frame_start, trim_frame_end)
 
-	if frame_range:
+	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
-		with tqdm(total = len(frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		with tqdm(total = len(temp_frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
@@ -120,12 +121,12 @@ def process_stream_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
-				for frame_number in frame_range:
+				for frame_number in temp_frame_range:
 					future = executor.submit(process_stream_frame, frame_number, temp_video_resolution)
 					futures.append(future)
 
 				for future in futures:
-					if core.is_process_stopping():
+					if is_process_stopping():
 						for pending_future in futures:
 							pending_future.cancel()
 
@@ -140,7 +141,7 @@ def process_stream_frames() -> ErrorCode:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
-		if core.is_process_stopping():
+		if is_process_stopping():
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
@@ -157,7 +158,7 @@ def merge_frames() -> ErrorCode:
 	if ffmpeg.merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
-		if core.is_process_stopping():
+		if is_process_stopping():
 			return 4
 		logger.error(translator.get('merging_video_failed'), __name__)
 		return 1
@@ -178,7 +179,7 @@ def restore_audio() -> ErrorCode:
 				logger.debug(translator.get('replacing_audio_succeeded'), __name__)
 			else:
 				video_manager.clear_video_pool()
-				if core.is_process_stopping():
+				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
@@ -188,7 +189,7 @@ def restore_audio() -> ErrorCode:
 				logger.debug(translator.get('restoring_audio_succeeded'), __name__)
 			else:
 				video_manager.clear_video_pool()
-				if core.is_process_stopping():
+				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('restoring_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
