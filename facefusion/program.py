@@ -25,7 +25,7 @@ def create_workflow_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_workflow = program.add_argument_group('workflow')
 	group_workflow.add_argument('--workflow-mode', help = translator.get('help.workflow_mode'), default = config.get_str_value('workflow', 'workflow_mode', 'auto'), choices = facefusion.choices.workflow_modes)
-	group_workflow.add_argument('--workflow-strategy', help = translator.get('help.workflow_strategy'), default = config.get_str_value('workflow', 'workflow_strategy', 'disk'), choices = facefusion.choices.workflow_strategies)
+	group_workflow.add_argument('--workflow-strategy', help = translator.get('help.workflow_strategy'), default = config.get_str_value('workflow', 'workflow_strategy', 'stream'), choices = facefusion.choices.workflow_strategies)
 	job_store.register_step_keys([ 'workflow_mode', 'workflow_strategy' ])
 	return program
 
