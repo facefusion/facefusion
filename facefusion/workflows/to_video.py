@@ -1,5 +1,5 @@
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
-from typing import List, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Tuple
 
 import cv2
 import numpy
@@ -12,7 +12,7 @@ from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
-from facefusion.types import ErrorCode, Resolution, VideoWriter, VisionFrame
+from facefusion.types import ErrorCode, Resolution, VisionFrame
 from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 
 
@@ -42,8 +42,9 @@ def extract_frames() -> ErrorCode:
 
 
 def process_disk_frame(temp_frame_path : str, frame_number : int) -> bool:
+	target_vision_frames = core.conditional_get_target_vision_frames(frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = core.process_temp_frame(temp_vision_frame, frame_number)
+	temp_vision_frame = core.process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
@@ -90,7 +91,7 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 
 	if not (target_vision_frame.shape[1], target_vision_frame.shape[0]) == temp_video_resolution:
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
-	temp_vision_frame = core.process_temp_frame(temp_vision_frame, frame_number)
+	temp_vision_frame = core.process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 
 	if state_manager.get_item('temp_pixel_format') == 'bgra':
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
@@ -99,26 +100,6 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 		temp_vision_frame = temp_vision_frame[:, :, :3]
 
 	return frame_number, numpy.ascontiguousarray(temp_vision_frame)
-
-
-def calculate_frame_look_ahead(temp_video_resolution : Resolution) -> int:
-	width, height = temp_video_resolution
-	frame_memory_budget = 3 * 1024 ** 3
-	frame_memory_usage = width * height * 4 * 6
-	return min(state_manager.get_item('execution_thread_count') * 2, max(2, frame_memory_budget // frame_memory_usage))
-
-
-def write_stream_frame(video_writer : VideoWriter, futures : List[Future[Tuple[int, VisionFrame]]], progress : tqdm) -> None:
-	if core.is_process_stopping():
-		for pending_future in futures:
-			pending_future.cancel()
-
-	future = futures.pop(0)
-
-	if not future.cancelled():
-		_, temp_vision_frame = future.result()
-		video_manager.write_video_frame(video_writer, temp_vision_frame)
-		progress.update()
 
 
 def process_stream_frames() -> ErrorCode:
@@ -130,7 +111,6 @@ def process_stream_frames() -> ErrorCode:
 
 	if frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
-		frame_look_ahead = calculate_frame_look_ahead(temp_video_resolution)
 
 		with tqdm(total = len(frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
@@ -144,11 +124,15 @@ def process_stream_frames() -> ErrorCode:
 					future = executor.submit(process_stream_frame, frame_number, temp_video_resolution)
 					futures.append(future)
 
-					if len(futures) > frame_look_ahead:
-						write_stream_frame(video_writer, futures, progress)
+				for future in futures:
+					if core.is_process_stopping():
+						for pending_future in futures:
+							pending_future.cancel()
 
-				for _ in list(futures):
-					write_stream_frame(video_writer, futures, progress)
+					if not future.cancelled():
+						_, temp_vision_frame = future.result()
+						video_manager.write_video_frame(video_writer, temp_vision_frame)
+						progress.update()
 
 		if not video_manager.close_video_writer(video_writer):
 			process_manager.stop()

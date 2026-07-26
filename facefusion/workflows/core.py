@@ -69,12 +69,11 @@ def conditional_get_target_vision_frames(frame_number : int) -> List[VisionFrame
 	return [ read_static_image(state_manager.get_item('target_path')) ]
 
 
-def process_temp_frame(temp_vision_frame : VisionFrame, frame_number : int) -> VisionFrame:
+def process_temp_frame(target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame, frame_number : int) -> VisionFrame:
 	reference_vision_frame = conditional_get_reference_vision_frame()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = conditional_get_source_audio_frame(frame_number)
 	source_voice_frame = conditional_get_source_voice_frame(frame_number)
-	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):

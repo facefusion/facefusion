@@ -5,7 +5,7 @@ from facefusion.temp_helper import get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, pack_resolution, read_static_image, restrict_image_resolution, scale_resolution, write_image
-from facefusion.workflows.core import is_process_stopping, process_temp_frame
+from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
 def analyse_image() -> ErrorCode:
@@ -30,8 +30,9 @@ def prepare_image() -> ErrorCode:
 
 def process_image() -> ErrorCode:
 	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
+	target_vision_frames = conditional_get_target_vision_frames(0)
 	temp_vision_frame = read_static_image(temp_image_path, 'rgba')
-	temp_vision_frame = process_temp_frame(temp_vision_frame, 0)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, 0)
 	write_image(temp_image_path, temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
