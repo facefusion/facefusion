@@ -12,12 +12,12 @@ import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
+from facefusion.execution import has_execution_provider, resolve_cache_path
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
-from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import create_directory, filter_image_paths, has_image, in_directory, is_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
 from facefusion.processors.modules.face_swapper.types import FaceSwapperInputs
@@ -25,7 +25,7 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferenceOptionSet, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_images, read_static_video_chunk, read_static_video_frame, unpack_resolution
 
 
@@ -508,13 +508,28 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 
 	if is_macos() and has_execution_provider('coreml'):
 		if model_type in [ 'ghost', 'uniface' ] or model_precision == 'fp16':
+			inference_option_set : InferenceOptionSet =\
+			{
+				'ModelFormat': 'MLProgram',
+				'SpecializationStrategy': 'FastPrediction'
+			}
+			cache_path = resolve_cache_path()
+
+			if model_precision == 'fp16':
+				inference_option_set.update(
+				{
+					'MLComputeUnits': 'CPUAndNeuralEngine'
+				})
+
+			if is_directory(cache_path) or create_directory(cache_path):
+				inference_option_set.update(
+				{
+					'ModelCacheDirectory': cache_path
+				})
+
 			return\
 			[
-				(facefusion.choices.execution_provider_set.get('coreml'),
-				{
-					'ModelFormat': 'MLProgram',
-					'SpecializationStrategy': 'FastPrediction'
-				})
+				(facefusion.choices.execution_provider_set.get('coreml'), inference_option_set)
 			]
 
 	return []

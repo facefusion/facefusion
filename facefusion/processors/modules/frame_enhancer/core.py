@@ -12,14 +12,14 @@ import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
-from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.execution import has_execution_provider, resolve_cache_path
+from facefusion.filesystem import create_directory, in_directory, is_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.modules.frame_enhancer import choices as frame_enhancer_choices
 from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerInputs
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferenceOptionSet, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_chunk, read_static_video_frame
 
 
@@ -562,13 +562,23 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
 
 	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
+		inference_option_set : InferenceOptionSet =\
+		{
+			'ModelFormat': 'MLProgram',
+			'SpecializationStrategy': 'FastPrediction',
+			'MLComputeUnits': 'CPUAndNeuralEngine'
+		}
+		cache_path = resolve_cache_path()
+
+		if is_directory(cache_path) or create_directory(cache_path):
+			inference_option_set.update(
+			{
+				'ModelCacheDirectory': cache_path
+			})
+
 		return\
 		[
-			(facefusion.choices.execution_provider_set.get('coreml'),
-			{
-				'ModelFormat': 'MLProgram',
-				'SpecializationStrategy': 'FastPrediction'
-			})
+			(facefusion.choices.execution_provider_set.get('coreml'), inference_option_set)
 		]
 
 	return []
