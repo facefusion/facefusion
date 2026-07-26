@@ -75,23 +75,17 @@ def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optiona
 	return read_video_frame(video_path, frame_number)
 
 
-#todo: needs review - [decoding] [critical: medium] cv2 capture replaced by the pooled ffmpeg reader, position clamped to the frame_total estimate
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		video_reader = video_manager.get_reader(video_path)
+		video_reader = video_manager.get_reader(video_path, 'read_video_frame')
 
-		if video_reader:
-			video_frame_position = min(video_reader.get('metadata').get('frame_total'), frame_number)
-
-			with thread_semaphore():
-				video_manager.conditional_set_video_reader_position(video_reader, video_frame_position)
-				return video_manager.read_video_reader_frame(video_reader)
+		with thread_semaphore():
+			video_manager.conditional_seek_video_reader(video_reader, frame_number)
+			return video_manager.read_video_frame(video_reader)
 
 	return None
 
 
-#todo: needs review - [decoding] [critical: high] window read replaces the chunk cache, out of range frames fall back to empty vision frames
-#todo: question to restore the chunk_size approach over the window read
 def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
 	frame_start = frame_number - frame_offset
@@ -99,8 +93,8 @@ def select_video_frames(video_path : str, frame_number : int = 0, frame_offset :
 
 	if is_video(video_path):
 		with thread_lock():
-			video_reader = video_manager.get_reader(video_path)
-			frame_set = video_manager.read_video_reader_window(video_reader, max(frame_start, 0), frame_end)
+			video_reader = video_manager.get_reader(video_path, 'select_video_frames')
+			frame_set = video_manager.read_video_frames(video_reader, max(frame_start, 0), frame_end)
 
 			for frame_number in range(frame_start, frame_end + 1):
 				vision_frame = create_empty_vision_frame()

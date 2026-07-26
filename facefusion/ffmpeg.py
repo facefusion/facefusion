@@ -69,9 +69,9 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
-def create_video_reader(video_path : str, frame_position : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[bytes]:
+def create_video_reader(video_path : str, frame_number : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.seek_to(frame_position / video_metadata.get('fps')),
+		ffmpeg_builder.seek_to(frame_number / video_metadata.get('fps')),
 		ffmpeg_builder.set_input(video_path),
 		ffmpeg_builder.restrict_color_transfer(video_metadata.get('color_transfer')),
 		ffmpeg_builder.prevent_frame_drop(),

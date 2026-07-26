@@ -186,7 +186,7 @@ def write_stream_frame(video_writer : VideoWriter, futures : List[Future[Tuple[i
 
 	if not future.cancelled():
 		_, temp_vision_frame = future.result()
-		video_manager.write_video_writer(video_writer, temp_vision_frame)
+		video_manager.write_video_frame(video_writer, temp_vision_frame)
 		progress.update()
 
 

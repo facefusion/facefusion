@@ -135,7 +135,7 @@ VideoReader = TypedDict('VideoReader',
 	'file_path' : str,
 	'process' : subprocess.Popen[bytes],
 	'metadata' : VideoReaderMetadata,
-	'position' : int
+	'frame_number' : int
 })
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
 VideoWriter = TypedDict('VideoWriter',
