@@ -479,7 +479,7 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def override_inference_providers() -> List[InferenceProvider]:
 	model_type = get_model_options().get('type')
 
 	if is_macos() and has_execution_provider('coreml') or is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':

@@ -93,10 +93,23 @@ def resolve_static_inference_providers(module_name : str, execution_device_id : 
 	module = importlib.import_module(module_name)
 	execution_providers = state_manager.get_item('execution_providers')
 
-	if hasattr(module, 'resolve_inference_providers'):
-		inference_providers = getattr(module, 'resolve_inference_providers')()
+	if hasattr(module, 'override_inference_providers'):
+		override_inference_providers = getattr(module, 'override_inference_providers')()
 
-		if inference_providers:
+		if override_inference_providers:
+			return override_inference_providers
+
+	if hasattr(module, 'adjust_inference_providers'):
+		adjust_inference_providers = getattr(module, 'adjust_inference_providers')()
+
+		if adjust_inference_providers:
+			inference_providers = create_inference_providers(execution_device_id, execution_providers)
+
+			for adjust_inference_provider in adjust_inference_providers:
+				for inference_provider in inference_providers:
+					if inference_provider[0] == adjust_inference_provider[0] and inference_provider[1]:
+						inference_provider[1].update(adjust_inference_provider[1])
+
 			return inference_providers
 
 	return create_inference_providers(execution_device_id, execution_providers)

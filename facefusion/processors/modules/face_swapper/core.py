@@ -502,7 +502,7 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def adjust_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
 	model_type = get_model_options().get('type')
 
@@ -512,8 +512,7 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 			[
 				(facefusion.choices.execution_provider_set.get('coreml'),
 				{
-					'ModelFormat': 'MLProgram',
-					'SpecializationStrategy': 'FastPrediction'
+					'ModelFormat': 'MLProgram'
 				})
 			]
 
