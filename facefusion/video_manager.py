@@ -105,14 +105,13 @@ def collect_video_frames(video_reader : VideoReader, frame_start : int, frame_en
 	for frame_number in range(video_reader.get('frame_number'), frame_end + 1):
 		vision_frame = read_video_frame(video_reader)
 
-		if numpy.any(vision_frame):
+		if numpy.ndim(vision_frame) == 3:
 			frame_store.set_frame(reader_id, frame_number, vision_frame)
 
 
 def close_video_reader(video_reader : VideoReader) -> None:
 	video_reader.get('process').kill()
 	video_reader.get('process').wait()
-	frame_store.clear_frames(video_reader.get('id'))
 
 
 def get_writer(video_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
@@ -146,6 +145,7 @@ def close_video_writer(video_writer : VideoWriter) -> bool:
 def clear_video_pool() -> None:
 	for video_reader in VIDEO_POOL_SET.get('reader').values():
 		close_video_reader(video_reader)
+		frame_store.clear_frames(video_reader.get('id'))
 
 	for video_writer in VIDEO_POOL_SET.get('writer').values():
 		close_video_writer(video_writer)

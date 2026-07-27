@@ -142,7 +142,7 @@ def test_close_video_reader() -> None:
 	if is_linux() or is_macos():
 		assert video_reader.get('process').returncode == -9
 
-	assert get_frame_store(video_reader.get('id')) == {}
+	assert len(get_frame_store(video_reader.get('id'))) == 5
 
 
 def test_get_writer() -> None:
@@ -186,8 +186,9 @@ def test_close_video_writer() -> None:
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(target_path)
-	video_reader = get_reader(target_path, 'read_video_frame')
+	video_reader = get_reader(target_path, 'select_video_frames')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	read_video_frames(video_reader, 0, 4)
 	write_video_frame(video_writer, read_video_frame(video_reader))
 	clear_video_pool()
 
@@ -198,3 +199,4 @@ def test_clear_video_pool() -> None:
 		assert video_reader.get('process').returncode == -9
 
 	assert video_writer.get('process').returncode == 0
+	assert get_frame_store(video_reader.get('id')) == {}
