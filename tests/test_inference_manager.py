@@ -1,5 +1,6 @@
 from functools import partial
 from types import SimpleNamespace
+from typing import Any, List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,9 +9,10 @@ from onnxruntime import InferenceSession
 from facefusion import content_analyser, state_manager
 from facefusion.execution import resolve_cache_path
 from facefusion.inference_manager import INFERENCE_POOL_SET, get_inference_pool, resolve_static_inference_providers
+from facefusion.types import InferenceProvider
 
 
-def provide_inference_providers(inference_providers, *args):
+def provide_inference_providers(inference_providers : List[InferenceProvider], *args : Any) -> List[InferenceProvider]:
 	return inference_providers
 
 
