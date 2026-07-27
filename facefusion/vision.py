@@ -310,6 +310,10 @@ def create_empty_vision_frame() -> VisionFrame:
 	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
 
 
+def is_vision_frame(vision_frame : VisionFrame) -> bool:
+	return numpy.ndim(vision_frame) == 3
+
+
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:
 	tile_width = size[0] - 2 * size[2]
 	pad_size_top = size[1] + size[2]
