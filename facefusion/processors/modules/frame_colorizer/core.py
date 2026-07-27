@@ -172,7 +172,7 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def override_inference_providers() -> List[InferenceProvider]:
 	if is_macos() and has_execution_provider('coreml'):
 		return [ facefusion.choices.execution_provider_set.get('cpu') ]
 

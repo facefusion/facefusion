@@ -558,7 +558,7 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def adjust_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
 
 	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
@@ -567,7 +567,7 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 			(facefusion.choices.execution_provider_set.get('coreml'),
 			{
 				'ModelFormat': 'MLProgram',
-				'SpecializationStrategy': 'FastPrediction'
+				'MLComputeUnits': 'CPUAndNeuralEngine'
 			})
 		]
 
