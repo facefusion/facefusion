@@ -1,6 +1,6 @@
 from functools import partial
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from onnxruntime import InferenceSession
@@ -39,17 +39,16 @@ def test_get_inference_pool() -> None:
 
 
 def test_resolve_static_inference_providers() -> None:
-	state_manager.init_item('execution_providers', [ 'coreml' ])
-	cache_path = resolve_cache_path()
 	override_module = SimpleNamespace(override_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
 	adjust_module = SimpleNamespace(adjust_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
 
+	state_manager.init_item('execution_providers', ['coreml'])
 	resolve_static_inference_providers.cache_clear()
 
-	with patch('facefusion.inference_manager.importlib', **{ 'import_module.return_value': override_module }):
+	with patch('facefusion.inference_manager.importlib', Mock(import_module = Mock(return_value = override_module))):
 		assert resolve_static_inference_providers('override_module', 0) == [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]
 
-	with patch('facefusion.inference_manager.importlib', **{ 'import_module.return_value': adjust_module }):
-		assert resolve_static_inference_providers('adjust_module', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': cache_path, 'ModelFormat': 'MLProgram' }) ]
+	with patch('facefusion.inference_manager.importlib', Mock(import_module = Mock(return_value = adjust_module))):
+		assert resolve_static_inference_providers('adjust_module', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path(), 'ModelFormat': 'MLProgram' }) ]
 
-	assert resolve_static_inference_providers('test', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': cache_path }) ]
+	assert resolve_static_inference_providers('test', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path() }) ]
