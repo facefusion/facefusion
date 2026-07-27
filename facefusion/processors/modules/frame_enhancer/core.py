@@ -566,8 +566,7 @@ def adjust_inference_providers() -> List[InferenceProvider]:
 		[
 			(facefusion.choices.execution_provider_set.get('coreml'),
 			{
-				'ModelFormat': 'MLProgram',
-				'MLComputeUnits': 'CPUAndNeuralEngine'
+				'ModelFormat': 'MLProgram'
 			})
 		]
 

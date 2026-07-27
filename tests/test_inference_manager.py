@@ -1,3 +1,4 @@
+from functools import partial
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -5,7 +6,12 @@ import pytest
 from onnxruntime import InferenceSession
 
 from facefusion import content_analyser, state_manager
+from facefusion.execution import resolve_cache_path
 from facefusion.inference_manager import INFERENCE_POOL_SET, get_inference_pool, resolve_static_inference_providers
+
+
+def provide_inference_providers(inference_providers, *args):
+	return inference_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -33,13 +39,17 @@ def test_get_inference_pool() -> None:
 
 
 def test_resolve_static_inference_providers() -> None:
-	resolve_static_inference_providers.cache_clear()
-	override_module = SimpleNamespace(override_inference_providers = lambda: [ ('OverrideExecutionProvider', {}) ])
-	adjust_module = SimpleNamespace(adjust_inference_providers = lambda: [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ])
-	default_module = SimpleNamespace()
+	state_manager.init_item('execution_providers', [ 'coreml' ])
+	cache_path = resolve_cache_path()
+	override_module = SimpleNamespace(override_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
+	adjust_module = SimpleNamespace(adjust_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
 
-	with patch.dict('sys.modules', { 'test_override': override_module, 'test_adjust': adjust_module, 'test_default': default_module }),\
-		patch('facefusion.inference_manager.create_inference_providers', side_effect = lambda *args: [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction' }) ]):
-		assert resolve_static_inference_providers('test_override', 0) == [ ('OverrideExecutionProvider', {}) ]
-		assert resolve_static_inference_providers('test_adjust', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelFormat': 'MLProgram' }) ]
-		assert resolve_static_inference_providers('test_default', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction' }) ]
+	resolve_static_inference_providers.cache_clear()
+
+	with patch('facefusion.inference_manager.importlib', **{ 'import_module.return_value': override_module }):
+		assert resolve_static_inference_providers('override_module', 0) == [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]
+
+	with patch('facefusion.inference_manager.importlib', **{ 'import_module.return_value': adjust_module }):
+		assert resolve_static_inference_providers('adjust_module', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': cache_path, 'ModelFormat': 'MLProgram' }) ]
+
+	assert resolve_static_inference_providers('test', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': cache_path }) ]

@@ -507,22 +507,12 @@ def adjust_inference_providers() -> List[InferenceProvider]:
 	model_type = get_model_options().get('type')
 
 	if is_macos() and has_execution_provider('coreml'):
-		if model_type in [ 'ghost', 'uniface' ]:
+		if model_type in [ 'ghost', 'uniface' ] or model_precision == 'fp16':
 			return\
 			[
 				(facefusion.choices.execution_provider_set.get('coreml'),
 				{
 					'ModelFormat': 'MLProgram'
-				})
-			]
-
-		if model_precision == 'fp16':
-			return\
-			[
-				(facefusion.choices.execution_provider_set.get('coreml'),
-				{
-					'ModelFormat': 'MLProgram',
-					'MLComputeUnits': 'CPUAndNeuralEngine'
 				})
 			]
 
