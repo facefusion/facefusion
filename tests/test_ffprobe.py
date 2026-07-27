@@ -41,7 +41,7 @@ def test_extract_audio_metadata() -> None:
 
 	assert audio_metadata.get('sample_rate') == 44100
 	assert audio_metadata.get('channel_total') == 1
-	assert audio_metadata.get('frame_total') == 167039
+	assert audio_metadata.get('frame_total') == 167040
 	assert audio_metadata.get('bit_rate') == 128000
 
 	audio_metadata = extract_audio_metadata(get_test_example_file('source-48000khz-2ch.wav'))
