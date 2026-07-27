@@ -1,6 +1,4 @@
-from functools import partial
 from types import SimpleNamespace
-from typing import Any, List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,11 +7,6 @@ from onnxruntime import InferenceSession
 from facefusion import content_analyser, state_manager
 from facefusion.execution import resolve_cache_path
 from facefusion.inference_manager import INFERENCE_POOL_SET, get_inference_pool, resolve_static_inference_providers
-from facefusion.types import InferenceProvider
-
-
-def provide_inference_providers(inference_providers : List[InferenceProvider], *args : Any) -> List[InferenceProvider]:
-	return inference_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -40,10 +33,17 @@ def test_get_inference_pool() -> None:
 	assert INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1') == INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1')
 
 
-def test_resolve_static_inference_providers() -> None:
-	override_module = SimpleNamespace(override_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
-	adjust_module = SimpleNamespace(adjust_inference_providers = partial(provide_inference_providers, [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
+@pytest.fixture
+def override_module() -> SimpleNamespace:
+	return SimpleNamespace(override_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
 
+
+@pytest.fixture
+def adjust_module() -> SimpleNamespace:
+	return SimpleNamespace(adjust_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
+
+
+def test_resolve_static_inference_providers(override_module : SimpleNamespace, adjust_module : SimpleNamespace) -> None:
 	state_manager.init_item('execution_providers', ['coreml'])
 	resolve_static_inference_providers.cache_clear()
 
