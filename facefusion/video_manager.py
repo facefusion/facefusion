@@ -5,7 +5,7 @@ from typing import Optional, cast
 
 import numpy
 
-from facefusion import ffmpeg, ffprobe, frame_store
+from facefusion import ffmpeg, ffprobe, frame_store, vision
 from facefusion.common_helper import get_first, get_last
 from facefusion.types import Fps, Resolution, VideoPoolSet, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
 
@@ -105,7 +105,7 @@ def collect_video_frames(video_reader : VideoReader, frame_start : int, frame_en
 	for frame_number in range(video_reader.get('frame_number'), frame_end + 1):
 		vision_frame = read_video_frame(video_reader)
 
-		if numpy.ndim(vision_frame) == 3:
+		if vision.is_vision_frame(vision_frame):
 			frame_store.set_frame(reader_id, frame_number, vision_frame)
 
 

@@ -211,7 +211,6 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frames, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
-
 	return gradio.Image(value = None, elem_classes = None)
 
 
