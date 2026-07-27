@@ -35,7 +35,8 @@ def get_reader(video_path : str, context : str) -> VideoReader:
 
 
 def conditional_seek_video_reader(video_reader : VideoReader, frame_number : int = 0) -> None:
-	frame_number = min(video_reader.get('metadata').get('frame_total') - 1, frame_number)
+	frame_total = video_reader.get('metadata').get('frame_total')
+	frame_number = min(frame_total - 1, frame_number)
 	skip_total = frame_number - video_reader.get('frame_number')
 	skip_margin = 128
 

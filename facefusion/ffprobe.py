@@ -74,7 +74,7 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 
 	duration = float(format_entries.get('duration'))
 	sample_rate = int(audio_entries.get('sample_rate'))
-	frame_total = int(duration * sample_rate)
+	frame_total = round(duration * sample_rate)
 	channel_total = int(audio_entries.get('channels'))
 	bit_rate = int(format_entries.get('bit_rate'))
 
@@ -101,7 +101,7 @@ def extract_video_metadata(video_path : str) -> VideoMetadata:
 
 	duration = float(format_entries.get('duration'))
 	fps = extract_video_fps(video_entries.get('r_frame_rate'))
-	frame_total = int(duration * fps)
+	frame_total = round(duration * fps)
 	width = int(video_entries.get('width'))
 	height = int(video_entries.get('height'))
 	bit_rate = int(format_entries.get('bit_rate'))

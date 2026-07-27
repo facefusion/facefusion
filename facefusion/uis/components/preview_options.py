@@ -26,8 +26,9 @@ def render() -> None:
 		'visible': False
 	}
 	if is_video(state_manager.get_item('target_path')):
+		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 		preview_frame_slider_options['value'] = state_manager.get_item('reference_frame_number')
-		preview_frame_slider_options['maximum'] = count_video_frame_total(state_manager.get_item('target_path')) - 1
+		preview_frame_slider_options['maximum'] = video_frame_total - 1
 		preview_frame_slider_options['visible'] = True
 	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_options)
 	with gradio.Row():
