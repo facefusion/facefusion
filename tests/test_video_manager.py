@@ -50,34 +50,35 @@ def test_get_reader() -> None:
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('frame_total') == 270
+
 	assert get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame') is video_reader
 	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames').get('id') == video_reader.get('id')
 
 
 def test_conditional_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
-	sequential_frames = {}
+	video_frames = {}
 
 	for frame_number in range(30):
-		sequential_frames[frame_number] = read_video_frame(video_reader)
+		video_frames[frame_number] = read_video_frame(video_reader)
 
 	for frame_number in [ 5, 17, 29 ]:
 		conditional_seek_video_reader(video_reader, frame_number)
 
-		assert numpy.array_equal(read_video_frame(video_reader), sequential_frames.get(frame_number)) is True
+		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_number)) is True
 
 
 def test_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
-	sequential_frames = {}
+	video_frames = {}
 
 	for frame_number in range(30):
-		sequential_frames[frame_number] = read_video_frame(video_reader)
+		video_frames[frame_number] = read_video_frame(video_reader)
 
 	for frame_number in [ 5, 17, 29 ]:
 		seek_video_reader(video_reader, frame_number)
 
-		assert numpy.array_equal(read_video_frame(video_reader), sequential_frames.get(frame_number)) is True
+		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_number)) is True
 
 
 def test_drain_video_reader() -> None:
@@ -133,6 +134,7 @@ def test_collect_video_frames() -> None:
 
 def test_close_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames')
+
 	read_video_frames(video_reader, 0, 4)
 	close_video_reader(video_reader)
 
@@ -176,6 +178,7 @@ def test_close_video_writer() -> None:
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
+
 	write_video_frame(video_writer, read_video_frame(video_reader))
 
 	assert close_video_writer(video_writer) is True
@@ -186,6 +189,7 @@ def test_clear_video_pool() -> None:
 	create_temp_directory(target_path)
 	video_reader = get_reader(target_path, 'select_video_frames')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+
 	read_video_frames(video_reader, 0, 4)
 	write_video_frame(video_writer, read_video_frame(video_reader))
 	clear_video_pool()
