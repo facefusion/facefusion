@@ -15,7 +15,7 @@ from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame
-from facefusion.vision import extract_vision_mask, read_static_images
+from facefusion.vision import extract_vision_mask, is_vision_frame, read_static_images
 
 
 def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Iterator[VisionFrame]:
@@ -31,7 +31,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 				if analyse_stream(capture_vision_frame, camera_fps):
 					camera_capture.release()
 
-				if numpy.any(capture_vision_frame):
+				if is_vision_frame(capture_vision_frame):
 					future = executor.submit(process_stream_frame, source_vision_frames, capture_vision_frame)
 					futures.append(future)
 

@@ -5,12 +5,13 @@ import numpy
 
 from facefusion.hash_helper import create_hash
 from facefusion.types import Face, FaceStore, VisionFrame
+from facefusion.vision import is_vision_frame
 
 FACE_STORE : FaceStore = {}
 
 
 def get_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
-	if numpy.any(vision_frame):
+	if is_vision_frame(vision_frame):
 		vision_hash = create_hash(vision_frame.data)
 
 		if FACE_STORE.get(vision_hash):
@@ -20,7 +21,7 @@ def get_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 
 
 def set_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
-	if numpy.any(vision_frame):
+	if is_vision_frame(vision_frame):
 		vision_hash = create_hash(vision_frame.data)
 		FACE_STORE.setdefault(vision_hash,
 		{
@@ -29,7 +30,7 @@ def set_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 
 
 def resolve_lock(vision_frame : VisionFrame) -> threading.Lock:
-	if numpy.any(vision_frame):
+	if is_vision_frame(vision_frame):
 		vision_hash = create_hash(vision_frame.data)
 		return FACE_STORE.setdefault(vision_hash,
 		{
