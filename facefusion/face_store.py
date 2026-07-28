@@ -1,8 +1,6 @@
 import threading
 from typing import List, Optional
 
-import numpy
-
 from facefusion.hash_helper import create_hash
 from facefusion.types import Face, FaceStore, VisionFrame
 from facefusion.vision import is_vision_frame

@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Deque, Iterator, List
 
 import cv2
-import numpy
 from tqdm import tqdm
 
 from facefusion import ffmpeg_builder, logger, state_manager, translator
