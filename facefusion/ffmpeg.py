@@ -66,7 +66,7 @@ def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 
 def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
-	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, pipesize = 1024 * 1024)
 
 
 def create_video_reader(video_path : str, frame_number : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[bytes]:
