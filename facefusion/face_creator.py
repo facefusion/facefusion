@@ -10,6 +10,7 @@ from facefusion.face_helper import apply_nms, average_points, convert_to_face_la
 from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
 from facefusion.face_recognizer import calculate_face_embedding
 from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
+from facefusion.vision import is_vision_frame
 
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_scores : List[Score], face_landmarks_5 : List[FaceLandmark5]) -> List[Face]:
@@ -73,7 +74,7 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	many_faces : List[Face] = []
 
 	for vision_frame in vision_frames:
-		if numpy.any(vision_frame):
+		if is_vision_frame(vision_frame):
 			all_bounding_boxes = []
 			all_face_scores = []
 			all_face_landmarks_5 = []

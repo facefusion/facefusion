@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, select_video_frames, unpack_resolution
+from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, is_vision_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, select_video_frames, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -277,7 +277,7 @@ def create_face_by_face(reference_vision_frame : VisionFrame, source_vision_fram
 		target_crop_vision_frame = extract_crop_frame(target_vision_frame, target_face)
 		output_crop_vision_frame = extract_crop_frame(temp_vision_frame, target_face)
 
-		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
+		if is_vision_frame(target_crop_vision_frame) and is_vision_frame(output_crop_vision_frame):
 			target_crop_dimension = min(target_crop_vision_frame.shape[:2])
 			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (target_crop_dimension, target_crop_dimension))
 			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (target_crop_dimension, target_crop_dimension))
