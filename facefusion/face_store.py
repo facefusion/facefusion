@@ -11,7 +11,7 @@ FACE_STORE : FaceStore = {}
 
 def get_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	if numpy.any(vision_frame):
-		vision_hash = create_hash(vision_frame.tobytes())
+		vision_hash = create_hash(vision_frame.data)
 
 		if FACE_STORE.get(vision_hash):
 			return FACE_STORE.get(vision_hash).get('faces')
@@ -21,7 +21,7 @@ def get_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 
 def set_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 	if numpy.any(vision_frame):
-		vision_hash = create_hash(vision_frame.tobytes())
+		vision_hash = create_hash(vision_frame.data)
 		FACE_STORE.setdefault(vision_hash,
 		{
 			'lock': threading.Lock()
@@ -30,7 +30,7 @@ def set_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 
 def resolve_lock(vision_frame : VisionFrame) -> threading.Lock:
 	if numpy.any(vision_frame):
-		vision_hash = create_hash(vision_frame.tobytes())
+		vision_hash = create_hash(vision_frame.data)
 		return FACE_STORE.setdefault(vision_hash,
 		{
 			'lock': threading.Lock()
