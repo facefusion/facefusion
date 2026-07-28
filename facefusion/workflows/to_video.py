@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Tuple
 
 import cv2
 import numpy
@@ -84,7 +83,7 @@ def process_disk_frames() -> ErrorCode:
 	return 0
 
 
-def process_stream_frame(frame_number : int, temp_video_resolution : Resolution) -> Tuple[int, VisionFrame]:
+def process_stream_frame(frame_number : int, temp_video_resolution : Resolution) -> VisionFrame:
 	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
@@ -100,7 +99,7 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 	if state_manager.get_item('temp_pixel_format') == 'bgr24':
 		temp_vision_frame = temp_vision_frame[:, :, :3]
 
-	return frame_number, numpy.ascontiguousarray(temp_vision_frame)
+	return numpy.ascontiguousarray(temp_vision_frame)
 
 
 def process_stream_frames() -> ErrorCode:
@@ -131,7 +130,7 @@ def process_stream_frames() -> ErrorCode:
 							pending_future.cancel()
 
 					if not future.cancelled():
-						_, temp_vision_frame = future.result()
+						temp_vision_frame = future.result()
 						video_manager.write_video_frame(video_writer, temp_vision_frame)
 						progress.update()
 
