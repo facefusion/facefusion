@@ -133,7 +133,7 @@ def get_writer(video_path : str, temp_video_fps : Fps, temp_video_resolution : R
 
 
 def write_video_frame(video_writer : VideoWriter, vision_frame : VisionFrame) -> None:
-	video_writer.get('process').stdin.write(vision_frame.tobytes())
+	video_writer.get('process').stdin.write(vision_frame.data)
 
 
 def close_video_writer(video_writer : VideoWriter) -> bool:

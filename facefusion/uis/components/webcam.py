@@ -106,7 +106,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 				yield capture_vision_frame
 			if webcam_mode in [ 'udp', 'v4l2' ]:
 				try:
-					stream.stdin.write(capture_vision_frame.tobytes())
+					stream.stdin.write(capture_vision_frame.data)
 				except Exception:
 					pass
 
