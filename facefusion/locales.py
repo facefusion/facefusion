@@ -204,7 +204,6 @@ LOCALES : Locales =\
 			'clear_button': 'CLEAR',
 			'download_providers_checkbox_group': 'DOWNLOAD PROVIDERS',
 			'execution_providers_checkbox_group': 'EXECUTION PROVIDERS',
-			'workflow_mode_dropdown': 'WORKFLOW MODE',
 			'workflow_strategy_dropdown': 'WORKFLOW STRATEGY',
 			'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
 			'face_detector_angles_checkbox_group': 'FACE DETECTOR ANGLES',

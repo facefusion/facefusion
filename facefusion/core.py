@@ -315,16 +315,19 @@ def conditional_process() -> ErrorCode:
 	if state_manager.get_item('workflow_mode') == 'auto':
 		state_manager.set_item('workflow_mode', detect_workflow_mode())
 
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
-			return 2
+	if state_manager.get_item('workflow_mode') == detect_workflow_mode():
+		for processor_module in get_processors_modules(state_manager.get_item('processors')):
+			if not processor_module.pre_process('output'):
+				return 2
 
-	if state_manager.get_item('workflow_mode') == 'image-to-image':
-		return image_to_image.process(start_time)
-	if state_manager.get_item('workflow_mode') == 'image-to-video':
-		return image_to_video.process(start_time)
+		if state_manager.get_item('workflow_mode') == 'image-to-image':
+			return image_to_image.process(start_time)
+		if state_manager.get_item('workflow_mode') == 'image-to-video':
+			return image_to_video.process(start_time)
 
-	return 0
+		return 0
+
+	return 2
 
 
 def detect_workflow_mode() -> WorkflowMode:
