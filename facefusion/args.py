@@ -45,7 +45,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('trim_frame_start', args.get('trim_frame_start'))
 	apply_state_item('trim_frame_end', args.get('trim_frame_end'))
 	apply_state_item('temp_frame_format', args.get('temp_frame_format'))
-	apply_state_item('keep_temp', args.get('keep_temp'))
+	apply_state_item('temp_pixel_format', args.get('temp_pixel_format'))
 	apply_state_item('target_frame_amount', args.get('target_frame_amount'))
 	apply_state_item('output_image_quality', args.get('output_image_quality'))
 	apply_state_item('output_image_scale', args.get('output_image_scale'))
@@ -61,6 +61,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)
 
+	apply_state_item('workflow_mode', args.get('workflow_mode'))
+	apply_state_item('workflow_strategy', args.get('workflow_strategy'))
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
 

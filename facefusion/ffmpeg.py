@@ -7,11 +7,10 @@ from typing import List, Optional, cast
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
+from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frame_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
-from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
+from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat, VideoReaderMetadata
 
 
 def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -67,7 +66,52 @@ def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 
 def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
-	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.DEVNULL, stdout = subprocess.PIPE)
+
+
+def create_video_reader(video_path : str, frame_number : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[bytes]:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.seek_to(frame_number / video_metadata.get('fps')),
+		ffmpeg_builder.set_input(video_path),
+		ffmpeg_builder.restrict_color_transfer(video_metadata.get('color_transfer')),
+		ffmpeg_builder.prevent_frame_drop(),
+		ffmpeg_builder.enforce_pixel_format('bgr24'),
+		ffmpeg_builder.set_output_format('rawvideo'),
+		ffmpeg_builder.cast_stream()
+	)
+
+	return open_ffmpeg(commands)
+
+
+def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> subprocess.Popen[bytes]:
+	output_video_encoder = state_manager.get_item('output_video_encoder')
+	output_video_quality = state_manager.get_item('output_video_quality')
+	output_video_preset = state_manager.get_item('output_video_preset')
+	temp_video_path = get_temp_file_path(target_path)
+	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
+	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
+
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_output_format('rawvideo'),
+		ffmpeg_builder.enforce_pixel_format(state_manager.get_item('temp_pixel_format')),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_video_resolution)),
+		ffmpeg_builder.set_input_fps(temp_video_fps),
+		ffmpeg_builder.set_input('pipe:0'),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_video_resolution)),
+		ffmpeg_builder.set_video_encoder(output_video_encoder),
+		ffmpeg_builder.set_thread_count(16),
+		ffmpeg_builder.set_video_tag(output_video_encoder, temp_video_format),
+		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
+		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
+		ffmpeg_builder.concat(
+			ffmpeg_builder.set_video_fps(output_video_fps),
+			ffmpeg_builder.convert_color_space('bt709')
+		),
+		ffmpeg_builder.set_pixel_format(output_video_encoder),
+		ffmpeg_builder.force_output(temp_video_path)
+	)
+
+	return open_ffmpeg(commands)
 
 
 def log_debug(process : subprocess.Popen[bytes]) -> None:
@@ -108,14 +152,19 @@ def get_available_encoder_set() -> EncoderSet:
 
 
 def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
-	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
+	color_transfer = ffprobe.extract_static_video_metadata(target_path).get('color_transfer')
+	extract_frame_total = vision.predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frame_pattern = get_temp_frame_pattern(target_path, '%08d')
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_frame_quality(0),
 		ffmpeg_builder.enforce_pixel_format('rgb24'),
-		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
+		ffmpeg_builder.concat(
+			ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
+			ffmpeg_builder.restrict_color_transfer(color_transfer)
+		),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_start_number(trim_frame_start),
 		ffmpeg_builder.set_output(temp_frame_pattern)
@@ -128,24 +177,28 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 
 def copy_image(target_path : str, temp_image_resolution : Resolution) -> bool:
 	temp_image_path = get_temp_file_path(target_path)
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_media_resolution(pack_resolution(temp_image_resolution)),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_image_resolution)),
 		ffmpeg_builder.set_image_quality(target_path, 100),
 		ffmpeg_builder.force_output(temp_image_path)
 	)
+
 	return run_ffmpeg(commands).returncode == 0
 
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : Resolution) -> bool:
 	output_image_quality = state_manager.get_item('output_image_quality')
 	temp_image_path = get_temp_file_path(target_path)
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_image_path),
-		ffmpeg_builder.set_media_resolution(pack_resolution(output_image_resolution)),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_image_resolution)),
 		ffmpeg_builder.set_image_quality(target_path, output_image_quality),
 		ffmpeg_builder.force_output(output_path)
 	)
+
 	return run_ffmpeg(commands).returncode == 0
 
 
@@ -170,13 +223,13 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
-	target_video_fps = detect_video_fps(target_path)
+	target_video_fps = vision.detect_video_fps(target_path)
 	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
-	temp_video_duration = detect_video_duration(temp_video_path)
+	temp_video_duration = vision.detect_video_duration(temp_video_path)
 	output_video_format = cast(VideoFormat, get_file_format(output_path))
-
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, target_video_fps),
@@ -191,6 +244,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+
 	return run_ffmpeg(commands).returncode == 0
 
 
@@ -200,10 +254,10 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
-	temp_video_duration = detect_video_duration(temp_video_path)
+	temp_video_duration = vision.detect_video_duration(temp_video_path)
 	output_video_format = cast(VideoFormat, get_file_format(output_path))
-
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.set_input(audio_path),
@@ -215,6 +269,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+
 	return run_ffmpeg(commands).returncode == 0
 
 
@@ -222,24 +277,25 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
-	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
+	merge_frame_total = vision.predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
 	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_frame_pattern = get_temp_frame_pattern(target_path, '%08d')
-
 	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input_fps(temp_video_fps),
 		ffmpeg_builder.set_start_number(trim_frame_start),
 		ffmpeg_builder.set_input(temp_frame_pattern),
-		ffmpeg_builder.set_media_resolution(pack_resolution(output_video_resolution)),
+		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_video_tag(output_video_encoder, temp_video_format),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.concat(
 			ffmpeg_builder.set_video_fps(output_video_fps),
-			ffmpeg_builder.keep_video_alpha(output_video_encoder)
+			ffmpeg_builder.keep_video_alpha(output_video_encoder),
+			ffmpeg_builder.convert_color_space('bt709')
 		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.force_output(temp_video_path)
@@ -262,6 +318,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 	output_path = os.path.abspath(output_path)
 	output_video_format = cast(VideoFormat, get_file_format(output_path))
+
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.unsafe_concat(),
 		ffmpeg_builder.set_input(concat_video_file.name),
@@ -270,6 +327,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+
 	process = run_ffmpeg(commands)
 	process.communicate()
 	remove_file(concat_video_path)

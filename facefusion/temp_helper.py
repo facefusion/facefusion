@@ -43,7 +43,5 @@ def create_temp_directory(file_path : str) -> bool:
 
 
 def clear_temp_directory(file_path : str) -> bool:
-	if not state_manager.get_item('keep_temp'):
-		temp_directory_path = get_temp_directory_path(file_path)
-		return remove_directory(temp_directory_path)
-	return True
+	temp_directory_path = get_temp_directory_path(file_path)
+	return remove_directory(temp_directory_path)

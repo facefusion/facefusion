@@ -9,13 +9,13 @@ from facefusion import benchmarker, cli_helper, content_analyser, hash_helper, l
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import get_file_extension, get_file_name, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode
+from facefusion.types import Args, ErrorCode, WorkflowMode
 from facefusion.workflows import image_to_image, image_to_video
 
 
@@ -90,20 +90,17 @@ def pre_check() -> bool:
 		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 
-	if not shutil.which('curl'):
-		logger.error(translator.get('curl_not_installed'), __name__)
-		return False
-
-	if not shutil.which('ffmpeg'):
-		logger.error(translator.get('ffmpeg_not_installed'), __name__)
-		return False
+	for dependency in [ 'curl', 'ffmpeg', 'ffprobe' ]:
+		if not shutil.which(dependency):
+			logger.error(translator.get('dependency_not_installed').format(dependency = dependency), __name__)
+			return False
 	return True
 
 
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 
-	return hash_helper.create_hash(content_analyser_content) == '975d67d6'
+	return hash_helper.create_hash(content_analyser_content) == '3c6ce25e'
 
 
 def processors_pre_check() -> bool:
@@ -315,15 +312,28 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
-			return 2
+	if state_manager.get_item('workflow_mode') == 'auto':
+		state_manager.set_item('workflow_mode', detect_workflow_mode())
 
-	if is_image(state_manager.get_item('target_path')):
-		return image_to_image.process(start_time)
+	if state_manager.get_item('workflow_mode') == detect_workflow_mode():
+		for processor_module in get_processors_modules(state_manager.get_item('processors')):
+			if not processor_module.pre_process('output'):
+				return 2
+
+		if state_manager.get_item('workflow_mode') == 'image-to-image':
+			return image_to_image.process(start_time)
+		if state_manager.get_item('workflow_mode') == 'image-to-video':
+			return image_to_video.process(start_time)
+
+		return 0
+
+	return 2
+
+
+def detect_workflow_mode() -> WorkflowMode:
 	if is_video(state_manager.get_item('target_path')):
-		return image_to_video.process(start_time)
+		return 'image-to-video'
 
-	return 0
+	return 'image-to-image'
 
 

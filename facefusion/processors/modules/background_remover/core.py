@@ -22,7 +22,7 @@ from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_chunk, read_static_video_frame
+from facefusion.vision import read_static_image, read_static_video_frame
 
 
 @lru_cache()
@@ -479,7 +479,7 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def override_inference_providers() -> List[InferenceProvider]:
 	model_type = get_model_options().get('type')
 
 	if is_macos() and has_execution_provider('coreml') or is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':
@@ -539,7 +539,6 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
-	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
 
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:

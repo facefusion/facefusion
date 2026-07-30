@@ -28,8 +28,8 @@ if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.24.4')
 	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '1.24.4')
 if is_linux():
-	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.25.0')
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.22.2.post1')
+	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.26.0')
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.22.2.post3')
 
 
 def cli() -> None:
