@@ -83,7 +83,7 @@ def process_disk_frames() -> ErrorCode:
 	return 0
 
 
-def process_stream_frame(frame_number : int, temp_video_resolution : Resolution) -> VisionFrame:
+def process_memory_frame(frame_number : int, temp_video_resolution : Resolution) -> VisionFrame:
 	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
@@ -102,7 +102,7 @@ def process_stream_frame(frame_number : int, temp_video_resolution : Resolution)
 	return numpy.ascontiguousarray(temp_vision_frame)
 
 
-def process_stream_frames() -> ErrorCode:
+def process_memory_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
@@ -121,7 +121,7 @@ def process_stream_frames() -> ErrorCode:
 				futures = []
 
 				for frame_number in temp_frame_range:
-					future = executor.submit(process_stream_frame, frame_number, temp_video_resolution)
+					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution)
 					futures.append(future)
 
 				for future in futures:

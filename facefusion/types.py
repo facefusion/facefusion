@@ -65,7 +65,7 @@ Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
 WorkflowMode = Literal['auto', 'image-to-image', 'image-to-video']
-WorkflowStrategy = Literal['disk', 'stream']
+WorkflowStrategy = Literal['disk', 'memory']
 
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 CameraPoolSet = TypedDict('CameraPoolSet',

@@ -3,7 +3,7 @@ from functools import partial
 from facefusion import process_manager, state_manager
 from facefusion.types import ErrorCode
 from facefusion.workflows.core import clear, setup
-from facefusion.workflows.to_video import analyse_video, extract_frames, finalize_video, merge_frames, process_disk_frames, process_stream_frames, restore_audio
+from facefusion.workflows.to_video import analyse_video, extract_frames, finalize_video, merge_frames, process_disk_frames, process_memory_frames, restore_audio
 
 
 def process(start_time : float) -> ErrorCode:
@@ -22,8 +22,8 @@ def process(start_time : float) -> ErrorCode:
 			merge_frames
 		])
 
-	if state_manager.get_item('workflow_strategy') == 'stream':
-		tasks.append(process_stream_frames)
+	if state_manager.get_item('workflow_strategy') == 'memory':
+		tasks.append(process_memory_frames)
 
 	tasks.extend(
 	[
