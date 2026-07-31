@@ -1,5 +1,5 @@
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from itertools import repeat
 
 import cv2
 import numpy
@@ -58,8 +58,20 @@ def process_disk_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				for temp_vision_frame_ in executor.map(process_disk_frame, temp_frame_set.values(), temp_frame_set.keys()):
-					if not is_process_stopping():
+				futures = deque()
+
+				for frame_number, temp_frame_path in temp_frame_set.items():
+					futures.append(executor.submit(process_disk_frame, temp_frame_path, frame_number))
+
+				while futures:
+					future = futures.popleft()
+
+					if is_process_stopping():
+						for pending_future in futures:
+							pending_future.cancel()
+						futures.clear()
+					else:
+						future.result()
 						progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -108,9 +120,20 @@ def process_memory_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				for temp_vision_frame in executor.map(process_memory_frame, temp_frame_range, repeat(temp_video_resolution)):
-					if not is_process_stopping():
-						video_manager.write_video_frame(video_writer, temp_vision_frame)
+				futures = deque()
+
+				for frame_number in temp_frame_range:
+					futures.append(executor.submit(process_memory_frame, frame_number, temp_video_resolution))
+
+				while futures:
+					future = futures.popleft()
+
+					if is_process_stopping():
+						for pending_future in futures:
+							pending_future.cancel()
+						futures.clear()
+					else:
+						video_manager.write_video_frame(video_writer, future.result())
 						progress.update()
 
 		if not video_manager.close_video_writer(video_writer):
