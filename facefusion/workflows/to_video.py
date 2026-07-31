@@ -62,7 +62,8 @@ def process_disk_frames() -> ErrorCode:
 				futures : Deque[Future[bool]] = deque()
 
 				for frame_number, temp_frame_path in temp_frame_set.items():
-					futures.append(executor.submit(process_disk_frame, temp_frame_path, frame_number))
+					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
+					futures.append(future)
 
 				while futures:
 					future = futures.popleft()
@@ -127,7 +128,8 @@ def process_memory_frames() -> ErrorCode:
 				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_number in temp_frame_range:
-					futures.append(executor.submit(process_memory_frame, frame_number, temp_video_resolution))
+					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution)
+					futures.append(future)
 
 				while futures:
 					future = futures.popleft()
