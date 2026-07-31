@@ -1,5 +1,6 @@
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
+from typing import Deque
 
 import cv2
 import numpy
@@ -58,7 +59,7 @@ def process_disk_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = deque()
+				futures : Deque[Future[bool]] = deque()
 
 				for frame_number, temp_frame_path in temp_frame_set.items():
 					futures.append(executor.submit(process_disk_frame, temp_frame_path, frame_number))
@@ -120,7 +121,7 @@ def process_memory_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = deque()
+				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_number in temp_frame_range:
 					futures.append(executor.submit(process_memory_frame, frame_number, temp_video_resolution))
