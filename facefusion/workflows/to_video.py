@@ -68,9 +68,12 @@ def process_disk_frames() -> ErrorCode:
 					future = futures.popleft()
 
 					if is_process_stopping():
+
 						for pending_future in futures:
 							pending_future.cancel()
+
 						futures.clear()
+
 					else:
 						future.result()
 						progress.update()
@@ -130,9 +133,12 @@ def process_memory_frames() -> ErrorCode:
 					future = futures.popleft()
 
 					if is_process_stopping():
+
 						for pending_future in futures:
 							pending_future.cancel()
+
 						futures.clear()
+
 					else:
 						video_manager.write_video_frame(video_writer, future.result())
 						progress.update()
