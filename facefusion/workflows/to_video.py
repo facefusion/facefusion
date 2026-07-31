@@ -1,4 +1,5 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+from itertools import repeat
 
 import cv2
 import numpy
@@ -57,19 +58,8 @@ def process_disk_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = []
-
-				for frame_number, temp_frame_path in temp_frame_set.items():
-					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
-					futures.append(future)
-
-				for future in as_completed(futures):
-					if is_process_stopping():
-						for pending_future in futures:
-							pending_future.cancel()
-
-					if not future.cancelled():
-						future.result()
+				for temp_vision_frame_ in executor.map(process_disk_frame, temp_frame_set.values(), temp_frame_set.keys()):
+					if not is_process_stopping():
 						progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -118,19 +108,8 @@ def process_memory_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = []
-
-				for frame_number in temp_frame_range:
-					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution)
-					futures.append(future)
-
-				for future in futures:
-					if is_process_stopping():
-						for pending_future in futures:
-							pending_future.cancel()
-
-					if not future.cancelled():
-						temp_vision_frame = future.result()
+				for temp_vision_frame in executor.map(process_memory_frame, temp_frame_range, repeat(temp_video_resolution)):
+					if not is_process_stopping():
 						video_manager.write_video_frame(video_writer, temp_vision_frame)
 						progress.update()
 
