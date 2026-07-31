@@ -1,4 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import deque
+from concurrent.futures import Future, ThreadPoolExecutor
+from typing import Deque
 
 import cv2
 import numpy
@@ -57,18 +59,23 @@ def process_disk_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = []
+				futures : Deque[Future[bool]] = deque()
 
 				for frame_number, temp_frame_path in temp_frame_set.items():
 					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
-				for future in as_completed(futures):
+				while futures:
+					future = futures.popleft()
+
 					if is_process_stopping():
+
 						for pending_future in futures:
 							pending_future.cancel()
 
-					if not future.cancelled():
+						futures.clear()
+
+					else:
 						future.result()
 						progress.update()
 
@@ -118,20 +125,24 @@ def process_memory_frames() -> ErrorCode:
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures = []
+				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_number in temp_frame_range:
 					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution)
 					futures.append(future)
 
-				for future in futures:
+				while futures:
+					future = futures.popleft()
+
 					if is_process_stopping():
+
 						for pending_future in futures:
 							pending_future.cancel()
 
-					if not future.cancelled():
-						temp_vision_frame = future.result()
-						video_manager.write_video_frame(video_writer, temp_vision_frame)
+						futures.clear()
+
+					else:
+						video_manager.write_video_frame(video_writer, future.result())
 						progress.update()
 
 		if not video_manager.close_video_writer(video_writer):
