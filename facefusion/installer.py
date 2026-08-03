@@ -22,7 +22,8 @@ ONNXRUNTIME_SET =\
 	'default': ('onnxruntime', '1.28.0')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.28.0')
+	ONNXRUNTIME_SET['cuda@12'] = ('onnxruntime-gpu', '1.26.0')
+	ONNXRUNTIME_SET['cuda@13'] = ('onnxruntime-gpu', '1.28.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.24.1')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.24.4')
