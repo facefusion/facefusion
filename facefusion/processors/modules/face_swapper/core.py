@@ -504,15 +504,15 @@ def clear_inference_pool() -> None:
 
 def adjust_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
-	target_path = state_manager.get_item('target_path')
 
-	if is_macos() and has_execution_provider('coreml'):
-		if model_precision == 'fp16' and is_video(target_path):
+	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
+		if state_manager.get_item('workflow_mode') == 'image-to-video':
 			return\
 			[
 				(facefusion.choices.execution_provider_set.get('coreml'),
 				{
-					'ModelFormat': 'MLProgram'
+					'ModelFormat': 'MLProgram',
+					'MLComputeUnits': 'CPUAndGPU'
 				})
 			]
 
