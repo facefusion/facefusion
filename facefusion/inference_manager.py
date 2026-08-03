@@ -32,10 +32,12 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-		if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
-			INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
-		if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
-			INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+		if state_manager.get_item('video_memory_strategy') in [ 'moderate', 'tolerant' ]:
+			if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
+				INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
+			if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
+				INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+
 		if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			inference_providers = resolve_static_inference_providers(module_name, execution_device_id)
 			INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, inference_providers)
@@ -49,6 +51,7 @@ def create_inference_pool(model_source_set : DownloadSet, inference_providers : 
 
 	for model_name in model_source_set.keys():
 		model_path = model_source_set.get(model_name).get('path')
+
 		if is_file(model_path):
 			inference_pool[model_name] = create_inference_session(model_path, inference_providers)
 
@@ -65,6 +68,7 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
+
 		if INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			del INFERENCE_POOL_SET[app_context][inference_context]
 
