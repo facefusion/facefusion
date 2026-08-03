@@ -64,6 +64,7 @@ def run(program : ArgumentParser) -> None:
 
 		for line in file.readlines():
 			__line__ = line.strip()
+
 			if not __line__.startswith('onnxruntime'):
 				commands.append(__line__)
 
