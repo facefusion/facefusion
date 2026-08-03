@@ -504,10 +504,10 @@ def clear_inference_pool() -> None:
 
 def adjust_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
-	model_type = get_model_options().get('type')
+	target_path = state_manager.get_item('target_path')
 
 	if is_macos() and has_execution_provider('coreml'):
-		if model_type in [ 'ghost', 'uniface' ] or model_precision == 'fp16':
+		if model_precision == 'fp16' and is_video(target_path):
 			return\
 			[
 				(facefusion.choices.execution_provider_set.get('coreml'),
