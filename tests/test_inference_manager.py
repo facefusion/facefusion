@@ -20,6 +20,8 @@ def test_get_inference_pool() -> None:
 	model_names = [ 'nsfw_1', 'nsfw_2', 'nsfw_3' ]
 	_, model_source_set = content_analyser.collect_model_downloads()
 
+	state_manager.init_item('video_memory_strategy', 'strict')
+
 	with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
 		get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
@@ -28,9 +30,18 @@ def test_get_inference_pool() -> None:
 	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
 		get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
-		assert isinstance(INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1'), InferenceSession)
+		assert isinstance(INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1'), InferenceSession)
 
-	assert INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1') == INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1')
+	assert not (INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1') is INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1'))
+
+	state_manager.init_item('video_memory_strategy', 'tolerant')
+
+	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
+		get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+
+		assert isinstance(INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1'), InferenceSession)
+
+	assert INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1') is INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.nsfw_1.nsfw_2.nsfw_3.0.cpu').get('nsfw_1')
 
 
 @pytest.fixture
