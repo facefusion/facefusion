@@ -20,26 +20,27 @@ def test_get_inference_pool() -> None:
 	model_names = [ 'nsfw_1', 'nsfw_2', 'nsfw_3' ]
 	_, model_source_set = content_analyser.collect_model_downloads()
 
-	state_manager.init_item('video_memory_strategy', 'strict')
+	with patch('facefusion.inference_manager.has_execution_provider', return_value = True):
+		with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = (1, 26, 0)):
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
-		cli_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+			with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
+				cli_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
-		assert isinstance(cli_inference_pool.get('nsfw_1'), InferenceSession)
+				assert isinstance(cli_inference_pool.get('nsfw_1'), InferenceSession)
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
-		ui_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+			with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
+				ui_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
-		assert isinstance(ui_inference_pool.get('nsfw_1'), InferenceSession)
+				assert isinstance(ui_inference_pool.get('nsfw_1'), InferenceSession)
 
-	assert not (cli_inference_pool.get('nsfw_1') is ui_inference_pool.get('nsfw_1'))
+			assert not (cli_inference_pool.get('nsfw_1') is ui_inference_pool.get('nsfw_1'))
 
-	state_manager.init_item('video_memory_strategy', 'tolerant')
+	with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = (1, 24, 4)):
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
-		ui_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+		with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
+			ui_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
-		assert isinstance(ui_inference_pool.get('nsfw_1'), InferenceSession)
+			assert isinstance(ui_inference_pool.get('nsfw_1'), InferenceSession)
 
 	assert cli_inference_pool.get('nsfw_1') is ui_inference_pool.get('nsfw_1')
 
