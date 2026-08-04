@@ -8,6 +8,7 @@ from onnxruntime import InferenceSession
 
 from facefusion import logger, process_manager, state_manager, translator
 from facefusion.app_context import detect_app_context
+from facefusion.common_helper import is_windows
 from facefusion.execution import create_inference_providers, get_onnxruntime_version, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
@@ -29,6 +30,9 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	execution_providers = state_manager.get_item('execution_providers')
 	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
 	app_context = detect_app_context()
+
+	if is_windows() and has_execution_provider('directml'):
+		INFERENCE_POOL_SET[app_context].clear()
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
