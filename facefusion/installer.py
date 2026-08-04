@@ -71,6 +71,7 @@ def run(program : ArgumentParser) -> None:
 	onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 	commands.append(onnxruntime_name + '==' + onnxruntime_version)
 
-	subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
+	for onnxruntime_package, _ in ONNXRUNTIME_SET.values():
+		subprocess.call([ shutil.which('pip'), 'uninstall', onnxruntime_package, '-y', '-q' ])
 
 	subprocess.call(commands)
