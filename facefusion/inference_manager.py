@@ -31,9 +31,6 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
 	app_context = detect_app_context()
 
-	if is_windows() and has_execution_provider('directml'):
-		INFERENCE_POOL_SET[app_context].clear()
-
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
@@ -67,6 +64,9 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
 	app_context = detect_app_context()
+
+	if is_windows() and has_execution_provider('directml'):
+		INFERENCE_POOL_SET[app_context].clear()
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
