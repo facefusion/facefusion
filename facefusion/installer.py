@@ -56,7 +56,7 @@ def run(program : ArgumentParser) -> None:
 		sys.exit(1)
 
 	for onnxruntime_package, _ in ONNXRUNTIME_SET.values():
-		subprocess.call([ shutil.which('pip'), 'uninstall', onnxruntime_package, '-y', '-q' ],  stderr = subprocess.DEVNULL)
+		subprocess.call([ shutil.which('pip'), 'uninstall', onnxruntime_package, '-y', '-q' ], stderr = subprocess.DEVNULL)
 
 	commands = [ shutil.which('pip'), 'install' ]
 
