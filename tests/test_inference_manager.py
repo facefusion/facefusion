@@ -59,9 +59,15 @@ def test_resolve_static_inference_providers(override_module : SimpleNamespace, a
 	resolve_static_inference_providers.cache_clear()
 
 	with patch('facefusion.inference_manager.importlib', Mock(import_module = Mock(return_value = override_module))):
-		assert resolve_static_inference_providers('override_module', 0) == [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]
+		inference_providers = resolve_static_inference_providers('override_module', 0)
+
+		assert inference_providers == [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]
 
 	with patch('facefusion.inference_manager.importlib', Mock(import_module = Mock(return_value = adjust_module))):
-		assert resolve_static_inference_providers('adjust_module', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path(), 'ModelFormat': 'MLProgram' }) ]
+		inference_providers = resolve_static_inference_providers('adjust_module', 0)
 
-	assert resolve_static_inference_providers('test', 0) == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path() }) ]
+		assert inference_providers == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path(), 'ModelFormat': 'MLProgram' }) ]
+
+	inference_providers = resolve_static_inference_providers('test', 0)
+
+	assert inference_providers == [ ('CoreMLExecutionProvider', { 'SpecializationStrategy': 'FastPrediction', 'ModelCacheDirectory': resolve_cache_path() }) ]
