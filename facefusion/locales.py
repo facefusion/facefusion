@@ -98,10 +98,6 @@ LOCALES : Locales =\
 		'exclamation_mark': '!',
 		'help':
 		{
-			'install_dependency': 'choose the variant of {dependency} to install',
-			'skip_conda': 'skip the conda environment check',
-			'workflow_mode': 'choose the workflow mode',
-			'workflow_strategy': 'process the temporary frames in memory or on disk',
 			'config_path': 'choose the config file to override defaults',
 			'temp_path': 'specify the directory for the temporary resources',
 			'jobs_path': 'specify the directory to store jobs',
@@ -152,6 +148,8 @@ LOCALES : Locales =\
 			'output_video_quality': 'specify the video quality which translates to the video compression',
 			'output_video_scale': 'specify the video scale based on the target video',
 			'output_video_fps': 'specify the video fps based on the target video',
+			'workflow_mode': 'choose the workflow mode',
+			'workflow_strategy': 'process the temporary frames in memory or on disk',
 			'processors': 'load a single or multiple processors (choices: {choices}, ...)',
 			'background-remover-model': 'choose the model responsible for removing the background',
 			'background-remover-color': 'apply red, green blue and alpha values of the background',
