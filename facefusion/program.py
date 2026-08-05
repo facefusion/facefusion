@@ -41,15 +41,26 @@ def create_config_path_program() -> ArgumentParser:
 
 def create_workflow_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	group_paths = program.add_argument_group('paths')
+	group_workflow = program.add_argument_group('workflow')
 
 	capability_store.register_capability_set(
 		[
-			group_paths.add_argument(
+			group_workflow.add_argument(
 				'--workflow-mode',
 				help = translator.get('help.workflow_mode'),
 				default = config.get_str_value('workflow', 'workflow_mode', 'auto'),
 				choices = facefusion.choices.workflow_modes
+			)
+		],
+		scopes = [ 'api', 'cli' ]
+	)
+	capability_store.register_capability_set(
+		[
+			group_workflow.add_argument(
+				'--workflow-strategy',
+				help = translator.get('help.workflow_strategy'),
+				default = config.get_str_value('workflow', 'workflow_strategy', 'memory'),
+				choices = facefusion.choices.workflow_strategies
 			)
 		],
 		scopes = [ 'api', 'cli' ]
@@ -592,6 +603,17 @@ def create_frame_extraction_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
+	capability_store.register_capability_set(
+		[
+			group_frame_extraction.add_argument(
+				'--temp-pixel-format',
+				help = translator.get('help.temp_pixel_format'),
+				default = config.get_str_value('frame_extraction', 'temp_pixel_format', 'bgr24'),
+				choices = facefusion.choices.temp_pixel_formats
+			)
+		],
+		scopes = [ 'api', 'cli' ]
+	)
 
 	return program
 
@@ -1033,6 +1055,7 @@ def collect_step_program() -> ArgumentParser:
 			create_frame_extraction_program(),
 			create_frame_distribution_program(),
 			create_output_creation_program(),
+			create_workflow_program(),
 			create_processors_program()
 		],
 		add_help = False
@@ -1043,7 +1066,6 @@ def collect_job_program() -> ArgumentParser:
 	return ArgumentParser(
 		parents =
 		[
-			create_workflow_program(),
 			create_execution_program(),
 			create_download_providers_program(),
 			create_memory_program(),
@@ -1205,7 +1227,6 @@ def create_program() -> ArgumentParser:
 		parents =
 		[
 			create_job_id_program(),
-			create_workflow_program(),
 			create_config_path_program(),
 			create_jobs_path_program(),
 			create_source_paths_program(),
@@ -1222,7 +1243,6 @@ def create_program() -> ArgumentParser:
 		parents =
 		[
 			create_job_id_program(),
-			create_workflow_program(),
 			create_step_index_program(),
 			create_config_path_program(),
 			create_jobs_path_program(),
@@ -1239,7 +1259,6 @@ def create_program() -> ArgumentParser:
 		parents =
 		[
 			create_job_id_program(),
-			create_workflow_program(),
 			create_step_index_program(),
 			create_config_path_program(),
 			create_jobs_path_program(),

@@ -1,15 +1,16 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy
 
-from facefusion import rtc, streamer
+from facefusion import rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.vision import read_static_images
 
 
 def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
@@ -59,8 +60,9 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
 	video_decoder = create_video_decoder(video_codec)
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
-	video_frame_handler = partial(handle_video_frame, video_codec, video_decoder, video_queue, video_executor)
+	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
 
@@ -70,8 +72,8 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def process_video_frame(input_vision_frame : VisionFrame) -> BufferPack:
-	output_vision_frame = streamer.process_stream_frame(input_vision_frame)
+def process_video_frame(source_vision_frames : List[VisionFrame], input_vision_frame : VisionFrame) -> BufferPack:
+	output_vision_frame = streamer.process_stream_frame(source_vision_frames, input_vision_frame)
 	output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 	output_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	return BufferPack(buffer = output_buffer, resolution = output_resolution)
@@ -165,10 +167,10 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : int) -> None:
+def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : int) -> None:
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if numpy.any(vision_frame) and video_queue.qsize() < video_queue.maxsize:
-		video_future = video_executor.submit(process_video_frame, vision_frame)
+		video_future = video_executor.submit(process_video_frame, source_vision_frames, vision_frame)
 		video_time = rtc.convert_timestamp_to_time(video_codec, video_timestamp)
 		video_queue.put((video_time, video_future))

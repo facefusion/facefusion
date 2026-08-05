@@ -79,7 +79,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
 
 	with ThreadPoolExecutor(max_workers = 1) as executor:
-		video_queue.put((0.1, executor.submit(process_video_frame, video_frame)))
+		video_queue.put((0.1, executor.submit(process_video_frame, [], video_frame)))
 
 		with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
 			encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
@@ -267,7 +267,7 @@ def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	with ThreadPoolExecutor(max_workers = 1) as executor:
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			with patch('facefusion.apis.stream_video.process_video_frame', return_value = BufferPack(buffer = video_frame.tobytes(), resolution = (426, 226))):
-				handle_video_frame(video_codec, video_decoder, video_queue, executor, bytes(), 0)
+				handle_video_frame([], video_codec, video_decoder, video_queue, executor, bytes(), 0)
 				_, video_future = video_queue.get_nowait()
 
 	video_buffer = video_future.result().get('buffer')

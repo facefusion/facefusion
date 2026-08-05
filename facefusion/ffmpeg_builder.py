@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, SampleRate, StreamMode, VideoEncoder, VideoFormat, VideoPreset
+from facefusion.types import AudioEncoder, ColorSpace, ColorTransfer, Command, CommandSet, Duration, Fps, SampleRate, StreamMode, VideoEncoder, VideoFormat, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -47,6 +47,10 @@ def set_input(input_path : str) -> List[Command]:
 	return [ '-i', input_path ]
 
 
+def seek_to(time : float) -> List[Command]:
+	return [ '-ss', str(time) ]
+
+
 def set_input_fps(input_fps : Fps) -> List[Command]:
 	return [ '-r', str(input_fps) ]
 
@@ -61,6 +65,14 @@ def set_output(output_path : str) -> List[Command]:
 
 def force_output(output_path : str) -> List[Command]:
 	return [ '-y', output_path ]
+
+
+def set_output_format(output_format : str) -> List[Command]:
+	return [ '-f', output_format ]
+
+
+def set_thread_count(thread_count : int) -> List[Command]:
+	return [ '-threads', str(thread_count) ]
 
 
 def set_loop() -> List[Command]:
@@ -101,6 +113,16 @@ def set_pixel_format(video_encoder : VideoEncoder) -> List[Command]:
 	if video_encoder == 'libvpx-vp9':
 		return [ '-pix_fmt', 'yuva420p' ]
 	return [ '-pix_fmt', 'yuv420p' ]
+
+
+def restrict_color_transfer(color_transfer : ColorTransfer) -> List[Command]:
+	if color_transfer in [ 'smpte2084', 'arib-std-b67' ]:
+		return [ '-vf', 'scale=out_primaries=bt709:out_transfer=bt709:intent=perceptual' ]
+	return []
+
+
+def convert_color_space(color_space : ColorSpace) -> List[Command]:
+	return [ '-vf', 'scale=out_color_matrix=' + color_space + ':out_range=tv,setparams=colorspace=' + color_space + ':color_primaries=' + color_space + ':color_trc=' + color_space ]
 
 
 def set_frame_quality(frame_quality : int) -> List[Command]:

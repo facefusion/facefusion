@@ -1,5 +1,6 @@
 from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.filesystem import is_image
+from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
@@ -30,6 +31,9 @@ def prepare_image() -> ErrorCode:
 def process_image() -> ErrorCode:
 	temp_image_path = get_temp_file_path(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 	process_temp_frame(temp_image_path, 0)
+
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		processor_module.post_process()
 
 	if is_process_stopping():
 		return 4

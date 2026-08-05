@@ -9,7 +9,7 @@ from onnxruntime import InferenceSession
 from facefusion import logger, process_manager, state_manager, translator
 from facefusion.app_context import detect_app_context
 from facefusion.common_helper import is_windows
-from facefusion.execution import create_inference_providers, has_execution_provider
+from facefusion.execution import create_inference_providers, get_onnxruntime_version, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
 from facefusion.time_helper import calculate_end_time
@@ -25,17 +25,21 @@ INFERENCE_POOL_SET : InferencePoolSet =\
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
 	while process_manager.is_checking():
 		sleep(0.5)
+
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
+	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
 	app_context = detect_app_context()
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-		if app_context == 'cli' and INFERENCE_POOL_SET.get('api').get(inference_context):
-			INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('api').get(inference_context)
-		if app_context == 'api' and INFERENCE_POOL_SET.get('cli').get(inference_context):
-			INFERENCE_POOL_SET['api'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+		if not has_arena_leak:
+			if app_context == 'cli' and INFERENCE_POOL_SET.get('api').get(inference_context):
+				INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('api').get(inference_context)
+			if app_context == 'api' and INFERENCE_POOL_SET.get('cli').get(inference_context):
+				INFERENCE_POOL_SET['api'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+
 		if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			inference_providers = resolve_static_inference_providers(module_name, execution_device_id)
 			INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, inference_providers)
@@ -49,6 +53,7 @@ def create_inference_pool(model_source_set : DownloadSet, inference_providers : 
 
 	for model_name in model_source_set.keys():
 		model_path = model_source_set.get(model_name).get('path')
+
 		if is_file(model_path):
 			inference_pool[model_name] = create_inference_session(model_path, inference_providers)
 
@@ -65,6 +70,7 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
+
 		if INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			del INFERENCE_POOL_SET[app_context][inference_context]
 
@@ -93,10 +99,23 @@ def resolve_static_inference_providers(module_name : str, execution_device_id : 
 	module = importlib.import_module(module_name)
 	execution_providers = state_manager.get_item('execution_providers')
 
-	if hasattr(module, 'resolve_inference_providers'):
-		inference_providers = getattr(module, 'resolve_inference_providers')()
+	if hasattr(module, 'override_inference_providers'):
+		override_inference_providers = getattr(module, 'override_inference_providers')()
 
-		if inference_providers:
+		if override_inference_providers:
+			return override_inference_providers
+
+	if hasattr(module, 'adjust_inference_providers'):
+		adjust_inference_providers = getattr(module, 'adjust_inference_providers')()
+
+		if adjust_inference_providers:
+			inference_providers = create_inference_providers(execution_device_id, execution_providers)
+
+			for adjust_inference_provider in adjust_inference_providers:
+				for inference_provider in inference_providers:
+					if inference_provider[0] == adjust_inference_provider[0] and inference_provider[1]:
+						inference_provider[1].update(adjust_inference_provider[1])
+
 			return inference_providers
 
 	return create_inference_providers(execution_device_id, execution_providers)

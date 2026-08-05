@@ -7,7 +7,7 @@ from facefusion.download import conditional_download
 from facefusion.face_creator import get_many_faces, get_one_face
 from facefusion.face_store import clear_faces
 from facefusion.face_tracker import create_face_tracks, select_face_track, track_faces
-from facefusion.vision import read_static_video_chunk, read_static_video_frame
+from facefusion.vision import read_static_video_frame, select_video_frames
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -47,8 +47,7 @@ def before_each() -> None:
 
 def test_track_faces() -> None:
 	target_path = get_test_example_file('target-240p.mp4')
-	video_frame_chunk = read_static_video_chunk(target_path, 0, 7)
-	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk) ]
+	target_vision_frames = select_video_frames(target_path, 3, 3)
 	empty_vision_frame = numpy.zeros_like(get_first(target_vision_frames))
 
 	target_vision_frames[2] = empty_vision_frame
@@ -58,7 +57,7 @@ def test_track_faces() -> None:
 
 	assert len(track_faces(target_vision_frames, 0.3)) == 1
 
-	target_vision_frames = [ video_frame_chunk.get(frame_number) for frame_number in sorted(video_frame_chunk)[:5] ]
+	target_vision_frames = select_video_frames(target_path, 3, 3)[:5]
 	target_vision_frames[0] = empty_vision_frame
 	target_vision_frames[1] = empty_vision_frame
 	target_vision_frames[2] = empty_vision_frame

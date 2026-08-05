@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode
+from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, TempPixelFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -48,6 +48,7 @@ face_mask_regions : List[FaceMaskRegion] = list(get_args(FaceMaskRegion))
 voice_extractor_models : List[VoiceExtractorModel] = list(get_args(VoiceExtractorModel))
 
 workflow_modes : List[WorkflowMode] = [ 'auto', 'audio-to-image:frames', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frames' ]
+workflow_strategies : List[WorkflowStrategy] = list(get_args(WorkflowStrategy))
 
 audio_set : AudioSet =\
 {
@@ -82,6 +83,7 @@ audio_formats : List[AudioFormat] = list(get_args(AudioFormat))
 image_formats : List[ImageFormat] = list(get_args(ImageFormat))
 video_formats : List[VideoFormat] = list(get_args(VideoFormat))
 temp_frame_formats : List[TempFrameFormat] = list(get_args(TempFrameFormat))
+temp_pixel_formats : List[TempPixelFormat] = list(get_args(TempPixelFormat))
 
 audio_encoders : List[AudioEncoder] = list(get_args(AudioEncoder))
 image_encoders : List[ImageEncoder] = list(get_args(ImageEncoder))

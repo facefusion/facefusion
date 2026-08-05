@@ -1,17 +1,17 @@
 import math
 from functools import lru_cache
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy
 from cv2.typing import Size
 
+from facefusion import ffprobe, video_manager
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.media_helper import restrict_trim_frame
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
-from facefusion.video_manager import conditional_set_video_frame_position, get_video_capture
 
 
 def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
@@ -78,61 +78,30 @@ def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optiona
 
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		video_capture = get_video_capture(video_path)
+		video_reader = video_manager.get_reader(video_path, 'read_video_frame')
 
-		if video_capture and video_capture.isOpened():
-			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			video_frame_position = min(video_frame_total, frame_number)
-
-			with thread_semaphore():
-				conditional_set_video_frame_position(video_capture, video_frame_position)
-				has_vision_frame, vision_frame = video_capture.read()
-
-			if has_vision_frame:
-				return vision_frame
+		with thread_semaphore():
+			video_manager.conditional_seek_video_reader(video_reader, frame_number)
+			return video_manager.read_video_frame(video_reader)
 
 	return None
 
 
-@lru_cache(maxsize = 2)
-def read_static_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
-	return read_video_chunk(video_path, chunk_number, chunk_size)
-
-
-def read_video_chunk(video_path : str, chunk_number : int, chunk_size : int) -> Dict[int, VisionFrame]:
-	video_frame_chunk = {}
-
-	if is_video(video_path) and chunk_number > -1:
-		video_capture = get_video_capture(video_path)
-
-		if video_capture and video_capture.isOpened():
-			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			video_frame_position = chunk_number * chunk_size
-
-			with thread_semaphore():
-				conditional_set_video_frame_position(video_capture, video_frame_position)
-
-				for frame_number in range(video_frame_position, min(video_frame_position + chunk_size, video_frame_total)):
-					has_vision_frame, vision_frame = video_capture.read()
-
-					if has_vision_frame:
-						video_frame_chunk[frame_number] = vision_frame
-
-	return video_frame_chunk
-
-
 def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
-	chunk_size = frame_offset * 2 + 1
+	frame_start = frame_number - frame_offset
+	frame_end = frame_number + frame_offset
 
 	if is_video(video_path):
 		with thread_lock():
-			for current_number in range(frame_number - frame_offset, frame_number + frame_offset + 1):
-				video_frame_chunk = read_static_video_chunk(video_path, current_number // chunk_size, chunk_size)
+			video_reader = video_manager.get_reader(video_path, 'select_video_frames')
+			frame_set = video_manager.read_video_frames(video_reader, max(frame_start, 0), frame_end)
+
+			for frame_number in range(frame_start, frame_end + 1):
 				vision_frame = create_empty_vision_frame()
 
-				if current_number in video_frame_chunk:
-					vision_frame = video_frame_chunk.get(current_number)
+				if frame_number in frame_set:
+					vision_frame = frame_set.get(frame_number)
 
 				vision_frames.append(vision_frame)
 
@@ -141,12 +110,7 @@ def select_video_frames(video_path : str, frame_number : int = 0, frame_offset :
 
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
-		video_capture = get_video_capture(video_path)
-
-		if video_capture and video_capture.isOpened():
-			with thread_semaphore():
-				video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-				return video_frame_total
+		return ffprobe.extract_static_video_metadata(video_path).get('frame_total')
 
 	return 0
 
@@ -162,12 +126,7 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 
 def detect_video_fps(video_path : str) -> Optional[Fps]:
 	if is_video(video_path):
-		video_capture = get_video_capture(video_path)
-
-		if video_capture and video_capture.isOpened():
-			with thread_semaphore():
-				video_fps = video_capture.get(cv2.CAP_PROP_FPS)
-				return video_fps
+		return ffprobe.extract_static_video_metadata(video_path).get('fps')
 
 	return None
 
@@ -196,13 +155,7 @@ def restrict_trim_video_frame(video_path : str, trim_frame_start : Optional[int]
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
-		video_capture = get_video_capture(video_path)
-
-		if video_capture and video_capture.isOpened():
-			with thread_semaphore():
-				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
-				height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-				return int(width), int(height)
+		return ffprobe.extract_static_video_metadata(video_path).get('resolution')
 
 	return None
 
@@ -338,6 +291,10 @@ def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame :
 
 def create_empty_vision_frame() -> VisionFrame:
 	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
+
+
+def is_vision_frame(vision_frame : VisionFrame) -> bool:
+	return numpy.ndim(vision_frame) == 3
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:

@@ -91,20 +91,17 @@ def pre_check() -> bool:
 		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 
-	if not shutil.which('curl'):
-		logger.error(translator.get('curl_not_installed'), __name__)
-		return False
-
-	if not shutil.which('ffmpeg'):
-		logger.error(translator.get('ffmpeg_not_installed'), __name__)
-		return False
+	for dependency in [ 'curl', 'ffmpeg', 'ffprobe' ]:
+		if not shutil.which(dependency):
+			logger.error(translator.get('dependency_not_installed').format(dependency = dependency), __name__)
+			return False
 	return True
 
 
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 
-	return hash_helper.create_hash(content_analyser_content) == '975d67d6'
+	return hash_helper.create_hash(content_analyser_content) == '3c6ce25e'
 
 
 def processors_pre_check() -> bool:

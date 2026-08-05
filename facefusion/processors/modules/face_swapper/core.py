@@ -26,7 +26,7 @@ from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Args, DownloadScope, Embedding, Face, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_images, read_static_video_chunk, read_static_video_frame, unpack_resolution
+from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
 
 
 @lru_cache()
@@ -502,20 +502,19 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_inference_providers() -> List[InferenceProvider]:
+def adjust_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
-	model_type = get_model_options().get('type')
+	workflow_mode = state_manager.get_item('workflow_mode')
 
-	if is_macos() and has_execution_provider('coreml'):
-		if model_type in [ 'ghost', 'uniface' ] or model_precision == 'fp16':
-			return\
-			[
-				(facefusion.choices.execution_provider_set.get('coreml'),
-				{
-					'ModelFormat': 'MLProgram',
-					'SpecializationStrategy': 'FastPrediction'
-				})
-			]
+	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16' and workflow_mode == 'image-to-video':
+		return\
+		[
+			(facefusion.choices.execution_provider_set.get('coreml'),
+			{
+				'ModelFormat': 'MLProgram',
+				'MLComputeUnits': 'CPUAndGPU'
+			})
+		]
 
 	return []
 
@@ -610,7 +609,6 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_video_frame.cache_clear()
-	read_static_video_chunk.cache_clear()
 	video_manager.clear_video_pool()
 
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:

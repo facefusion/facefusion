@@ -26,13 +26,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch.wav'))
 		)
 	)
-	ffmpeg.run_ffmpeg(
-		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_duration(1),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.mov'))
+	for video_format in [ 'mkv', 'mov' ]:
+		ffmpeg.run_ffmpeg(
+			ffmpeg_builder.chain(
+				ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+				ffmpeg_builder.set_video_duration(1),
+				ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.' + video_format))
+			)
 		)
-	)
 
 
 def test_extract_audio_metadata() -> None:
@@ -40,7 +41,7 @@ def test_extract_audio_metadata() -> None:
 
 	assert audio_metadata.get('sample_rate') == 44100
 	assert audio_metadata.get('channel_total') == 1
-	assert audio_metadata.get('frame_total') == 167039
+	assert audio_metadata.get('frame_total') == 167040
 	assert audio_metadata.get('bit_rate') == 128000
 
 	audio_metadata = extract_audio_metadata(get_test_example_file('source-48000khz-2ch.wav'))
@@ -48,7 +49,7 @@ def test_extract_audio_metadata() -> None:
 	assert audio_metadata.get('sample_rate') == 48000
 	assert audio_metadata.get('channel_total') == 2
 	assert audio_metadata.get('frame_total') == 91200
-	assert audio_metadata.get('bit_rate') == 1536000
+	assert audio_metadata.get('bit_rate') == 1536328
 
 
 def test_extract_video_metadata() -> None:
@@ -57,7 +58,15 @@ def test_extract_video_metadata() -> None:
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('duration') == 10.8
 	assert video_metadata.get('resolution') == (426, 226)
-	assert video_metadata.get('bit_rate') == 138754
+	assert video_metadata.get('bit_rate') == 141981
+	assert video_metadata.get('color_transfer') == 'smpte170m'
+
+	video_metadata = extract_video_metadata(get_test_example_file('target-240p-1s.mkv'))
+
+	assert video_metadata.get('fps') == 25.0
+	assert video_metadata.get('duration') == 1.0
+	assert video_metadata.get('frame_total') == 25
+	assert video_metadata.get('resolution') == (426, 226)
 
 	video_metadata = extract_video_metadata(get_test_example_file('target-240p-1s.mov'))
 

@@ -1,4 +1,5 @@
 import ctypes
+import subprocess
 from collections import namedtuple
 from datetime import datetime
 from threading import Lock
@@ -66,22 +67,19 @@ Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
 WorkflowMode = Literal['auto', 'audio-to-image:frames', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frames']
+WorkflowStrategy = Literal['disk', 'memory']
 
-VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
-VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
-VideoPoolSet = TypedDict('VideoPoolSet',
-{
-	'capture' : VideoCaptureSet,
-	'writer' : VideoWriterSet
-})
 CameraPoolSet = TypedDict('CameraPoolSet',
 {
 	'capture' : CameraCaptureSet
 })
 
 ColorMode = Literal['rgb', 'rgba']
+ColorSpace = Literal['bt601', 'bt709', 'bt2020']
+ColorTransfer : TypeAlias = str
 VisionFrame : TypeAlias = NDArray[Any]
+VisionFrameSet : TypeAlias = Dict[int, VisionFrame]
 Mask : TypeAlias = NDArray[Any]
 Points : TypeAlias = NDArray[Any]
 Distance : TypeAlias = NDArray[Any]
@@ -197,6 +195,7 @@ AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
+TempPixelFormat = Literal['bgr24', 'bgra']
 
 FrameSet : TypeAlias = Dict[int, str]
 
@@ -235,8 +234,38 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'frame_total' : int,
 	'fps' : Fps,
 	'resolution' : Resolution,
-	'bit_rate' : BitRate
+	'bit_rate' : BitRate,
+	'color_transfer' : ColorTransfer
 })
+VideoReaderMetadata : TypeAlias = VideoMetadata
+VideoWriterMetadata = TypedDict('VideoWriterMetadata',
+{
+	'fps' : Fps,
+	'resolution' : Resolution
+})
+VideoReader = TypedDict('VideoReader',
+{
+	'id' : str,
+	'file_path' : str,
+	'process' : subprocess.Popen[bytes],
+	'metadata' : VideoReaderMetadata,
+	'frame_number' : int
+})
+VideoReaderSet : TypeAlias = Dict[str, VideoReader]
+VideoWriter = TypedDict('VideoWriter',
+{
+	'id' : str,
+	'file_path' : str,
+	'process' : subprocess.Popen[bytes],
+	'metadata' : VideoWriterMetadata
+})
+VideoWriterSet : TypeAlias = Dict[str, VideoWriter]
+VideoPoolSet = TypedDict('VideoPoolSet',
+{
+	'reader' : VideoReaderSet,
+	'writer' : VideoWriterSet
+})
+FrameStoreSet : TypeAlias = Dict[str, VisionFrameSet]
 AudioAsset = TypedDict('AudioAsset',
 {
 	'id' : AssetId,
@@ -475,7 +504,6 @@ StateValue : TypeAlias = Any
 StateKey = Literal\
 [
 	'command',
-	'workflow_mode',
 	'config_path',
 	'temp_path',
 	'jobs_path',
@@ -518,6 +546,7 @@ StateKey = Literal\
 	'trim_frame_start',
 	'trim_frame_end',
 	'temp_frame_format',
+	'temp_pixel_format',
 	'keep_temp',
 	'target_frame_amount',
 	'output_image_quality',
@@ -531,6 +560,8 @@ StateKey = Literal\
 	'output_video_quality',
 	'output_video_scale',
 	'output_video_fps',
+	'workflow_mode',
+	'workflow_strategy',
 	'processors',
 	'execution_device_ids',
 	'execution_providers',
@@ -549,7 +580,6 @@ StateKey = Literal\
 State = TypedDict('State',
 {
 	'command' : str,
-	'workflow_mode' : WorkflowMode,
 	'config_path' : str,
 	'temp_path' : str,
 	'jobs_path' : str,
@@ -592,6 +622,7 @@ State = TypedDict('State',
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
+	'temp_pixel_format' : TempPixelFormat,
 	'keep_temp' : bool,
 	'target_frame_amount' : int,
 	'output_image_quality' : int,
@@ -605,6 +636,8 @@ State = TypedDict('State',
 	'output_video_scale' : Scale,
 	'output_video_fps' : float,
 	'output_audio_fps' : float,
+	'workflow_mode' : WorkflowMode,
+	'workflow_strategy' : WorkflowStrategy,
 	'processors' : List[str],
 	'execution_device_ids' : List[int],
 	'execution_providers' : List[ExecutionProvider],

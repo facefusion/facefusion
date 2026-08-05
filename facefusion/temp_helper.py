@@ -2,6 +2,7 @@ import os
 from typing import List
 
 from facefusion.filesystem import create_directory, get_file_extension, get_file_name, move_file, remove_directory, resolve_file_pattern
+from facefusion.types import FrameSet
 
 
 def get_temp_file_path(temp_path : str, output_path : str) -> str:
@@ -18,6 +19,17 @@ def move_temp_file(temp_path : str, output_path : str) -> bool:
 def resolve_temp_frame_paths(temp_path : str, output_path : str, temp_frame_format : str) -> List[str]:
 	temp_frames_pattern = get_temp_frames_pattern(temp_path, output_path, temp_frame_format, '*')
 	return resolve_file_pattern(temp_frames_pattern)
+
+
+def resolve_temp_frame_set(temp_path : str, output_path : str, temp_frame_format : str) -> FrameSet:
+	temp_frames_pattern = get_temp_frames_pattern(temp_path, output_path, temp_frame_format, '*')
+	temp_frame_set = {}
+
+	for temp_frame_path in resolve_file_pattern(temp_frames_pattern):
+		frame_number = int(get_file_name(temp_frame_path))
+		temp_frame_set[frame_number] = temp_frame_path
+
+	return temp_frame_set
 
 
 def get_temp_frames_pattern(temp_path : str, output_path : str, temp_frame_format : str, temp_frame_prefix : str) -> str:

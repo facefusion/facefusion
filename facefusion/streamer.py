@@ -2,10 +2,9 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import Deque, Iterator
+from typing import Deque, Iterator, List
 
 import cv2
-import numpy
 from tqdm import tqdm
 
 from facefusion import ffmpeg_builder, logger, state_manager, translator
@@ -15,11 +14,12 @@ from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import Buffer, Fps, StreamMode, VisionFrame
-from facefusion.vision import extract_vision_mask, read_static_images
+from facefusion.vision import extract_vision_mask, is_vision_frame, read_static_images
 
 
 def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Iterator[VisionFrame]:
 	capture_deque : Deque[VisionFrame] = deque()
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
 	with tqdm(desc = translator.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
@@ -30,8 +30,8 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 				if analyse_stream(capture_vision_frame, camera_fps):
 					camera_capture.release()
 
-				if numpy.any(capture_vision_frame):
-					future = executor.submit(process_stream_frame, capture_vision_frame)
+				if is_vision_frame(capture_vision_frame):
+					future = executor.submit(process_stream_frame, source_vision_frames, capture_vision_frame)
 					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
@@ -44,8 +44,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					yield capture_deque.popleft()
 
 
-def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+def process_stream_frame(source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> VisionFrame:
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
 	temp_vision_frame = target_vision_frame.copy()
