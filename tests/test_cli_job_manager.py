@@ -36,9 +36,21 @@ def before_each() -> None:
 	init_jobs(get_test_jobs_directory())
 
 
-@pytest.mark.skip()
 def test_job_list() -> None:
-	pass
+	commands = [ sys.executable, 'facefusion.py', 'job-list', 'drafted', '--jobs-path', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-list', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-list', 'drafted', '--jobs-path', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 0
+
+	commands = [ sys.executable, 'facefusion.py', 'job-list', 'queued', '--jobs-path', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
 
 
 def test_job_create() -> None:
