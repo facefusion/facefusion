@@ -9,6 +9,6 @@ def test_load() -> None:
 
 
 def test_get() -> None:
-	assert translator.get('python_not_supported').format(version = '3.12') == 'python version is not supported, upgrade to 3.12 or higher'
+	assert translator.get('processing_stopped') == 'processing stopped'
 	assert translator.get('help.run') == 'run the program'
 	assert translator.get('invalid') is None
