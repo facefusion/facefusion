@@ -4,7 +4,6 @@ LOCALES : Locales =\
 {
 	'en':
 	{
-		'conda_not_activated': 'conda is not activated',
 		'python_not_supported': 'python version is not supported, upgrade to {version} or higher',
 		'dependency_not_installed': '{dependency} is not installed',
 		'creating_temp': 'creating temporary resources',
@@ -96,8 +95,6 @@ LOCALES : Locales =\
 		'exclamation_mark': '!',
 		'help':
 		{
-			'install_dependency': 'choose the variant of {dependency} to install',
-			'skip_conda': 'skip the conda environment check',
 			'config_path': 'choose the config file to override defaults',
 			'temp_path': 'specify the directory for the temporary resources',
 			'jobs_path': 'specify the directory to store jobs',

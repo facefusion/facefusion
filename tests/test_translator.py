@@ -9,6 +9,6 @@ def test_load() -> None:
 
 
 def test_get() -> None:
-	assert translator.get('conda_not_activated') == 'conda is not activated'
-	assert translator.get('help.skip_conda') == 'skip the conda environment check'
+	assert translator.get('processing_stopped') == 'processing stopped'
+	assert translator.get('help.run') == 'run the program'
 	assert translator.get('invalid') is None
