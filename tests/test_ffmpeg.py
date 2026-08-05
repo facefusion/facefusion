@@ -6,7 +6,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
+from facefusion.ffmpeg import concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_audio_entries, probe_video_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
@@ -282,5 +282,31 @@ def test_sanitize_video() -> None:
 
 	assert sanitize_video(file_content, output_paths[1], 'moderate') is True
 	assert probe_video_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
+
+
+def test_fix_audio_encoder() -> None:
+	assert fix_audio_encoder('avi', 'libopus') == 'aac'
+	assert fix_audio_encoder('m4v', 'libopus') == 'aac'
+	assert fix_audio_encoder('mpeg', 'libopus') == 'aac'
+	assert fix_audio_encoder('wmv', 'libopus') == 'aac'
+	assert fix_audio_encoder('mov', 'flac') == 'aac'
+	assert fix_audio_encoder('mov', 'libopus') == 'aac'
+	assert fix_audio_encoder('mxf', 'libopus') == 'pcm_s16le'
+	assert fix_audio_encoder('webm', 'aac') == 'libopus'
+	assert fix_audio_encoder('mp4', 'aac') == 'aac'
+	assert fix_audio_encoder('avi', 'aac') == 'aac'
+
+
+def test_fix_video_encoder() -> None:
+	assert fix_video_encoder('m4v', 'libx265') == 'libx264'
+	assert fix_video_encoder('mpeg', 'libx265') == 'libx264'
+	assert fix_video_encoder('mxf', 'libx265') == 'libx264'
+	assert fix_video_encoder('wmv', 'libx265') == 'libx264'
+	assert fix_video_encoder('mkv', 'rawvideo') == 'libx264'
+	assert fix_video_encoder('mp4', 'rawvideo') == 'libx264'
+	assert fix_video_encoder('mov', 'libvpx-vp9') == 'libx264'
+	assert fix_video_encoder('webm', 'libx264') == 'libvpx-vp9'
+	assert fix_video_encoder('mp4', 'libx265') == 'libx265'
+	assert fix_video_encoder('avi', 'rawvideo') == 'rawvideo'
 
 
