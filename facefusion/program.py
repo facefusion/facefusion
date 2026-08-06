@@ -53,7 +53,8 @@ def create_workflow_program() -> ArgumentParser:
 				choices = facefusion.choices.workflow_modes
 			)
 		],
-		scopes = [ 'api', 'cli' ]
+		scopes = [ 'api', 'cli' ],
+		groups = [ 'workflow' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -65,7 +66,7 @@ def create_workflow_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		groups = [ 'paths' ]
+		groups = [ 'workflow' ]
 	)
 
 	return program
@@ -316,7 +317,7 @@ def create_face_aligner_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		groups = [ 'face_landmarker' ]
+		groups = [ 'face_aligner' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -330,7 +331,7 @@ def create_face_aligner_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		groups = [ 'face_landmarker' ]
+		groups = [ 'face_aligner' ]
 	)
 
 	return program
@@ -650,7 +651,8 @@ def create_frame_extraction_program() -> ArgumentParser:
 				choices = facefusion.choices.temp_pixel_formats
 			)
 		],
-		scopes = [ 'api', 'cli' ]
+		scopes = [ 'api', 'cli' ],
+		groups = [ 'frame_extraction' ]
 	)
 
 	return program
