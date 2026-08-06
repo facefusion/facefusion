@@ -287,30 +287,30 @@ def create_face_detector_program() -> ArgumentParser:
 	return program
 
 
-def create_face_landmarker_program() -> ArgumentParser:
+def create_face_aligner_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	group_face_landmarker = program.add_argument_group('face landmarker')
+	group_face_aligner = program.add_argument_group('face aligner')
 
 	capability_store.register_capability_set(
 		[
-			group_face_landmarker.add_argument(
-				'--face-landmarker-model',
-				help = translator.get('help.face_landmarker_model'),
-				default = config.get_str_value('face_landmarker', 'face_landmarker_model', '2dfan4'),
-				choices = facefusion.choices.face_landmarker_models
+			group_face_aligner.add_argument(
+				'--face-aligner-model',
+				help = translator.get('help.face_aligner_model'),
+				default = config.get_str_value('face_aligner', 'face_aligner_model', '2dfan4'),
+				choices = facefusion.choices.face_aligner_models
 			)
 		],
 		scopes = [ 'api', 'cli' ]
 	)
 	capability_store.register_capability_set(
 		[
-			group_face_landmarker.add_argument(
-				'--face-landmarker-score',
-				help = translator.get('help.face_landmarker_score'),
+			group_face_aligner.add_argument(
+				'--face-aligner-score',
+				help = translator.get('help.face_aligner_score'),
 				type = float,
-				default = config.get_float_value('face_landmarker', 'face_landmarker_score', '0.5'),
-				choices = facefusion.choices.face_landmarker_score_range,
-				metavar = create_float_metavar(facefusion.choices.face_landmarker_score_range)
+				default = config.get_float_value('face_aligner', 'face_aligner_score', '0.5'),
+				choices = facefusion.choices.face_aligner_score_range,
+				metavar = create_float_metavar(facefusion.choices.face_aligner_score_range)
 			)
 		],
 		scopes = [ 'api', 'cli' ]
@@ -1047,7 +1047,7 @@ def collect_step_program() -> ArgumentParser:
 		parents =
 		[
 			create_face_detector_program(),
-			create_face_landmarker_program(),
+			create_face_aligner_program(),
 			create_face_selector_program(),
 			create_face_tracker_program(),
 			create_face_masker_program(),

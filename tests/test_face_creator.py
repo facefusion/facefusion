@@ -2,7 +2,7 @@
 import numpy
 import pytest
 
-from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_creator import average_face_geometry, get_many_faces, get_one_face, refill_faces
 from facefusion.face_store import clear_faces
@@ -38,12 +38,12 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_size', '640x640')
 	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	state_manager.init_item('face_detector_score', 0.5)
-	state_manager.init_item('face_landmarker_model', 'many')
-	state_manager.init_item('face_landmarker_score', 0.5)
+	state_manager.init_item('face_aligner_model', 'many')
+	state_manager.init_item('face_aligner_score', 0.5)
 
 	face_classifier.pre_check()
 	face_detector.pre_check()
-	face_landmarker.pre_check()
+	face_aligner.pre_check()
 	face_recognizer.pre_check()
 
 
@@ -51,7 +51,7 @@ def before_all() -> None:
 def before_each() -> None:
 	face_classifier.clear_inference_pool()
 	face_detector.clear_inference_pool()
-	face_landmarker.clear_inference_pool()
+	face_aligner.clear_inference_pool()
 	face_recognizer.clear_inference_pool()
 	clear_faces()
 

@@ -30,7 +30,7 @@ FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 FaceScoreSet = TypedDict('FaceScoreSet',
 {
 	'detector' : Score,
-	'landmarker' : Score
+	'aligner' : Score
 })
 Embedding : TypeAlias = NDArray[numpy.float64]
 
@@ -177,7 +177,7 @@ TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any
 
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
-FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
+FaceAlignerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
@@ -523,8 +523,8 @@ StateKey = Literal\
 	'face_detector_margin',
 	'face_detector_angles',
 	'face_detector_score',
-	'face_landmarker_model',
-	'face_landmarker_score',
+	'face_aligner_model',
+	'face_aligner_score',
 	'face_selector_mode',
 	'face_selector_order',
 	'face_selector_gender',
@@ -599,8 +599,8 @@ State = TypedDict('State',
 	'face_detector_margin' : Margin,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
-	'face_landmarker_model' : FaceLandmarkerModel,
-	'face_landmarker_score' : Score,
+	'face_aligner_model' : FaceAlignerModel,
+	'face_aligner_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
 	'face_selector_race' : FaceSelectorRace,

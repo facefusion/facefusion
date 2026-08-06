@@ -7,7 +7,7 @@ import numpy
 
 import facefusion.capability_store
 import facefusion.jobs.job_manager
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
+from facefusion import config, content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_middle
 from facefusion.face_creator import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
@@ -53,7 +53,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def get_common_modules() -> List[ModuleType]:
-	return [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer ]
+	return [ content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer ]
 
 
 def pre_check() -> bool:
