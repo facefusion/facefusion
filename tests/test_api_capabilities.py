@@ -18,7 +18,8 @@ def before_all() -> None:
 				nargs = '+'
 			)
 		],
-		scopes = [ 'api' ]
+		scopes = [ 'api' ],
+		groups = [ 'paths' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -28,7 +29,8 @@ def before_all() -> None:
 				choices = [ 'mp4', 'mkv', 'webm' ]
 			)
 		],
-		scopes = [ 'api' ]
+		scopes = [ 'api' ],
+		groups = [ 'paths' ]
 	)
 
 
@@ -55,5 +57,5 @@ def test_get_capabilities(test_client : TestClient) -> None:
 
 	assert 'mp4' in capabilities_body.get('formats').get('video')
 
-	assert capabilities_body.get('arguments').get('source_paths').get('default') is None
-	assert capabilities_body.get('arguments').get('output_format').get('choices') == [ 'mp4', 'mkv', 'webm' ]
+	assert capabilities_body.get('arguments').get('paths').get('source_paths').get('default') is None
+	assert capabilities_body.get('arguments').get('paths').get('output_format').get('choices') == [ 'mp4', 'mkv', 'webm' ]

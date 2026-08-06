@@ -211,7 +211,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_int_metavar(frame_colorizer_choices.frame_colorizer_blend_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'frame_colorizer' ]
 		)
 
 

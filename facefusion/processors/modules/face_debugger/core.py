@@ -44,7 +44,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = 'FACE_DEBUGGER_ITEMS'
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'face_debugger' ]
 		)
 
 

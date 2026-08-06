@@ -319,7 +319,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_float_metavar(face_enhancer_choices.face_enhancer_weight_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'face_enhancer' ]
 		)
 
 

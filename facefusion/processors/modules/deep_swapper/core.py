@@ -294,7 +294,8 @@ def register_args(program : ArgumentParser) -> None:
 					metavar = create_int_metavar(deep_swapper_choices.deep_swapper_morph_range)
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'deep_swapper' ]
 		)
 
 

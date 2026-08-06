@@ -519,7 +519,8 @@ def register_args(program : ArgumentParser) -> None:
 					nargs = '+'
 				)
 			],
-			scopes = [ 'api', 'cli' ]
+			scopes = [ 'api', 'cli' ],
+			groups = [ 'background_remover' ]
 		)
 
 
