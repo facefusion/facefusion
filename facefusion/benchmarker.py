@@ -36,7 +36,7 @@ def run() -> Iterator[List[BenchmarkCycleSet]]:
 	benchmark_cycle_count = state_manager.get_item('benchmark_cycle_count')
 
 	state_manager.init_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
-	state_manager.init_item('face_landmarker_score', 0)
+	state_manager.init_item('face_aligner_score', 0)
 	state_manager.init_item('temp_frame_format', 'bmp')
 	state_manager.init_item('output_audio_volume', 0)
 	state_manager.init_item('output_video_preset', 'ultrafast')

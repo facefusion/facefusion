@@ -4,10 +4,10 @@ import numpy
 
 from facefusion import face_store, state_manager
 from facefusion.common_helper import get_first, get_middle
+from facefusion.face_aligner import detect_face_landmark, estimate_face_landmark_68_5
 from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_faces_by_angle
 from facefusion.face_helper import apply_nms, average_points, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
-from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
 from facefusion.face_recognizer import calculate_face_embedding
 from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 from facefusion.vision import is_vision_frame
@@ -28,9 +28,9 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		face_landmark_score_68 = 0.0
 		face_angle = estimate_face_angle(face_landmark_68_5)
 
-		if state_manager.get_item('face_landmarker_score') > 0:
+		if state_manager.get_item('face_aligner_score') > 0:
 			face_landmark_68, face_landmark_score_68 = detect_face_landmark(vision_frame, bounding_box, face_angle)
-		if face_landmark_score_68 > state_manager.get_item('face_landmarker_score'):
+		if face_landmark_score_68 > state_manager.get_item('face_aligner_score'):
 			face_landmark_5_68 = convert_to_face_landmark_5(face_landmark_68)
 
 		face_landmark_set : FaceLandmarkSet =\
@@ -43,7 +43,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		face_score_set : FaceScoreSet =\
 		{
 			'detector': face_score,
-			'landmarker': face_landmark_score_68
+			'aligner': face_landmark_score_68
 		}
 		face_embedding, face_embedding_norm = calculate_face_embedding(vision_frame, face_landmark_set.get('5/68'))
 		gender, age, race = classify_face(vision_frame, face_landmark_set.get('5/68'))

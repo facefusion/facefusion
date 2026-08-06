@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, TempPixelFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
+from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceAlignerModel, FaceDetectorModel, FaceDetectorSet, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, TempPixelFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -13,7 +13,7 @@ face_detector_set : FaceDetectorSet =\
 	'yunet': [ '640x640' ]
 }
 face_detector_models : List[FaceDetectorModel] = list(get_args(FaceDetectorModel))
-face_landmarker_models : List[FaceLandmarkerModel] = list(get_args(FaceLandmarkerModel))
+face_aligner_models : List[FaceAlignerModel] = list(get_args(FaceAlignerModel))
 face_selector_modes : List[FaceSelectorMode] = list(get_args(FaceSelectorMode))
 face_selector_orders : List[FaceSelectorOrder] = list(get_args(FaceSelectorOrder))
 genders : List[Gender] = list(get_args(Gender))
@@ -158,7 +158,7 @@ execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
 face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)
 face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
-face_landmarker_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
+face_aligner_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
 face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
 face_selector_age_range : Sequence[int] = create_int_range(0, 100, 1)

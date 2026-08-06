@@ -97,14 +97,14 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ state_manager.get_item('face_landmarker_model'), 'fan_68_5' ]
+	model_names = [ state_manager.get_item('face_aligner_model'), 'fan_68_5' ]
 	_, model_source_set = collect_model_downloads()
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ state_manager.get_item('face_landmarker_model'), 'fan_68_5' ]
+	model_names = [ state_manager.get_item('face_aligner_model'), 'fan_68_5' ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
@@ -119,10 +119,10 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
-	for face_landmarker_model in [ '2dfan4', 'peppa_wutz' ]:
-		if state_manager.get_item('face_landmarker_model') in [ 'many', face_landmarker_model ]:
-			model_hash_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('hashes').get(face_landmarker_model)
-			model_source_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('sources').get(face_landmarker_model)
+	for face_aligner_model in [ '2dfan4', 'peppa_wutz' ]:
+		if state_manager.get_item('face_aligner_model') in [ 'many', face_aligner_model ]:
+			model_hash_set[face_aligner_model] = model_set.get(face_aligner_model).get('hashes').get(face_aligner_model)
+			model_source_set[face_aligner_model] = model_set.get(face_aligner_model).get('sources').get(face_aligner_model)
 
 	return model_hash_set, model_source_set
 
@@ -139,10 +139,10 @@ def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox,
 	face_landmark_score_2dfan4 = 0.0
 	face_landmark_score_peppa_wutz = 0.0
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
+	if state_manager.get_item('face_aligner_model') in [ 'many', '2dfan4' ]:
 		face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
+	if state_manager.get_item('face_aligner_model') in [ 'many', 'peppa_wutz' ]:
 		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
 	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.2:
@@ -205,10 +205,10 @@ def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark
 
 
 def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Prediction]:
-	face_landmarker = get_inference_pool().get('2dfan4')
+	face_aligner = get_inference_pool().get('2dfan4')
 
 	with conditional_thread_semaphore():
-		prediction = face_landmarker.run(None,
+		prediction = face_aligner.run(None,
 		{
 			'input': [ crop_vision_frame ]
 		})
@@ -217,10 +217,10 @@ def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Pr
 
 
 def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
-	face_landmarker = get_inference_pool().get('peppa_wutz')
+	face_aligner = get_inference_pool().get('peppa_wutz')
 
 	with conditional_thread_semaphore():
-		prediction = face_landmarker.run(None,
+		prediction = face_aligner.run(None,
 		{
 			'input': crop_vision_frame
 		})[0]
@@ -229,10 +229,10 @@ def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
 
 
 def forward_fan_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
-	face_landmarker = get_inference_pool().get('fan_68_5')
+	face_aligner = get_inference_pool().get('fan_68_5')
 
 	with conditional_thread_semaphore():
-		face_landmark_68_5 = face_landmarker.run(None,
+		face_landmark_68_5 = face_aligner.run(None,
 		{
 			'input': [ face_landmark_5 ]
 		})[0][0]

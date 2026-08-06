@@ -9,7 +9,7 @@ import numpy
 import facefusion.capability_store
 import facefusion.choices
 import facefusion.jobs.job_manager
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
+from facefusion import config, content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -567,7 +567,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def get_common_modules() -> List[ModuleType]:
-	return [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer ]
+	return [ content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer ]
 
 
 def pre_check() -> bool:
