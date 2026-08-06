@@ -1,7 +1,7 @@
 from argparse import Action
-from typing import Dict, List
+from typing import List
 
-from facefusion.types import CapabilityGroup, CapabilitySet, CapabilityStore, Group, Scope
+from facefusion.types import Capability, CapabilityGroup, CapabilitySet, CapabilityStore, Group, Scope
 
 CAPABILITY_STORE : CapabilityStore =\
 {
@@ -21,15 +21,15 @@ def get_api_capability_group() -> CapabilityGroup:
 	return capability_group
 
 
-def get_api_capability_set() -> Dict[str, CapabilitySet]:
+def get_api_capability_set() -> CapabilitySet:
 	return CAPABILITY_STORE.get('api')
 
 
-def get_cli_capability_set() -> Dict[str, CapabilitySet]:
+def get_cli_capability_set() -> CapabilitySet:
 	return CAPABILITY_STORE.get('cli')
 
 
-def get_sys_capability_set() -> Dict[str, CapabilitySet]:
+def get_sys_capability_set() -> CapabilitySet:
 	return CAPABILITY_STORE.get('sys')
 
 
@@ -47,7 +47,7 @@ def get_sys_arguments() -> List[str]:
 
 def register_capability_set(actions : List[Action], scopes : List[Scope], groups : List[Group]) -> None:
 	for action in actions:
-		value : CapabilitySet =\
+		value : Capability =\
 		{
 			'default': action.default,
 			'groups': groups

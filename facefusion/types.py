@@ -135,19 +135,20 @@ Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
 Group : TypeAlias = str
 
-CapabilitySet = TypedDict('CapabilitySet',
+Capability = TypedDict('Capability',
 {
 	'default' : Any,
-	'choices' : NotRequired[List[Choice]],
-	'groups' : NotRequired[List[Group]]
+	'groups' : List[Group],
+	'choices' : NotRequired[List[Choice]]
 })
+CapabilitySet : TypeAlias = Dict[str, Capability]
 CapabilityStore = TypedDict('CapabilityStore',
 {
-	'api' : Dict[str, CapabilitySet],
-	'cli' : Dict[str, CapabilitySet],
-	'sys' : Dict[str, CapabilitySet]
+	'api' : CapabilitySet,
+	'cli' : CapabilitySet,
+	'sys' : CapabilitySet
 })
-CapabilityGroup : TypeAlias = Dict[Group, Dict[str, CapabilitySet]]
+CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 UpdateProgress : TypeAlias = Callable[[int], None]
