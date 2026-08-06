@@ -8,11 +8,28 @@ from tqdm import tqdm
 from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
-from facefusion.filesystem import filter_audio_paths
+from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, resolve_temp_frame_set
-from facefusion.types import AudioFrame, ErrorCode, VisionFrame
+from facefusion.types import AudioFrame, ErrorCode, VisionFrame, WorkflowMode
 from facefusion.vision import conditional_merge_vision_mask, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, restrict_trim_video_frame, restrict_video_fps, select_video_frames, write_image
+
+
+def detect_workflow_mode() -> WorkflowMode:
+	target_path = state_manager.get_item('target_path')
+	output_path = state_manager.get_item('output_path')
+
+	if has_video([ target_path ]):
+		if get_file_extension(output_path):
+			return 'image-to-video'
+		return 'image-to-video:frames'
+
+	if has_audio(state_manager.get_item('source_paths')) and has_image([ target_path ]):
+		if get_file_extension(output_path):
+			return 'audio-to-image:video'
+		return 'audio-to-image:frames'
+
+	return 'image-to-image'
 
 
 def is_process_stopping() -> bool:

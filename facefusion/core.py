@@ -12,15 +12,16 @@ from facefusion import args_helper, benchmarker, cli_helper, content_analyser, h
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.filesystem import get_file_extension, has_audio, has_image, has_video
+from facefusion.filesystem import get_file_extension
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode, WorkflowMode
+from facefusion.types import Args, ErrorCode
 from facefusion.workflows import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
+from facefusion.workflows.core import detect_workflow_mode
 
 
 def cli() -> None:
@@ -317,33 +318,24 @@ def conditional_process() -> ErrorCode:
 	if state_manager.get_item('workflow_mode') == 'auto':
 		state_manager.set_item('workflow_mode', detect_workflow_mode())
 
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
-			return 2
+	workflow_mode = state_manager.get_item('workflow_mode')
 
-	if state_manager.get_item('workflow_mode') == 'audio-to-image:video':
-		return audio_to_image.process(start_time)
-	if state_manager.get_item('workflow_mode') == 'audio-to-image:frames':
-		return audio_to_image_as_frames.process(start_time)
-	if state_manager.get_item('workflow_mode') == 'image-to-image':
-		return image_to_image.process(start_time)
-	if state_manager.get_item('workflow_mode') == 'image-to-video':
-		return image_to_video.process(start_time)
-	if state_manager.get_item('workflow_mode') == 'image-to-video:frames':
-		return image_to_video_as_frames.process(start_time)
+	if workflow_mode == detect_workflow_mode():
+		for processor_module in get_processors_modules(state_manager.get_item('processors')):
+			if not processor_module.pre_process('output'):
+				return 2
 
-	return 0
+		if workflow_mode == 'audio-to-image:video':
+			return audio_to_image.process(start_time)
+		if workflow_mode == 'audio-to-image:frames':
+			return audio_to_image_as_frames.process(start_time)
+		if workflow_mode == 'image-to-image':
+			return image_to_image.process(start_time)
+		if workflow_mode == 'image-to-video':
+			return image_to_video.process(start_time)
+		if workflow_mode == 'image-to-video:frames':
+			return image_to_video_as_frames.process(start_time)
 
+		return 0
 
-def detect_workflow_mode() -> WorkflowMode:
-	if has_video([ state_manager.get_item('target_path') ]):
-		if get_file_extension(state_manager.get_item('output_path')):
-			return 'image-to-video'
-		return 'image-to-video:frames'
-
-	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
-		if get_file_extension(state_manager.get_item('output_path')):
-			return 'audio-to-image:video'
-		return 'audio-to-image:frames'
-
-	return 'image-to-image'
+	return 2
