@@ -90,7 +90,7 @@ async def get_asset(request : Request) -> Response:
 		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:
-			if request.query_params.get('action') == 'capture' and request.query_params.get('subject') == 'frame':
+			if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture' and request.query_params.get('subject') == 'frame':
 				resolution = request.query_params.get('resolution')
 				frame_numbers = request.query_params.getlist('frame_number')
 				vision_frames = capture_asset_frames(asset, frame_numbers, resolution)
