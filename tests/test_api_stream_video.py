@@ -8,7 +8,6 @@ from typing import Tuple
 from unittest.mock import patch
 
 import cv2
-import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
