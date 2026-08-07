@@ -7,9 +7,10 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import session_context, session_manager
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import save_asset_files, validate_asset_files
-from facefusion.apis.endpoints.session import extract_access_token
+from facefusion.apis.asset_helper import capture_asset_frames, save_asset_files, validate_asset_files
+from facefusion.apis.session_helper import extract_access_token
 from facefusion.filesystem import remove_file
+from facefusion.vision import is_vision_frames, to_strip_buffer
 
 
 async def upload_asset(request : Request) -> Response:
@@ -89,6 +90,16 @@ async def get_asset(request : Request) -> Response:
 		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:
+			if request.query_params.get('action') == 'capture' and request.query_params.get('subject') == 'frame':
+				resolution = request.query_params.get('resolution')
+				frame_numbers = request.query_params.getlist('frame_number')
+				vision_frames = capture_asset_frames(asset, frame_numbers, resolution)
+
+				if is_vision_frames(vision_frames):
+					return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
+
+				return Response(status_code = HTTP_400_BAD_REQUEST)
+
 			if request.query_params.get('action') == 'download':
 				asset_path = asset.get('path')
 

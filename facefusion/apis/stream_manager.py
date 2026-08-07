@@ -14,29 +14,28 @@ from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, Time, VideoCodec, VisionFrame
-from facefusion.vision import read_static_images
+from facefusion.vision import is_vision_frame, read_static_images, to_buffer
 
 
 async def process_image(websocket : WebSocket) -> None:
 	capture_vision_frame = await anext(receive_vision_frames(websocket), None)
 
-	if numpy.any(capture_vision_frame):
+	if is_vision_frame(capture_vision_frame):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
-		is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
+		output_vision_buffer = to_buffer(output_vision_frame)
 
-		if is_success:
-			await websocket.send_bytes(output_frame_buffer.tobytes())
+		await websocket.send_bytes(output_vision_buffer)
 
 
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
 	websocket_event = await websocket.receive()
 
 	while websocket_event.get('type') == 'websocket.receive':
-		frame_buffer = websocket_event.get('bytes') or bytes()
-		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+		vision_buffer = websocket_event.get('bytes') or bytes()
+		vision_frame = cv2.imdecode(numpy.frombuffer(vision_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
-		if numpy.any(vision_frame):
+		if is_vision_frame(vision_frame):
 			yield vision_frame
 
 		websocket_event = await websocket.receive()

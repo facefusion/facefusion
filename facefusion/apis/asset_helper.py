@@ -8,8 +8,8 @@ from starlette.datastructures import UploadFile
 import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
-from facefusion.types import ImageMetadata, MediaType
-from facefusion.vision import detect_image_resolution
+from facefusion.types import ImageAsset, ImageMetadata, MediaType, VideoAsset, VisionFrame
+from facefusion.vision import detect_image_resolution, fit_contain_frame, is_vision_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
 def extract_image_metadata(file_path : str) -> ImageMetadata:
@@ -89,3 +89,34 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		process_manager.end()
 
 	return asset_paths
+
+
+def read_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str]) -> List[VisionFrame]:
+	vision_frames = []
+
+	if asset.get('media') == 'image':
+		vision_frame = read_static_image(asset.get('path'))
+
+		if is_vision_frame(vision_frame):
+			vision_frames.append(vision_frame)
+
+	if asset.get('media') == 'video':
+		for frame_number in frame_numbers:
+			if frame_number.isdigit():
+				vision_frame = read_static_video_frame(asset.get('path'), int(frame_number))
+
+				if is_vision_frame(vision_frame):
+					vision_frames.append(vision_frame)
+
+	return vision_frames
+
+
+def capture_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str], resolution : str) -> List[VisionFrame]:
+	capture_vision_frames = []
+	temp_vision_frames = read_asset_frames(asset, frame_numbers)
+
+	for temp_vision_frame in temp_vision_frames:
+		capture_vision_frame = fit_contain_frame(temp_vision_frame, unpack_resolution(resolution))
+		capture_vision_frames.append(capture_vision_frame)
+
+	return capture_vision_frames

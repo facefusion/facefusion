@@ -11,7 +11,7 @@ from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.media_helper import restrict_trim_frame
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
+from facefusion.types import Buffer, ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 
 
 def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
@@ -202,6 +202,18 @@ def detect_frame_orientation(vision_frame : VisionFrame) -> Orientation:
 	return 'portrait'
 
 
+def is_vision_frame(vision_frame : VisionFrame) -> bool:
+	return numpy.ndim(vision_frame) == 3
+
+
+def is_vision_frames(vision_frames : List[VisionFrame]) -> bool:
+	for vision_frame in vision_frames:
+		if not is_vision_frame(vision_frame):
+			return False
+
+	return True
+
+
 def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:
 	height, width = vision_frame.shape[:2]
 	restrict_width, restrict_height = resolution
@@ -264,6 +276,7 @@ def match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : V
 
 	for color_difference_size in color_difference_sizes:
 		source_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, normalize_resolution((color_difference_size, color_difference_size)))
+
 	target_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
 	return target_vision_frame
 
@@ -293,8 +306,16 @@ def create_empty_vision_frame() -> VisionFrame:
 	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
 
 
-def is_vision_frame(vision_frame : VisionFrame) -> bool:
-	return numpy.ndim(vision_frame) == 3
+def to_buffer(vision_frame : VisionFrame) -> Buffer:
+	is_success, vision_buffer = cv2.imencode('.jpg', vision_frame)
+
+	if is_success:
+		return vision_buffer.tobytes()
+	return bytes()
+
+
+def to_strip_buffer(vision_frames : List[VisionFrame]) -> Buffer:
+	return to_buffer(cv2.hconcat(vision_frames))
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:

@@ -10,7 +10,7 @@ from facefusion import rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
-from facefusion.vision import read_static_images
+from facefusion.vision import is_vision_frame, read_static_images
 
 
 def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
@@ -170,7 +170,7 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : int) -> None:
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
-	if numpy.any(vision_frame) and video_queue.qsize() < video_queue.maxsize:
+	if is_vision_frame(vision_frame) and video_queue.qsize() < video_queue.maxsize:
 		video_future = video_executor.submit(process_video_frame, source_vision_frames, vision_frame)
 		video_time = rtc.convert_timestamp_to_time(video_codec, video_timestamp)
 		video_queue.put((video_time, video_future))

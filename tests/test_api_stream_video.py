@@ -19,7 +19,7 @@ from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
 from facefusion.types import Buffer, BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
-from facefusion.vision import read_video_frame
+from facefusion.vision import is_vision_frame, read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -178,7 +178,7 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 
 	video_decoder = create_video_decoder(video_codec)
 
-	assert numpy.any(decode_video_frame(video_codec, video_decoder, encode_buffer))
+	assert is_vision_frame(decode_video_frame(video_codec, video_decoder, encode_buffer))
 
 	destroy_video_decoder(video_codec, video_decoder)
 
