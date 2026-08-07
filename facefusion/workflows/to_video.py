@@ -13,7 +13,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
-from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
+from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
@@ -99,6 +99,7 @@ def process_memory_frame(frame_number : int, temp_video_resolution : Resolution)
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 
 	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
+	temp_vision_frame = restrict_frame(temp_vision_frame, temp_video_resolution)
 
 	if state_manager.get_item('temp_pixel_format') == 'bgra':
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
