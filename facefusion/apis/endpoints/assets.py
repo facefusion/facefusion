@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import session_context, session_manager
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import capture_asset_frames, save_asset_files, validate_asset_files
+from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.filesystem import remove_file
 from facefusion.vision import is_vision_frames, to_strip_buffer
@@ -90,12 +90,18 @@ async def get_asset(request : Request) -> Response:
 		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:
-			if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture' and request.query_params.get('subject') == 'frame':
+			if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture':
 				resolution = request.query_params.get('resolution')
 				frame_numbers = request.query_params.getlist('frame_number')
-				vision_frames = capture_asset_frames(asset, frame_numbers, resolution) #type:ignore[arg-type]
+				vision_frames = []
 
-				if is_vision_frames(vision_frames):
+				if request.query_params.get('subject') == 'frame':
+					vision_frames = capture_asset_frames(asset, frame_numbers, resolution) #type:ignore[arg-type]
+
+				if request.query_params.get('subject') == 'face':
+					vision_frames = capture_asset_faces(asset, frame_numbers, resolution) #type:ignore[arg-type]
+
+				if vision_frames and is_vision_frames(vision_frames):
 					return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
 
 				return Response(status_code = HTTP_400_BAD_REQUEST)

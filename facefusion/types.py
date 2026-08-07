@@ -315,7 +315,7 @@ AssetSet : TypeAlias = Dict[AssetId, AudioAsset | ImageAsset | VideoAsset]
 AssetStore : TypeAlias = Dict[SessionId, AssetSet]
 
 AssetAction = Literal['capture']
-AssetSubject = Literal['frame']
+AssetSubject = Literal['frame', 'face']
 
 BenchmarkMode = Literal['warm', 'cold']
 BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
