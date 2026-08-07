@@ -93,7 +93,7 @@ async def get_asset(request : Request) -> Response:
 			if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture' and request.query_params.get('subject') == 'frame':
 				resolution = request.query_params.get('resolution')
 				frame_numbers = request.query_params.getlist('frame_number')
-				vision_frames = capture_asset_frames(asset, frame_numbers, resolution)
+				vision_frames = capture_asset_frames(asset, frame_numbers, resolution) #type:ignore[arg-type]
 
 				if is_vision_frames(vision_frames):
 					return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
