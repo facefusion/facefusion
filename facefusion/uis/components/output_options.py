@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import gradio
 
@@ -7,8 +7,10 @@ from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import is_image, is_video
+from facefusion.processors.modules.frame_enhancer.core import create_static_model_set
+from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerModel
 from facefusion.types import AudioEncoder, Fps, Scale, VideoEncoder, VideoPreset
-from facefusion.uis.core import get_ui_components, register_ui_component
+from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.vision import detect_video_fps
 
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
@@ -126,6 +128,14 @@ def listen() -> None:
 	OUTPUT_VIDEO_SCALE_SLIDER.release(update_output_video_scale, inputs = OUTPUT_VIDEO_SCALE_SLIDER)
 	OUTPUT_VIDEO_FPS_SLIDER.release(update_output_video_fps, inputs = OUTPUT_VIDEO_FPS_SLIDER)
 
+	frame_enhancer_model_dropdown = get_ui_component('frame_enhancer_model_dropdown')
+	if frame_enhancer_model_dropdown:
+		frame_enhancer_model_dropdown.change(update_output_scale_by_frame_enhancer_model, inputs = frame_enhancer_model_dropdown, outputs = [ OUTPUT_IMAGE_SCALE_SLIDER, OUTPUT_VIDEO_SCALE_SLIDER ])
+
+	processors_checkbox_group = get_ui_component('processors_checkbox_group')
+	if processors_checkbox_group:
+		processors_checkbox_group.change(update_output_scale_by_processors, inputs = processors_checkbox_group, outputs = [ OUTPUT_IMAGE_SCALE_SLIDER, OUTPUT_VIDEO_SCALE_SLIDER ])
+
 	for ui_component in get_ui_components(
 	[
 		'target_image',
@@ -142,6 +152,26 @@ def remote_update() -> Tuple[gradio.Slider, gradio.Slider, gradio.Dropdown, grad
 		state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 		return gradio.Slider(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Slider(visible = True), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Slider(visible = True), gradio.Slider(value = state_manager.get_item('output_video_fps'), visible = True)
 	return gradio.Slider(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False)
+
+
+def update_output_scale_by_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> Tuple[gradio.Slider, gradio.Slider]:
+	frame_enhancer_scale = create_static_model_set('full').get(frame_enhancer_model).get('scale')
+	state_manager.set_item('output_image_scale', frame_enhancer_scale)
+	state_manager.set_item('output_video_scale', frame_enhancer_scale)
+	return gradio.Slider(value = state_manager.get_item('output_image_scale')), gradio.Slider(value = state_manager.get_item('output_video_scale'))
+
+
+def update_output_scale_by_processors(processors : List[str]) -> Tuple[gradio.Slider, gradio.Slider]:
+	if 'frame_enhancer' in processors:
+		frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
+		frame_enhancer_scale = create_static_model_set('full').get(frame_enhancer_model).get('scale')
+		state_manager.set_item('output_image_scale', frame_enhancer_scale)
+		state_manager.set_item('output_video_scale', frame_enhancer_scale)
+		return gradio.Slider(value = state_manager.get_item('output_image_scale')), gradio.Slider(value = state_manager.get_item('output_video_scale'))
+
+	state_manager.set_item('output_image_scale', 1.0)
+	state_manager.set_item('output_video_scale', 1.0)
+	return gradio.Slider(value = state_manager.get_item('output_image_scale')), gradio.Slider(value = state_manager.get_item('output_video_scale'))
 
 
 def update_output_image_quality(output_image_quality : float) -> None:
