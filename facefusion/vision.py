@@ -211,7 +211,7 @@ def is_vision_frames(vision_frames : List[VisionFrame]) -> bool:
 		if not is_vision_frame(vision_frame):
 			return False
 
-	return True
+	return bool(vision_frames)
 
 
 def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:

@@ -7,6 +7,8 @@ from starlette.datastructures import UploadFile
 
 import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager
+from facefusion.face_creator import get_many_faces
+from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
 from facefusion.types import ImageAsset, ImageMetadata, MediaType, VideoAsset, VisionFrame
 from facefusion.vision import detect_image_resolution, fit_contain_frame, is_vision_frame, read_static_image, read_static_video_frame, unpack_resolution
@@ -118,5 +120,20 @@ def capture_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[s
 	for temp_vision_frame in temp_vision_frames:
 		capture_vision_frame = fit_contain_frame(temp_vision_frame, unpack_resolution(resolution))
 		capture_vision_frames.append(capture_vision_frame)
+
+	return capture_vision_frames
+
+
+def capture_asset_faces(asset : ImageAsset | VideoAsset, frame_numbers : List[str], resolution : str) -> List[VisionFrame]:
+	capture_vision_frames = []
+	temp_vision_frames = read_asset_frames(asset, frame_numbers)
+	crop_size = unpack_resolution(resolution)
+
+	for temp_vision_frame in temp_vision_frames:
+		faces = get_many_faces([ temp_vision_frame ])
+
+		for face in faces:
+			capture_vision_frame, _ = warp_face_by_bounding_box(temp_vision_frame, face.bounding_box, crop_size)
+			capture_vision_frames.append(capture_vision_frame)
 
 	return capture_vision_frames
