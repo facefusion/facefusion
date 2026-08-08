@@ -101,7 +101,7 @@ async def get_asset(request : Request) -> Response:
 				if request.query_params.get('subject') == 'face':
 					vision_frames = capture_asset_faces(asset, frame_numbers, resolution) #type:ignore[arg-type]
 
-				if vision_frames and is_vision_frames(vision_frames):
+				if is_vision_frames(vision_frames):
 					return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
 
 				return Response(status_code = HTTP_400_BAD_REQUEST)
