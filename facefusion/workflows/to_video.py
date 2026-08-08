@@ -13,7 +13,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
-from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
+from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
@@ -90,7 +90,7 @@ def process_disk_frames() -> ErrorCode:
 	return 0
 
 
-def process_memory_frame(frame_number : int, temp_video_resolution : Resolution) -> VisionFrame:
+def process_memory_frame(frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
 	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
@@ -99,7 +99,9 @@ def process_memory_frame(frame_number : int, temp_video_resolution : Resolution)
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 
 	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
-	temp_vision_frame = restrict_frame(temp_vision_frame, temp_video_resolution)
+
+	if not (temp_vision_frame.shape[1], temp_vision_frame.shape[0]) == output_video_resolution:
+		temp_vision_frame = cv2.resize(temp_vision_frame, output_video_resolution)
 
 	if state_manager.get_item('temp_pixel_format') == 'bgra':
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
@@ -118,7 +120,7 @@ def process_memory_frames() -> ErrorCode:
 	temp_frame_range = range(trim_frame_start, trim_frame_end)
 
 	if temp_frame_range:
-		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
+		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
 		with tqdm(total = len(temp_frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
@@ -129,7 +131,7 @@ def process_memory_frames() -> ErrorCode:
 				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_number in temp_frame_range:
-					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution)
+					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution, output_video_resolution)
 					futures.append(future)
 
 				while futures:
