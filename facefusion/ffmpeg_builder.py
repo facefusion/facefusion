@@ -118,7 +118,7 @@ def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> L
 
 
 def prevent_frame_drop() -> List[Command]:
-	return [ '-vsync', '0' ]
+	return [ '-fps_mode', 'passthrough' ]
 
 
 def restrict_color_transfer(color_transfer : ColorTransfer) -> List[Command]:
