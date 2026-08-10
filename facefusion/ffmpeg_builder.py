@@ -140,7 +140,7 @@ def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> L
 
 
 def prevent_frame_drop() -> List[Command]:
-	return [ '-vsync', '0' ]
+	return [ '-fps_mode', 'passthrough' ]
 
 
 def select_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> List[Command]:
