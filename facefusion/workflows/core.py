@@ -3,9 +3,8 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Deque, List
 
 import numpy
-from tqdm import tqdm
 
-from facefusion import logger, process_manager, state_manager, translator
+from facefusion import cli_progress, logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
@@ -150,8 +149,10 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
-		with tqdm(total = len(temp_frame_set), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
+		with cli_progress.create() as progress:
+			progress.set_title(translator.get('processing'))
+			progress.set_description('execution_providers = [ ' + ', '.join(state_manager.get_item('execution_providers')) + ' ]')
+			progress.count(temp_frame_set)
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()

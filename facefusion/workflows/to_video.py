@@ -4,9 +4,8 @@ from typing import Deque
 
 import cv2
 import numpy
-from tqdm import tqdm
 
-from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.media_helper import restrict_trim_frame
@@ -75,8 +74,10 @@ def process_memory_frames() -> ErrorCode:
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
-		with tqdm(total = len(temp_frame_range), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
+		with cli_progress.create() as progress:
+			progress.set_title(translator.get('processing'))
+			progress.set_description('execution_providers = [ ' + ', '.join(state_manager.get_item('execution_providers')) + ' ]')
+			progress.count(temp_frame_range)
 
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 

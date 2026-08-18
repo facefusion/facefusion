@@ -1,13 +1,11 @@
 import os
 import subprocess
 import tempfile
-from functools import lru_cache, partial
+from functools import lru_cache
 from typing import List, Optional, cast
 
-from tqdm import tqdm
-
 import facefusion.choices
-from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
+from facefusion import cli_progress, ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, Resolution, SampleRate, UpdateProgress, VideoEncoder, VideoFormat, VideoReaderMetadata
@@ -38,10 +36,6 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 		return process
 
 	return process
-
-
-def update_progress(progress : tqdm, frame_number : int) -> None:
-	progress.update(frame_number - progress.n)
 
 
 def run_ffmpeg_with_pipe(commands : List[Command], file_content : Buffer) -> subprocess.Popen[Buffer]:
@@ -184,8 +178,10 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		ffmpeg_builder.set_output(temp_frames_pattern)
 	)
 
-	with tqdm(total = extract_frame_total, desc = translator.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
+	with cli_progress.create(total = extract_frame_total) as progress:
+		progress.set_title(translator.get('extracting'))
+
+		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 
 
@@ -202,8 +198,10 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		ffmpeg_builder.set_output(temp_frames_pattern)
 	)
 
-	with tqdm(total = spawn_frame_total, desc = translator.get('spawning'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
+	with cli_progress.create(total = spawn_frame_total) as progress:
+		progress.set_title(translator.get('spawning'))
+
+		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 
 
@@ -328,8 +326,10 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		ffmpeg_builder.force_output(temp_video_path)
 	)
 
-	with tqdm(total = merge_frame_total, desc = translator.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
+	with cli_progress.create(total = merge_frame_total) as progress:
+		progress.set_title(translator.get('merging'))
+
+		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 
 

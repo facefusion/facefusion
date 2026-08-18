@@ -4,10 +4,8 @@ from functools import lru_cache
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from tqdm import tqdm
-
 import facefusion.choices
-from facefusion import curl_builder, logger, process_manager, state_manager, translator
+from facefusion import cli_progress, curl_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Buffer, Command, DownloadProvider, DownloadSet
@@ -26,7 +24,10 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
-			with tqdm(total = download_size, initial = initial_size, desc = translator.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			with cli_progress.create(total = download_size) as progress:
+				progress.set_title(translator.get('downloading'))
+				progress.set_description(download_file_name)
+
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
 					curl_builder.set_timeout(5),
@@ -34,12 +35,11 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 				)
 				open_curl(commands)
 				current_size = initial_size
-				progress.set_postfix(download_providers = state_manager.get_item('download_providers'), file_name = download_file_name)
 
 				while current_size < download_size:
 					if is_file(download_file_path):
 						current_size = get_file_size(download_file_path)
-						progress.update(current_size - progress.n)
+						progress.seek(current_size)
 
 
 @lru_cache(maxsize = 64)

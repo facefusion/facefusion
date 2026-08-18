@@ -2,9 +2,8 @@ from functools import lru_cache
 from typing import Tuple
 
 import numpy
-from tqdm import tqdm
 
-from facefusion import inference_manager, state_manager, translator, video_manager
+from facefusion import cli_progress, inference_manager, translator, video_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
@@ -166,7 +165,9 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	if trim_frame_start > 0:
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
-	with tqdm(total = len(frame_range), desc = translator.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with cli_progress.create() as progress:
+		progress.set_title(translator.get('analysing'))
+		progress.count(frame_range)
 
 		for frame_number in frame_range:
 			vision_frame = video_manager.read_video_frame(video_reader)
@@ -181,7 +182,6 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			if counter > 0 and total > 0:
 				rate = counter / total * 100
 
-			progress.set_postfix(rate = rate)
 			progress.update()
 
 	return bool(rate > 10.0)
