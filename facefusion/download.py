@@ -26,7 +26,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		if initial_size < download_size:
 			with cli_progress.create(total = download_size) as progress:
 				progress.set_title(translator.get('downloading'))
-				progress.set_description('download_providers = [ ' + ', '.join(state_manager.get_item('download_providers')) + ' ], file_name = ' + download_file_name)
+				progress.set_description('file_name = ' + download_file_name)
 
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
