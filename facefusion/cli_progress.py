@@ -73,20 +73,24 @@ def render(progress : SimpleNamespace) -> None:
 	if progress.mode == 'download':
 		status = resolve_download(progress)
 
-	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - len(description) - 3
+	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - 2
+
+	if description:
+		progress_width -= len(description) + 3
 
 	if progress.total > 0:
 		progress_fill = progress.current * progress_width // progress.total
 	else:
 		progress_fill = 0
 
-	sys.stdout.write(choices.progress_action_set.get('cursor_start') + ' '.join(
-	[
-		title,
-		choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset'),
-		status,
-		description
-	]) + choices.progress_action_set.get('erase_line'))
+	progress_bar = choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
+	progress_parts = [ title, progress_bar, status ]
+
+	if description:
+		progress_parts.append('|')
+		progress_parts.append(description)
+
+	sys.stdout.write(choices.progress_action_set.get('cursor_start') + ' '.join(progress_parts) + choices.progress_action_set.get('erase_line'))
 	sys.stdout.flush()
 
 
