@@ -1,3 +1,4 @@
+import math
 from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Deque
@@ -13,7 +14,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
-from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
+from facefusion.vision import detect_video_fps, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
@@ -117,7 +118,8 @@ def process_memory_frames() -> ErrorCode:
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	temp_frame_range = range(trim_frame_start, trim_frame_end)
+	video_fps = detect_video_fps(state_manager.get_item('target_path'))
+	temp_frame_range = range(predict_video_frame_total(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, trim_frame_end))
 
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
@@ -130,7 +132,8 @@ def process_memory_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()
 
-				for frame_number in temp_frame_range:
+				for frame_index in temp_frame_range:
+					frame_number = trim_frame_start + math.floor(frame_index * video_fps / temp_video_fps)
 					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution, output_video_resolution)
 					futures.append(future)
 
