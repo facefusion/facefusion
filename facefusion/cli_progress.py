@@ -59,34 +59,6 @@ def seek(progress : SimpleNamespace, current : int) -> None:
 		render(progress)
 
 
-def resolve_percent(progress : SimpleNamespace) -> str:
-	if progress.total > 0:
-		percent = progress.current * 100 // progress.total
-		return str(percent) + ' %'
-
-	return '0 %'
-
-
-def resolve_frame(progress : SimpleNamespace) -> str:
-	if time.monotonic() - progress.time_start > 0:
-		rate = progress.current / (time.monotonic() - progress.time_start)
-		return str(round(rate, 1)) + ' f/s'
-
-	return '0.0 f/s'
-
-
-def resolve_download(progress : SimpleNamespace) -> str:
-	if time.monotonic() - progress.time_start > 0:
-		rate = progress.current / (time.monotonic() - progress.time_start)
-
-		if rate > 1024 * 1024:
-			return str(round(rate / (1024 * 1024), 1)) + ' mb/s'
-
-		return str(round(rate / 1024, 1)) + ' kb/s'
-
-	return '0.0 kb/s'
-
-
 def render(progress : SimpleNamespace) -> None:
 	title = getattr(progress, 'title', '')
 	description = getattr(progress, 'description', '')
@@ -108,11 +80,39 @@ def render(progress : SimpleNamespace) -> None:
 	else:
 		progress_fill = 0
 
-	sys.stdout.write(choices.terminal_action_set.get('cursor_start') + ' '.join(
+	sys.stdout.write(choices.progress_action_set.get('cursor_start') + ' '.join(
 	[
 		title,
-		choices.terminal_action_set.get('color_active') + '=' * progress_fill + choices.terminal_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.terminal_action_set.get('reset'),
+		choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset'),
 		status,
 		description
-	]) + choices.terminal_action_set.get('erase_line'))
+	]) + choices.progress_action_set.get('erase_line'))
 	sys.stdout.flush()
+
+
+def resolve_percent(progress : SimpleNamespace) -> str:
+	if progress.total > 0:
+		percent = progress.current * 100 // progress.total
+		return str(percent) + ' %'
+
+	return '0 %'
+
+
+def resolve_frame(progress : SimpleNamespace) -> str:
+	if time.monotonic() - progress.time_start > 0:
+		rate = progress.current / (time.monotonic() - progress.time_start)
+		return str(round(rate, 1)) + 'frame/s'
+
+	return '0.0frame/s'
+
+
+def resolve_download(progress : SimpleNamespace) -> str:
+	if time.monotonic() - progress.time_start > 0:
+		rate = progress.current / (time.monotonic() - progress.time_start)
+
+		if rate > 1024 * 1024:
+			return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
+
+		return str(round(rate / 1024, 1)) + 'kb/s'
+
+	return '0.0kb/s'

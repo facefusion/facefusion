@@ -149,7 +149,7 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
-		with cli_progress.create(frame = 'mode') as progress:
+		with cli_progress.create(mode = 'frame') as progress:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_set)
 
