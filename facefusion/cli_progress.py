@@ -54,44 +54,52 @@ def update(progress : SimpleNamespace) -> None:
 def seek(progress : SimpleNamespace, current : int) -> None:
 	progress.current = current
 
-	if time.monotonic() - progress.moment > 0.1:
+	if time.monotonic() - progress.moment > 0.5:
 		progress.moment = time.monotonic()
 		render(progress)
 
 
-def resolve_status(progress : SimpleNamespace) -> str:
-	if progress.mode == 'percent' and progress.total > 0:
+def resolve_percent(progress : SimpleNamespace) -> str:
+	if progress.total > 0:
 		percent = progress.current * 100 // progress.total
-		return str(percent) + '%'
+		return str(percent) + ' %'
 
-	if progress.mode == 'frame':
-		rate = round(resolve_rate(progress), 1)
-		return str(rate) + ' frames/s'
+	return '0 %'
 
-	if progress.mode == 'download':
-		rate = resolve_rate(progress)
+
+def resolve_frame(progress : SimpleNamespace) -> str:
+	if time.monotonic() - progress.time_start > 0:
+		rate = progress.current / (time.monotonic() - progress.time_start)
+		return str(round(rate, 1)) + ' f/s'
+
+	return '0.0 f/s'
+
+
+def resolve_download(progress : SimpleNamespace) -> str:
+	if time.monotonic() - progress.time_start > 0:
+		rate = progress.current / (time.monotonic() - progress.time_start)
 
 		if rate > 1024 * 1024:
-			rate = round(rate / (1024 * 1024), 1)
-			return str(rate) + ' mb/s'
+			return str(round(rate / (1024 * 1024), 1)) + ' mb/s'
 
-		rate = round(rate / 1024, 1)
-		return str(rate) + ' kb/s'
+		return str(round(rate / 1024, 1)) + ' kb/s'
 
-	return str(progress.current)
-
-
-def resolve_rate(progress : SimpleNamespace) -> float:
-	if time.monotonic() - progress.time_start > 0:
-		return progress.current / (time.monotonic() - progress.time_start)
-
-	return 0.0
+	return '0.0 kb/s'
 
 
 def render(progress : SimpleNamespace) -> None:
 	title = getattr(progress, 'title', '')
 	description = getattr(progress, 'description', '')
-	status = resolve_status(progress)
+	status = str(progress.current)
+
+	if progress.mode == 'percent':
+		status = resolve_percent(progress)
+
+	if progress.mode == 'frame':
+		status = resolve_frame(progress)
+
+	if progress.mode == 'download':
+		status = resolve_download(progress)
 
 	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - len(description) - 3
 
