@@ -74,7 +74,7 @@ def process_memory_frames() -> ErrorCode:
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
-		with cli_progress.create(mode = 'frame') as progress:
+		with cli_progress.create(unit = 'frame') as progress:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_range)
 

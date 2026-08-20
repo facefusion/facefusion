@@ -179,7 +179,7 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
 ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
-ProgressMode = Literal['percent', 'frame', 'download']
+ProgressUnit = Literal['percent', 'frame', 'download']
 
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any

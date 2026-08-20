@@ -8,13 +8,13 @@ from types import SimpleNamespace
 from typing import Iterator, Sized
 
 from facefusion import choices
-from facefusion.types import ProgressMode
+from facefusion.types import ProgressUnit
 
 
 @contextmanager
-def create(mode : ProgressMode = 'frame', current : int = 0, total : int = 0, moment : float = 0.5) -> Iterator[SimpleNamespace]:
+def create(unit : ProgressUnit = 'frame', current : int = 0, total : int = 0, moment : float = 0.5) -> Iterator[SimpleNamespace]:
 	progress = SimpleNamespace(
-		mode = mode,
+		unit = unit,
 		current = current,
 		total = total,
 		moment = moment,
@@ -64,13 +64,13 @@ def render(progress : SimpleNamespace) -> None:
 	description = getattr(progress, 'description', '')
 	status = str(progress.current)
 
-	if progress.mode == 'percent':
+	if progress.unit == 'percent':
 		status = resolve_percent(progress)
 
-	if progress.mode == 'frame':
+	if progress.unit == 'frame':
 		status = resolve_frame(progress)
 
-	if progress.mode == 'download':
+	if progress.unit == 'download':
 		status = resolve_download(progress)
 
 	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - 2
