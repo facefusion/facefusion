@@ -180,7 +180,6 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 
 	with cli_progress.create(total = extract_frame_total) as progress:
 		progress.set_title(translator.get('extracting'))
-
 		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 
@@ -200,7 +199,6 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 
 	with cli_progress.create(total = spawn_frame_total) as progress:
 		progress.set_title(translator.get('spawning'))
-
 		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 
@@ -328,7 +326,6 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 
 	with cli_progress.create(total = merge_frame_total) as progress:
 		progress.set_title(translator.get('merging'))
-
 		process = run_ffmpeg_with_progress(commands, progress.seek)
 		return process.returncode == 0
 

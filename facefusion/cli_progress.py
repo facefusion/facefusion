@@ -48,10 +48,6 @@ def update(progress : SimpleNamespace) -> None:
 	seek(progress, progress.current + 1)
 
 
-def substract(progress : SimpleNamespace) -> None:
-	seek(progress, progress.current - 1)
-
-
 def seek(progress : SimpleNamespace, current : int) -> None:
 	progress.current = current
 
