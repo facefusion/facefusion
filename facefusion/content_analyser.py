@@ -182,6 +182,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			if counter > 0 and total > 0:
 				rate = counter / total * 100
 
+			progress.set_description('rate = ' + str(rate))
 			progress.update()
 
 	return bool(rate > 10.0)
