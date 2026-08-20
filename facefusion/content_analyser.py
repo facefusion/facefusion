@@ -165,7 +165,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	if trim_frame_start > 0:
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
-	with cli_progress.create() as progress:
+	with cli_progress.create(mode = 'frame') as progress:
 		progress.set_title(translator.get('analysing'))
 		progress.count(frame_range)
 

@@ -24,7 +24,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
-			with cli_progress.create(total = download_size) as progress:
+			with cli_progress.create(mode = 'download', total = download_size) as progress:
 				progress.set_title(translator.get('downloading'))
 				progress.set_description('file_name = ' + download_file_name)
 

@@ -149,9 +149,8 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
-		with cli_progress.create() as progress:
+		with cli_progress.create(frame = 'mode') as progress:
 			progress.set_title(translator.get('processing'))
-			progress.set_description('execution_providers = [ ' + ', '.join(state_manager.get_item('execution_providers')) + ' ]')
 			progress.count(temp_frame_set)
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
