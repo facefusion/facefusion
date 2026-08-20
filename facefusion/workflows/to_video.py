@@ -43,14 +43,15 @@ def extract_frames() -> ErrorCode:
 	return 0
 
 
-def process_disk_frame(temp_frame_path : str, frame_number : int) -> bool:
+def process_disk_frame(temp_frame_path : str, frame_number : int, audio_frame_number : int) -> bool:
 	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, audio_frame_number)
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
 def process_disk_frames() -> ErrorCode:
+	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_item('target_path'))
 
 	if temp_frame_set:
@@ -63,7 +64,7 @@ def process_disk_frames() -> ErrorCode:
 				futures : Deque[Future[bool]] = deque()
 
 				for frame_number, temp_frame_path in temp_frame_set.items():
-					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
+					future = executor.submit(process_disk_frame, temp_frame_path, frame_number, frame_number - trim_frame_start)
 					futures.append(future)
 
 				while futures:
@@ -91,7 +92,7 @@ def process_disk_frames() -> ErrorCode:
 	return 0
 
 
-def process_memory_frame(frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
+def process_memory_frame(frame_number : int, audio_frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
 	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
@@ -99,7 +100,7 @@ def process_memory_frame(frame_number : int, temp_video_resolution : Resolution,
 	if not (target_vision_frame.shape[1], target_vision_frame.shape[0]) == temp_video_resolution:
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 
-	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, audio_frame_number)
 
 	if not (temp_vision_frame.shape[1], temp_vision_frame.shape[0]) == output_video_resolution:
 		temp_vision_frame = cv2.resize(temp_vision_frame, output_video_resolution)
@@ -119,7 +120,12 @@ def process_memory_frames() -> ErrorCode:
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	video_fps = detect_video_fps(state_manager.get_item('target_path'))
-	temp_frame_range = range(predict_video_frame_total(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, trim_frame_end))
+	temp_frame_total = predict_video_frame_total(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, trim_frame_end)
+
+	if trim_frame_end > trim_frame_start:
+		temp_frame_total = max(temp_frame_total, 1)
+
+	temp_frame_range = range(temp_frame_total)
 
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
@@ -134,7 +140,7 @@ def process_memory_frames() -> ErrorCode:
 
 				for frame_index in temp_frame_range:
 					frame_number = trim_frame_start + math.floor(frame_index * video_fps / temp_video_fps)
-					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution, output_video_resolution)
+					future = executor.submit(process_memory_frame, frame_number, frame_index, temp_video_resolution, output_video_resolution)
 					futures.append(future)
 
 				while futures:
