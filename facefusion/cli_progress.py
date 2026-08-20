@@ -12,13 +12,13 @@ from facefusion.types import ProgressUnit
 
 
 @contextmanager
-def create(unit : ProgressUnit = 'frame', current : int = 0, total : int = 0, moment : float = 0.5) -> Iterator[SimpleNamespace]:
+def create(unit : ProgressUnit = 'frame', current : int = 0, total : int = 0) -> Iterator[SimpleNamespace]:
 	progress = SimpleNamespace(
 		unit = unit,
 		current = current,
 		total = total,
-		moment = moment,
-		time_start = time.monotonic()
+		time_start = time.monotonic(),
+		time_update = 0.0
 	)
 	progress.count = partial(count, progress)
 	progress.set_title = partial(set_title, progress)
@@ -53,9 +53,10 @@ def update(progress : SimpleNamespace) -> None:
 
 def seek(progress : SimpleNamespace, current : int) -> None:
 	progress.current = current
+	time_current = time.monotonic()
 
-	if time.monotonic() - progress.moment > 0.5:
-		progress.moment = time.monotonic()
+	if time_current - progress.time_update > 0.5:
+		progress.time_update = time_current
 		render(progress)
 
 
@@ -103,16 +104,20 @@ def resolve_percent(progress : SimpleNamespace) -> str:
 
 
 def resolve_frame(progress : SimpleNamespace) -> str:
-	if time.monotonic() - progress.time_start > 0:
-		rate = progress.current / (time.monotonic() - progress.time_start)
+	time_current = time.monotonic()
+
+	if time_current - progress.time_start > 0:
+		rate = progress.current / (time_current - progress.time_start)
 		return str(round(rate, 1)) + 'frame/s'
 
 	return '0.0frame/s'
 
 
 def resolve_download(progress : SimpleNamespace) -> str:
-	if time.monotonic() - progress.time_start > 0:
-		rate = progress.current / (time.monotonic() - progress.time_start)
+	time_current = time.monotonic()
+
+	if time_current - progress.time_start > 0:
+		rate = progress.current / (time_current - progress.time_start)
 
 		if rate > 1024 * 1024:
 			return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
