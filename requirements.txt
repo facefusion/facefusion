@@ -4,7 +4,6 @@ onnxruntime==1.28.0
 opencv-python-headless==5.0.0.93
 psutil==7.2.2
 python-multipart==0.0.28
-tqdm==4.70.0
 scipy==1.18.0
 starlette==0.52.1
 uvicorn==0.41.0

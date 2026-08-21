@@ -177,6 +177,10 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
+ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
+ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
+ProgressUnit = Literal['percent', 'frame', 'download']
+
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any
 

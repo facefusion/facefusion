@@ -5,9 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Deque, Iterator, List
 
 import cv2
-from tqdm import tqdm
 
-from facefusion import ffmpeg_builder, logger, state_manager, translator
+from facefusion import cli_progress, ffmpeg_builder, logger, state_manager, translator
 from facefusion.audio import create_empty_audio_frame
 from facefusion.content_analyser import analyse_stream
 from facefusion.ffmpeg import open_ffmpeg
@@ -21,7 +20,9 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 	capture_deque : Deque[VisionFrame] = deque()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
-	with tqdm(desc = translator.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with cli_progress.create() as progress:
+		progress.set_title(translator.get('streaming'))
+
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
 
