@@ -257,7 +257,7 @@ VideoReader = TypedDict('VideoReader',
 	'file_path' : str,
 	'process' : subprocess.Popen[bytes],
 	'metadata' : VideoReaderMetadata,
-	'frame_number' : int
+	'frame_index' : int
 })
 VideoReaderSet : TypeAlias = Dict[str, VideoReader]
 VideoWriter = TypedDict('VideoWriter',
@@ -544,7 +544,7 @@ StateKey = Literal\
 	'face_selector_age_end',
 	'reference_face_position',
 	'reference_face_distance',
-	'reference_frame_number',
+	'reference_frame_index',
 	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
@@ -620,7 +620,7 @@ State = TypedDict('State',
 	'face_selector_age_end' : int,
 	'reference_face_position' : int,
 	'reference_face_distance' : float,
-	'reference_frame_number' : int,
+	'reference_frame_index' : int,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,

@@ -10,18 +10,18 @@ def get_frame_store(id : str) -> VisionFrameSet:
 	return FRAME_STORE_SET.get(id)
 
 
-def set_frame(id : str, frame_number : int, vision_frame : VisionFrame) -> None:
+def set_frame(id : str, frame_index : int, vision_frame : VisionFrame) -> None:
 	frame_store = get_frame_store(id)
-	frame_store[frame_number] = vision_frame
+	frame_store[frame_index] = vision_frame
 
 
 def select_frame_set(id : str, frame_start : int, frame_end : int) -> VisionFrameSet:
 	frame_store = get_frame_store(id)
 	frame_set = {}
 
-	for frame_number in range(frame_start, frame_end + 1):
-		if frame_number in frame_store:
-			frame_set[frame_number] = frame_store.get(frame_number)
+	for frame_index in range(frame_start, frame_end + 1):
+		if frame_index in frame_store:
+			frame_set[frame_index] = frame_store.get(frame_index)
 
 	return frame_set
 

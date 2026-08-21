@@ -72,36 +72,36 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 
 
 @lru_cache(maxsize = 64)
-def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
-	return read_video_frame(video_path, frame_number)
+def read_static_video_frame(video_path : str, frame_index : int = 0) -> Optional[VisionFrame]:
+	return read_video_frame(video_path, frame_index)
 
 
-def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
+def read_video_frame(video_path : str, frame_index : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_reader = video_manager.get_reader(video_path, 'read_video_frame')
 
 		with thread_semaphore():
-			video_manager.conditional_seek_video_reader(video_reader, frame_number)
+			video_manager.conditional_seek_video_reader(video_reader, frame_index)
 			return video_manager.read_video_frame(video_reader)
 
 	return None
 
 
-def select_video_frames(video_path : str, frame_number : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
+def select_video_frames(video_path : str, frame_index : int = 0, frame_offset : int = 2) -> List[VisionFrame]:
 	vision_frames = []
-	frame_start = frame_number - frame_offset
-	frame_end = frame_number + frame_offset
+	frame_start = frame_index - frame_offset
+	frame_end = frame_index + frame_offset
 
 	if is_video(video_path):
 		with thread_lock():
 			video_reader = video_manager.get_reader(video_path, 'select_video_frames')
 			frame_set = video_manager.read_video_frames(video_reader, max(frame_start, 0), frame_end)
 
-			for frame_number in range(frame_start, frame_end + 1):
+			for frame_index in range(frame_start, frame_end + 1):
 				vision_frame = create_empty_vision_frame()
 
-				if frame_number in frame_set:
-					vision_frame = frame_set.get(frame_number)
+				if frame_index in frame_set:
+					vision_frame = frame_set.get(frame_index)
 
 				vision_frames.append(vision_frame)
 

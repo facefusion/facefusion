@@ -26,8 +26,8 @@ def resolve_temp_frame_set(temp_path : str, output_path : str, temp_frame_format
 	temp_frame_set = {}
 
 	for temp_frame_path in resolve_file_pattern(temp_frames_pattern):
-		frame_number = int(get_file_name(temp_frame_path))
-		temp_frame_set[frame_number] = temp_frame_path
+		frame_index = int(get_file_name(temp_frame_path))
+		temp_frame_set[frame_index] = temp_frame_path
 
 	return temp_frame_set
 

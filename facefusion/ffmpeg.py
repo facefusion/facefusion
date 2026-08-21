@@ -25,8 +25,8 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 					process.terminate()
 
 				if 'frame=' in __line__:
-					_, frame_number = __line__.split('frame=')
-					update_progress(int(frame_number))
+					_, frame_index = __line__.split('frame=')
+					update_progress(int(frame_index))
 
 			if log_level == 'debug':
 				log_debug(process)
@@ -70,9 +70,9 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.DEVNULL, stdout = subprocess.PIPE)
 
 
-def create_video_reader(video_path : str, frame_number : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[Buffer]:
+def create_video_reader(video_path : str, frame_index : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[Buffer]:
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.seek_to(frame_number / video_metadata.get('fps')),
+		ffmpeg_builder.seek_to(frame_index / video_metadata.get('fps')),
 		ffmpeg_builder.set_input(video_path),
 		ffmpeg_builder.restrict_color_transfer(video_metadata.get('color_transfer')),
 		ffmpeg_builder.prevent_frame_drop(),
