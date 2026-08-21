@@ -56,11 +56,11 @@ def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	return None
 
 
-def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
+def get_audio_frame(audio_path : str, fps : Fps, frame_index : int = 0) -> Optional[AudioFrame]:
 	if is_audio(audio_path):
 		audio_frames = read_static_audio(audio_path, fps)
-		if frame_number in range(len(audio_frames)):
-			return audio_frames[frame_number]
+		if frame_index in range(len(audio_frames)):
+			return audio_frames[frame_index]
 	return None
 
 
@@ -78,11 +78,11 @@ def extract_audio_frames(spectrogram : Spectrogram, fps : Fps) -> List[AudioFram
 	return audio_frames
 
 
-def get_voice_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
+def get_voice_frame(audio_path : str, fps : Fps, frame_index : int = 0) -> Optional[AudioFrame]:
 	if is_audio(audio_path):
 		voice_frames = read_static_voice(audio_path, fps)
-		if frame_number in range(len(voice_frames)):
-			return voice_frames[frame_number]
+		if frame_index in range(len(voice_frames)):
+			return voice_frames[frame_index]
 	return None
 
 

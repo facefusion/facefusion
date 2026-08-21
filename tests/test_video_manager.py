@@ -59,26 +59,26 @@ def test_conditional_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	video_frames = {}
 
-	for frame_number in range(30):
-		video_frames[frame_number] = read_video_frame(video_reader)
+	for frame_index in range(30):
+		video_frames[frame_index] = read_video_frame(video_reader)
 
-	for frame_number in [ 5, 17, 29 ]:
-		conditional_seek_video_reader(video_reader, frame_number)
+	for frame_index in [ 5, 17, 29 ]:
+		conditional_seek_video_reader(video_reader, frame_index)
 
-		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_number)) is True
+		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_index)) is True
 
 
 def test_seek_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 	video_frames = {}
 
-	for frame_number in range(30):
-		video_frames[frame_number] = read_video_frame(video_reader)
+	for frame_index in range(30):
+		video_frames[frame_index] = read_video_frame(video_reader)
 
-	for frame_number in [ 5, 17, 29 ]:
-		seek_video_reader(video_reader, frame_number)
+	for frame_index in [ 5, 17, 29 ]:
+		seek_video_reader(video_reader, frame_index)
 
-		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_number)) is True
+		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_index)) is True
 
 
 def test_drain_video_reader() -> None:
@@ -86,7 +86,7 @@ def test_drain_video_reader() -> None:
 
 	drain_video_reader(video_reader, 10)
 
-	assert video_reader.get('frame_number') == 10
+	assert video_reader.get('frame_index') == 10
 
 	vision_frame = read_video_frame(video_reader)
 	seek_video_reader(video_reader, 10)
@@ -98,7 +98,7 @@ def test_read_video_frame() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
 
 	assert read_video_frame(video_reader).shape == (226, 426, 3)
-	assert video_reader.get('frame_number') == 1
+	assert video_reader.get('frame_index') == 1
 
 	seek_video_reader(video_reader, 269)
 
@@ -111,10 +111,10 @@ def test_read_video_frames() -> None:
 
 	assert sorted(read_video_frames(video_reader, 0, 4)) == [ 0, 1, 2, 3, 4 ]
 
-	frame_number = video_reader.get('frame_number')
+	frame_index = video_reader.get('frame_index')
 
 	assert sorted(read_video_frames(video_reader, 1, 3)) == [ 1, 2, 3 ]
-	assert video_reader.get('frame_number') == frame_number
+	assert video_reader.get('frame_index') == frame_index
 
 	read_video_frames(video_reader, 21, 25)
 
@@ -129,7 +129,7 @@ def test_collect_video_frames() -> None:
 	collect_video_frames(video_reader, 20, 24)
 
 	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24 ]
-	assert video_reader.get('frame_number') == 25
+	assert video_reader.get('frame_index') == 25
 
 
 def test_close_video_reader() -> None:
@@ -159,7 +159,7 @@ def test_write_video_frame() -> None:
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
-	for frame_number in range(25):
+	for frame_index in range(25):
 		write_video_frame(video_writer, read_video_frame(video_reader))
 
 	assert close_video_writer(video_writer) is True

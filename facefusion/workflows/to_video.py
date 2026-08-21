@@ -42,15 +42,15 @@ def create_temp_frames() -> ErrorCode:
 	return 0
 
 
-def process_memory_frame(frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
-	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
+def process_memory_frame(frame_index : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
+	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_index, state_manager.get_item('target_frame_amount'))
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
 
 	if not (target_vision_frame.shape[1], target_vision_frame.shape[0]) == temp_video_resolution:
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 
-	temp_vision_frame = process_temp_vision_frame(target_vision_frames, temp_vision_frame, frame_number)
+	temp_vision_frame = process_temp_vision_frame(target_vision_frames, temp_vision_frame, frame_index)
 
 	if not (temp_vision_frame.shape[1], temp_vision_frame.shape[0]) == output_video_resolution:
 		temp_vision_frame = cv2.resize(temp_vision_frame, output_video_resolution)
@@ -78,13 +78,13 @@ def process_memory_frames() -> ErrorCode:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_range)
 
-			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()
 
-				for frame_number in temp_frame_range:
-					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution, output_video_resolution)
+				for frame_index in temp_frame_range:
+					future = executor.submit(process_memory_frame, frame_index, temp_video_resolution, output_video_resolution)
 					futures.append(future)
 
 				while futures:

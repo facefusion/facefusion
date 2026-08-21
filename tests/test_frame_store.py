@@ -54,8 +54,8 @@ def test_select_frame_set() -> None:
 def test_reduce_frames() -> None:
 	target_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 0)
 
-	for frame_number in range(0, 10):
-		set_frame('reader-1', frame_number, target_frame)
+	for frame_index in range(0, 10):
+		set_frame('reader-1', frame_index, target_frame)
 
 	reduce_frames('reader-1', 4, 6)
 

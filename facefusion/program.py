@@ -446,10 +446,10 @@ def create_face_selector_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--reference-frame-number',
-				help = translator.get('help.reference_frame_number'),
+				'--reference-frame-index',
+				help = translator.get('help.reference_frame_index'),
 				type = int,
-				default = config.get_int_value('face_selector', 'reference_frame_number', '0')
+				default = config.get_int_value('face_selector', 'reference_frame_index', '0')
 			)
 		],
 		scopes = [ 'api', 'cli' ],

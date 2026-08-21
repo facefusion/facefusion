@@ -169,10 +169,10 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		progress.set_title(translator.get('analysing'))
 		progress.count(frame_range)
 
-		for frame_number in frame_range:
+		for frame_index in frame_range:
 			vision_frame = video_manager.read_video_frame(video_reader)
 
-			if frame_number % int(video_fps) == 0:
+			if frame_index % int(video_fps) == 0:
 				if is_vision_frame(vision_frame):
 					total += 1
 

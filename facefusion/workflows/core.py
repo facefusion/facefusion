@@ -50,7 +50,7 @@ def clear() -> ErrorCode:
 	return 0
 
 
-def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
+def conditional_get_source_audio_frame(frame_index : int) -> AudioFrame:
 	if state_manager.get_item('workflow_mode') in [ 'audio-to-image:frames', 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		fps = state_manager.get_item('output_audio_fps')
@@ -58,9 +58,9 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 		if state_manager.get_item('workflow_mode') == 'image-to-video':
 			trim_frame_start, _ = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 			fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-			frame_number = frame_number - trim_frame_start
+			frame_index = frame_index - trim_frame_start
 
-		source_audio_frame = get_audio_frame(source_audio_path, fps, frame_number)
+		source_audio_frame = get_audio_frame(source_audio_path, fps, frame_index)
 
 		if numpy.any(source_audio_frame):
 			return source_audio_frame
@@ -68,7 +68,7 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 	return create_empty_audio_frame()
 
 
-def conditional_get_source_voice_frame(frame_number : int) -> AudioFrame:
+def conditional_get_source_voice_frame(frame_index : int) -> AudioFrame:
 	if state_manager.get_item('workflow_mode') in [ 'audio-to-image:frames', 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		temp_fps = state_manager.get_item('output_audio_fps')
@@ -76,9 +76,9 @@ def conditional_get_source_voice_frame(frame_number : int) -> AudioFrame:
 		if state_manager.get_item('workflow_mode') == 'image-to-video':
 			trim_frame_start, _ = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 			temp_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-			frame_number = frame_number - trim_frame_start
+			frame_index = frame_index - trim_frame_start
 
-		source_voice_frame = get_voice_frame(source_audio_path, temp_fps, frame_number)
+		source_voice_frame = get_voice_frame(source_audio_path, temp_fps, frame_index)
 
 		if numpy.any(source_voice_frame):
 			return source_voice_frame
@@ -88,22 +88,22 @@ def conditional_get_source_voice_frame(frame_number : int) -> AudioFrame:
 
 def conditional_get_reference_vision_frame() -> VisionFrame:
 	if state_manager.get_item('workflow_mode') in [ 'image-to-video', 'image-to-video:frames' ]:
-		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index'))
 	return read_static_image(state_manager.get_item('target_path'))
 
 
-def conditional_get_target_vision_frames(frame_number : int) -> List[VisionFrame]:
+def conditional_get_target_vision_frames(frame_index : int) -> List[VisionFrame]:
 	if state_manager.get_item('workflow_mode') in [ 'image-to-video', 'image-to-video:frames' ]:
-		return select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
+		return select_video_frames(state_manager.get_item('target_path'), frame_index, state_manager.get_item('target_frame_amount'))
 	return [ read_static_image(state_manager.get_item('target_path')) ]
 
 
-def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
+def process_temp_frame(temp_frame_path : str, frame_index : int) -> bool:
 	reference_vision_frame = conditional_get_reference_vision_frame()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_frame = conditional_get_source_audio_frame(frame_number)
-	source_voice_frame = conditional_get_source_voice_frame(frame_number)
-	target_vision_frames = conditional_get_target_vision_frames(frame_number)
+	source_audio_frame = conditional_get_source_audio_frame(frame_index)
+	source_voice_frame = conditional_get_source_voice_frame(frame_index)
+	target_vision_frames = conditional_get_target_vision_frames(frame_index)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba').copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
@@ -123,11 +123,11 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
-def process_temp_vision_frame(target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame, frame_number : int) -> VisionFrame:
+def process_temp_vision_frame(target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame, frame_index : int) -> VisionFrame:
 	reference_vision_frame = conditional_get_reference_vision_frame()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_frame = conditional_get_source_audio_frame(frame_number)
-	source_voice_frame = conditional_get_source_voice_frame(frame_number)
+	source_audio_frame = conditional_get_source_audio_frame(frame_index)
+	source_voice_frame = conditional_get_source_voice_frame(frame_index)
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -156,8 +156,8 @@ def process_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
-				for frame_number, temp_frame_path in temp_frame_set.items():
-					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
+				for frame_index, temp_frame_path in temp_frame_set.items():
+					future = executor.submit(process_temp_frame, temp_frame_path, frame_index)
 					futures.append(future)
 
 				while futures:

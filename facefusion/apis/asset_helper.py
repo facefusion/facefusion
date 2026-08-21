@@ -93,7 +93,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	return asset_paths
 
 
-def read_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str]) -> List[VisionFrame]:
+def read_asset_frames(asset : ImageAsset | VideoAsset, frame_indexes : List[str]) -> List[VisionFrame]:
 	vision_frames = []
 
 	if asset.get('media') == 'image':
@@ -103,9 +103,9 @@ def read_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str]
 			vision_frames.append(vision_frame)
 
 	if asset.get('media') == 'video':
-		for frame_number in frame_numbers:
-			if frame_number.isdigit():
-				vision_frame = read_static_video_frame(asset.get('path'), int(frame_number))
+		for frame_index in frame_indexes:
+			if frame_index.isdigit():
+				vision_frame = read_static_video_frame(asset.get('path'), int(frame_index))
 
 				if is_vision_frame(vision_frame):
 					vision_frames.append(vision_frame)
@@ -113,9 +113,9 @@ def read_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str]
 	return vision_frames
 
 
-def capture_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[str], resolution : str) -> List[VisionFrame]:
+def capture_asset_frames(asset : ImageAsset | VideoAsset, frame_indexes : List[str], resolution : str) -> List[VisionFrame]:
 	capture_vision_frames = []
-	temp_vision_frames = read_asset_frames(asset, frame_numbers)
+	temp_vision_frames = read_asset_frames(asset, frame_indexes)
 
 	for temp_vision_frame in temp_vision_frames:
 		capture_vision_frame = fit_contain_frame(temp_vision_frame, unpack_resolution(resolution))
@@ -124,9 +124,9 @@ def capture_asset_frames(asset : ImageAsset | VideoAsset, frame_numbers : List[s
 	return capture_vision_frames
 
 
-def capture_asset_faces(asset : ImageAsset | VideoAsset, frame_numbers : List[str], resolution : str) -> List[VisionFrame]:
+def capture_asset_faces(asset : ImageAsset | VideoAsset, frame_indexes : List[str], resolution : str) -> List[VisionFrame]:
 	capture_vision_frames = []
-	temp_vision_frames = read_asset_frames(asset, frame_numbers)
+	temp_vision_frames = read_asset_frames(asset, frame_indexes)
 	crop_size = unpack_resolution(resolution)
 
 	for temp_vision_frame in temp_vision_frames:
