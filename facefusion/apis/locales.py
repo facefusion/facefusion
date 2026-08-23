@@ -10,6 +10,7 @@ LOCALES : Locales =\
 		'invalid_refresh_token': 'invalid refresh token',
 		'source_asset_not_found': 'source asset not found',
 		'target_asset_not_found': 'target asset not found',
-		'invalid_state_key': 'invalid state key'
+		'invalid_state_key': 'invalid state key',
+		'job_not_created': 'job not created'
 	}
 }

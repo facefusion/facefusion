@@ -57,6 +57,8 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'api':
 		if not common_pre_check() or not processors_pre_check() or not facefusion.apis.core.pre_check():
 			hard_exit(2)
+		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
 		uvicorn.run(facefusion.apis.core.create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
