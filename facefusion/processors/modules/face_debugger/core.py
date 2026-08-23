@@ -38,7 +38,7 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--face-debugger-items',
 					help = translator.get('help.items', __package__).format(choices = ', '.join(face_debugger_choices.face_debugger_items)),
-					default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'),
+					default = config.get_str_list('processors.face_debugger', 'face_debugger_items', 'face-landmark-5/68 face-mask'),
 					choices = face_debugger_choices.face_debugger_items,
 					nargs = '+',
 					metavar = 'FACE_DEBUGGER_ITEMS'

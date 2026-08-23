@@ -139,14 +139,14 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--lip-syncer-model',
 					help = translator.get('help.model', __package__),
-					default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'),
+					default = config.get_str_value('processors.lip_syncer', 'lip_syncer_model', 'wav2lip_gan_96'),
 					choices = lip_syncer_choices.lip_syncer_models
 				),
 				group_processors.add_argument(
 					'--lip-syncer-weight',
 					help = translator.get('help.weight', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'),
+					default = config.get_float_value('processors.lip_syncer', 'lip_syncer_weight', '0.5'),
 					choices = lip_syncer_choices.lip_syncer_weight_range,
 					metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range)
 				)

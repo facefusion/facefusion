@@ -130,14 +130,14 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--age-modifier-model',
 					help = translator.get('help.model', __package__),
-					default = config.get_str_value('processors', 'age_modifier_model', 'fran'),
+					default = config.get_str_value('processors.age_modifier', 'age_modifier_model', 'fran'),
 					choices = age_modifier_choices.age_modifier_models
 				),
 				group_processors.add_argument(
 					'--age-modifier-direction',
 					help = translator.get('help.direction', __package__),
 					type = int,
-					default = config.get_int_value('processors', 'age_modifier_direction', '0'),
+					default = config.get_int_value('processors.age_modifier', 'age_modifier_direction', '0'),
 					choices = age_modifier_choices.age_modifier_direction_range,
 					metavar = create_int_metavar(age_modifier_choices.age_modifier_direction_range)
 				)

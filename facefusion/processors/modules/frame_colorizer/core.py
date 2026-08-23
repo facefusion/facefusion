@@ -192,21 +192,21 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--frame-colorizer-model',
 					help = translator.get('help.model', __package__),
-					default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'),
+					default = config.get_str_value('processors.frame_colorizer', 'frame_colorizer_model', 'ddcolor'),
 					choices = frame_colorizer_choices.frame_colorizer_models
 				),
 				group_processors.add_argument(
 					'--frame-colorizer-size',
 					help = translator.get('help.size', __package__),
 					type = str,
-					default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'),
+					default = config.get_str_value('processors.frame_colorizer', 'frame_colorizer_size', '256x256'),
 					choices = frame_colorizer_choices.frame_colorizer_sizes
 				),
 				group_processors.add_argument(
 					'--frame-colorizer-blend',
 					help = translator.get('help.blend', __package__),
 					type = int,
-					default = config.get_int_value('processors', 'frame_colorizer_blend', '100'),
+					default = config.get_int_value('processors.frame_colorizer', 'frame_colorizer_blend', '100'),
 					choices = frame_colorizer_choices.frame_colorizer_blend_range,
 					metavar = create_int_metavar(frame_colorizer_choices.frame_colorizer_blend_range)
 				)

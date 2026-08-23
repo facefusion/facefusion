@@ -135,14 +135,14 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--face-editor-model',
 					help = translator.get('help.model', __package__),
-					default = config.get_str_value('processors', 'face_editor_model', 'live_portrait'),
+					default = config.get_str_value('processors.face_editor', 'face_editor_model', 'live_portrait'),
 					choices = face_editor_choices.face_editor_models
 				),
 				group_processors.add_argument(
 					'--face-editor-eyebrow-direction',
 					help = translator.get('help.eyebrow_direction', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_eyebrow_direction', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_eyebrow_direction', '0'),
 					choices = face_editor_choices.face_editor_eyebrow_direction_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_eyebrow_direction_range)
 				),
@@ -150,7 +150,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-eye-gaze-horizontal',
 					help = translator.get('help.eye_gaze_horizontal', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_eye_gaze_horizontal', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_eye_gaze_horizontal', '0'),
 					choices = face_editor_choices.face_editor_eye_gaze_horizontal_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_eye_gaze_horizontal_range)
 				),
@@ -158,7 +158,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-eye-gaze-vertical',
 					help = translator.get('help.eye_gaze_vertical', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_eye_gaze_vertical', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_eye_gaze_vertical', '0'),
 					choices = face_editor_choices.face_editor_eye_gaze_vertical_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_eye_gaze_vertical_range)
 				),
@@ -166,7 +166,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-eye-open-ratio',
 					help = translator.get('help.eye_open_ratio', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_eye_open_ratio', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_eye_open_ratio', '0'),
 					choices = face_editor_choices.face_editor_eye_open_ratio_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_eye_open_ratio_range)
 				),
@@ -174,7 +174,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-lip-open-ratio',
 					help = translator.get('help.lip_open_ratio', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_lip_open_ratio', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_lip_open_ratio', '0'),
 					choices = face_editor_choices.face_editor_lip_open_ratio_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_lip_open_ratio_range)
 				),
@@ -182,7 +182,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-grim',
 					help = translator.get('help.mouth_grim', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_grim', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_grim', '0'),
 					choices = face_editor_choices.face_editor_mouth_grim_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_grim_range)
 				),
@@ -190,7 +190,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-pout',
 					help = translator.get('help.mouth_pout', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_pout', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_pout', '0'),
 					choices = face_editor_choices.face_editor_mouth_pout_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_pout_range)
 				),
@@ -198,7 +198,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-purse',
 					help = translator.get('help.mouth_purse', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_purse', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_purse', '0'),
 					choices = face_editor_choices.face_editor_mouth_purse_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_purse_range)
 				),
@@ -206,7 +206,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-smile',
 					help = translator.get('help.mouth_smile', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_smile', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_smile', '0'),
 					choices = face_editor_choices.face_editor_mouth_smile_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_smile_range)
 				),
@@ -214,7 +214,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-position-horizontal',
 					help = translator.get('help.mouth_position_horizontal', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_position_horizontal', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_position_horizontal', '0'),
 					choices = face_editor_choices.face_editor_mouth_position_horizontal_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_position_horizontal_range)
 				),
@@ -222,7 +222,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-mouth-position-vertical',
 					help = translator.get('help.mouth_position_vertical', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_mouth_position_vertical', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_mouth_position_vertical', '0'),
 					choices = face_editor_choices.face_editor_mouth_position_vertical_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_mouth_position_vertical_range)
 				),
@@ -230,7 +230,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-head-pitch',
 					help = translator.get('help.head_pitch', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_head_pitch', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_head_pitch', '0'),
 					choices = face_editor_choices.face_editor_head_pitch_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_head_pitch_range)
 				),
@@ -238,7 +238,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-head-yaw',
 					help = translator.get('help.head_yaw', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_head_yaw', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_head_yaw', '0'),
 					choices = face_editor_choices.face_editor_head_yaw_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_head_yaw_range)
 				),
@@ -246,7 +246,7 @@ def register_args(program : ArgumentParser) -> None:
 					'--face-editor-head-roll',
 					help = translator.get('help.head_roll', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_editor_head_roll', '0'),
+					default = config.get_float_value('processors.face_editor', 'face_editor_head_roll', '0'),
 					choices = face_editor_choices.face_editor_head_roll_range,
 					metavar = create_float_metavar(face_editor_choices.face_editor_head_roll_range)
 				)

@@ -532,7 +532,7 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--face-swapper-model',
 					help = translator.get('help.model', __package__),
-					default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'),
+					default = config.get_str_value('processors.face_swapper', 'face_swapper_model', 'hyperswap_1a_256'),
 					choices = face_swapper_choices.face_swapper_models
 				)
 			],
@@ -546,14 +546,14 @@ def register_args(program : ArgumentParser) -> None:
 				group_processors.add_argument(
 					'--face-swapper-pixel-boost',
 					help = translator.get('help.pixel_boost', __package__),
-					default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)),
+					default = config.get_str_value('processors.face_swapper', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)),
 					choices = face_swapper_pixel_boost_choices
 				),
 				group_processors.add_argument(
 					'--face-swapper-weight',
 					help = translator.get('help.weight', __package__),
 					type = float,
-					default = config.get_float_value('processors', 'face_swapper_weight', '0.5'),
+					default = config.get_float_value('processors.face_swapper', 'face_swapper_weight', '0.5'),
 					choices = face_swapper_choices.face_swapper_weight_range
 				)
 			],
