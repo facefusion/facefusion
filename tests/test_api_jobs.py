@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager
 from facefusion.apis.core import create_api
-from facefusion.jobs.job_manager import clear_jobs, find_job_ids, init_jobs
+from facefusion.jobs.job_manager import clear_jobs, create_job, find_job_ids, init_jobs
 from .assert_helper import get_test_jobs_directory
 
 
@@ -21,6 +21,73 @@ def before_each() -> None:
 def test_client() -> Iterator[TestClient]:
 	with TestClient(create_api()) as test_client:
 		yield test_client
+
+
+def test_get_jobs(test_client : TestClient) -> None:
+	get_jobs_response = test_client.get('/jobs?status=drafted')
+
+	assert get_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	get_jobs_response = test_client.get('/jobs?status=invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_jobs_body = get_jobs_response.json()
+
+	assert get_jobs_body.get('message') == 'invalid job status'
+	assert get_jobs_response.status_code == 400
+
+	create_job('job-test-get-jobs')
+
+	get_jobs_response = test_client.get('/jobs?status=drafted', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_jobs_body = get_jobs_response.json()
+
+	assert 'job-test-get-jobs' in get_jobs_body
+	assert get_jobs_body.get('job-test-get-jobs').get('step_total') == 0
+	assert get_jobs_response.status_code == 200
+
+
+def test_get_job(test_client : TestClient) -> None:
+	get_job_response = test_client.get('/jobs/job-test-get-job')
+
+	assert get_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	get_job_response = test_client.get('/jobs/job-test-unknown', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_job_body = get_job_response.json()
+
+	assert get_job_body.get('message') == 'job not found'
+	assert get_job_response.status_code == 404
+
+	create_job('job-test-get-job')
+
+	get_job_response = test_client.get('/jobs/job-test-get-job', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_job_body = get_job_response.json()
+
+	assert get_job_body.get('version') == '1'
+	assert get_job_response.status_code == 200
 
 
 def test_create_job(test_client : TestClient) -> None:

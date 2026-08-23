@@ -11,6 +11,8 @@ LOCALES : Locales =\
 		'source_asset_not_found': 'source asset not found',
 		'target_asset_not_found': 'target asset not found',
 		'invalid_state_key': 'invalid state key',
+		'invalid_job_status': 'invalid job status',
+		'job_not_found': 'job not found',
 		'job_not_created': 'job not created'
 	}
 }
