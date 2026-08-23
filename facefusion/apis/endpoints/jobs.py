@@ -3,7 +3,7 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 import facefusion.choices
-from facefusion import translator
+from facefusion import state_manager, translator
 from facefusion.jobs import job_helper, job_manager
 
 
@@ -56,3 +56,31 @@ async def create_job(request : Request) -> JSONResponse:
 	{
 		'message': translator.get('job_not_created', 'facefusion.apis')
 	}, status_code = HTTP_400_BAD_REQUEST)
+
+
+async def delete_jobs(request : Request) -> JSONResponse:
+	if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
+		return JSONResponse(
+		{
+			'message': translator.get('ok', 'facefusion.apis')
+		}, status_code = HTTP_200_OK)
+
+	return JSONResponse(
+	{
+		'message': translator.get('job_not_found', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)
+
+
+async def delete_job(request : Request) -> JSONResponse:
+	job_id = request.path_params.get('job_id')
+
+	if job_manager.delete_job(job_id):
+		return JSONResponse(
+		{
+			'message': translator.get('ok', 'facefusion.apis')
+		}, status_code = HTTP_200_OK)
+
+	return JSONResponse(
+	{
+		'message': translator.get('job_not_found', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)

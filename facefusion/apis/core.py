@@ -8,7 +8,7 @@ from starlette.routing import Route, WebSocketRoute
 
 from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
 from facefusion.apis.endpoints.capabilities import get_capabilities
-from facefusion.apis.endpoints.jobs import create_job, get_job, get_jobs
+from facefusion.apis.endpoints.jobs import create_job, delete_job, delete_jobs, get_job, get_jobs
 from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
@@ -49,8 +49,10 @@ def create_api() -> Starlette:
 			Route('/stream', post_stream, methods = [ 'POST' ], middleware = [ session_guard ]),
 			Route('/stream', delete_stream, methods = [ 'DELETE' ], name = 'delete_stream', middleware = [ session_guard ]),
 			Route('/jobs', get_jobs, methods = [ 'GET' ], middleware = [ session_guard ]),
-			Route('/jobs/{job_id}', get_job, methods = [ 'GET' ], middleware = [ session_guard ]),
 			Route('/jobs', create_job, methods = [ 'POST' ], middleware = [ session_guard ]),
+			Route('/jobs', delete_jobs, methods = [ 'DELETE' ], middleware = [ session_guard ]),
+			Route('/jobs/{job_id}', get_job, methods = [ 'GET' ], middleware = [ session_guard ]),
+			Route('/jobs/{job_id}', delete_job, methods = [ 'DELETE' ], middleware = [ session_guard ]),
 			WebSocketRoute('/metrics', websocket_metrics, middleware = [ session_guard ]),
 			WebSocketRoute('/ping', websocket_ping, middleware = [ session_guard ]),
 			WebSocketRoute('/stream', websocket_stream, middleware = [ session_guard ])

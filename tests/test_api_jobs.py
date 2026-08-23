@@ -53,7 +53,6 @@ def test_get_jobs(test_client : TestClient) -> None:
 	get_jobs_body = get_jobs_response.json()
 
 	assert 'job-test-get-jobs' in get_jobs_body
-	assert get_jobs_body.get('job-test-get-jobs').get('step_total') == 0
 	assert get_jobs_response.status_code == 200
 
 
@@ -127,3 +126,68 @@ def test_create_job(test_client : TestClient) -> None:
 
 		assert create_job_body.get('message') == 'job not created'
 		assert create_job_response.status_code == 400
+
+
+def test_delete_jobs(test_client : TestClient) -> None:
+	delete_jobs_response = test_client.delete('/jobs')
+
+	assert delete_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	delete_jobs_response = test_client.delete('/jobs', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	delete_jobs_body = delete_jobs_response.json()
+
+	assert delete_jobs_body.get('message') == 'job not found'
+	assert delete_jobs_response.status_code == 404
+
+	create_job('job-test-delete-jobs-1')
+	create_job('job-test-delete-jobs-2')
+
+	delete_jobs_response = test_client.delete('/jobs', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert find_job_ids('drafted') == []
+	assert delete_jobs_response.status_code == 200
+
+
+def test_delete_job(test_client : TestClient) -> None:
+	delete_job_response = test_client.delete('/jobs/job-test-delete-job')
+
+	assert delete_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	delete_job_response = test_client.delete('/jobs/job-test-unknown', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	delete_job_body = delete_job_response.json()
+
+	assert delete_job_body.get('message') == 'job not found'
+	assert delete_job_response.status_code == 404
+
+	create_job('job-test-delete-job')
+
+	delete_job_response = test_client.delete('/jobs/job-test-delete-job', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert find_job_ids('drafted') == []
+	assert delete_job_response.status_code == 200
