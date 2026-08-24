@@ -183,3 +183,67 @@ async def delete_job(request : Request) -> JSONResponse:
 	{
 		'message': translator.get('job_not_deleted', 'facefusion.apis')
 	}, status_code = HTTP_404_NOT_FOUND)
+
+
+async def create_step(request : Request) -> JSONResponse:
+	job_id = request.path_params.get('job_id')
+	step_index = request.path_params.get('step_index')
+	action = request.query_params.get('action')
+	step_args = await request.json()
+
+	if action == 'add':
+		if job_manager.add_step(job_id, step_args):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_201_CREATED)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_step_not_added', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'insert':
+		if job_manager.insert_step(job_id, step_index, step_args):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_201_CREATED)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_step_not_inserted', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'remix':
+		if job_manager.remix_step(job_id, step_index, step_args):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_201_CREATED)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_step_not_remixed', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	return JSONResponse(
+	{
+		'message': translator.get('invalid_job_action', 'facefusion.apis')
+	}, status_code = HTTP_400_BAD_REQUEST)
+
+
+async def delete_step(request : Request) -> JSONResponse:
+	job_id = request.path_params.get('job_id')
+	step_index = request.path_params.get('step_index')
+
+	if job_manager.remove_step(job_id, step_index):
+		return JSONResponse(
+		{
+			'message': translator.get('ok', 'facefusion.apis')
+		}, status_code = HTTP_200_OK)
+
+	return JSONResponse(
+	{
+		'message': translator.get('job_step_not_removed', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)

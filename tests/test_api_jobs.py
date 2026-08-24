@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager
 from facefusion.apis.core import create_api
-from facefusion.jobs.job_manager import clear_jobs, create_job, find_job_ids, init_jobs
+from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs
 from .assert_helper import get_test_jobs_directory
 
 
@@ -415,3 +415,108 @@ def test_delete_job(test_client : TestClient) -> None:
 
 	assert find_job_ids('drafted') == []
 	assert delete_job_response.status_code == 200
+
+
+def test_create_step(test_client : TestClient) -> None:
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert create_step_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	create_job('job-test-create-step')
+
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	create_step_body = create_step_response.json()
+
+	assert create_step_body.get('message') == 'ok'
+	assert count_step_total('job-test-create-step') == 1
+	assert create_step_response.status_code == 201
+
+	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert count_step_total('job-test-create-step') == 2
+	assert create_step_response.status_code == 201
+
+	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=remix', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert count_step_total('job-test-create-step') == 3
+	assert create_step_response.status_code == 201
+
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	create_step_body = create_step_response.json()
+
+	assert create_step_body.get('message') == 'invalid job action'
+	assert create_step_response.status_code == 400
+
+
+def test_delete_step(test_client : TestClient) -> None:
+	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0')
+
+	assert delete_step_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	create_job('job-test-delete-step')
+
+	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	delete_step_body = delete_step_response.json()
+
+	assert delete_step_body.get('message') == 'step not removed'
+	assert delete_step_response.status_code == 404
+
+	test_client.post('/jobs/job-test-delete-step?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert count_step_total('job-test-delete-step') == 0
+	assert delete_step_response.status_code == 200
