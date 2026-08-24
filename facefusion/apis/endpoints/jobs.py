@@ -1,10 +1,14 @@
+from functools import partial
+
+from starlette.background import BackgroundTask
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 import facefusion.choices
+import facefusion.core
 from facefusion import state_manager, translator
-from facefusion.jobs import job_helper, job_manager
+from facefusion.jobs import job_helper, job_manager, job_runner
 
 
 async def get_jobs(request : Request) -> JSONResponse:
@@ -58,31 +62,98 @@ async def create_job(request : Request) -> JSONResponse:
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
-async def submit_jobs(request : Request) -> JSONResponse:
-	if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
+async def update_jobs(request : Request) -> JSONResponse:
+	action = request.query_params.get('action')
+
+	if action == 'submit':
+		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_200_OK)
+
 		return JSONResponse(
 		{
-			'message': translator.get('ok', 'facefusion.apis')
-		}, status_code = HTTP_200_OK)
+			'message': translator.get('job_all_not_submitted', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'run':
+		if job_manager.find_job_ids('queued'):
+			run_jobs_task = BackgroundTask(partial(job_runner.run_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = run_jobs_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_all_not_run', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'retry':
+		if job_manager.find_job_ids('failed'):
+			retry_jobs_task = BackgroundTask(partial(job_runner.retry_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = retry_jobs_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_all_not_retried', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
 
 	return JSONResponse(
 	{
-		'message': translator.get('job_all_not_submitted', 'facefusion.apis')
+		'message': translator.get('invalid_job_action', 'facefusion.apis')
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
-async def submit_job(request : Request) -> JSONResponse:
+async def update_job(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
+	action = request.query_params.get('action')
 
-	if job_manager.submit_job(job_id):
+	if action == 'submit':
+		if job_manager.submit_job(job_id):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_200_OK)
+
 		return JSONResponse(
 		{
-			'message': translator.get('ok', 'facefusion.apis')
-		}, status_code = HTTP_200_OK)
+			'message': translator.get('job_not_submitted', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'run':
+		if job_id in job_manager.find_job_ids('queued'):
+			run_job_task = BackgroundTask(partial(job_runner.run_job, job_id, facefusion.core.process_step))
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = run_job_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_not_run', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'retry':
+		if job_id in job_manager.find_job_ids('failed'):
+			retry_job_task = BackgroundTask(partial(job_runner.retry_job, job_id, facefusion.core.process_step))
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = retry_job_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_not_retried', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
 
 	return JSONResponse(
 	{
-		'message': translator.get('job_not_submitted', 'facefusion.apis')
+		'message': translator.get('invalid_job_action', 'facefusion.apis')
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
