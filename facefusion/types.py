@@ -222,7 +222,7 @@ EncoderSet = TypedDict('EncoderSet',
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
 AssetId : TypeAlias = str
-AssetType = Literal['source', 'target']
+AssetType = Literal['source', 'target', 'output']
 MediaType = Literal['image', 'video', 'audio']
 AudioMetadata = TypedDict('AudioMetadata',
 {
