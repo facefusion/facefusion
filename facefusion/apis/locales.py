@@ -13,6 +13,10 @@ LOCALES : Locales =\
 		'invalid_state_key': 'invalid state key',
 		'invalid_job_status': 'invalid job status',
 		'job_not_found': 'job not found',
-		'job_not_created': 'job not created'
+		'job_not_created': 'job not created',
+		'job_not_submitted': 'job not submitted',
+		'job_not_deleted': 'job not deleted',
+		'job_all_not_submitted': 'jobs not submitted',
+		'job_all_not_deleted': 'jobs not deleted'
 	}
 }

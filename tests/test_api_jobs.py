@@ -128,6 +128,74 @@ def test_create_job(test_client : TestClient) -> None:
 		assert create_job_response.status_code == 400
 
 
+def test_submit_jobs(test_client : TestClient) -> None:
+	submit_jobs_response = test_client.put('/jobs/submit')
+
+	assert submit_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	create_job('job-test-submit-jobs')
+
+	submit_jobs_response = test_client.put('/jobs/submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_jobs_body = submit_jobs_response.json()
+
+	assert submit_jobs_body.get('message') == 'jobs not submitted'
+	assert submit_jobs_response.status_code == 400
+
+	with patch('facefusion.jobs.job_manager.submit_jobs', return_value = True):
+		submit_jobs_response = test_client.put('/jobs/submit', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+		submit_jobs_body = submit_jobs_response.json()
+
+		assert submit_jobs_body.get('message') == 'ok'
+		assert submit_jobs_response.status_code == 200
+
+
+def test_submit_job(test_client : TestClient) -> None:
+	submit_job_response = test_client.put('/jobs/job-test-submit-job/submit')
+
+	assert submit_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	create_job('job-test-submit-job')
+
+	submit_job_response = test_client.put('/jobs/job-test-submit-job/submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_job_body = submit_job_response.json()
+
+	assert submit_job_body.get('message') == 'job not submitted'
+	assert submit_job_response.status_code == 400
+
+	with patch('facefusion.jobs.job_manager.submit_job', return_value = True):
+		submit_job_response = test_client.put('/jobs/job-test-submit-job/submit', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+		submit_job_body = submit_job_response.json()
+
+		assert submit_job_body.get('message') == 'ok'
+		assert submit_job_response.status_code == 200
+
+
 def test_delete_jobs(test_client : TestClient) -> None:
 	delete_jobs_response = test_client.delete('/jobs')
 
@@ -146,7 +214,7 @@ def test_delete_jobs(test_client : TestClient) -> None:
 	})
 	delete_jobs_body = delete_jobs_response.json()
 
-	assert delete_jobs_body.get('message') == 'job not found'
+	assert delete_jobs_body.get('message') == 'jobs not deleted'
 	assert delete_jobs_response.status_code == 404
 
 	create_job('job-test-delete-jobs-1')
@@ -179,7 +247,7 @@ def test_delete_job(test_client : TestClient) -> None:
 	})
 	delete_job_body = delete_job_response.json()
 
-	assert delete_job_body.get('message') == 'job not found'
+	assert delete_job_body.get('message') == 'job not deleted'
 	assert delete_job_response.status_code == 404
 
 	create_job('job-test-delete-job')
