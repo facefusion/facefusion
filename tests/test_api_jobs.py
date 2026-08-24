@@ -7,7 +7,13 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager
 from facefusion.apis.core import create_api
 from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs
+from facefusion.program import create_program
 from .assert_helper import get_test_jobs_directory
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	create_program()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -446,6 +452,14 @@ def test_create_step(test_client : TestClient) -> None:
 	assert create_step_body.get('message') == 'ok'
 	assert count_step_total('job-test-create-step') == 1
 	assert create_step_response.status_code == 201
+
+	get_job_response = test_client.get('/jobs/job-test-create-step', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_job_body = get_job_response.json()
+
+	assert get_job_body.get('steps')[0].get('args') == { 'processors': [ 'face_swapper' ] }
 
 	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
 	{

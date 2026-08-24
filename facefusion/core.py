@@ -182,7 +182,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-add-step':
-		step_args = args_helper.filter_step_args(args)
+		step_args = args_helper.filter_cli_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
 			logger.info(translator.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
@@ -191,7 +191,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = args_helper.filter_step_args(args)
+		step_args = args_helper.filter_cli_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -200,7 +200,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-insert-step':
-		step_args = args_helper.filter_step_args(args)
+		step_args = args_helper.filter_cli_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -254,7 +254,7 @@ def route_job_runner() -> ErrorCode:
 
 def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_args = args_helper.filter_step_args(args)
+	step_args = args_helper.filter_cli_step_args(args)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
@@ -263,7 +263,7 @@ def process_headless(args : Args) -> ErrorCode:
 
 def process_batch(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('batch')
-	step_args = args_helper.filter_step_args(args)
+	step_args = args_helper.filter_cli_step_args(args)
 	source_paths = resolve_file_pattern(step_args.get('source_pattern'))
 	target_paths = resolve_file_pattern(step_args.get('target_pattern'))
 

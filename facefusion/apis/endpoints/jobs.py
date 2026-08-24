@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, H
 
 import facefusion.choices
 import facefusion.core
-from facefusion import state_manager, translator
+from facefusion import args_helper, state_manager, translator
 from facefusion.jobs import job_helper, job_manager, job_runner
 
 
@@ -189,7 +189,7 @@ async def create_step(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
 	step_index = request.path_params.get('step_index')
 	action = request.query_params.get('action')
-	step_args = await request.json()
+	step_args = args_helper.filter_api_step_args(await request.json())
 
 	if action == 'add':
 		if job_manager.add_step(job_id, step_args):
