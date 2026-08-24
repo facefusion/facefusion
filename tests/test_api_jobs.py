@@ -1,10 +1,12 @@
+import os
 from typing import Iterator
 from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager
+from facefusion import metadata, session_manager, state_manager
+from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs
 from facefusion.program import create_program
@@ -19,6 +21,8 @@ def before_all() -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	session_manager.SESSIONS.clear()
+	asset_store.clear()
+	state_manager.init_item('temp_path', get_test_jobs_directory())
 	clear_jobs(get_test_jobs_directory())
 	init_jobs(get_test_jobs_directory())
 
@@ -438,6 +442,8 @@ def test_create_step(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 
+	state_manager.init_item('source_paths', [ 'source.jpg' ])
+	state_manager.init_item('target_path', 'target.mp4')
 	create_job('job-test-create-step')
 
 	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', headers =
@@ -445,6 +451,7 @@ def test_create_step(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	}, json =
 	{
+		'target_path': 'client.mp4',
 		'processors': [ 'face_swapper' ]
 	})
 	create_step_body = create_step_response.json()
@@ -458,8 +465,17 @@ def test_create_step(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	get_job_body = get_job_response.json()
+	step_args = get_job_body.get('steps')[0].get('args')
 
-	assert get_job_body.get('steps')[0].get('args') == { 'processors': [ 'face_swapper' ] }
+	access_session_id = session_manager.find_session_id(access_token)
+
+	assert step_args ==\
+	{
+		'processors': [ 'face_swapper' ],
+		'source_paths': [ 'source.jpg' ],
+		'target_path': 'target.mp4',
+		'output_path': os.path.join(get_test_jobs_directory(), access_session_id, 'job-test-create-step.mp4')
+	}
 
 	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
 	{
