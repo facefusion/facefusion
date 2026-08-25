@@ -37,11 +37,11 @@ def conditional_get_reference_vision_frame() -> VisionFrame:
 	return read_static_image(state_manager.get_item('target_path'))
 
 
-def conditional_get_source_audio_frame(audio_frame_number : int) -> AudioFrame:
+def conditional_get_source_audio_frame(temp_frame_number : int) -> AudioFrame:
 	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-		source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, audio_frame_number)
+		source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, temp_frame_number)
 
 		if numpy.any(source_audio_frame):
 			return source_audio_frame
@@ -49,11 +49,11 @@ def conditional_get_source_audio_frame(audio_frame_number : int) -> AudioFrame:
 	return create_empty_audio_frame()
 
 
-def conditional_get_source_voice_frame(audio_frame_number : int) -> AudioFrame:
+def conditional_get_source_voice_frame(temp_frame_number : int) -> AudioFrame:
 	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-		source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, audio_frame_number)
+		source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, temp_frame_number)
 
 		if numpy.any(source_voice_frame):
 			return source_voice_frame
@@ -67,11 +67,11 @@ def conditional_get_target_vision_frames(frame_number : int) -> List[VisionFrame
 	return [ read_static_image(state_manager.get_item('target_path')) ]
 
 
-def process_temp_frame(target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame, audio_frame_number : int) -> VisionFrame:
+def process_temp_frame(target_vision_frames : List[VisionFrame], temp_vision_frame : VisionFrame, temp_frame_number : int) -> VisionFrame:
 	reference_vision_frame = conditional_get_reference_vision_frame()
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_frame = conditional_get_source_audio_frame(audio_frame_number)
-	source_voice_frame = conditional_get_source_voice_frame(audio_frame_number)
+	source_audio_frame = conditional_get_source_audio_frame(temp_frame_number)
+	source_voice_frame = conditional_get_source_voice_frame(temp_frame_number)
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):

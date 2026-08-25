@@ -117,9 +117,20 @@ def count_video_frame_total(video_path : str) -> int:
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
 	if is_video(video_path):
 		video_fps = detect_video_fps(video_path)
-		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / video_fps
-		return math.floor(extract_frame_total)
+		trim_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end)
+
+		if trim_frame_total > 0:
+			extract_frame_total = trim_frame_total * fps / video_fps
+			return max(math.floor(extract_frame_total), 1)
 	return 0
+
+
+def resolve_video_frame_number(video_path : str, fps : Fps, trim_frame_start : int, temp_frame_number : int) -> int:
+	video_fps = detect_video_fps(video_path)
+
+	if video_fps:
+		return trim_frame_start + math.floor(temp_frame_number * video_fps / fps)
+	return trim_frame_start + temp_frame_number
 
 
 def detect_video_fps(video_path : str) -> Optional[float]:
