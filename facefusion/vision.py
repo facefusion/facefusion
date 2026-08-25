@@ -120,8 +120,7 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 		trim_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end)
 
 		if trim_frame_total > 0:
-			extract_frame_total = trim_frame_total * fps / video_fps
-			return max(math.floor(extract_frame_total + 0.5), 1)
+			return max(math.floor((trim_frame_total * fps / video_fps) + 0.5), 1)
 	return 0
 
 
