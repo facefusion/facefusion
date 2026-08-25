@@ -13,7 +13,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
-from facefusion.vision import detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_image, read_static_video_frame, resolve_video_frame_number, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, write_image
+from facefusion.vision import detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
@@ -42,8 +42,8 @@ def extract_frames() -> ErrorCode:
 	return 0
 
 
-def process_disk_frame(temp_frame_path : str, frame_number : int, temp_frame_number : int) -> bool:
-	target_vision_frames = conditional_get_target_vision_frames(frame_number)
+def process_disk_frame(temp_frame_path : str, temp_frame_number : int) -> bool:
+	target_vision_frames = conditional_get_target_vision_frames(temp_frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, temp_frame_number)
 	return write_image(temp_frame_path, temp_vision_frame)
@@ -61,8 +61,8 @@ def process_disk_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
-				for temp_frame_number, frame_number in enumerate(temp_frame_set):
-					future = executor.submit(process_disk_frame, temp_frame_set.get(frame_number), frame_number, temp_frame_number)
+				for temp_frame_number, temp_frame_path in enumerate(temp_frame_set.values()):
+					future = executor.submit(process_disk_frame, temp_frame_path, temp_frame_number)
 					futures.append(future)
 
 				while futures:
@@ -91,10 +91,7 @@ def process_disk_frames() -> ErrorCode:
 
 
 def process_memory_frame(temp_frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
-	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
-	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	frame_number = resolve_video_frame_number(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, temp_frame_number)
-	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
+	target_vision_frames = conditional_get_target_vision_frames(temp_frame_number)
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
 

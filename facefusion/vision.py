@@ -121,7 +121,7 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 
 		if trim_frame_total > 0:
 			extract_frame_total = trim_frame_total * fps / video_fps
-			return max(math.floor(extract_frame_total), 1)
+			return max(math.floor(extract_frame_total + 0.5), 1)
 	return 0
 
 
@@ -129,7 +129,7 @@ def resolve_video_frame_number(video_path : str, fps : Fps, trim_frame_start : i
 	video_fps = detect_video_fps(video_path)
 
 	if video_fps:
-		return trim_frame_start + math.floor(temp_frame_number * video_fps / fps)
+		return trim_frame_start + math.floor((temp_frame_number + 0.5) * video_fps / fps)
 	return trim_frame_start + temp_frame_number
 
 

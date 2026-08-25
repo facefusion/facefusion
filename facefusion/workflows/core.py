@@ -9,7 +9,7 @@ from facefusion.filesystem import filter_audio_paths
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory
 from facefusion.types import AudioFrame, ErrorCode, VisionFrame
-from facefusion.vision import conditional_merge_vision_mask, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, restrict_video_fps, select_video_frames
+from facefusion.vision import conditional_merge_vision_mask, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, resolve_video_frame_number, restrict_trim_frame, restrict_video_fps, select_video_frames
 
 
 def is_process_stopping() -> bool:
@@ -61,8 +61,11 @@ def conditional_get_source_voice_frame(temp_frame_number : int) -> AudioFrame:
 	return create_empty_audio_frame()
 
 
-def conditional_get_target_vision_frames(frame_number : int) -> List[VisionFrame]:
+def conditional_get_target_vision_frames(temp_frame_number : int) -> List[VisionFrame]:
 	if state_manager.get_item('workflow_mode') == 'image-to-video':
+		trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+		temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+		frame_number = resolve_video_frame_number(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, temp_frame_number)
 		return select_video_frames(state_manager.get_item('target_path'), frame_number, state_manager.get_item('target_frame_amount'))
 	return [ read_static_image(state_manager.get_item('target_path')) ]
 
