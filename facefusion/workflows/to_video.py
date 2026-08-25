@@ -42,10 +42,10 @@ def extract_frames() -> ErrorCode:
 	return 0
 
 
-def process_disk_frame(temp_frame_path : str, temp_frame_number : int) -> bool:
-	target_vision_frames = conditional_get_target_vision_frames(temp_frame_number)
+def process_disk_frame(temp_frame_path : str, frame_number : int) -> bool:
+	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	temp_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, temp_frame_number)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
@@ -61,8 +61,8 @@ def process_disk_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
-				for temp_frame_number, temp_frame_path in enumerate(temp_frame_set.values()):
-					future = executor.submit(process_disk_frame, temp_frame_path, temp_frame_number)
+				for frame_number, temp_frame_path in enumerate(temp_frame_set.values()):
+					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
 				while futures:
@@ -90,15 +90,15 @@ def process_disk_frames() -> ErrorCode:
 	return 0
 
 
-def process_memory_frame(temp_frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
-	target_vision_frames = conditional_get_target_vision_frames(temp_frame_number)
+def process_memory_frame(frame_number : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
+	target_vision_frames = conditional_get_target_vision_frames(frame_number)
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
 
 	if not (target_vision_frame.shape[1], target_vision_frame.shape[0]) == temp_video_resolution:
 		temp_vision_frame = cv2.resize(target_vision_frame, temp_video_resolution)
 
-	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, temp_frame_number)
+	temp_vision_frame = process_temp_frame(target_vision_frames, temp_vision_frame, frame_number)
 
 	if not (temp_vision_frame.shape[1], temp_vision_frame.shape[0]) == output_video_resolution:
 		temp_vision_frame = cv2.resize(temp_vision_frame, output_video_resolution)
@@ -130,8 +130,8 @@ def process_memory_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()
 
-				for temp_frame_number in temp_frame_range:
-					future = executor.submit(process_memory_frame, temp_frame_number, temp_video_resolution, output_video_resolution)
+				for frame_number in temp_frame_range:
+					future = executor.submit(process_memory_frame, frame_number, temp_video_resolution, output_video_resolution)
 					futures.append(future)
 
 				while futures:
