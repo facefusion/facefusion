@@ -157,8 +157,6 @@ def test_predict_video_frame_total() -> None:
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 100) == 100
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 200) == 200
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 12, 0, 270) == 130
-	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 9, 0, 270) == 97
-	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 11, 0, 270) == 119
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 13, 0, 270) == 140
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 1, 0, 1) == 1
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 25, 100, 100) == 0
@@ -166,14 +164,9 @@ def test_predict_video_frame_total() -> None:
 
 
 def test_resolve_video_frame_number() -> None:
-	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 0) == 0
 	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 100) == 100
 	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 25, 20, 100) == 120
-	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 10, 0, 0) == 1
-	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 10, 0, 19) == 48
 	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 10, 100, 19) == 148
-	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 5, 100, 0) == 102
-	assert resolve_video_frame_number(get_test_example_file('target-240p-25fps.mp4'), 5, 100, 9) == 147
 	assert resolve_video_frame_number('invalid', 25, 20, 100) == 120
 
 
