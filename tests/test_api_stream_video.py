@@ -77,16 +77,17 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
 
-	with ThreadPoolExecutor(max_workers = 1) as executor:
-		video_queue.put((0.1, executor.submit(process_video_frame, [], video_frame)))
+	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
+		with ThreadPoolExecutor(max_workers = 1) as executor:
+			video_queue.put((0.1, executor.submit(process_video_frame, [], video_frame)))
 
-		with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-			encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
-			encode_loop_thread.start()
-			empty_future : Future[BufferPack] = Future()
-			empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
-			video_queue.put((0.0, empty_future))
-			encode_loop_thread.join(timeout = 5.0)
+			with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
+				encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
+				encode_loop_thread.start()
+				empty_future : Future[BufferPack] = Future()
+				empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
+				video_queue.put((0.0, empty_future))
+				encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
 

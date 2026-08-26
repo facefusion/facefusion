@@ -371,6 +371,12 @@ RtcPeer = TypedDict('RtcPeer',
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
+ContentSet = TypedDict('ContentSet',
+{
+	'total' : int,
+	'hit' : int
+})
+
 SdpAudioMedia = TypedDict('SdpAudioMedia',
 {
 	'codec': AudioCodec,

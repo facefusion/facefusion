@@ -45,7 +45,8 @@ async def test_process_image() -> None:
 		}
 	]
 
-	await process_image(websocket_mock)
+	with patch('facefusion.apis.stream_manager.analyse_frame', return_value = False):
+		await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
 
