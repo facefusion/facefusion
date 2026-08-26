@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.content_store import clear, get_hit, get_rate, set_hit, tick
+from facefusion.content_store import clear, get_hit, calculate_rate, set_hit, tick
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -24,14 +24,14 @@ def test_set_hit() -> None:
 
 
 def test_get_rate() -> None:
-	assert get_rate() == 0.0
+	assert calculate_rate() == 0.0
 
 	for _ in range(100):
 		tick()
 
 	set_hit()
 
-	assert get_rate() == 30.0
+	assert calculate_rate() == 30.0
 
 
 def test_clear() -> None:
@@ -40,4 +40,4 @@ def test_clear() -> None:
 	clear()
 
 	assert get_hit() == 0
-	assert get_rate() == 0.0
+	assert calculate_rate() == 0.0

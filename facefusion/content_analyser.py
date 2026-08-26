@@ -171,10 +171,10 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			if content_store.tick() and analyse_frame(vision_frame):
 				content_store.set_hit()
 
-			progress.set_description('rate = ' + str(content_store.get_rate()))
+			progress.set_description('rate = ' + str(content_store.calculate_rate()))
 			progress.update()
 
-	return bool(content_store.get_rate() > 10.0)
+	return bool(content_store.calculate_rate() > 10.0)
 
 
 def detect_nsfw(vision_frame : VisionFrame) -> bool:
