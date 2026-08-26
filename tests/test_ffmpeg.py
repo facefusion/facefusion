@@ -127,7 +127,7 @@ def test_extract_frames() -> None:
 		assert extract_frames(target_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
 		assert len(resolve_temp_frame_set(target_path)) == frame_total
 
-		temp_vision_frame = read_image(resolve_temp_frame_set(target_path).get(trim_frame_start))
+		temp_vision_frame = read_image(resolve_temp_frame_set(target_path).get(0))
 
 		assert temp_vision_frame.std() > frame_std
 		assert temp_vision_frame.max() > frame_max

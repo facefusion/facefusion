@@ -61,7 +61,7 @@ def process_disk_frames() -> ErrorCode:
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
-				for frame_number, temp_frame_path in enumerate(temp_frame_set.values()):
+				for frame_number, temp_frame_path in temp_frame_set.items():
 					future = executor.submit(process_disk_frame, temp_frame_path, frame_number)
 					futures.append(future)
 

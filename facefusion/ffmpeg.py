@@ -166,7 +166,7 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 			ffmpeg_builder.restrict_color_transfer(color_transfer)
 		),
 		ffmpeg_builder.prevent_frame_drop(),
-		ffmpeg_builder.set_start_number(trim_frame_start),
+		ffmpeg_builder.set_start_number(0),
 		ffmpeg_builder.set_output(temp_frame_pattern)
 	)
 
@@ -285,7 +285,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input_fps(temp_video_fps),
-		ffmpeg_builder.set_start_number(trim_frame_start),
+		ffmpeg_builder.set_start_number(0),
 		ffmpeg_builder.set_input(temp_frame_pattern),
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
