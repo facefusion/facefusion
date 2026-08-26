@@ -104,7 +104,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'dfd4bcd6' and hash_helper.create_hash(content_store_content) == '9cd9f029'
+	return hash_helper.create_hash(content_analyser_content) == 'c5d70a17' and hash_helper.create_hash(content_store_content) == '9cd9f029'
 
 
 def processors_pre_check() -> bool:

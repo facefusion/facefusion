@@ -132,13 +132,6 @@ def pre_check() -> bool:
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-def analyse_stream(vision_frame : VisionFrame) -> bool:
-	if content_store.tick() and analyse_frame(vision_frame):
-		content_store.set_hit()
-
-	return content_store.get_hit() > 0
-
-
 def analyse_frame(vision_frame : VisionFrame) -> bool:
 	if is_vision_frame(vision_frame):
 		return detect_nsfw(vision_frame)
@@ -175,6 +168,13 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			progress.update()
 
 	return bool(content_store.calculate_rate() > 10.0)
+
+
+def analyse_stream(vision_frame : VisionFrame) -> bool:
+	if content_store.tick() and analyse_frame(vision_frame):
+		content_store.set_hit()
+
+	return content_store.get_hit() > 0
 
 
 def detect_nsfw(vision_frame : VisionFrame) -> bool:
