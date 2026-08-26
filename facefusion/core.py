@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, hash_helper, logger, state_manager, translator
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, logger, state_manager, translator
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -103,7 +103,8 @@ def pre_check() -> bool:
 
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'f36ff98c'
+	content_store_content = inspect.getsource(content_store).encode()
+	return hash_helper.create_hash(content_analyser_content) == '90bd2243' and hash_helper.create_hash(content_store_content) == '7b2d33ac'
 
 
 def processors_pre_check() -> bool:

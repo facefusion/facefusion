@@ -168,10 +168,8 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		for _ in frame_range:
 			vision_frame = video_manager.read_video_frame(video_reader)
 
-			if content_store.tick():
-
-				if analyse_frame(vision_frame):
-					content_store.set_hit()
+			if content_store.tick() and analyse_frame(vision_frame):
+				content_store.set_hit()
 
 			progress.set_description('rate = ' + str(content_store.get_rate()))
 			progress.update()
