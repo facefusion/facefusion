@@ -273,13 +273,14 @@ def detect_network_metrics() -> NetworkMetrics:
 
 
 def detect_processor_metrics() -> ProcessorMetrics:
+	cpu_count = psutil.cpu_count()
 	cpu_frequency = psutil.cpu_freq()
 
 	return\
 	{
 		'cores':
 		{
-			'value': psutil.cpu_count(logical = True),
+			'value': int(cpu_count),
 			'unit': 'cores'
 		},
 		'frequency':
@@ -289,7 +290,7 @@ def detect_processor_metrics() -> ProcessorMetrics:
 		},
 		'utilization':
 		{
-			'value': int(psutil.cpu_percent(interval = None)),
+			'value': int(psutil.cpu_percent()),
 			'unit': '%'
 		}
 	}
