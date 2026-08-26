@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.content_store import clear, get_hit, calculate_rate, set_hit, tick
+from facefusion.content_store import calculate_rate, clear, get_hit, set_hit, tick
 
 
 @pytest.fixture(scope = 'function', autouse = True)
