@@ -7,25 +7,23 @@ CONTENT_STORE : ContentSet =\
 }
 
 
-def count_hit() -> None:
-	CONTENT_STORE['hit'] += 1
-
-
-def count_total() -> None:
+def tick(step : int = 30) -> bool:
 	CONTENT_STORE['total'] += 1
+
+	return CONTENT_STORE.get('total') % step == 0
 
 
 def get_hit() -> int:
 	return CONTENT_STORE.get('hit')
 
 
-def get_total() -> int:
-	return CONTENT_STORE.get('total')
+def set_hit() -> None:
+	CONTENT_STORE['hit'] += 1
 
 
-def get_rate() -> float:
+def get_rate(step : int = 30) -> float:
 	if CONTENT_STORE.get('hit') and CONTENT_STORE.get('total'):
-		return CONTENT_STORE.get('hit') / CONTENT_STORE.get('total') * 100
+		return CONTENT_STORE.get('hit') / CONTENT_STORE.get('total') * step * 100
 	return 0.0
 
 

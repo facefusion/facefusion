@@ -8,7 +8,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Detection, DownloadScope, DownloadSet, InferencePool, ModelSet, VisionFrame
-from facefusion.vision import detect_video_fps, fit_contain_frame, is_vision_frame, read_image
+from facefusion.vision import fit_contain_frame, is_vision_frame, read_image
 
 
 @lru_cache()
@@ -133,14 +133,16 @@ def pre_check() -> bool:
 
 
 def analyse_stream(vision_frame : VisionFrame) -> bool:
-	if analyse_frame(vision_frame):
-		content_store.count_hit()
+	if content_store.tick() and analyse_frame(vision_frame):
+		content_store.set_hit()
 
 	return content_store.get_hit() > 0
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
-	return detect_nsfw(vision_frame)
+	if is_vision_frame(vision_frame):
+		return detect_nsfw(vision_frame)
+	return False
 
 
 @lru_cache()
@@ -151,7 +153,6 @@ def analyse_image(image_path : str) -> bool:
 
 @lru_cache()
 def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int) -> bool:
-	video_fps = detect_video_fps(video_path)
 	frame_range = range(trim_frame_start, trim_frame_end)
 	video_reader = video_manager.get_reader(video_path, 'analyse_video')
 
@@ -164,15 +165,13 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 
 		content_store.clear()
 
-		for frame_index in frame_range:
+		for _ in frame_range:
 			vision_frame = video_manager.read_video_frame(video_reader)
 
-			if frame_index % int(video_fps) == 0:
-				if is_vision_frame(vision_frame):
-					content_store.count_total()
+			if content_store.tick():
 
-					if analyse_frame(vision_frame):
-						content_store.count_hit()
+				if analyse_frame(vision_frame):
+					content_store.set_hit()
 
 			progress.set_description('rate = ' + str(content_store.get_rate()))
 			progress.update()
