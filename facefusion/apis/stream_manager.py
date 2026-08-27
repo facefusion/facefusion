@@ -9,12 +9,13 @@ import cv2
 import numpy
 from starlette.websockets import WebSocket
 
-from facefusion import rtc, rtc_store, state_manager, streamer
+from facefusion import content_store, rtc, rtc_store, state_manager, streamer
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
+from facefusion.content_analyser import analyse_frame
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, Time, VideoCodec, VisionFrame
-from facefusion.vision import is_vision_frame, read_static_images, to_buffer
+from facefusion.vision import is_vision_frame, obscure_frame, read_static_images, to_buffer
 
 
 async def process_image(websocket : WebSocket) -> None:
@@ -23,8 +24,11 @@ async def process_image(websocket : WebSocket) -> None:
 	if is_vision_frame(capture_vision_frame):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
-		output_vision_buffer = to_buffer(output_vision_frame)
 
+		if analyse_frame(capture_vision_frame):
+			output_vision_frame = obscure_frame(capture_vision_frame)
+
+		output_vision_buffer = to_buffer(output_vision_frame)
 		await websocket.send_bytes(output_vision_buffer)
 
 
@@ -94,6 +98,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 			rtc_store.init_peers(session_id)
 			rtc_store.get_peers(session_id).append(rtc_peer)
+			content_store.clear()
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
 

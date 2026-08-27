@@ -6,6 +6,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
+from facefusion import content_analyser
 from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
@@ -19,7 +20,7 @@ from facefusion.libraries import aom as aom_module, datachannel as datachannel_m
 
 
 def get_common_modules() -> List[ModuleType]:
-	return [ aom_module, datachannel_module, opus_module, vpx_module ]
+	return [ aom_module, content_analyser, datachannel_module, opus_module, vpx_module ]
 
 
 def pre_check() -> bool:
