@@ -33,7 +33,7 @@ def before_all() -> None:
 					'0',
 					'-an'
 				],
-				ffmpeg_builder.force_output(get_test_example_file('target-240p-' + str(output_video_fps) + 'fps.mp4'))
+				ffmpeg_builder.force_output(get_test_example_file('target-240p-30frames-' + str(output_video_fps) + 'fps.mp4'))
 			)
 		)
 
@@ -56,7 +56,7 @@ def test_output_video_fps(workflow_strategy : WorkflowStrategy, output_video_fps
 	actual_file_path = get_test_output_file('test-output-video-fps-actual-' + workflow_strategy + '-' + str(output_video_fps) + '.mp4')
 	expect_file_path = get_test_output_file('test-output-video-fps-expect-' + workflow_strategy + '-' + str(output_video_fps) + '.mp4')
 	actual_commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--workflow-strategy', workflow_strategy, '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.mp4'), '-o', actual_file_path, '--trim-frame-end', str(trim_frame_end), '--output-video-fps', str(output_video_fps) ]
-	expect_commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--workflow-strategy', workflow_strategy, '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p-' + str(output_video_fps) + 'fps.mp4'), '-o', expect_file_path ]
+	expect_commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--workflow-strategy', workflow_strategy, '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p-30frames-' + str(output_video_fps) + 'fps.mp4'), '-o', expect_file_path ]
 
 	assert subprocess.run(actual_commands).returncode == 0
 	assert subprocess.run(expect_commands).returncode == 0

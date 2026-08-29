@@ -1,4 +1,3 @@
-import math
 from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Deque
@@ -14,7 +13,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_set
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Resolution, VisionFrame
-from facefusion.vision import detect_video_fps, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_image, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
+from facefusion.vision import detect_video_fps, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_image, read_static_video_frame, resolve_extract_frame_number, resolve_target_frame_number, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_frame
 
 
@@ -47,9 +46,9 @@ def resolve_video_frame_number(frame_number : int) -> int:
 	trim_frame_start, _ = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	video_fps = detect_video_fps(state_manager.get_item('target_path'))
-	temp_frame_number = math.floor(trim_frame_start * temp_video_fps / video_fps + 0.5) + frame_number - trim_frame_start
+	temp_frame_number = resolve_extract_frame_number(video_fps, temp_video_fps, trim_frame_start) + frame_number - trim_frame_start
 
-	return math.ceil((temp_frame_number + 0.5) * video_fps / temp_video_fps) - 1
+	return resolve_target_frame_number(video_fps, temp_video_fps, temp_frame_number)
 
 
 def process_disk_frame(temp_frame_path : str, frame_number : int) -> bool:
