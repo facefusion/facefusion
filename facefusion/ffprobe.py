@@ -96,11 +96,11 @@ def extract_static_video_metadata(video_path : str) -> VideoMetadata:
 
 
 def extract_video_metadata(video_path : str) -> VideoMetadata:
-	video_entries = probe_video_entries(video_path, [ 'width', 'height', 'r_frame_rate', 'color_transfer' ])
+	video_entries = probe_video_entries(video_path, [ 'width', 'height', 'avg_frame_rate', 'r_frame_rate', 'color_transfer' ])
 	format_entries = probe_format_entries(video_path, [ 'duration', 'bit_rate' ])
 
 	duration = float(format_entries.get('duration'))
-	fps = extract_video_fps(video_entries.get('r_frame_rate'))
+	fps = extract_video_fps(video_entries)
 	frame_total = round(duration * fps)
 	width = int(video_entries.get('width'))
 	height = int(video_entries.get('height'))
@@ -120,11 +120,12 @@ def extract_video_metadata(video_path : str) -> VideoMetadata:
 	return video_metadata
 
 
-def extract_video_fps(frame_rate : str) -> Fps:
-	if frame_rate and '/' in frame_rate:
-		numerator, denominator = frame_rate.split('/')
+def extract_video_fps(video_entries : Dict[str, str]) -> Fps:
+	for frame_rate in [ video_entries.get('avg_frame_rate'), video_entries.get('r_frame_rate') ]:
+		if frame_rate and '/' in frame_rate:
+			numerator, denominator = frame_rate.split('/')
 
-		if int(numerator) and int(denominator):
-			return int(numerator) / int(denominator)
+			if int(numerator) and int(denominator):
+				return int(numerator) / int(denominator)
 
 	return 0.0
