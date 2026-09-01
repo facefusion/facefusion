@@ -13,8 +13,8 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Fps, Resolution, VisionFrame
-from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, read_static_video_frame, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames
-from facefusion.workflows.core import is_process_stopping, process_temp_vision_frame
+from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_video_frame, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
+from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_vision_frame
 
 
 def analyse_video() -> ErrorCode:
@@ -43,7 +43,7 @@ def create_temp_frames() -> ErrorCode:
 
 
 def process_memory_frame(frame_index : int, temp_video_resolution : Resolution, output_video_resolution : Resolution) -> VisionFrame:
-	target_vision_frames = select_video_frames(state_manager.get_item('target_path'), frame_index, state_manager.get_item('target_frame_amount'))
+	target_vision_frames = conditional_get_target_vision_frames(frame_index)
 	target_vision_frame = get_middle(target_vision_frames)
 	temp_vision_frame = target_vision_frame.copy()
 
@@ -69,7 +69,8 @@ def process_memory_frames() -> ErrorCode:
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	temp_frame_range = range(trim_frame_start, trim_frame_end)
+	temp_frame_total = predict_video_frame_total(state_manager.get_item('target_path'), temp_video_fps, trim_frame_start, trim_frame_end)
+	temp_frame_range = range(trim_frame_start, trim_frame_start + temp_frame_total)
 
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))

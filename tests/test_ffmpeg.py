@@ -11,6 +11,7 @@ from facefusion.ffprobe import probe_audio_entries, probe_video_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
+from facefusion.vision import predict_video_frame_total
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
@@ -119,6 +120,7 @@ def test_extract_frames() -> None:
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
 		assert len(resolve_temp_frame_paths(state_manager.get_temp_path(), output_path, state_manager.get_item('temp_frame_format'))) == frame_total
+		assert predict_video_frame_total(target_path, 30.0, trim_frame_start, trim_frame_end) == frame_total
 
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
 

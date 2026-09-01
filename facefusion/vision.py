@@ -119,9 +119,19 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 	if is_video(video_path):
 		video_fps = detect_video_fps(video_path)
 		trim_frame_start, trim_frame_end = restrict_trim_video_frame(video_path, trim_frame_start, trim_frame_end)
-		extract_frame_total = (trim_frame_end - trim_frame_start) * fps / video_fps
-		return math.floor(extract_frame_total)
+		extract_frame_start = resolve_extract_frame_index(video_fps, fps, trim_frame_start)
+		extract_frame_end = resolve_extract_frame_index(video_fps, fps, trim_frame_end)
+
+		return extract_frame_end - extract_frame_start
 	return 0
+
+
+def resolve_extract_frame_index(video_fps : Fps, fps : Fps, frame_index : int) -> int:
+	return math.floor(frame_index * fps / video_fps + 0.5)
+
+
+def resolve_target_frame_index(video_fps : Fps, fps : Fps, frame_index : int) -> int:
+	return math.ceil((frame_index + 0.5) * video_fps / fps) - 1
 
 
 def detect_video_fps(video_path : str) -> Optional[Fps]:

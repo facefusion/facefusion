@@ -3,9 +3,11 @@ import sys
 
 import pytest
 
+import facefusion.choices
 from facefusion import ffmpeg, ffmpeg_builder, process_manager
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
+from facefusion.types import WorkflowStrategy
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
 
@@ -37,22 +39,25 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def test_enhance_face_to_image() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-enhance-face-to-image.jpg') ]
+@pytest.mark.parametrize('workflow_strategy', facefusion.choices.workflow_strategies)
+def test_enhance_face_to_image(workflow_strategy : WorkflowStrategy) -> None:
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-image', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-enhance-face-to-image.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-enhance-face-to-image.jpg') is True
 
 
-def test_enhance_face_to_video() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-face-to-video.mp4'), '--trim-frame-end', '1' ]
+@pytest.mark.parametrize('workflow_strategy', facefusion.choices.workflow_strategies)
+def test_enhance_face_to_video(workflow_strategy : WorkflowStrategy) -> None:
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-face-to-video.mp4'), '--trim-frame-end', '1' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-enhance-face-to-video.mp4') is True
 
 
-def test_enhance_face_to_video_as_frames() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-face-to-video-as-frames'), '--trim-frame-end', '1' ]
+@pytest.mark.parametrize('workflow_strategy', facefusion.choices.workflow_strategies)
+def test_enhance_face_to_video_as_frames(workflow_strategy : WorkflowStrategy) -> None:
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video:frames', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'face_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-face-to-video-as-frames'), '--trim-frame-end', '1' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_sequence(get_test_output_path('test-enhance-face-to-video-as-frames')) is True

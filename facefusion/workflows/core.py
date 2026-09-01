@@ -11,7 +11,7 @@ from facefusion.filesystem import filter_audio_paths, get_file_extension, has_au
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, resolve_temp_frame_set
 from facefusion.types import AudioFrame, ErrorCode, VisionFrame, WorkflowMode
-from facefusion.vision import conditional_merge_vision_mask, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, restrict_trim_video_frame, restrict_video_fps, select_video_frames, write_image
+from facefusion.vision import conditional_merge_vision_mask, detect_video_fps, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_trim_video_frame, restrict_video_fps, select_video_frames, write_image
 
 
 def detect_workflow_mode() -> WorkflowMode:
@@ -94,7 +94,13 @@ def conditional_get_reference_vision_frame() -> VisionFrame:
 
 def conditional_get_target_vision_frames(frame_index : int) -> List[VisionFrame]:
 	if state_manager.get_item('workflow_mode') in [ 'image-to-video', 'image-to-video:frames' ]:
-		return select_video_frames(state_manager.get_item('target_path'), frame_index, state_manager.get_item('target_frame_amount'))
+		trim_frame_start, _ = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+		temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+		video_fps = detect_video_fps(state_manager.get_item('target_path'))
+		temp_frame_index = resolve_extract_frame_index(video_fps, temp_video_fps, trim_frame_start) + frame_index - trim_frame_start
+		video_frame_index = resolve_target_frame_index(video_fps, temp_video_fps, temp_frame_index)
+
+		return select_video_frames(state_manager.get_item('target_path'), video_frame_index, state_manager.get_item('target_frame_amount'))
 	return [ read_static_image(state_manager.get_item('target_path')) ]
 
 
