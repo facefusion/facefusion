@@ -131,8 +131,9 @@
 	background: currentColor;
 }
 
-:root:root:root:root .slider_input_container > span,
-:root:root:root:root .feather-upload,
+:root:root:root:root .slider_input_container .min_value,
+:root:root:root:root .slider_input_container .max_value,
+:root:root:root:root .icon-wrap .feather-upload,
 :root:root:root:root footer
 {
 	display: none;
