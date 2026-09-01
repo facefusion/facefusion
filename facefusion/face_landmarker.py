@@ -164,22 +164,21 @@ def pre_check() -> bool:
 
 
 def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmark_2dfan4 = None
-	face_landmark_peppa_wutz = None
-	face_landmark_score_2dfan4 = 0.0
-	face_landmark_score_peppa_wutz = 0.0
-
-	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
-		face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+	if state_manager.get_item('face_landmarker_model') == '2dfan4':
+		return detect_with_2dfan4(vision_frame, bounding_box, face_angle)
 
 	if state_manager.get_item('face_landmarker_model') == 'hrffa':
 		return detect_with_hrffa(vision_frame, bounding_box)
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
-		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
+	if state_manager.get_item('face_landmarker_model') == 'peppa_wutz':
+		return detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
+
+	face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+	face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
 	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.2:
 		return face_landmark_2dfan4, face_landmark_score_2dfan4
+
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
 

@@ -10,7 +10,7 @@ from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
 from facefusion.types import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
-JOBS_PATH : Optional[str] = None
+JOBS_PATH : str = '.jobs'
 
 
 def init_jobs(jobs_path : str) -> bool:
