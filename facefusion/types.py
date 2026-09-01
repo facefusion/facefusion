@@ -175,7 +175,7 @@ TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any
 
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
-FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
+FaceLandmarkerModel = Literal['many', '2dfan4', 'hrffa', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
