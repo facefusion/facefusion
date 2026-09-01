@@ -19,15 +19,15 @@ LOCALES =\
 }
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.28.0')
+	'default': ('onnxruntime', '1.29.0')
 }
 if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda@12'] = ('onnxruntime-gpu', '1.24.4')
-	ONNXRUNTIME_SET['cuda@13'] = ('onnxruntime-gpu', '1.28.0')
+	ONNXRUNTIME_SET['cuda@13'] = ('onnxruntime-gpu', '1.29.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.24.1')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.24.4')
-	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '2.4.0')
+	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '2.5.0')
 if is_linux():
 	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.27.1')
 	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.22.2.post3')
