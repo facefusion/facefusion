@@ -218,8 +218,9 @@ def detect_with_hrffa(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	face_landmark_68 = forward_with_hrffa(crop_vision_frame)
 	face_landmark_68 = face_landmark_68.reshape(-1, 2) * model_size[0]
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
+	face_landmark_score_68 = 1.0
 
-	return face_landmark_68, 1.0
+	return face_landmark_68, face_landmark_score_68
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
