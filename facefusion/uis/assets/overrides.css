@@ -132,7 +132,7 @@
 }
 
 :root:root:root:root .slider_input_container > span,
-:root:root:root:root .feather-upload,
+:root:root:root:root .icon-wrap .feather-upload,
 :root:root:root:root footer
 {
 	display: none;
