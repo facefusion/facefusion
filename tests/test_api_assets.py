@@ -77,6 +77,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 			[
 				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 			])
+
 		asset_ids = upload_response.json().get('asset_ids')
 		asset = asset_store.get_asset(session_id, asset_ids[0])
 
@@ -94,6 +95,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
 				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 			])
+
 		asset_ids = upload_response.json().get('asset_ids')
 
 		assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
@@ -112,6 +114,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 			[
 				('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
 			])
+
 		asset_ids = upload_response.json().get('asset_ids')
 		asset = asset_store.get_asset(session_id, asset_ids[0])
 
@@ -228,6 +231,7 @@ def test_get_asset(test_client : TestClient) -> None:
 		[
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
+
 	asset_ids = upload_response.json().get('asset_ids')
 
 	second_session_response = test_client.post('/session', json =
@@ -347,6 +351,7 @@ def test_delete_asset(test_client : TestClient) -> None:
 		[
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
+
 	asset_ids = upload_response.json().get('asset_ids')
 	asset_path = asset_store.get_asset(session_id, asset_ids[0]).get('path')
 
