@@ -153,8 +153,7 @@ async def delete_asset(request : Request) -> Response:
 	if session_id and asset_id:
 		asset = asset_store.get_asset(session_id, asset_id)
 
-		if asset:
-			remove_file(asset.get('path'))
+		if asset and remove_file(asset.get('path')):
 			asset_store.delete_asset(session_id, asset_id)
 			return Response(status_code = HTTP_200_OK)
 
