@@ -13,7 +13,7 @@ from facefusion.filesystem import remove_file
 from facefusion.vision import is_vision_frames, to_strip_buffer
 
 
-async def upload_asset(request : Request) -> Response:
+async def upload_assets(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
 	asset_type = request.query_params.get('type')
@@ -128,22 +128,6 @@ async def get_asset(request : Request) -> Response:
 	return Response(status_code = HTTP_404_NOT_FOUND)
 
 
-async def delete_asset(request : Request) -> Response:
-	access_token = extract_access_token(request.scope)
-	session_id = session_manager.find_session_id(access_token)
-	asset_id = request.path_params.get('asset_id')
-
-	if session_id and asset_id:
-		asset = asset_store.get_asset(session_id, asset_id)
-
-		if asset:
-			remove_file(asset.get('path'))
-			asset_store.delete_asset(session_id, asset_id)
-			return Response(status_code = HTTP_200_OK)
-
-	return Response(status_code = HTTP_404_NOT_FOUND)
-
-
 async def delete_assets(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
@@ -157,5 +141,21 @@ async def delete_assets(request : Request) -> Response:
 
 		asset_store.delete_assets(session_id)
 		return Response(status_code = HTTP_200_OK)
+
+	return Response(status_code = HTTP_404_NOT_FOUND)
+
+
+async def delete_asset(request : Request) -> Response:
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
+	asset_id = request.path_params.get('asset_id')
+
+	if session_id and asset_id:
+		asset = asset_store.get_asset(session_id, asset_id)
+
+		if asset:
+			remove_file(asset.get('path'))
+			asset_store.delete_asset(session_id, asset_id)
+			return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)

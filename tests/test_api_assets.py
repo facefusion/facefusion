@@ -48,7 +48,7 @@ def test_client() -> Iterator[TestClient]:
 		yield test_client
 
 
-def test_upload_asset(test_client : TestClient) -> None:
+def test_upload_assets(test_client : TestClient) -> None:
 	upload_response = test_client.post('/assets?type=source')
 
 	assert upload_response.status_code == 401
@@ -259,62 +259,6 @@ def test_get_asset(test_client : TestClient) -> None:
 	assert get_response.status_code == 200
 
 
-def test_delete_asset(test_client : TestClient) -> None:
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
-
-	source_path = get_test_example_file('source.jpg')
-
-	with open(source_path, 'rb') as source_file:
-		upload_response = test_client.post('/assets?type=source', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
-			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
-		])
-	asset_ids = upload_response.json().get('asset_ids')
-	asset_path = asset_store.get_asset(session_id, asset_ids[0]).get('path')
-
-	assert os.path.exists(asset_path) is True
-
-	second_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	second_session_body = second_session_response.json()
-	second_access_token = second_session_body.get('access_token')
-
-	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
-	{
-		'Authorization': 'Bearer ' + second_access_token
-	})
-
-	assert delete_response.status_code == 404
-	assert os.path.exists(asset_path) is True
-
-	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
-	assert delete_response.status_code == 200
-	assert os.path.exists(asset_path) is False
-	assert asset_store.get_asset(session_id, asset_ids[0]) is None
-
-	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
-	assert delete_response.status_code == 404
-
-
 def test_delete_assets(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
@@ -381,3 +325,59 @@ def test_delete_assets(test_client : TestClient) -> None:
 
 	for asset_path in asset_paths:
 		assert os.path.exists(asset_path) is False
+
+
+def test_delete_asset(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	source_path = get_test_example_file('source.jpg')
+
+	with open(source_path, 'rb') as source_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+	asset_ids = upload_response.json().get('asset_ids')
+	asset_path = asset_store.get_asset(session_id, asset_ids[0]).get('path')
+
+	assert os.path.exists(asset_path) is True
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_session_body = second_session_response.json()
+	second_access_token = second_session_body.get('access_token')
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert delete_response.status_code == 404
+	assert os.path.exists(asset_path) is True
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 200
+	assert os.path.exists(asset_path) is False
+	assert asset_store.get_asset(session_id, asset_ids[0]) is None
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 404
