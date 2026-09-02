@@ -5,49 +5,12 @@ from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
 
-from facefusion import session_context, session_manager
+from facefusion import session_context, session_manager, translator
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.filesystem import remove_file
 from facefusion.vision import is_vision_frames, to_strip_buffer
-
-
-async def upload_assets(request : Request) -> Response:
-	access_token = extract_access_token(request.scope)
-	session_id = session_manager.find_session_id(access_token)
-	asset_type = request.query_params.get('type')
-
-	if session_id and asset_type in [ 'source', 'target' ]:
-		session_context.set_session_id(session_id)
-
-		form = await request.form()
-		upload_files = form.getlist('file')
-
-		if upload_files and validate_asset_files(upload_files):
-			asset_paths = await save_asset_files(upload_files)
-
-			if asset_paths:
-				asset_ids : List[str] = []
-
-				for asset_path in asset_paths:
-					asset = asset_store.create_asset(session_id, asset_type, asset_path)
-
-					if asset:
-						asset_id = asset.get('id')
-
-						if asset_id:
-							asset_ids.append(asset_id)
-
-				if asset_ids:
-					return JSONResponse(
-					{
-						'asset_ids': asset_ids
-					}, status_code = HTTP_201_CREATED)
-
-			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-	return Response(status_code = HTTP_400_BAD_REQUEST)
 
 
 async def get_assets(request : Request) -> Response:
@@ -78,7 +41,10 @@ async def get_assets(request : Request) -> Response:
 			'assets': assets
 		}, status_code = HTTP_200_OK)
 
-	return Response(status_code = HTTP_400_BAD_REQUEST)
+	return JSONResponse(
+	{
+		'message': translator.get('something_went_wrong', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)
 
 
 async def get_asset(request : Request) -> Response:
@@ -125,7 +91,47 @@ async def get_asset(request : Request) -> Response:
 				'metadata': asset.get('metadata')
 			}, status_code = HTTP_200_OK)
 
-	return Response(status_code = HTTP_404_NOT_FOUND)
+	return JSONResponse(
+	{
+		'message': translator.get('something_went_wrong', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)
+
+
+async def upload_assets(request : Request) -> Response:
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
+	asset_type = request.query_params.get('type')
+
+	if session_id and asset_type in [ 'source', 'target' ]:
+		session_context.set_session_id(session_id)
+
+		form = await request.form()
+		upload_files = form.getlist('file')
+
+		if upload_files and validate_asset_files(upload_files):
+			asset_paths = await save_asset_files(upload_files)
+
+			if asset_paths:
+				asset_ids : List[str] = []
+
+				for asset_path in asset_paths:
+					asset = asset_store.create_asset(session_id, asset_type, asset_path)
+
+					if asset:
+						asset_id = asset.get('id')
+
+						if asset_id:
+							asset_ids.append(asset_id)
+
+				if asset_ids:
+					return JSONResponse(
+					{
+						'asset_ids': asset_ids
+					}, status_code = HTTP_201_CREATED)
+
+			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+	return Response(status_code = HTTP_400_BAD_REQUEST)
 
 
 async def delete_assets(request : Request) -> Response:
@@ -134,7 +140,7 @@ async def delete_assets(request : Request) -> Response:
 
 	if session_id:
 		asset_set = asset_store.get_assets(session_id)
-		asset_ids = []
+		asset_ids : List[str] = []
 
 		if asset_set:
 			for asset in asset_set.values():
