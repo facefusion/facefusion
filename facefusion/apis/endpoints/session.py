@@ -3,10 +3,12 @@ import secrets
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
-from facefusion import session_context, session_manager, translator
+from facefusion import session_context, session_manager, state_manager, translator
+from facefusion.apis import asset_store
 from facefusion.apis.session_helper import extract_access_token
+from facefusion.filesystem import remove_directory
 
 
 async def create_session(request : Request) -> JSONResponse:
@@ -67,9 +69,25 @@ async def refresh_session(request : Request) -> JSONResponse:
 async def destroy_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
-	session_manager.clear_session(session_id)
+
+	if session_id:
+		session_context.set_session_id(session_id)
+
+		if remove_directory(state_manager.get_temp_path()):
+			asset_store.delete_assets(session_id)
+			session_manager.clear_session(session_id)
+
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_200_OK)
+
+		return JSONResponse(
+		{
+			'message': translator.get('something_went_wrong', 'facefusion.apis')
+		}, status_code = HTTP_404_NOT_FOUND)
 
 	return JSONResponse(
 	{
-		'message': translator.get('ok', 'facefusion.apis')
-	}, status_code = HTTP_200_OK)
+		'message': translator.get('something_went_wrong', 'facefusion.apis')
+	}, status_code = HTTP_401_UNAUTHORIZED)

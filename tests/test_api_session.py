@@ -1,18 +1,33 @@
 import os
+import tempfile
 from datetime import timedelta
 from typing import Iterator
 
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager
+from facefusion import metadata, process_manager, session_manager, state_manager
+from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
+from facefusion.download import conditional_download
 from facefusion.types import Session
+from .assert_helper import get_test_example_file, get_test_examples_directory
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	process_manager.start()
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+	])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
+	state_manager.init_item('temp_path', tempfile.gettempdir())
 	session_manager.SESSIONS.clear()
+	asset_store.clear()
 
 
 @pytest.fixture(scope = 'module')
@@ -161,6 +176,23 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'client_version': metadata.get('version')
 	})
 	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	source_path = get_test_example_file('source.jpg')
+
+	with open(source_path, 'rb') as source_file:
+		test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+
+	asset_paths = []
+
+	for asset in asset_store.get_assets(session_id).values():
+		asset_paths.append(asset.get('path'))
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
@@ -169,11 +201,17 @@ def test_destroy_session(test_client : TestClient) -> None:
 
 	assert delete_session_response.status_code == 401
 
+	for asset_path in asset_paths:
+		assert os.path.exists(asset_path) is True
+
 	delete_session_response = test_client.delete('/session', headers =
 	{
-		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert session_manager.find_session_id(create_session_body.get('access_token')) is None
-
+	assert session_manager.find_session_id(access_token) is None
+	assert asset_store.get_assets(session_id) is None
 	assert delete_session_response.status_code == 200
+
+	for asset_path in asset_paths:
+		assert os.path.exists(asset_path) is False

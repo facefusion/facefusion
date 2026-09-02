@@ -290,6 +290,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
 			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 		])
+
 	asset_paths = []
 
 	for asset in asset_store.get_assets(session_id).values():
@@ -320,8 +321,8 @@ def test_delete_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert delete_response.status_code == 200
 	assert asset_store.get_assets(session_id) is None
+	assert delete_response.status_code == 200
 
 	for asset_path in asset_paths:
 		assert os.path.exists(asset_path) is False
@@ -363,17 +364,17 @@ def test_delete_asset(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + second_access_token
 	})
 
-	assert delete_response.status_code == 404
 	assert os.path.exists(asset_path) is True
+	assert delete_response.status_code == 404
 
 	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert delete_response.status_code == 200
 	assert os.path.exists(asset_path) is False
 	assert asset_store.get_asset(session_id, asset_ids[0]) is None
+	assert delete_response.status_code == 200
 
 	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
 	{
