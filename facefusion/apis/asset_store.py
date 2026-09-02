@@ -84,6 +84,9 @@ def delete_asset(session_id : SessionId, asset_id : AssetId) -> None:
 	if session_id in ASSET_STORE:
 		if asset_id in ASSET_STORE.get(session_id):
 			del ASSET_STORE[session_id][asset_id]
+
+		if ASSET_STORE.get(session_id) == {}:
+			del ASSET_STORE[session_id]
 	return None
 
 

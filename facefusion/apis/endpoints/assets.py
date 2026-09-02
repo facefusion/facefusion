@@ -134,12 +134,16 @@ async def delete_assets(request : Request) -> Response:
 
 	if session_id:
 		asset_set = asset_store.get_assets(session_id)
+		asset_ids = []
 
 		if asset_set:
 			for asset in asset_set.values():
-				remove_file(asset.get('path'))
+				if remove_file(asset.get('path')):
+					asset_ids.append(asset.get('id'))
 
-		asset_store.delete_assets(session_id)
+			for asset_id in asset_ids:
+				asset_store.delete_asset(session_id, asset_id)
+
 		return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)
