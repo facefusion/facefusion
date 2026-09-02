@@ -128,25 +128,34 @@ async def get_asset(request : Request) -> Response:
 	return Response(status_code = HTTP_404_NOT_FOUND)
 
 
+async def delete_asset(request : Request) -> Response:
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
+	asset_id = request.path_params.get('asset_id')
+
+	if session_id and asset_id:
+		asset = asset_store.get_asset(session_id, asset_id)
+
+		if asset:
+			remove_file(asset.get('path'))
+			asset_store.delete_asset(session_id, asset_id)
+			return Response(status_code = HTTP_200_OK)
+
+	return Response(status_code = HTTP_404_NOT_FOUND)
+
+
 async def delete_assets(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
-	body = await request.json()
-	asset_ids = body.get('asset_ids')
 
-	if session_id and asset_ids:
+	if session_id:
 		asset_set = asset_store.get_assets(session_id)
 
 		if asset_set:
+			for asset in asset_set.values():
+				remove_file(asset.get('path'))
 
-			for asset_id in asset_ids:
-				if asset_id in asset_set:
-					asset = asset_set.get(asset_id)
-
-					if asset:
-						remove_file(asset.get('path'))
-
-			asset_store.delete_assets(session_id, asset_ids)
-			return Response(status_code = HTTP_200_OK)
+		asset_store.delete_assets(session_id)
+		return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)

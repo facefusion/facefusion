@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import Iterator
 
@@ -52,93 +53,97 @@ def test_upload_asset(test_client : TestClient) -> None:
 
 	assert upload_response.status_code == 401
 
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
-
 	source_path = get_test_example_file('source.jpg')
 	target_image_path = get_test_example_file('target-240p.jpg')
 	target_video_path = get_test_example_file('target-240p.mp4')
-
-	with open(source_path, 'rb') as source_file:
-		upload_response = test_client.post('/assets?type=source', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
-			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
-		])
-	asset_ids = upload_response.json().get('asset_ids')
-	asset = asset_store.get_asset(session_id, asset_ids[0])
-
-	assert asset.get('media') == 'image'
-	assert asset.get('type') == 'source'
-	assert asset.get('format') == 'jpeg'
-	assert upload_response.status_code == 201
-
-	with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
-		upload_response = test_client.post('/assets?type=target', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
-			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
-			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
-		])
-	asset_ids = upload_response.json().get('asset_ids')
-
-	assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
-	assert asset_store.get_asset(session_id, asset_ids[0]).get('type') == 'target'
-	assert asset_store.get_asset(session_id, asset_ids[0]).get('format') == 'jpeg'
-	assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
-	assert asset_store.get_asset(session_id, asset_ids[1]).get('type') == 'target'
-	assert asset_store.get_asset(session_id, asset_ids[1]).get('format') == 'mp4'
-	assert upload_response.status_code == 201
-
 	audio_path = get_test_example_file('source.mp3')
 
-	with open(audio_path, 'rb') as audio_file:
+	for security_strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', security_strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		create_session_body = create_session_response.json()
+		access_token = create_session_body.get('access_token')
+		session_id = session_manager.find_session_id(access_token)
+
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+			])
+		asset_ids = upload_response.json().get('asset_ids')
+		asset = asset_store.get_asset(session_id, asset_ids[0])
+
+		assert asset.get('media') == 'image'
+		assert asset.get('type') == 'source'
+		assert asset.get('format') == 'jpeg'
+		assert upload_response.status_code == 201
+
+		with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
+			upload_response = test_client.post('/assets?type=target', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
+				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
+			])
+		asset_ids = upload_response.json().get('asset_ids')
+
+		assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
+		assert asset_store.get_asset(session_id, asset_ids[0]).get('type') == 'target'
+		assert asset_store.get_asset(session_id, asset_ids[0]).get('format') == 'jpeg'
+		assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+		assert asset_store.get_asset(session_id, asset_ids[1]).get('type') == 'target'
+		assert asset_store.get_asset(session_id, asset_ids[1]).get('format') == 'mp4'
+		assert upload_response.status_code == 201
+
+		with open(audio_path, 'rb') as audio_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
+			])
+		asset_ids = upload_response.json().get('asset_ids')
+		asset = asset_store.get_asset(session_id, asset_ids[0])
+
+		assert asset.get('media') == 'audio'
+		assert asset.get('type') == 'source'
+		assert upload_response.status_code == 201
+
+		upload_response = test_client.post('/assets?type=invalid', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert upload_response.status_code == 400
+
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert upload_response.status_code == 400
+
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
-		[
-			('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
-		])
-	asset_ids = upload_response.json().get('asset_ids')
-	asset = asset_store.get_asset(session_id, asset_ids[0])
+		{
+			'file': ('invalid.txt', 'invalid'.encode(), 'text/plain')
+		})
 
-	assert asset.get('media') == 'audio'
-	assert asset.get('type') == 'source'
-	assert upload_response.status_code == 201
+		assert upload_response.status_code == 415
 
-	upload_response = test_client.post('/assets?type=invalid', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
-	assert upload_response.status_code == 400
-
-	upload_response = test_client.post('/assets?type=source', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
-	assert upload_response.status_code == 400
-
-	upload_response = test_client.post('/assets?type=source', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, files =
-	{
-		'file': ('invalid.txt', 'invalid'.encode(), 'text/plain')
-	})
-
-	assert upload_response.status_code == 415
+	state_manager.init_item('api_security_strategy', 'strict')
 
 
 def test_get_assets(test_client : TestClient) -> None:
@@ -254,7 +259,7 @@ def test_get_asset(test_client : TestClient) -> None:
 	assert get_response.status_code == 200
 
 
-def test_delete_assets(test_client : TestClient) -> None:
+def test_delete_asset(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -274,8 +279,80 @@ def test_delete_assets(test_client : TestClient) -> None:
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
 	asset_ids = upload_response.json().get('asset_ids')
+	asset_path = asset_store.get_asset(session_id, asset_ids[0]).get('path')
 
-	assert asset_store.get_asset(session_id, asset_ids[0])
+	assert os.path.exists(asset_path) is True
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_session_body = second_session_response.json()
+	second_access_token = second_session_body.get('access_token')
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert delete_response.status_code == 404
+	assert os.path.exists(asset_path) is True
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 200
+	assert os.path.exists(asset_path) is False
+	assert asset_store.get_asset(session_id, asset_ids[0]) is None
+
+	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 404
+
+
+def test_delete_assets(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	source_path = get_test_example_file('source.jpg')
+	target_image_path = get_test_example_file('target-240p.jpg')
+	target_video_path = get_test_example_file('target-240p.mp4')
+
+	with open(source_path, 'rb') as source_file:
+		test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+
+	with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
+		test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
+			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
+		])
+	asset_paths = []
+
+	for asset in asset_store.get_assets(session_id).values():
+		asset_paths.append(asset.get('path'))
+
+	for asset_path in asset_paths:
+		assert os.path.exists(asset_path) is True
 
 	second_session_response = test_client.post('/session', json =
 	{
@@ -287,76 +364,20 @@ def test_delete_assets(test_client : TestClient) -> None:
 	delete_response = test_client.request('DELETE', '/assets', headers =
 	{
 		'Authorization': 'Bearer ' + second_access_token
-	}, json =
-	{
-		'asset_ids': asset_ids
-	})
-
-	assert delete_response.status_code == 404
-
-	delete_response = test_client.request('DELETE', '/assets', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'asset_ids': asset_ids
 	})
 
 	assert delete_response.status_code == 200
 
+	for asset_path in asset_paths:
+		assert os.path.exists(asset_path) is True
+
 	delete_response = test_client.request('DELETE', '/assets', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'asset_ids': asset_ids
 	})
 
-	assert delete_response.status_code == 404
+	assert delete_response.status_code == 200
+	assert asset_store.get_assets(session_id) is None
 
-
-def test_upload_asset_security_strategies(test_client : TestClient) -> None:
-	source_path = get_test_example_file('source.jpg')
-	target_image_path = get_test_example_file('target-240p.jpg')
-	target_video_path = get_test_example_file('target-240p.mp4')
-
-	for strategy in [ 'strict', 'moderate' ]:
-		state_manager.init_item('api_security_strategy', strategy)
-
-		create_session_response = test_client.post('/session', json =
-		{
-			'client_version': metadata.get('version')
-		})
-		access_token = create_session_response.json().get('access_token')
-		session_id = session_manager.find_session_id(access_token)
-
-		with open(source_path, 'rb') as source_file:
-			source_upload_response = test_client.post('/assets?type=source', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
-				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
-			])
-
-		with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
-			target_upload_response = test_client.post('/assets?type=target', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
-				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
-				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
-			])
-
-		assert source_upload_response.status_code == 201
-		assert target_upload_response.status_code == 201
-
-		source_asset_id = source_upload_response.json().get('asset_ids')[0]
-		target_asset_ids = target_upload_response.json().get('asset_ids')
-
-		assert asset_store.get_asset(session_id, source_asset_id).get('media') == 'image'
-		assert asset_store.get_asset(session_id, target_asset_ids[0]).get('media') == 'image'
-		assert asset_store.get_asset(session_id, target_asset_ids[1]).get('media') == 'video'
-
-	state_manager.init_item('api_security_strategy', 'strict')
+	for asset_path in asset_paths:
+		assert os.path.exists(asset_path) is False
