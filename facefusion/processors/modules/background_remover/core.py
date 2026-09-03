@@ -122,7 +122,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'vendor': 'nikopueringer',
 				'license': 'Non-Commercial',
-				'year': 2025
+				'year': 2026
 			},
 			'hashes':
 			{
@@ -151,7 +151,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'vendor': 'nikopueringer',
 				'license': 'Non-Commercial',
-				'year': 2025
+				'year': 2026
 			},
 			'hashes':
 			{
