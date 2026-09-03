@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional, cast
+from typing import Optional, cast
 
 from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata
 from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
@@ -80,11 +80,19 @@ def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset
 	return None
 
 
-def delete_assets(session_id : SessionId, asset_ids : List[AssetId]) -> None:
+def delete_asset(session_id : SessionId, asset_id : AssetId) -> None:
 	if session_id in ASSET_STORE:
-		for asset_id in asset_ids:
-			if asset_id in ASSET_STORE.get(session_id):
-				del ASSET_STORE[session_id][asset_id]
+		if asset_id in ASSET_STORE.get(session_id):
+			del ASSET_STORE[session_id][asset_id]
+
+		if ASSET_STORE.get(session_id) == {}:
+			del ASSET_STORE[session_id]
+	return None
+
+
+def delete_assets(session_id : SessionId) -> None:
+	if session_id in ASSET_STORE:
+		del ASSET_STORE[session_id]
 	return None
 
 

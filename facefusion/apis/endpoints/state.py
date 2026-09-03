@@ -1,5 +1,5 @@
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from facefusion import args_helper, capability_store, session_manager, state_manager, translator
@@ -12,7 +12,7 @@ async def get_state(request : Request) -> JSONResponse:
 	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
 
 
-async def set_state(request : Request) -> JSONResponse:
+async def set_state(request : Request) -> Response:
 	__api_args__ = {}
 
 	action = request.query_params.get('action')
@@ -33,6 +33,7 @@ async def set_state(request : Request) -> JSONResponse:
 			{
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
+
 		__api_args__[key] = value
 
 	if __api_args__:
@@ -43,7 +44,7 @@ async def set_state(request : Request) -> JSONResponse:
 		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
-	return JSONResponse({}, status_code = HTTP_422_UNPROCESSABLE_CONTENT)
+	return Response(status_code = HTTP_422_UNPROCESSABLE_CONTENT)
 
 
 async def select_source(request : Request) -> JSONResponse:
