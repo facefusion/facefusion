@@ -6,6 +6,7 @@ from facefusion.processors.modules.face_swapper.types import FaceSwapperModel, F
 
 face_swapper_set : FaceSwapperSet =\
 {
+	'alphaface_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
 	'blendswap_256': [ '256x256', '384x384', '512x512', '768x768', '1024x1024' ],
 	'ghost_1_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
 	'ghost_2_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
