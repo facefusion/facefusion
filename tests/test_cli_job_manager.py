@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, count_step_total, init_jobs
+from facefusion.jobs.job_manager import clear_jobs, count_step_total, init_jobs, move_job_file
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_job_file
 
 
@@ -111,31 +111,6 @@ def test_submit_all() -> None:
 	assert subprocess.run(commands).returncode == 1
 
 
-def test_job_prune() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--job-age', '0', '--halt-on-error' ]
-
-	assert subprocess.run(commands).returncode == 1
-
-	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-prune-1', '--jobs-path', get_test_jobs_directory() ]
-	subprocess.run(commands)
-
-	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-prune-2', '--jobs-path', get_test_jobs_directory() ]
-	subprocess.run(commands)
-
-	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--halt-on-error' ]
-
-	assert subprocess.run(commands).returncode == 1
-	assert is_test_job_file('test-job-prune-1.json', 'drafted') is True
-	assert is_test_job_file('test-job-prune-2.json', 'drafted') is True
-
-	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--job-age', '0', '--halt-on-error' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_job_file('test-job-prune-1.json', 'drafted') is False
-	assert is_test_job_file('test-job-prune-2.json', 'drafted') is False
-	assert subprocess.run(commands).returncode == 1
-
-
 def test_job_delete() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-delete', 'test-job-delete', '--jobs-path', get_test_jobs_directory() ]
 
@@ -162,11 +137,28 @@ def test_job_delete_all() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-delete-all-2', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
+	move_job_file('test-job-delete-all-2', 'queued')
+
+	commands = [ sys.executable, 'facefusion.py', 'job-delete-all', '--jobs-path', get_test_jobs_directory(), '--job-age', '24', '--halt-on-error' ]
+
+	assert subprocess.run(commands).returncode == 1
+	assert is_test_job_file('test-job-delete-all-1.json', 'drafted') is True
+
+	commands = [ sys.executable, 'facefusion.py', 'job-delete-all', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'queued', '--halt-on-error' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_job_file('test-job-delete-all-1.json', 'drafted') is True
+	assert is_test_job_file('test-job-delete-all-2.json', 'queued') is False
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-delete-all-3', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+	move_job_file('test-job-delete-all-3', 'queued')
+
 	commands = [ sys.executable, 'facefusion.py', 'job-delete-all', '--jobs-path', get_test_jobs_directory(), '--halt-on-error' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_job_file('test-job-delete-all-1.json', 'drafted') is False
-	assert is_test_job_file('test-job-delete-all-2.json', 'drafted') is False
+	assert is_test_job_file('test-job-delete-all-3.json', 'queued') is False
 	assert subprocess.run(commands).returncode == 1
 
 

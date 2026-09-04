@@ -187,7 +187,9 @@ async def delete_job(request : Request) -> JSONResponse:
 
 
 async def delete_jobs(request : Request) -> JSONResponse:
-	if job_manager.delete_jobs(facefusion.choices.job_statuses, state_manager.get_item('halt_on_error')):
+	job_age = request.query_params.get('age', '0')
+
+	if job_age.isdigit() and job_manager.delete_jobs(facefusion.choices.job_statuses, int(job_age), state_manager.get_item('halt_on_error')):
 		return JSONResponse(
 		{
 			'message': translator.get('ok', 'facefusion.apis')

@@ -3,7 +3,7 @@ from time import sleep
 import pytest
 
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.jobs.job_manager import clear_jobs, create_job, init_jobs
+from facefusion.jobs.job_manager import clear_jobs, create_job, init_jobs, move_job_file
 from .assert_helper import get_test_jobs_directory
 
 
@@ -22,3 +22,9 @@ def test_compose_job_list() -> None:
 	assert job_headers == [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
 	assert job_contents[0] == [ 'job-test-compose-job-list-1', 0, 'just now', None, 'drafted' ]
 	assert job_contents[1] == [ 'job-test-compose-job-list-2', 0, 'just now', None, 'drafted' ]
+
+	move_job_file('job-test-compose-job-list-1', 'queued')
+	job_headers, job_contents = compose_job_list([ 'drafted', 'queued' ])
+
+	assert job_contents[0] == [ 'job-test-compose-job-list-2', 0, 'just now', None, 'drafted' ]
+	assert job_contents[1] == [ 'job-test-compose-job-list-1', 0, 'just now', None, 'queued' ]

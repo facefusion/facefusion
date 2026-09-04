@@ -64,7 +64,7 @@ def route(args : Args) -> None:
 		uvicorn.run(facefusion.apis.core.create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
 		hard_exit(1)
 
-	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-prune', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
+	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = route_job_manager(args)
@@ -168,13 +168,6 @@ def route_job_manager(args : Args) -> ErrorCode:
 		logger.error(translator.get('job_all_not_submitted'), __name__)
 		return 1
 
-	if state_manager.get_item('command') == 'job-prune':
-		if job_manager.prune_jobs(state_manager.get_item('job_statuses'), state_manager.get_item('job_age'), state_manager.get_item('halt_on_error')):
-			logger.info(translator.get('job_all_pruned'), __name__)
-			return 0
-		logger.error(translator.get('job_all_not_pruned'), __name__)
-		return 1
-
 	if state_manager.get_item('command') == 'job-delete':
 		if job_manager.delete_job(state_manager.get_item('job_id')):
 			logger.info(translator.get('job_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
@@ -183,7 +176,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete-all':
-		if job_manager.delete_jobs(state_manager.get_item('job_statuses'), state_manager.get_item('halt_on_error')):
+		if job_manager.delete_jobs(state_manager.get_item('job_statuses'), state_manager.get_item('job_age'), state_manager.get_item('halt_on_error')):
 			logger.info(translator.get('job_all_deleted'), __name__)
 			return 0
 		logger.error(translator.get('job_all_not_deleted'), __name__)

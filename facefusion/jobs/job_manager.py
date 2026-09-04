@@ -64,40 +64,24 @@ def submit_jobs(halt_on_error : bool) -> bool:
 	return False
 
 
-def prune_jobs(job_statuses : List[JobStatus], job_age : int, halt_on_error : bool) -> bool:
+def delete_job(job_id : str) -> bool:
+	return delete_job_file(job_id)
+
+
+def delete_jobs(job_statuses : List[JobStatus], job_age : int, halt_on_error : bool) -> bool:
 	job_ids = []
 	has_error = False
 
 	for job_status in job_statuses:
 		for job_id in find_job_ids(job_status):
-			job = read_job_file(job_id)
+			if job_age == 0:
+				job_ids.append(job_id)
 
-			if job:
-				job_date = job.get('date_created')
+			if job_age > 0:
+				job = read_job_file(job_id)
 
-				if datetime.fromisoformat(job_date) < get_current_date_time() - timedelta(hours = job_age):
+				if job and datetime.fromisoformat(job.get('date_created')) < get_current_date_time() - timedelta(hours = job_age):
 					job_ids.append(job_id)
-
-	if job_ids:
-		for job_id in job_ids:
-			if not delete_job(job_id):
-				has_error = True
-				if halt_on_error:
-					return False
-		return not has_error
-	return False
-
-
-def delete_job(job_id : str) -> bool:
-	return delete_job_file(job_id)
-
-
-def delete_jobs(job_statuses : List[JobStatus], halt_on_error : bool) -> bool:
-	job_ids = []
-	has_error = False
-
-	for job_status in job_statuses:
-		job_ids.extend(find_job_ids(job_status))
 
 	if job_ids:
 		for job_id in job_ids:

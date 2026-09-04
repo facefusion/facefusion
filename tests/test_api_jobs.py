@@ -494,6 +494,22 @@ def test_delete_jobs(test_client : TestClient) -> None:
 	create_job('job-test-delete-jobs-1')
 	create_job('job-test-delete-jobs-2')
 
+	delete_jobs_response = test_client.delete('/jobs?age=invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert find_job_ids('drafted') == [ 'job-test-delete-jobs-1', 'job-test-delete-jobs-2' ]
+	assert delete_jobs_response.status_code == 404
+
+	delete_jobs_response = test_client.delete('/jobs?age=24', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert find_job_ids('drafted') == [ 'job-test-delete-jobs-1', 'job-test-delete-jobs-2' ]
+	assert delete_jobs_response.status_code == 404
+
 	delete_jobs_response = test_client.delete('/jobs', headers =
 	{
 		'Authorization': 'Bearer ' + access_token

@@ -1095,7 +1095,7 @@ def create_job_age_program() -> ArgumentParser:
 		'--job-age',
 		help = translator.get('help.job_age'),
 		type = int,
-		default = 24
+		default = 0
 	)
 
 	return program
@@ -1271,19 +1271,6 @@ def create_program() -> ArgumentParser:
 		formatter_class = create_help_formatter_large
 	)
 	sub_program.add_parser(
-		'job-prune',
-		help = translator.get('help.job_prune'),
-		parents =
-		[
-			create_jobs_path_program(),
-			create_job_statuses_program(),
-			create_job_age_program(),
-			create_log_level_program(),
-			create_halt_on_error_program()
-		],
-		formatter_class = create_help_formatter_large
-	)
-	sub_program.add_parser(
 		'job-delete',
 		help = translator.get('help.job_delete'),
 		parents =
@@ -1301,6 +1288,7 @@ def create_program() -> ArgumentParser:
 		[
 			create_jobs_path_program(),
 			create_job_statuses_program(),
+			create_job_age_program(),
 			create_log_level_program(),
 			create_halt_on_error_program()
 		],
