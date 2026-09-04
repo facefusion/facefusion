@@ -11,7 +11,7 @@ from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, Memo
 
 
 def get_metrics_set() -> Metrics:
-	drive_path = Path(state_manager.get_temp_path()).anchor
+	drive_path = Path(state_manager.resolve_temp_path()).anchor
 
 	return\
 	{

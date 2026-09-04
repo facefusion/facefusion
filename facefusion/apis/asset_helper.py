@@ -69,7 +69,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		file_format = get_file_format(upload_file.filename)
 		file_extension = get_file_extension(upload_file.filename)
 		media_type = detect_media_type_by_format(file_format)
-		temp_path = state_manager.get_temp_path()
+		temp_path = state_manager.resolve_temp_path()
 
 		create_directory(temp_path)
 

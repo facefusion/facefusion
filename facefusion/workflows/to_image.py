@@ -29,7 +29,7 @@ def prepare_image() -> ErrorCode:
 
 
 def process_image() -> ErrorCode:
-	temp_image_path = get_temp_file_path(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+	temp_image_path = get_temp_file_path(state_manager.resolve_temp_path(), state_manager.get_item('output_path'))
 	process_temp_frame(temp_image_path, 0)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):

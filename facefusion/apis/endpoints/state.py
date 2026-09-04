@@ -2,13 +2,13 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
-from facefusion import args_helper, capability_store, session_manager, state_manager, translator
+from facefusion import args_helper, capability_store, session_context, session_manager, state_manager, translator
 from facefusion.apis import asset_store
 from facefusion.apis.session_helper import extract_access_token
 
 
 async def get_state(request : Request) -> JSONResponse:
-	api_args = args_helper.extract_api_args(state_manager.get_state())
+	api_args = args_helper.extract_api_args(state_manager.get_state(session_context.get_session_id()))
 	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
 
 
@@ -41,7 +41,7 @@ async def set_state(request : Request) -> Response:
 		for key, value in __api_args__.items():
 			state_manager.set_item(key, value)
 
-		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+		__api_args__ = args_helper.extract_api_args(state_manager.get_state(session_context.get_session_id()))
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_422_UNPROCESSABLE_CONTENT)
@@ -64,7 +64,7 @@ async def select_source(request : Request) -> JSONResponse:
 
 		state_manager.set_item('source_paths', source_paths)
 
-		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+		__api_args__ = args_helper.extract_api_args(state_manager.get_state(session_context.get_session_id()))
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
@@ -85,7 +85,7 @@ async def select_target(request : Request) -> JSONResponse:
 		if asset:
 			state_manager.set_item('target_path', asset.get('path'))
 
-			__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+			__api_args__ = args_helper.extract_api_args(state_manager.get_state(session_context.get_session_id()))
 			return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(

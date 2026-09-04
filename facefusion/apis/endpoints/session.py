@@ -19,6 +19,9 @@ async def create_session(request : Request) -> JSONResponse:
 		session_context.set_session_id(session_id)
 		session_manager.set_session(session_id, session)
 
+		local_state = state_manager.get_context_state('cli', session_context.resolve_local_id())
+		state_manager.set_state(session_id, local_state.copy())
+
 		return JSONResponse(
 		{
 			'access_token': session.get('access_token'),
@@ -72,8 +75,9 @@ async def destroy_session(request : Request) -> JSONResponse:
 	if session_id:
 		session_context.set_session_id(session_id)
 
-		if remove_directory(state_manager.get_temp_path()):
+		if remove_directory(state_manager.resolve_temp_path()):
 			asset_store.delete_assets(session_id)
+			state_manager.clear_state(session_id)
 			session_manager.clear_session(session_id)
 
 			return JSONResponse(

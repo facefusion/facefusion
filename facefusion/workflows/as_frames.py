@@ -29,7 +29,7 @@ def create_temp_frames() -> ErrorCode:
 
 
 def copy_temp_frames() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.resolve_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	for temp_frame_path in temp_frame_paths:
 		if not create_directory(state_manager.get_item('output_path')) or not copy_file(temp_frame_path, os.path.join(state_manager.get_item('output_path'), os.path.basename(temp_frame_path))):

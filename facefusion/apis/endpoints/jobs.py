@@ -214,7 +214,7 @@ async def create_step(request : Request) -> JSONResponse:
 		access_token = extract_access_token(request.scope)
 		session_id = session_manager.find_session_id(access_token)
 		session_context.set_session_id(session_id)
-		temp_path = state_manager.get_temp_path()
+		temp_path = state_manager.resolve_temp_path()
 
 		step_args['target_path'] = state_manager.get_item('target_path')
 

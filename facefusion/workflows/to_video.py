@@ -5,7 +5,7 @@ from typing import Deque
 import cv2
 import numpy
 
-from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, session_context, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.media_helper import restrict_trim_frame
@@ -81,7 +81,7 @@ def process_memory_frames() -> ErrorCode:
 
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index'))
 
-			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
+			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count'), initializer = session_context.set_session_id, initargs = (session_context.get_session_id(),)) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_index in temp_frame_range:
@@ -117,7 +117,7 @@ def process_memory_frames() -> ErrorCode:
 
 
 def merge_frames() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.resolve_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = conditional_scale_resolution()
 	temp_video_fps = conditional_restrict_video_fps()
@@ -135,12 +135,12 @@ def merge_frames() -> ErrorCode:
 
 
 def restore_audio() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.resolve_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(translator.get('skipping_audio'), __name__)
-		move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+		move_temp_file(state_manager.resolve_temp_path(), state_manager.get_item('output_path'))
 	else:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
@@ -152,7 +152,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('replacing_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.resolve_temp_path(), state_manager.get_item('output_path'))
 		else:
 			if ffmpeg.restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
 				conditional_clear_video_pool()
@@ -162,7 +162,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('restoring_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.resolve_temp_path(), state_manager.get_item('output_path'))
 	return 0
 
 

@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, logger, state_manager, translator
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, logger, session_context, session_manager, state_manager, translator
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -27,6 +27,10 @@ from facefusion.workflows.core import detect_workflow_mode
 def cli() -> None:
 	if pre_check():
 		signal.signal(signal.SIGINT, signal_exit)
+		session_id = session_context.resolve_local_id()
+		session_manager.set_session(session_id, session_manager.create_session())
+		session_context.set_session_id(session_id)
+		state_manager.init_state(session_id)
 		program = create_program()
 
 		if validate_args(program):
@@ -57,7 +61,7 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'api':
 		if not common_pre_check() or not processors_pre_check() or not facefusion.apis.core.pre_check():
 			hard_exit(2)
-		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
@@ -65,25 +69,25 @@ def route(args : Args) -> None:
 		hard_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
-		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_manager(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'run':
-		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = process_headless(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'batch-run':
-		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = process_batch(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
-		if not job_manager.init_jobs(state_manager.get_jobs_path()):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_runner()
 		hard_exit(error_code)
@@ -302,10 +306,11 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	cli_args = args_helper.extract_cli_args(state_manager.get_state())
+	local_state = state_manager.get_state(session_context.resolve_local_id())
+	cli_args = args_helper.extract_cli_args(local_state)
 	args = cli_args.copy()
 	args.update(step_args)
-	apply_args(args, state_manager.set_item)
+	apply_args(args, state_manager.init_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 	if common_pre_check() and processors_pre_check():

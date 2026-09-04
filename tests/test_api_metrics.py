@@ -21,7 +21,7 @@ def test_client() -> Iterator[TestClient]:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def mock_detect_execution_devices(mocker : MockerFixture) -> None:
-	mocker.patch('facefusion.system.state_manager.get_temp_path', return_value = '/tmp')
+	mocker.patch('facefusion.system.state_manager.resolve_temp_path', return_value = '/tmp')
 	mocker.patch('facefusion.system.detect_disk_metrics', return_value =
 	[
 		{

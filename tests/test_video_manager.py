@@ -147,7 +147,7 @@ def test_close_video_reader() -> None:
 
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
-	create_temp_directory(state_manager.get_temp_path(), target_path)
+	create_temp_directory(state_manager.resolve_temp_path(), target_path)
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
 	assert get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0) is video_writer
@@ -155,7 +155,7 @@ def test_get_writer() -> None:
 
 def test_write_video_frame() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
-	create_temp_directory(state_manager.get_temp_path(), target_path)
+	create_temp_directory(state_manager.resolve_temp_path(), target_path)
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 
@@ -164,7 +164,7 @@ def test_write_video_frame() -> None:
 
 	assert close_video_writer(video_writer) is True
 
-	video_metadata = extract_video_metadata(get_temp_file_path(state_manager.get_temp_path(), target_path))
+	video_metadata = extract_video_metadata(get_temp_file_path(state_manager.resolve_temp_path(), target_path))
 
 	assert video_metadata.get('duration') == 1.0
 	assert video_metadata.get('frame_total') == 25
@@ -175,7 +175,7 @@ def test_write_video_frame() -> None:
 
 def test_close_video_writer() -> None:
 	target_path = get_test_example_file('target-240p-30fps.mp4')
-	create_temp_directory(state_manager.get_temp_path(), target_path)
+	create_temp_directory(state_manager.resolve_temp_path(), target_path)
 	video_reader = get_reader(target_path, 'read_video_frame')
 	video_writer = get_writer(target_path, 30.0, (426, 226), (426, 226), 30.0)
 
@@ -186,7 +186,7 @@ def test_close_video_writer() -> None:
 
 def test_clear_video_pool() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
-	create_temp_directory(state_manager.get_temp_path(), target_path)
+	create_temp_directory(state_manager.resolve_temp_path(), target_path)
 	video_reader = get_reader(target_path, 'select_video_frames')
 	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
 

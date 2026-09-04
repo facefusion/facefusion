@@ -4,7 +4,7 @@ from typing import Deque, List
 
 import numpy
 
-from facefusion import cli_progress, logger, process_manager, state_manager, translator
+from facefusion import cli_progress, logger, process_manager, session_context, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
@@ -39,13 +39,13 @@ def is_process_stopping() -> bool:
 
 
 def setup() -> ErrorCode:
-	if create_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path')):
+	if create_temp_directory(state_manager.resolve_temp_path(), state_manager.get_item('output_path')):
 		logger.debug(translator.get('creating_temp'), __name__)
 	return 0
 
 
 def clear() -> ErrorCode:
-	if clear_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path')):
+	if clear_temp_directory(state_manager.resolve_temp_path(), state_manager.get_item('output_path')):
 		logger.debug(translator.get('clearing_temp'), __name__)
 	return 0
 
@@ -152,14 +152,14 @@ def process_temp_vision_frame(target_vision_frames : List[VisionFrame], temp_vis
 
 
 def process_frames() -> ErrorCode:
-	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_set = resolve_temp_frame_set(state_manager.resolve_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
 		with cli_progress.create(unit = 'frame') as progress:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_set)
 
-			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
+			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count'), initializer = session_context.set_session_id, initargs = (session_context.get_session_id(),)) as executor:
 				futures : Deque[Future[bool]] = deque()
 
 				for frame_index, temp_frame_path in temp_frame_set.items():

@@ -1,3 +1,5 @@
+import getpass
+import hashlib
 from contextvars import ContextVar
 from typing import Optional
 
@@ -16,3 +18,7 @@ def get_session_id() -> Optional[SessionId]:
 
 def clear_session_id() -> None:
 	SESSION_ID.set(None)
+
+
+def resolve_local_id() -> SessionId:
+	return hashlib.sha1(getpass.getuser().encode()).hexdigest()

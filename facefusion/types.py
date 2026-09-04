@@ -670,6 +670,7 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
-StateSet : TypeAlias = Dict[AppContext, State]
+SessionStateSet : TypeAlias = Dict[SessionId, State]
+StateSet : TypeAlias = Dict[AppContext, SessionStateSet]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]
