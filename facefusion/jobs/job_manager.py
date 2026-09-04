@@ -69,7 +69,14 @@ def prune_jobs(job_statuses : List[JobStatus], job_age : int, halt_on_error : bo
 	has_error = False
 
 	for job_status in job_statuses:
-		job_ids.extend(find_outdated_job_ids(job_status, job_age))
+		for job_id in find_job_ids(job_status):
+			job = read_job_file(job_id)
+
+			if job:
+				job_date = job.get('date_created')
+
+				if datetime.fromisoformat(job_date) < get_current_date_time() - timedelta(hours = job_age):
+					job_ids.append(job_id)
 
 	if job_ids:
 		for job_id in job_ids:
@@ -120,18 +127,6 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 	for job_path in job_paths:
 		job_id = get_file_name(job_path)
 		job_ids.append(job_id)
-	return job_ids
-
-
-def find_outdated_job_ids(job_status : JobStatus, job_age : int) -> List[str]:
-	job_ids = []
-
-	for job_id in find_job_ids(job_status):
-		job = read_job_file(job_id)
-		job_date = job.get('date_updated') or job.get('date_created')
-
-		if datetime.fromisoformat(job_date) <= get_current_date_time() - timedelta(hours = job_age):
-			job_ids.append(job_id)
 	return job_ids
 
 
