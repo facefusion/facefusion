@@ -58,6 +58,14 @@ def test_create_session(test_client : TestClient) -> None:
 	os.environ['FACEFUSION_API_KEY'] = 'TEST'
 	create_session_response = test_client.post('/session', json =
 	{
+		'client_version': metadata.get('version')
+	})
+
+	assert create_session_response.status_code == 401
+
+	os.environ['FACEFUSION_API_KEY'] = 'TEST'
+	create_session_response = test_client.post('/session', json =
+	{
 		'api_key': 'INVALID',
 		'client_version': metadata.get('version')
 	})

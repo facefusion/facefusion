@@ -1,4 +1,3 @@
-import os
 import secrets
 
 from starlette.requests import Request
@@ -7,14 +6,14 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZE
 
 from facefusion import session_context, session_manager, state_manager, translator
 from facefusion.apis import asset_store
-from facefusion.apis.session_helper import extract_access_token
+from facefusion.apis.session_helper import extract_access_token, validate_api_key
 from facefusion.filesystem import remove_directory
 
 
 async def create_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
-	if not body.get('api_key') or body.get('api_key') == os.getenv('FACEFUSION_API_KEY'):
+	if validate_api_key(body.get('api_key')):
 		session_id = secrets.token_urlsafe(16)
 		session = session_manager.create_session()
 		session_context.set_session_id(session_id)
