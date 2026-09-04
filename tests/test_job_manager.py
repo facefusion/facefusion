@@ -3,7 +3,7 @@ from time import sleep
 import pytest
 
 from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, find_outdated_job_ids, get_steps, init_jobs, insert_step, move_job_file, prune_jobs, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from .assert_helper import get_test_jobs_directory
 
 
@@ -86,6 +86,20 @@ def test_submit_jobs() -> None:
 	assert submit_jobs(halt_on_error) is False
 
 
+def test_prune_jobs() -> None:
+	halt_on_error = True
+
+	assert prune_jobs([ 'drafted' ], 0, halt_on_error) is False
+
+	create_job('job-test-prune-jobs-1')
+	create_job('job-test-prune-jobs-2')
+
+	assert prune_jobs([ 'drafted' ], 24, halt_on_error) is False
+	assert prune_jobs([ 'completed', 'failed' ], 0, halt_on_error) is False
+	assert prune_jobs([ 'drafted' ], 0, halt_on_error) is True
+	assert find_job_ids('drafted') == []
+
+
 def test_delete_job() -> None:
 	assert delete_job('job-invalid') is False
 
@@ -98,12 +112,14 @@ def test_delete_job() -> None:
 def test_delete_jobs() -> None:
 	halt_on_error = True
 
-	assert delete_jobs(halt_on_error) is False
+	assert delete_jobs([ 'drafted' ], halt_on_error) is False
 
 	create_job('job-test-delete-jobs-1')
 	create_job('job-test-delete-jobs-2')
 
-	assert delete_jobs(halt_on_error) is True
+	assert delete_jobs([ 'queued' ], halt_on_error) is False
+	assert delete_jobs([ 'drafted', 'queued' ], halt_on_error) is True
+	assert find_job_ids('drafted') == []
 
 
 def test_find_jobs() -> None:
@@ -162,6 +178,14 @@ def test_find_job_ids() -> None:
 	assert find_job_ids('queued') == []
 	assert find_job_ids('completed') == [ 'job-test-find-job-ids-1', 'job-test-find-job-ids-3' ]
 	assert find_job_ids('failed') == [ 'job-test-find-job-ids-2' ]
+
+
+def test_find_outdated_job_ids() -> None:
+	create_job('job-test-find-outdated-job-ids')
+
+	assert find_outdated_job_ids('drafted', 24) == []
+	assert find_outdated_job_ids('drafted', 0) == [ 'job-test-find-outdated-job-ids' ]
+	assert find_outdated_job_ids('queued', 0) == []
 
 
 def test_add_step() -> None:

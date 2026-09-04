@@ -15,6 +15,19 @@ from facefusion.filesystem import create_directory, get_file_extension, is_direc
 from facefusion.jobs import job_helper, job_manager, job_runner
 
 
+async def get_job(request : Request) -> JSONResponse:
+	job_id = request.path_params.get('job_id')
+	job = job_manager.read_job_file(job_id)
+
+	if job:
+		return JSONResponse(job, status_code = HTTP_200_OK)
+
+	return JSONResponse(
+	{
+		'message': translator.get('job_not_found', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)
+
+
 async def get_jobs(request : Request) -> JSONResponse:
 	job_status = request.query_params.get('status')
 
@@ -38,19 +51,6 @@ async def get_jobs(request : Request) -> JSONResponse:
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
-async def get_job(request : Request) -> JSONResponse:
-	job_id = request.path_params.get('job_id')
-	job = job_manager.read_job_file(job_id)
-
-	if job:
-		return JSONResponse(job, status_code = HTTP_200_OK)
-
-	return JSONResponse(
-	{
-		'message': translator.get('job_not_found', 'facefusion.apis')
-	}, status_code = HTTP_404_NOT_FOUND)
-
-
 async def create_job(request : Request) -> JSONResponse:
 	job_id = job_helper.suggest_job_id()
 
@@ -63,55 +63,6 @@ async def create_job(request : Request) -> JSONResponse:
 	return JSONResponse(
 	{
 		'message': translator.get('job_not_created', 'facefusion.apis')
-	}, status_code = HTTP_400_BAD_REQUEST)
-
-
-async def update_jobs(request : Request) -> JSONResponse:
-	action = request.query_params.get('action')
-
-	if action == 'submit':
-		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
-			return JSONResponse(
-			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_200_OK)
-
-		return JSONResponse(
-		{
-			'message': translator.get('job_all_not_submitted', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
-
-	if action == 'run':
-		if job_manager.find_job_ids('queued'):
-			run_jobs_task = BackgroundTask(partial(job_runner.run_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
-
-			return JSONResponse(
-			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_202_ACCEPTED, background = run_jobs_task)
-
-		return JSONResponse(
-		{
-			'message': translator.get('job_all_not_run', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
-
-	if action == 'retry':
-		if job_manager.find_job_ids('failed'):
-			retry_jobs_task = BackgroundTask(partial(job_runner.retry_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
-
-			return JSONResponse(
-			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_202_ACCEPTED, background = retry_jobs_task)
-
-		return JSONResponse(
-		{
-			'message': translator.get('job_all_not_retried', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
-
-	return JSONResponse(
-	{
-		'message': translator.get('invalid_job_action', 'facefusion.apis')
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
@@ -171,17 +122,53 @@ async def update_job(request : Request) -> JSONResponse:
 	}, status_code = HTTP_400_BAD_REQUEST)
 
 
-async def delete_jobs(request : Request) -> JSONResponse:
-	if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
+async def update_jobs(request : Request) -> JSONResponse:
+	action = request.query_params.get('action')
+
+	if action == 'submit':
+		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_200_OK)
+
 		return JSONResponse(
 		{
-			'message': translator.get('ok', 'facefusion.apis')
-		}, status_code = HTTP_200_OK)
+			'message': translator.get('job_all_not_submitted', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'run':
+		if job_manager.find_job_ids('queued'):
+			run_jobs_task = BackgroundTask(partial(job_runner.run_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
+
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = run_jobs_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_all_not_run', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'retry':
+		if job_manager.find_job_ids('failed'):
+			retry_jobs_task = BackgroundTask(partial(job_runner.retry_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
+
+			return JSONResponse(
+			{
+				'message': translator.get('ok', 'facefusion.apis')
+			}, status_code = HTTP_202_ACCEPTED, background = retry_jobs_task)
+
+		return JSONResponse(
+		{
+			'message': translator.get('job_all_not_retried', 'facefusion.apis')
+		}, status_code = HTTP_400_BAD_REQUEST)
 
 	return JSONResponse(
 	{
-		'message': translator.get('job_all_not_deleted', 'facefusion.apis')
-	}, status_code = HTTP_404_NOT_FOUND)
+		'message': translator.get('invalid_job_action', 'facefusion.apis')
+	}, status_code = HTTP_400_BAD_REQUEST)
 
 
 async def delete_job(request : Request) -> JSONResponse:
@@ -196,6 +183,19 @@ async def delete_job(request : Request) -> JSONResponse:
 	return JSONResponse(
 	{
 		'message': translator.get('job_not_deleted', 'facefusion.apis')
+	}, status_code = HTTP_404_NOT_FOUND)
+
+
+async def delete_jobs(request : Request) -> JSONResponse:
+	if job_manager.delete_jobs(facefusion.choices.job_statuses, state_manager.get_item('halt_on_error')):
+		return JSONResponse(
+		{
+			'message': translator.get('ok', 'facefusion.apis')
+		}, status_code = HTTP_200_OK)
+
+	return JSONResponse(
+	{
+		'message': translator.get('job_all_not_deleted', 'facefusion.apis')
 	}, status_code = HTTP_404_NOT_FOUND)
 
 

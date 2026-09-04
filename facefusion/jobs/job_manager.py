@@ -1,5 +1,6 @@
 import os
 from copy import copy
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import facefusion.choices
@@ -63,13 +64,33 @@ def submit_jobs(halt_on_error : bool) -> bool:
 	return False
 
 
+def prune_jobs(job_statuses : List[JobStatus], job_age : int, halt_on_error : bool) -> bool:
+	job_ids = []
+	has_error = False
+
+	for job_status in job_statuses:
+		job_ids.extend(find_outdated_job_ids(job_status, job_age))
+
+	if job_ids:
+		for job_id in job_ids:
+			if not delete_job(job_id):
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
+	return False
+
+
 def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
-def delete_jobs(halt_on_error : bool) -> bool:
-	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
+def delete_jobs(job_statuses : List[JobStatus], halt_on_error : bool) -> bool:
+	job_ids = []
 	has_error = False
+
+	for job_status in job_statuses:
+		job_ids.extend(find_job_ids(job_status))
 
 	if job_ids:
 		for job_id in job_ids:
@@ -99,6 +120,18 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 	for job_path in job_paths:
 		job_id = get_file_name(job_path)
 		job_ids.append(job_id)
+	return job_ids
+
+
+def find_outdated_job_ids(job_status : JobStatus, job_age : int) -> List[str]:
+	job_ids = []
+
+	for job_id in find_job_ids(job_status):
+		job = read_job_file(job_id)
+		job_date = job.get('date_updated') or job.get('date_created')
+
+		if datetime.fromisoformat(job_date) <= get_current_date_time() - timedelta(hours = job_age):
+			job_ids.append(job_id)
 	return job_ids
 
 

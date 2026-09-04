@@ -37,18 +37,18 @@ def before_each() -> None:
 
 
 def test_job_list() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'job-list', 'drafted', '--jobs-path', get_test_jobs_directory() ]
+	commands = [ sys.executable, 'facefusion.py', 'job-list', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted' ]
 
 	assert subprocess.run(commands).returncode == 1
 
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-list', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-list', 'drafted', '--jobs-path', get_test_jobs_directory() ]
+	commands = [ sys.executable, 'facefusion.py', 'job-list', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted' ]
 
 	assert subprocess.run(commands).returncode == 0
 
-	commands = [ sys.executable, 'facefusion.py', 'job-list', 'queued', '--jobs-path', get_test_jobs_directory() ]
+	commands = [ sys.executable, 'facefusion.py', 'job-list', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'queued' ]
 
 	assert subprocess.run(commands).returncode == 1
 
@@ -108,6 +108,31 @@ def test_submit_all() -> None:
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_job_file('test-job-submit-all-1.json', 'queued') is True
 	assert is_test_job_file('test-job-submit-all-2.json', 'queued') is True
+	assert subprocess.run(commands).returncode == 1
+
+
+def test_job_prune() -> None:
+	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--job-age', '0', '--halt-on-error' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-prune-1', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-prune-2', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--halt-on-error' ]
+
+	assert subprocess.run(commands).returncode == 1
+	assert is_test_job_file('test-job-prune-1.json', 'drafted') is True
+	assert is_test_job_file('test-job-prune-2.json', 'drafted') is True
+
+	commands = [ sys.executable, 'facefusion.py', 'job-prune', '--jobs-path', get_test_jobs_directory(), '--job-statuses', 'drafted', '--job-age', '0', '--halt-on-error' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_job_file('test-job-prune-1.json', 'drafted') is False
+	assert is_test_job_file('test-job-prune-2.json', 'drafted') is False
 	assert subprocess.run(commands).returncode == 1
 
 

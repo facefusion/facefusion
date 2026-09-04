@@ -6,25 +6,27 @@ from facefusion.time_helper import describe_time_ago
 from facefusion.types import JobStatus, TableContent, TableHeader
 
 
-def compose_job_list(job_status : JobStatus) -> Tuple[List[TableHeader], List[List[TableContent]]]:
-	jobs = job_manager.find_jobs(job_status)
+def compose_job_list(job_statuses : List[JobStatus]) -> Tuple[List[TableHeader], List[List[TableContent]]]:
 	job_headers : List[TableHeader] = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
 	job_contents : List[List[TableContent]] = []
 
-	for index, job_id in enumerate(jobs):
-		if job_manager.validate_job(job_id):
-			job = jobs[job_id]
-			step_total = job_manager.count_step_total(job_id)
-			date_created = prepare_describe_datetime(job.get('date_created'))
-			date_updated = prepare_describe_datetime(job.get('date_updated'))
-			job_contents.append(
-			[
-				job_id,
-				step_total,
-				date_created,
-				date_updated,
-				job_status
-			])
+	for job_status in job_statuses:
+		jobs = job_manager.find_jobs(job_status)
+
+		for job_id in jobs:
+			if job_manager.validate_job(job_id):
+				job = jobs[job_id]
+				step_total = job_manager.count_step_total(job_id)
+				date_created = prepare_describe_datetime(job.get('date_created'))
+				date_updated = prepare_describe_datetime(job.get('date_updated'))
+				job_contents.append(
+				[
+					job_id,
+					step_total,
+					date_created,
+					date_updated,
+					job_status
+				])
 	return job_headers, job_contents
 
 

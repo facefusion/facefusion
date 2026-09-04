@@ -591,7 +591,8 @@ StateKey = Literal\
 	'api_key',
 	'api_security_strategy',
 	'job_id',
-	'job_status',
+	'job_statuses',
+	'job_age',
 	'step_index'
 ]
 State = TypedDict('State',
@@ -667,7 +668,8 @@ State = TypedDict('State',
 	'api_key' : str,
 	'api_security_strategy' : ApiSecurityStrategy,
 	'job_id' : str,
-	'job_status' : JobStatus,
+	'job_statuses' : List[JobStatus],
+	'job_age' : int,
 	'step_index' : int
 })
 StateSet : TypeAlias = Dict[AppContext, State]

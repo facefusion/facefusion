@@ -1074,13 +1074,28 @@ def create_job_id_program() -> ArgumentParser:
 	return program
 
 
-def create_job_status_program() -> ArgumentParser:
+def create_job_statuses_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 
 	program.add_argument(
-		'job_status',
-		help = translator.get('help.job_status'),
-		choices = facefusion.choices.job_statuses
+		'--job-statuses',
+		help = translator.get('help.job_statuses'),
+		default = facefusion.choices.job_statuses,
+		choices = facefusion.choices.job_statuses,
+		nargs = '+'
+	)
+
+	return program
+
+
+def create_job_age_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+
+	program.add_argument(
+		'--job-age',
+		help = translator.get('help.job_age'),
+		type = int,
+		default = 24
 	)
 
 	return program
@@ -1216,8 +1231,8 @@ def create_program() -> ArgumentParser:
 		help = translator.get('help.job_list'),
 		parents =
 		[
-			create_job_status_program(),
 			create_jobs_path_program(),
+			create_job_statuses_program(),
 			create_log_level_program()
 		],
 		formatter_class = create_help_formatter_large
@@ -1256,6 +1271,19 @@ def create_program() -> ArgumentParser:
 		formatter_class = create_help_formatter_large
 	)
 	sub_program.add_parser(
+		'job-prune',
+		help = translator.get('help.job_prune'),
+		parents =
+		[
+			create_jobs_path_program(),
+			create_job_statuses_program(),
+			create_job_age_program(),
+			create_log_level_program(),
+			create_halt_on_error_program()
+		],
+		formatter_class = create_help_formatter_large
+	)
+	sub_program.add_parser(
 		'job-delete',
 		help = translator.get('help.job_delete'),
 		parents =
@@ -1272,6 +1300,7 @@ def create_program() -> ArgumentParser:
 		parents =
 		[
 			create_jobs_path_program(),
+			create_job_statuses_program(),
 			create_log_level_program(),
 			create_halt_on_error_program()
 		],

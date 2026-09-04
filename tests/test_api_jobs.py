@@ -42,39 +42,6 @@ def test_client() -> Iterator[TestClient]:
 		yield test_client
 
 
-def test_get_jobs(test_client : TestClient) -> None:
-	get_jobs_response = test_client.get('/jobs?status=drafted')
-
-	assert get_jobs_response.status_code == 401
-
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-
-	get_jobs_response = test_client.get('/jobs?status=invalid', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	get_jobs_body = get_jobs_response.json()
-
-	assert get_jobs_body.get('message') == 'invalid job status'
-	assert get_jobs_response.status_code == 400
-
-	create_job('job-test-get-jobs')
-
-	get_jobs_response = test_client.get('/jobs?status=drafted', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	get_jobs_body = get_jobs_response.json()
-
-	assert 'job-test-get-jobs' in get_jobs_body
-	assert get_jobs_response.status_code == 200
-
-
 def test_get_job(test_client : TestClient) -> None:
 	get_job_response = test_client.get('/jobs/job-test-get-job')
 
@@ -106,6 +73,39 @@ def test_get_job(test_client : TestClient) -> None:
 
 	assert get_job_body.get('version') == '1'
 	assert get_job_response.status_code == 200
+
+
+def test_get_jobs(test_client : TestClient) -> None:
+	get_jobs_response = test_client.get('/jobs?status=drafted')
+
+	assert get_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	get_jobs_response = test_client.get('/jobs?status=invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_jobs_body = get_jobs_response.json()
+
+	assert get_jobs_body.get('message') == 'invalid job status'
+	assert get_jobs_response.status_code == 400
+
+	create_job('job-test-get-jobs')
+
+	get_jobs_response = test_client.get('/jobs?status=drafted', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_jobs_body = get_jobs_response.json()
+
+	assert 'job-test-get-jobs' in get_jobs_body
+	assert get_jobs_response.status_code == 200
 
 
 def test_create_job(test_client : TestClient) -> None:
@@ -145,57 +145,6 @@ def test_create_job(test_client : TestClient) -> None:
 
 		assert create_job_body.get('message') == 'job not created'
 		assert create_job_response.status_code == 400
-
-
-def test_submit_jobs(test_client : TestClient) -> None:
-	submit_jobs_response = test_client.patch('/jobs?action=submit')
-
-	assert submit_jobs_response.status_code == 401
-
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-
-	submit_jobs_response = test_client.patch('/jobs?action=invalid', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	submit_jobs_body = submit_jobs_response.json()
-
-	assert submit_jobs_body.get('message') == 'invalid job action'
-	assert submit_jobs_response.status_code == 400
-
-	create_job('job-test-submit-jobs')
-
-	submit_jobs_response = test_client.patch('/jobs?action=submit', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	submit_jobs_body = submit_jobs_response.json()
-
-	assert submit_jobs_body.get('message') == 'jobs not submitted'
-	assert submit_jobs_response.status_code == 400
-
-	test_client.post('/jobs/job-test-submit-jobs?action=add', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'processors': [ 'face_swapper' ]
-	})
-
-	submit_jobs_response = test_client.patch('/jobs?action=submit', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	submit_jobs_body = submit_jobs_response.json()
-
-	assert submit_jobs_body.get('message') == 'ok'
-	assert find_job_ids('queued') == [ 'job-test-submit-jobs' ]
-	assert submit_jobs_response.status_code == 200
 
 
 def test_submit_job(test_client : TestClient) -> None:
@@ -249,52 +198,6 @@ def test_submit_job(test_client : TestClient) -> None:
 	assert submit_job_response.status_code == 200
 
 
-def test_run_jobs(test_client : TestClient) -> None:
-	run_jobs_response = test_client.patch('/jobs?action=run')
-
-	assert run_jobs_response.status_code == 401
-
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-
-	run_jobs_response = test_client.patch('/jobs?action=run', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	run_jobs_body = run_jobs_response.json()
-
-	assert run_jobs_body.get('message') == 'jobs not run'
-	assert run_jobs_response.status_code == 400
-
-	create_job('job-test-run-jobs')
-	test_client.post('/jobs/job-test-run-jobs?action=add', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'processors': [ 'face_swapper' ]
-	})
-	test_client.patch('/jobs/job-test-run-jobs?action=submit', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
-	with patch('facefusion.jobs.job_runner.run_jobs', return_value = True) as run_jobs_mock:
-		run_jobs_response = test_client.patch('/jobs?action=run', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		})
-		run_jobs_body = run_jobs_response.json()
-
-		assert run_jobs_body.get('message') == 'ok'
-		assert run_jobs_response.status_code == 202
-		assert run_jobs_mock.called is True
-
-
 def test_run_job(test_client : TestClient) -> None:
 	run_job_response = test_client.patch('/jobs/job-test-run-job?action=run')
 
@@ -340,54 +243,6 @@ def test_run_job(test_client : TestClient) -> None:
 		assert run_job_body.get('message') == 'ok'
 		assert run_job_response.status_code == 202
 		assert run_job_mock.called is True
-
-
-def test_retry_jobs(test_client : TestClient) -> None:
-	retry_jobs_response = test_client.patch('/jobs?action=retry')
-
-	assert retry_jobs_response.status_code == 401
-
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
-
-	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	retry_jobs_body = retry_jobs_response.json()
-
-	assert retry_jobs_body.get('message') == 'jobs not retried'
-	assert retry_jobs_response.status_code == 400
-
-	create_job('job-test-retry-jobs')
-	test_client.post('/jobs/job-test-retry-jobs?action=add', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'processors': [ 'face_swapper' ]
-	})
-	test_client.patch('/jobs/job-test-retry-jobs?action=submit', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-	set_steps_status('job-test-retry-jobs', 'failed')
-	move_job_file('job-test-retry-jobs', 'failed')
-
-	with patch('facefusion.jobs.job_runner.retry_jobs', return_value = True) as retry_jobs_mock:
-		retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		})
-		retry_jobs_body = retry_jobs_response.json()
-
-		assert retry_jobs_body.get('message') == 'ok'
-		assert retry_jobs_response.status_code == 202
-		assert retry_jobs_mock.called is True
 
 
 def test_retry_job(test_client : TestClient) -> None:
@@ -438,10 +293,10 @@ def test_retry_job(test_client : TestClient) -> None:
 		assert retry_job_mock.called is True
 
 
-def test_delete_jobs(test_client : TestClient) -> None:
-	delete_jobs_response = test_client.delete('/jobs')
+def test_submit_jobs(test_client : TestClient) -> None:
+	submit_jobs_response = test_client.patch('/jobs?action=submit')
 
-	assert delete_jobs_response.status_code == 401
+	assert submit_jobs_response.status_code == 401
 
 	create_session_response = test_client.post('/session', json =
 	{
@@ -450,25 +305,137 @@ def test_delete_jobs(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 
-	delete_jobs_response = test_client.delete('/jobs', headers =
+	submit_jobs_response = test_client.patch('/jobs?action=invalid', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
-	delete_jobs_body = delete_jobs_response.json()
+	submit_jobs_body = submit_jobs_response.json()
 
-	assert delete_jobs_body.get('message') == 'jobs not deleted'
-	assert delete_jobs_response.status_code == 404
+	assert submit_jobs_body.get('message') == 'invalid job action'
+	assert submit_jobs_response.status_code == 400
 
-	create_job('job-test-delete-jobs-1')
-	create_job('job-test-delete-jobs-2')
+	create_job('job-test-submit-jobs')
 
-	delete_jobs_response = test_client.delete('/jobs', headers =
+	submit_jobs_response = test_client.patch('/jobs?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_jobs_body = submit_jobs_response.json()
+
+	assert submit_jobs_body.get('message') == 'jobs not submitted'
+	assert submit_jobs_response.status_code == 400
+
+	test_client.post('/jobs/job-test-submit-jobs?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	submit_jobs_response = test_client.patch('/jobs?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_jobs_body = submit_jobs_response.json()
+
+	assert submit_jobs_body.get('message') == 'ok'
+	assert find_job_ids('queued') == [ 'job-test-submit-jobs' ]
+	assert submit_jobs_response.status_code == 200
+
+
+def test_run_jobs(test_client : TestClient) -> None:
+	run_jobs_response = test_client.patch('/jobs?action=run')
+
+	assert run_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	run_jobs_response = test_client.patch('/jobs?action=run', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	run_jobs_body = run_jobs_response.json()
+
+	assert run_jobs_body.get('message') == 'jobs not run'
+	assert run_jobs_response.status_code == 400
+
+	create_job('job-test-run-jobs')
+	test_client.post('/jobs/job-test-run-jobs?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	test_client.patch('/jobs/job-test-run-jobs?action=submit', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert find_job_ids('drafted') == []
-	assert delete_jobs_response.status_code == 200
+	with patch('facefusion.jobs.job_runner.run_jobs', return_value = True) as run_jobs_mock:
+		run_jobs_response = test_client.patch('/jobs?action=run', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+		run_jobs_body = run_jobs_response.json()
+
+		assert run_jobs_body.get('message') == 'ok'
+		assert run_jobs_response.status_code == 202
+		assert run_jobs_mock.called is True
+
+
+def test_retry_jobs(test_client : TestClient) -> None:
+	retry_jobs_response = test_client.patch('/jobs?action=retry')
+
+	assert retry_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	retry_jobs_body = retry_jobs_response.json()
+
+	assert retry_jobs_body.get('message') == 'jobs not retried'
+	assert retry_jobs_response.status_code == 400
+
+	create_job('job-test-retry-jobs')
+	test_client.post('/jobs/job-test-retry-jobs?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	test_client.patch('/jobs/job-test-retry-jobs?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	set_steps_status('job-test-retry-jobs', 'failed')
+	move_job_file('job-test-retry-jobs', 'failed')
+
+	with patch('facefusion.jobs.job_runner.retry_jobs', return_value = True) as retry_jobs_mock:
+		retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+		retry_jobs_body = retry_jobs_response.json()
+
+		assert retry_jobs_body.get('message') == 'ok'
+		assert retry_jobs_response.status_code == 202
+		assert retry_jobs_mock.called is True
 
 
 def test_delete_job(test_client : TestClient) -> None:
@@ -501,6 +468,39 @@ def test_delete_job(test_client : TestClient) -> None:
 
 	assert find_job_ids('drafted') == []
 	assert delete_job_response.status_code == 200
+
+
+def test_delete_jobs(test_client : TestClient) -> None:
+	delete_jobs_response = test_client.delete('/jobs')
+
+	assert delete_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	delete_jobs_response = test_client.delete('/jobs', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	delete_jobs_body = delete_jobs_response.json()
+
+	assert delete_jobs_body.get('message') == 'jobs not deleted'
+	assert delete_jobs_response.status_code == 404
+
+	create_job('job-test-delete-jobs-1')
+	create_job('job-test-delete-jobs-2')
+
+	delete_jobs_response = test_client.delete('/jobs', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert find_job_ids('drafted') == []
+	assert delete_jobs_response.status_code == 200
 
 
 def test_create_step(test_client : TestClient) -> None:
