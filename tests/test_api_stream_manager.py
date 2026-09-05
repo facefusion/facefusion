@@ -132,6 +132,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
+	state_manager.set_state(session_id, { 'execution_thread_count': 8 })
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
 

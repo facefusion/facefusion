@@ -9,7 +9,7 @@ import cv2
 import numpy
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, rtc, rtc_store, state_manager, streamer
+from facefusion import content_store, rtc, rtc_store, session_context, state_manager, streamer
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.content_analyser import analyse_frame
@@ -110,10 +110,11 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+	session_context.set_session_id(session_id)
 	execution_thread_count = state_manager.get_item('execution_thread_count')
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = execution_thread_count)
 	audio_queue : Queue[Tuple[Time, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)
-	video_executor = ThreadPoolExecutor(max_workers = execution_thread_count)
+	video_executor = ThreadPoolExecutor(max_workers = execution_thread_count, initializer = session_context.set_session_id, initargs = (session_id,))
 
 	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue, video_executor), daemon = True)
 	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)

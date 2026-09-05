@@ -2,24 +2,20 @@ import importlib
 import random
 from functools import lru_cache
 from time import sleep, time
-from typing import List
+from typing import List, Optional
 
 from onnxruntime import InferenceSession
 
 from facefusion import logger, process_manager, state_manager, translator
-from facefusion.app_context import detect_app_context
 from facefusion.common_helper import is_windows
 from facefusion.execution import create_inference_providers, get_onnxruntime_version, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
+from facefusion.session_context import resolve_owner_id
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet, InferenceProvider
 
-INFERENCE_POOL_SET : InferencePoolSet =\
-{
-	'cli': {},
-	'api': {}
-}
+INFERENCE_POOL_SET : InferencePoolSet = {}
 
 
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
@@ -29,23 +25,23 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
 	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
-	app_context = detect_app_context()
+	inference_pool_set = INFERENCE_POOL_SET.setdefault(resolve_owner_id(), {})
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
 		if not has_arena_leak:
-			if app_context == 'cli' and INFERENCE_POOL_SET.get('api').get(inference_context):
-				INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('api').get(inference_context)
-			if app_context == 'api' and INFERENCE_POOL_SET.get('cli').get(inference_context):
-				INFERENCE_POOL_SET['api'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+			inference_pool = find_inference_pool(inference_context)
 
-		if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
+			if inference_pool:
+				inference_pool_set[inference_context] = inference_pool
+
+		if not inference_pool_set.get(inference_context):
 			inference_providers = resolve_static_inference_providers(module_name, execution_device_id)
-			INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, inference_providers)
+			inference_pool_set[inference_context] = create_inference_pool(model_source_set, inference_providers)
 
 	current_inference_context = get_inference_context(module_name, model_names, random.choice(execution_device_ids), execution_providers)
-	return INFERENCE_POOL_SET.get(app_context).get(current_inference_context)
+	return inference_pool_set.get(current_inference_context)
 
 
 def create_inference_pool(model_source_set : DownloadSet, inference_providers : List[InferenceProvider]) -> InferencePool:
@@ -63,16 +59,26 @@ def create_inference_pool(model_source_set : DownloadSet, inference_providers : 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
-	app_context = detect_app_context()
+	inference_pool_set = INFERENCE_POOL_SET.setdefault(resolve_owner_id(), {})
 
 	if is_windows() and has_execution_provider('directml'):
-		INFERENCE_POOL_SET[app_context].clear()
+		inference_pool_set.clear()
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-		if INFERENCE_POOL_SET.get(app_context).get(inference_context):
-			del INFERENCE_POOL_SET[app_context][inference_context]
+		if inference_pool_set.get(inference_context):
+			del inference_pool_set[inference_context]
+
+
+def find_inference_pool(inference_context : str) -> Optional[InferencePool]:
+	for session_id in INFERENCE_POOL_SET:
+		inference_pool = INFERENCE_POOL_SET.get(session_id).get(inference_context)
+
+		if inference_pool:
+			return inference_pool
+
+	return None
 
 
 def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> InferenceSession:

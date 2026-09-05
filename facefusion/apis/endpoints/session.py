@@ -16,11 +16,11 @@ async def create_session(request : Request) -> JSONResponse:
 	if validate_api_key(body.get('api_key')):
 		session_id = secrets.token_urlsafe(16)
 		session = session_manager.create_session()
-		session_context.set_session_id(session_id)
 		session_manager.set_session(session_id, session)
 
-		local_state = state_manager.get_context_state('cli', session_context.resolve_local_id())
-		state_manager.set_state(session_id, local_state.copy())
+		process_state = state_manager.get_state(session_context.resolve_process_id())
+		state_manager.set_state(session_id, process_state.copy())
+		session_context.set_session_id(session_id)
 
 		return JSONResponse(
 		{

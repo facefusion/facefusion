@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Tuple, TypeAlias
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, Mask, SessionId, VisionFrame
+from facefusion.types import Mask, SessionId, VisionFrame
 
 LivePortraitPitch : TypeAlias = float
 LivePortraitYaw : TypeAlias = float
@@ -17,8 +17,7 @@ LivePortraitTranslation : TypeAlias = NDArray[Any]
 ProcessorStateValue : TypeAlias = Any
 ProcessorStateKey : TypeAlias = str
 ProcessorState : TypeAlias = Dict[ProcessorStateKey, ProcessorStateValue]
-ProcessorSessionStateSet : TypeAlias = Dict[SessionId, ProcessorState]
-ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorSessionStateSet]
+ProcessorStateSet : TypeAlias = Dict[SessionId, ProcessorState]
 
 ApplyStateItem : TypeAlias = Callable[[ProcessorStateKey, ProcessorStateValue], None]
 

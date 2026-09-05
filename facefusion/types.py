@@ -495,10 +495,9 @@ DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
-AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]
-InferencePoolSet : TypeAlias = Dict[AppContext, Dict[str, InferencePool]]
+InferencePoolSet : TypeAlias = Dict[SessionId, Dict[str, InferencePool]]
 
 JobOutputSet : TypeAlias = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
@@ -670,7 +669,6 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
-SessionStateSet : TypeAlias = Dict[SessionId, State]
-StateSet : TypeAlias = Dict[AppContext, SessionStateSet]
+StateSet : TypeAlias = Dict[SessionId, State]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

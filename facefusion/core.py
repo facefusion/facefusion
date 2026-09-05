@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, logger, session_context, session_manager, state_manager, translator
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, logger, session_context, state_manager, translator
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -27,10 +27,6 @@ from facefusion.workflows.core import detect_workflow_mode
 def cli() -> None:
 	if pre_check():
 		signal.signal(signal.SIGINT, signal_exit)
-		session_id = session_context.resolve_local_id()
-		session_manager.set_session(session_id, session_manager.create_session())
-		session_context.set_session_id(session_id)
-		state_manager.init_state(session_id)
 		program = create_program()
 
 		if validate_args(program):
@@ -306,16 +302,23 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	local_state = state_manager.get_state(session_context.resolve_local_id())
-	cli_args = args_helper.extract_cli_args(local_state)
+	owner_session_id = session_context.get_session_id()
+	cli_args = args_helper.extract_cli_args(state_manager.get_state(owner_session_id))
 	args = cli_args.copy()
 	args.update(step_args)
-	apply_args(args, state_manager.init_item)
+	step_session_id = session_context.resolve_step_id(owner_session_id)
+	session_context.set_session_id(step_session_id)
+	apply_args(args, state_manager.set_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 	if common_pre_check() and processors_pre_check():
 		error_code = conditional_process()
+		session_context.set_session_id(owner_session_id)
+		state_manager.clear_state(step_session_id)
 		return error_code == 0
+
+	session_context.set_session_id(owner_session_id)
+	state_manager.clear_state(step_session_id)
 	return False
 
 
