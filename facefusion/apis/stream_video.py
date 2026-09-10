@@ -7,7 +7,7 @@ import cv2
 import numpy
 
 from facefusion import rtc, state_manager, streamer
-from facefusion.apis.stream_event import create_receive_event
+from facefusion.apis.stream_event import create_receive_event, destroy_receive_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.content_analyser import analyse_stream
 from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
@@ -66,6 +66,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 	receive_event.wait()
+	destroy_receive_event(video_track)
 
 	empty_future : Future[BufferPack] = Future()
 	empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))

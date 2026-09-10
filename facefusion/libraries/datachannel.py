@@ -1,6 +1,7 @@
 import ctypes
+from _ctypes import CFuncPtr
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Type
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
@@ -217,7 +218,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]
 	library.rtcChainRtcpReceivingSession.restype = ctypes.c_int
 
-	library.rtcSetFrameCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p) ]
+	library.rtcSetFrameCallback.argtypes = [ ctypes.c_int, define_frame_callback() ]
 	library.rtcSetFrameCallback.restype = ctypes.c_int
 
 	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
@@ -229,7 +230,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcRequestBitrate.argtypes = [ ctypes.c_int, ctypes.c_uint ]
 	library.rtcRequestBitrate.restype = ctypes.c_int
 
-	library.rtcSetClosedCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetClosedCallback.argtypes = [ ctypes.c_int, define_closed_callback() ]
 	library.rtcSetClosedCallback.restype = ctypes.c_int
 
 	return library
@@ -292,3 +293,11 @@ def define_rtc_packetizer_init() -> ctypes.Structure:
 			('obuPacketization', ctypes.c_int)
 		]
 	})()
+
+
+def define_frame_callback() -> Type[CFuncPtr]:
+	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)
+
+
+def define_closed_callback() -> Type[CFuncPtr]:
+	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
