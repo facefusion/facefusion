@@ -42,6 +42,32 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			},
 			'size': (256, 256)
 		},
+		'hrffa':
+		{
+			'__metadata__':
+			{
+				'vendor': 'PINTO0309',
+				'license': 'MIT',
+				'year': 2025
+			},
+			'hashes':
+			{
+				'hrffa':
+				{
+					'url': resolve_download_url('models-3.9.0', 'hrffa.hash'),
+					'path': resolve_relative_path('../.assets/models/hrffa.hash')
+				}
+			},
+			'sources':
+			{
+				'hrffa':
+				{
+					'url': resolve_download_url('models-3.9.0', 'hrffa.onnx'),
+					'path': resolve_relative_path('../.assets/models/hrffa.onnx')
+				}
+			},
+			'size': (256, 256)
+		},
 		'peppa_wutz':
 		{
 			'__metadata__':
@@ -119,6 +145,10 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
+	if state_manager.get_item('face_aligner_model') == 'hrffa':
+		model_hash_set['hrffa'] = model_set.get('hrffa').get('hashes').get('hrffa')
+		model_source_set['hrffa'] = model_set.get('hrffa').get('sources').get('hrffa')
+
 	for face_aligner_model in [ '2dfan4', 'peppa_wutz' ]:
 		if state_manager.get_item('face_aligner_model') in [ 'many', face_aligner_model ]:
 			model_hash_set[face_aligner_model] = model_set.get(face_aligner_model).get('hashes').get(face_aligner_model)
@@ -134,19 +164,21 @@ def pre_check() -> bool:
 
 
 def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmark_2dfan4 = None
-	face_landmark_peppa_wutz = None
-	face_landmark_score_2dfan4 = 0.0
-	face_landmark_score_peppa_wutz = 0.0
+	if state_manager.get_item('face_aligner_model') == '2dfan4':
+		return detect_with_2dfan4(vision_frame, bounding_box, face_angle)
 
-	if state_manager.get_item('face_aligner_model') in [ 'many', '2dfan4' ]:
-		face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+	if state_manager.get_item('face_aligner_model') == 'hrffa':
+		return detect_with_hrffa(vision_frame, bounding_box)
 
-	if state_manager.get_item('face_aligner_model') in [ 'many', 'peppa_wutz' ]:
-		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
+	if state_manager.get_item('face_aligner_model') == 'peppa_wutz':
+		return detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
+
+	face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+	face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
 	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.2:
 		return face_landmark_2dfan4, face_landmark_score_2dfan4
+
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
 
@@ -166,6 +198,24 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 	face_landmark_score_68 = numpy.amax(face_heatmap, axis = (2, 3))
 	face_landmark_score_68 = numpy.mean(face_landmark_score_68)
 	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0, 0.9 ], [ 0, 1 ])
+	return face_landmark_68, face_landmark_score_68
+
+
+def detect_with_hrffa(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
+	model_size = create_static_model_set('full').get('hrffa').get('size')
+	scale = model_size[0] / (numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None) * 1.7)
+	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, model_size)
+	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	crop_vision_frame = (crop_vision_frame - 0.5) / 0.5
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
+
+	face_landmark_68 = forward_with_hrffa(crop_vision_frame)
+	face_landmark_68 = face_landmark_68.reshape(-1, 2) * model_size[0]
+	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
+	face_landmark_score_68 = 1.0
+
 	return face_landmark_68, face_landmark_score_68
 
 
@@ -212,6 +262,18 @@ def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Pr
 		{
 			'input': [ crop_vision_frame ]
 		})
+
+	return prediction
+
+
+def forward_with_hrffa(crop_vision_frame : VisionFrame) -> Prediction:
+	face_aligner = get_inference_pool().get('hrffa')
+
+	with conditional_thread_semaphore():
+		prediction = face_aligner.run(None,
+		{
+			'input': crop_vision_frame
+		})[0]
 
 	return prediction
 
