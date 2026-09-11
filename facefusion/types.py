@@ -166,6 +166,13 @@ Session = TypedDict('Session',
 	'expires_at' : datetime
 })
 
+StoreContent : TypeAlias = Any
+Store = TypedDict('Store',
+{
+	'__init__' : StoreContent,
+	'content_set' : Dict[SessionId, StoreContent]
+})
+
 Command : TypeAlias = str
 CommandSet : TypeAlias = Dict[str, List[Command]]
 
