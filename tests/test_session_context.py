@@ -5,7 +5,8 @@ from facefusion.session_context import get_session_id, resolve_local_id, set_ses
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	set_session_id(resolve_local_id())
+	local_id = resolve_local_id()
+	set_session_id(local_id)
 
 
 def test_get_session_id() -> None:

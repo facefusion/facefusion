@@ -1,8 +1,8 @@
 import os
 import tempfile
 
+from facefusion import session_context
 from facefusion.filesystem import are_images, create_directory, is_directory, is_file, remove_directory, resolve_file_paths
-from facefusion.session_context import resolve_local_id
 from facefusion.types import JobStatus
 
 
@@ -11,7 +11,8 @@ def is_test_job_file(file_path : str, job_status : JobStatus) -> bool:
 
 
 def get_test_job_file(file_path : str, job_status : JobStatus) -> str:
-	jobs_path = os.path.join(get_test_jobs_directory(), resolve_local_id())
+	local_id = session_context.resolve_local_id()
+	jobs_path = os.path.join(get_test_jobs_directory(), local_id)
 
 	return os.path.join(jobs_path, job_status, file_path)
 
