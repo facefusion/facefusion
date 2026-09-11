@@ -156,7 +156,16 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 		'Content-Type': 'application/sdp'
 	})
 
-	assert rtc_store.get_peers(session_id)
+	assert rtc_store.has_peer(session_id) is True
+
+	post_response = test_client.post('/stream', content = sdp_offer, headers =
+	{
+		'Authorization': 'Bearer ' + access_token,
+		'Content-Type': 'application/sdp'
+	})
+
+	assert post_response.status_code == 409
+	assert rtc_store.has_peer(session_id) is True
 
 	delete_response = test_client.delete('/stream', headers =
 	{
@@ -164,4 +173,12 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	})
 
 	assert delete_response.status_code == 200
-	assert rtc_store.get_peers(session_id) is None
+	assert rtc_store.has_peer(session_id) is False
+
+	post_response = test_client.post('/stream', content = 'invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token,
+		'Content-Type': 'application/sdp'
+	})
+
+	assert post_response.status_code == 404

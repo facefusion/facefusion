@@ -369,7 +369,7 @@ RtcPeer = TypedDict('RtcPeer',
 	'sender_bitrate': ctypes.c_uint,
 	'receiver_bitrate': ctypes.c_uint
 })
-RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
+RtcStore : TypeAlias = Dict[SessionId, RtcPeer]
 
 ContentSet = TypedDict('ContentSet',
 {
