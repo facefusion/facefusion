@@ -10,14 +10,20 @@ def create_receive_event(track : int, frame_handler : FrameHandler) -> threading
 	datachannel_library = datachannel_module.create_static_library()
 	receive_event = threading.Event()
 
-	frame_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(partial(dispatch_frame, frame_handler))
-	close_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, receive_event))
+	frame_callback = datachannel_module.define_frame_callback()(partial(dispatch_frame, frame_handler))
+	close_callback = datachannel_module.define_closed_callback()(partial(dispatch_event, receive_event))
 	datachannel_library.rtcSetFrameCallback(track, frame_callback)
 	datachannel_library.rtcSetClosedCallback(track, close_callback)
 	receive_event.frame_callback = frame_callback  # type: ignore[attr-defined]
 	receive_event.close_callback = close_callback  # type: ignore[attr-defined]
 
 	return receive_event
+
+
+def destroy_receive_event(track : int) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	datachannel_library.rtcSetFrameCallback(track, datachannel_module.define_frame_callback()(0))
+	datachannel_library.rtcSetClosedCallback(track, datachannel_module.define_closed_callback()(0))
 
 
 def dispatch_frame(frame_handler : FrameHandler, track : int, data : ctypes.c_void_p, size : int, info : ctypes.c_void_p, pointer : ctypes.c_void_p) -> None:

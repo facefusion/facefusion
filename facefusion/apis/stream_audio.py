@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import numpy
 
 from facefusion import rtc
-from facefusion.apis.stream_event import create_receive_event
+from facefusion.apis.stream_event import create_receive_event, destroy_receive_event
 from facefusion.codecs import opus_decoder, opus_encoder
 from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPeer, RtcPeerAudio, Time
 
@@ -35,6 +35,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tupl
 	audio_frame_handler = partial(handle_audio_frame, audio_codec, audio_decoder, audio_queue)
 	receive_event = create_receive_event(audio_track, audio_frame_handler)
 	receive_event.wait()
+	destroy_receive_event(audio_track)
 
 	empty_audio_frame = numpy.empty(0)
 	audio_queue.put((0.0, empty_audio_frame))
