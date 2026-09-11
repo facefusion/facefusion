@@ -11,6 +11,7 @@ from facefusion.inference_manager import get_inference_pool, resolve_static_infe
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])

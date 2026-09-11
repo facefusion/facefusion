@@ -15,6 +15,7 @@ from facefusion.vision import read_video_frame
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4' ])

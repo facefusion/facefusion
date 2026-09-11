@@ -1,9 +1,11 @@
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
 from typing import ContextManager, Union
 
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.execution import has_execution_provider
+from facefusion.session_context import get_session_id, set_session_id
 
 THREAD_LOCK : threading.Lock = threading.Lock()
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -22,3 +24,9 @@ def conditional_thread_semaphore() -> Union[threading.Semaphore, ContextManager[
 	if is_windows() and has_execution_provider('directml') or is_linux() and has_execution_provider('migraphx') or is_linux() and has_execution_provider('rocm'):
 		return THREAD_SEMAPHORE
 	return NULL_CONTEXT
+
+
+def create_executor(max_workers : int) -> ThreadPoolExecutor:
+	session_id = get_session_id()
+
+	return ThreadPoolExecutor(max_workers = max_workers, initializer = set_session_id, initargs = (session_id,))

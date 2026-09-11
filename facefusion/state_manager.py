@@ -1,21 +1,35 @@
 import os
+from copy import deepcopy
 from typing import Union
 
-from facefusion.app_context import detect_app_context
-from facefusion.processors.types import ProcessorState, ProcessorStateKey, ProcessorStateSet
-from facefusion.session_context import get_session_id
-from facefusion.types import Args, State, StateKey, StateSet, StateValue
+from facefusion import store_creator
+from facefusion.processors.types import ProcessorState, ProcessorStateKey
+from facefusion.session_context import get_session_id, resolve_local_id
+from facefusion.types import Args, State, StateKey, StateValue, Store
 
-STATE_SET : Union[StateSet, ProcessorStateSet] =\
-{
-	'api': {}, #type:ignore[assignment]
-	'cli': {} #type:ignore[assignment]
-}
+STATE_SET : Store = store_creator.create_store({})
+
+
+def init() -> None:
+	session_id = get_session_id()
+	local_id = resolve_local_id()
+	store_creator.set_content(STATE_SET, session_id, deepcopy(store_creator.get_content(STATE_SET, local_id)))
 
 
 def get_state() -> Union[State, ProcessorState]:
-	app_context = detect_app_context()
-	return STATE_SET.get(app_context)
+	session_id = get_session_id()
+
+	return store_creator.get_content(STATE_SET, session_id)
+
+
+def set_state(state : Union[State, ProcessorState]) -> None:
+	session_id = get_session_id()
+	store_creator.set_content(STATE_SET, session_id, state)
+
+
+def clear() -> None:
+	session_id = get_session_id()
+	store_creator.init_content(STATE_SET, session_id)
 
 
 def collect_state(args : Args) -> Union[State, ProcessorState]:
@@ -27,8 +41,7 @@ def collect_state(args : Args) -> Union[State, ProcessorState]:
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : StateValue) -> None:
-	STATE_SET['api'][key] = value #type:ignore[literal-required]
-	STATE_SET['cli'][key] = value #type:ignore[literal-required]
+	get_state()[key] = value #type:ignore[literal-required]
 
 
 def get_item(key : Union[StateKey, ProcessorStateKey]) -> StateValue:
@@ -36,8 +49,7 @@ def get_item(key : Union[StateKey, ProcessorStateKey]) -> StateValue:
 
 
 def set_item(key : Union[StateKey, ProcessorStateKey], value : StateValue) -> None:
-	app_context = detect_app_context()
-	STATE_SET[app_context][key] = value #type:ignore[literal-required]
+	get_state()[key] = value #type:ignore[literal-required]
 
 
 def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 import pytest
 
 from facefusion import session_context
@@ -5,12 +7,18 @@ from facefusion.process_manager import clear, end, get_state, init, is_pending, 
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
 	session_context.set_session_id('session-a')
 	clear()
 	session_context.set_session_id('session-b')
 	clear()
 	session_context.set_session_id('session-a')
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 def test_init() -> None:

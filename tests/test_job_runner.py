@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
@@ -13,6 +13,8 @@ from .assert_helper import get_test_example_file, get_test_examples_directory, g
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
+
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

@@ -1,22 +1,25 @@
 import ctypes
 import threading
+from contextvars import copy_context
+from typing import Iterator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from facefusion import rtc, rtc_store, state_manager
+from facefusion import rtc, rtc_store, state_manager, store_creator
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video, receive_vision_frames, run_peer_loop
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.session_context import set_session_id
+from facefusion.session_context import resolve_local_id, set_session_id
 from facefusion.types import RtcPeer, SessionId, VideoCodec
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('execution_thread_count', 8)
 	state_manager.init_item('processors', [])
@@ -30,8 +33,14 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = resolve_local_id()
+
 	rtc_store.clear()
+
+	yield
+
+	set_session_id(local_id)
 
 
 @pytest.mark.anyio
@@ -148,17 +157,19 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 	}
 
 	rtc_store.set_peer(session_id, rtc_peer)
+	store_creator.set_content(state_manager.STATE_SET, session_id, state_manager.get_state())
+	set_session_id(session_id)
 
 	assert rtc_store.has_peer(session_id) is True
 
-	with patch('facefusion.apis.stream_manager.ThreadPoolExecutor') as thread_pool_executor_mock:
+	with patch('facefusion.thread_helper.ThreadPoolExecutor') as thread_pool_executor_mock:
 		with patch('facefusion.apis.stream_manager.receive_video_frames'):
 			with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
-				thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
+				thread = threading.Thread(target = copy_context().run, args = (run_peer_loop, session_id, rtc_peer), daemon = True)
 				thread.start()
 				thread.join(timeout = 5.0)
 
-	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = (session_id,))
+	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = tuple([ session_id ]))
 
 	assert rtc_store.has_peer(session_id) is False
 

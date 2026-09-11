@@ -1,10 +1,10 @@
 from collections import deque
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future
 from typing import Deque, List
 
 import numpy
 
-from facefusion import cli_progress, logger, process_manager, state_manager, translator
+from facefusion import cli_progress, logger, process_manager, state_manager, thread_helper, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
@@ -159,7 +159,7 @@ def process_frames() -> ErrorCode:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_set)
 
-			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
+			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
 				for frame_index, temp_frame_path in temp_frame_set.items():

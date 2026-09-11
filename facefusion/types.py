@@ -676,6 +676,5 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
-StateSet : TypeAlias = Dict[AppContext, State]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

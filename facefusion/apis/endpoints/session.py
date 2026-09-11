@@ -19,6 +19,7 @@ async def create_session(request : Request) -> JSONResponse:
 		session_context.set_session_id(session_id)
 		session_manager.set_session(session_id, session)
 
+		state_manager.init()
 		content_store.init()
 		process_manager.init()
 
@@ -80,6 +81,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 	asset_store.delete_assets(session_id)
 	session_manager.clear_session(session_id)
 
+	state_manager.clear()
 	content_store.clear()
 	process_manager.clear()
 
