@@ -10,6 +10,7 @@ from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module
+from facefusion.session_context import set_session_id
 from facefusion.types import RtcPeer, SessionId, VideoCodec
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -150,11 +151,14 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	assert rtc_store.has_peer(session_id) is True
 
-	with patch('facefusion.apis.stream_manager.receive_video_frames'):
-		with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
-			thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
-			thread.start()
-			thread.join(timeout = 5.0)
+	with patch('facefusion.apis.stream_manager.ThreadPoolExecutor') as thread_pool_executor_mock:
+		with patch('facefusion.apis.stream_manager.receive_video_frames'):
+			with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
+				thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
+				thread.start()
+				thread.join(timeout = 5.0)
+
+	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = (session_id,))
 
 	assert rtc_store.has_peer(session_id) is False
 

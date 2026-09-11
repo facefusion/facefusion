@@ -1,11 +1,29 @@
 import pytest
 
-from facefusion.content_store import calculate_rate, clear, get_hit, set_hit, tick
+from facefusion import session_context
+from facefusion.content_store import calculate_rate, clear, get_hit, init, set_hit, tick
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	clear()
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
+	init()
+
+
+def test_init() -> None:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id('session-a')
+	init()
+	set_hit()
+
+	assert get_hit() == 1
+
+	session_context.set_session_id(local_id)
+
+	assert get_hit() == 0
 
 
 def test_get_hit() -> None:
@@ -23,7 +41,7 @@ def test_set_hit() -> None:
 	assert get_hit() == 2
 
 
-def test_get_rate() -> None:
+def test_calculate_rate() -> None:
 	assert calculate_rate() == 0.0
 
 	for _ in range(100):

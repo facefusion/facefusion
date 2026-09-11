@@ -34,7 +34,8 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	jobs_path = os.path.join(get_test_jobs_directory(), resolve_local_id())
+	local_id = resolve_local_id()
+	jobs_path = os.path.join(get_test_jobs_directory(), local_id)
 
 	clear_jobs(get_test_jobs_directory())
 	init_jobs(jobs_path)
