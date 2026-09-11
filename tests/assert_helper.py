@@ -11,7 +11,9 @@ def is_test_job_file(file_path : str, job_status : JobStatus) -> bool:
 
 
 def get_test_job_file(file_path : str, job_status : JobStatus) -> str:
-	return os.path.join(get_test_jobs_directory(), resolve_local_id(), job_status, file_path)
+	jobs_path = os.path.join(get_test_jobs_directory(), resolve_local_id())
+
+	return os.path.join(jobs_path, job_status, file_path)
 
 
 def get_test_jobs_directory() -> str:
