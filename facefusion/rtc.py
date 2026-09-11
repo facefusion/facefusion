@@ -1,5 +1,5 @@
 import ctypes
-from typing import List, Optional
+from typing import Optional
 
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, BitRate, Buffer, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, Time, VideoCodec
@@ -75,16 +75,12 @@ def send_audio(rtc_peer : RtcPeer, audio_buffer : Buffer, audio_timestamp : int)
 	return None
 
 
-def delete_peers(rtc_peers : List[RtcPeer]) -> None:
+def delete_peer(rtc_peer : RtcPeer) -> None:
 	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = rtc_peer.get('peer_connection')
 
-	for rtc_peer in rtc_peers:
-		peer_connection = rtc_peer.get('peer_connection')
-
-		if peer_connection:
-			datachannel_library.rtcDeletePeerConnection(peer_connection)
-
-	return None
+	if peer_connection:
+		datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:

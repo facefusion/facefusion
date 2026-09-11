@@ -91,8 +91,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 					codec = audio_codec
 				)
 
-			rtc_store.init_peers(session_id)
-			rtc_store.get_peers(session_id).append(rtc_peer)
+			rtc_store.set_peer(session_id, rtc_peer)
 			content_store.clear()
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
@@ -126,12 +125,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_receiver_thread.join()
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
-	rtc_store.delete_peers(session_id)
+
+	rtc_store.delete_peer(session_id)
 
 
 def destroy_stream(session_id : SessionId) -> bool:
-	if rtc_store.has_peers(session_id):
-		rtc_store.delete_peers(session_id)
-		return not rtc_store.has_peers(session_id)
+	if rtc_store.has_peer(session_id):
+		rtc_store.delete_peer(session_id)
+		return not rtc_store.has_peer(session_id)
 
 	return False

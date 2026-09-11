@@ -1,11 +1,10 @@
 import ctypes
-from typing import List
 
 import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import adapt_receiver_bitrate, add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, handle_sender_bitrate, send_audio, send_video, set_remote_description, wire_sender_bitrate
+from facefusion.rtc import adapt_receiver_bitrate, add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peer, get_payload_type, handle_sender_bitrate, send_audio, send_video, set_remote_description, wire_sender_bitrate
 from facefusion.types import RtcPeer, VideoCodec
 
 
@@ -116,25 +115,23 @@ def test_send_audio() -> None:
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
-def test_delete_peers() -> None:
+def test_delete_peer() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
-	rtc_peers : List[RtcPeer] =\
-	[
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
 		{
-			'peer_connection': peer_connection,
-			'video':
-			{
-				'sender_track': 0,
-				'receiver_track': 0,
-				'codec': 'vp8'
-			},
-			'sender_bitrate': ctypes.c_uint(0),
-			'receiver_bitrate': ctypes.c_uint(0)
-		}
-	]
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': 'vp8'
+		},
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
+	}
 
-	delete_peers(rtc_peers)
+	delete_peer(rtc_peer)
 
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
 
