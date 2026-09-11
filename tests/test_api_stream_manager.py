@@ -42,6 +42,9 @@ async def test_process_image() -> None:
 		{
 			'type': 'websocket.receive',
 			'bytes': image_buffer
+		},
+		{
+			'type': 'websocket.disconnect'
 		}
 	]
 
@@ -69,13 +72,24 @@ async def test_receive_vision_frames() -> None:
 			'bytes': 'invalid'.encode()
 		},
 		{
+			'type': 'websocket.receive',
+			'bytes': bytes()
+		},
+		{
+			'type': 'websocket.receive',
+			'bytes': image_buffer
+		},
+		{
 			'type': 'websocket.disconnect'
 		}
 	]
+	vision_frames = []
 
-	vision_frames = receive_vision_frames(websocket_mock)
+	async for vision_frame in receive_vision_frames(websocket_mock):
+		vision_frames.append(vision_frame)
 
-	assert create_hash((await anext(vision_frames)).tobytes()) == '5ed32ca0'
+	assert len(vision_frames) == 2
+	assert create_hash(vision_frames[0].tobytes()) == '5ed32ca0'
 
 
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
@@ -100,18 +114,18 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	assert 'a=recvonly' in sdp_answer
 	assert 'a=sendonly' in sdp_answer
 
-	for peer in rtc_store.get_peers(session_id):
-		sender_bitrate = peer.get('sender_bitrate')
-		receiver_bitrate = peer.get('receiver_bitrate')
+	rtc_peer = rtc_store.get_peer(session_id)
+	sender_bitrate = rtc_peer.get('sender_bitrate')
+	receiver_bitrate = rtc_peer.get('receiver_bitrate')
 
-		assert sender_bitrate.value == 0
-		assert receiver_bitrate.value == 8000
+	assert sender_bitrate.value == 0
+	assert receiver_bitrate.value == 8000
 
-		rtc.handle_sender_bitrate(0, 8000000, ctypes.addressof(sender_bitrate))
-		assert sender_bitrate.value == 8000
+	rtc.handle_sender_bitrate(0, 8000000, ctypes.addressof(sender_bitrate))
+	assert sender_bitrate.value == 8000
 
-		rtc.adapt_receiver_bitrate(peer, 4000)
-		assert receiver_bitrate.value == 4000
+	rtc.adapt_receiver_bitrate(rtc_peer, 4000)
+	assert receiver_bitrate.value == 4000
 
 
 @pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-run-peer-loop-av1'), ('vp8', 96, 'test-run-peer-loop-vp8') ])
@@ -132,10 +146,9 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	rtc_store.init_peers(session_id)
-	rtc_store.get_peers(session_id).append(rtc_peer)
+	rtc_store.set_peer(session_id, rtc_peer)
 
-	assert rtc_store.has_peers(session_id) is True
+	assert rtc_store.has_peer(session_id) is True
 
 	with patch('facefusion.apis.stream_manager.receive_video_frames'):
 		with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
@@ -143,7 +156,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 			thread.start()
 			thread.join(timeout = 5.0)
 
-	assert rtc_store.has_peers(session_id) is False
+	assert rtc_store.has_peer(session_id) is False
 
 
 def test_destroy_stream() -> None:
@@ -163,10 +176,9 @@ def test_destroy_stream() -> None:
 	}
 	session_id = 'test-destroy-stream'
 
-	rtc_store.init_peers(session_id)
-	rtc_store.get_peers(session_id).append(rtc_peer)
+	rtc_store.set_peer(session_id, rtc_peer)
 
 	assert destroy_stream(session_id) is True
-	assert rtc_store.get_peers(session_id) is None
+	assert rtc_store.get_peer(session_id) is None
 
 	assert destroy_stream(session_id) is False

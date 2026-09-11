@@ -316,6 +316,12 @@ def create_empty_vision_frame() -> VisionFrame:
 	return numpy.zeros((1, 1, 3)).astype(numpy.uint8)
 
 
+def from_buffer(vision_buffer : Buffer) -> Optional[VisionFrame]:
+	if vision_buffer:
+		return cv2.imdecode(numpy.frombuffer(vision_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+	return None
+
+
 def to_buffer(vision_frame : VisionFrame) -> Buffer:
 	is_success, vision_buffer = cv2.imencode('.jpg', vision_frame)
 

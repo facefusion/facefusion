@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional
 
 from facefusion import rtc
 from facefusion.types import RtcPeer, RtcStore, SessionId
@@ -6,27 +6,21 @@ from facefusion.types import RtcPeer, RtcStore, SessionId
 RTC_STORE : RtcStore = {}
 
 
-def init_peers(session_id : SessionId) -> None:
-	RTC_STORE[session_id] = []
+def has_peer(session_id : SessionId) -> bool:
+	return session_id in RTC_STORE
 
 
-def has_peers(session_id : SessionId) -> bool:
-	return bool(RTC_STORE.get(session_id))
-
-
-def get_peers(session_id : SessionId) -> List[RtcPeer]:
+def get_peer(session_id : SessionId) -> Optional[RtcPeer]:
 	return RTC_STORE.get(session_id)
 
 
-def delete_peers(session_id : SessionId) -> None:
+def set_peer(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+	RTC_STORE[session_id] = rtc_peer
+
+
+def delete_peer(session_id : SessionId) -> None:
 	if session_id in RTC_STORE:
-		rtc_peers = get_peers(session_id)
-
-		if rtc_peers:
-			rtc.delete_peers(rtc_peers)
-			del RTC_STORE[session_id]
-
-	return None
+		rtc.delete_peer(RTC_STORE.pop(session_id))
 
 
 def clear() -> None:

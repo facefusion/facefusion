@@ -5,8 +5,6 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from queue import Queue
 from typing import Optional, Tuple
 
-import cv2
-import numpy
 from starlette.websockets import WebSocket
 
 from facefusion import content_store, rtc, rtc_store, state_manager, streamer
@@ -15,13 +13,11 @@ from facefusion.apis.stream_video import receive_video_frames, run_video_encode_
 from facefusion.content_analyser import analyse_frame
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, Time, VideoCodec, VisionFrame
-from facefusion.vision import is_vision_frame, obscure_frame, read_static_images, to_buffer
+from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_static_images, to_buffer
 
 
 async def process_image(websocket : WebSocket) -> None:
-	capture_vision_frame = await anext(receive_vision_frames(websocket), None)
-
-	if is_vision_frame(capture_vision_frame):
+	async for capture_vision_frame in receive_vision_frames(websocket):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
 
@@ -36,8 +32,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 	websocket_event = await websocket.receive()
 
 	while websocket_event.get('type') == 'websocket.receive':
-		vision_buffer = websocket_event.get('bytes') or bytes()
-		vision_frame = cv2.imdecode(numpy.frombuffer(vision_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+		vision_frame = from_buffer(websocket_event.get('bytes'))
 
 		if is_vision_frame(vision_frame):
 			yield vision_frame
@@ -96,8 +91,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 					codec = audio_codec
 				)
 
-			rtc_store.init_peers(session_id)
-			rtc_store.get_peers(session_id).append(rtc_peer)
+			rtc_store.set_peer(session_id, rtc_peer)
 			content_store.clear()
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
@@ -131,12 +125,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_receiver_thread.join()
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
-	rtc_store.delete_peers(session_id)
+
+	rtc_store.delete_peer(session_id)
 
 
 def destroy_stream(session_id : SessionId) -> bool:
-	if rtc_store.has_peers(session_id):
-		rtc_store.delete_peers(session_id)
-		return not rtc_store.has_peers(session_id)
+	if rtc_store.has_peer(session_id):
+		rtc_store.delete_peer(session_id)
+		return not rtc_store.has_peer(session_id)
 
 	return False

@@ -151,7 +151,6 @@ CapabilityStore = TypedDict('CapabilityStore',
 CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-UpdateProgress : TypeAlias = Callable[[int], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
@@ -376,7 +375,7 @@ RtcPeer = TypedDict('RtcPeer',
 	'sender_bitrate': ctypes.c_uint,
 	'receiver_bitrate': ctypes.c_uint
 })
-RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
+RtcStore : TypeAlias = Dict[SessionId, RtcPeer]
 
 ContentSet = TypedDict('ContentSet',
 {
