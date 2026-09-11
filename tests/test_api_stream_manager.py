@@ -42,6 +42,9 @@ async def test_process_image() -> None:
 		{
 			'type': 'websocket.receive',
 			'bytes': image_buffer
+		},
+		{
+			'type': 'websocket.disconnect'
 		}
 	]
 
@@ -69,13 +72,24 @@ async def test_receive_vision_frames() -> None:
 			'bytes': 'invalid'.encode()
 		},
 		{
+			'type': 'websocket.receive',
+			'bytes': bytes()
+		},
+		{
+			'type': 'websocket.receive',
+			'bytes': image_buffer
+		},
+		{
 			'type': 'websocket.disconnect'
 		}
 	]
+	vision_frames = []
 
-	vision_frames = receive_vision_frames(websocket_mock)
+	async for vision_frame in receive_vision_frames(websocket_mock):
+		vision_frames.append(vision_frame)
 
-	assert create_hash((await anext(vision_frames)).tobytes()) == '5ed32ca0'
+	assert len(vision_frames) == 2
+	assert create_hash(vision_frames[0].tobytes()) == '5ed32ca0'
 
 
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
