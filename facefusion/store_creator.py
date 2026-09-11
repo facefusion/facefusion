@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import List
 
 from facefusion.types import SessionId, Store, StoreContent
 
@@ -33,8 +32,3 @@ def set_content(store : Store, session_id : SessionId, content : StoreContent) -
 def delete_content(store : Store, session_id : SessionId) -> None:
 	if has_content(store, session_id):
 		del store['content_set'][session_id]
-
-
-def delete_contents(store : Store, session_ids : List[SessionId]) -> None:
-	for session_id in session_ids:
-		delete_content(store, session_id)
