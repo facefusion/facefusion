@@ -37,10 +37,9 @@ def set_session(session_id : SessionId, session : Session) -> None:
 
 def validate_session(session_id : SessionId) -> bool:
 	session = get_session(session_id)
-	return session and datetime.now() <= session.get('expires_at')
+	return session and datetime.now() < session.get('expires_at')
 
 
 def clear_session(session_id : SessionId) -> None:
 	if session_id in SESSIONS:
 		del SESSIONS[session_id]
-

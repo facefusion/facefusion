@@ -9,16 +9,12 @@ from facefusion.types import SessionId
 SESSION_ID : ContextVar[Optional[SessionId]] = ContextVar('SESSION_ID', default = None)
 
 
-def set_session_id(session_id : SessionId) -> None:
-	SESSION_ID.set(session_id)
-
-
 def get_session_id() -> SessionId:
 	return SESSION_ID.get() or resolve_local_id()
 
 
-def clear_session_id() -> None:
-	SESSION_ID.set(None)
+def set_session_id(session_id : SessionId) -> None:
+	SESSION_ID.set(session_id)
 
 
 @lru_cache()
