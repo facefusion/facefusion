@@ -14,8 +14,7 @@ def before_each() -> None:
 
 
 def test_init() -> None:
-	assert get_state() is None
-
+	set_state('processing')
 	init()
 
 	assert get_state() == 'pending'
@@ -58,4 +57,4 @@ def test_clear() -> None:
 	set_state('processing')
 	clear()
 
-	assert get_state() is None
+	assert get_state() == 'pending'

@@ -46,4 +46,4 @@ def calculate_rate(step : int = 30) -> float:
 
 def clear() -> None:
 	session_id = get_session_id()
-	store_creator.delete_content(CONTENT_STORE, session_id)
+	store_creator.init_content(CONTENT_STORE, session_id)

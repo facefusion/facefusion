@@ -1,7 +1,7 @@
 import pytest
 
-from facefusion import session_context, store_creator
-from facefusion.content_store import CONTENT_STORE, calculate_rate, clear, get_hit, init, set_hit, tick
+from facefusion import session_context
+from facefusion.content_store import calculate_rate, clear, get_hit, init, set_hit, tick
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -53,10 +53,9 @@ def test_calculate_rate() -> None:
 
 
 def test_clear() -> None:
-	local_id = session_context.resolve_local_id()
-
 	tick()
 	set_hit()
 	clear()
 
-	assert store_creator.has_content(CONTENT_STORE, local_id) is False
+	assert get_hit() == 0
+	assert calculate_rate() == 0.0

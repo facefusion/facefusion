@@ -55,4 +55,4 @@ def end() -> None:
 
 def clear() -> None:
 	session_id = get_session_id()
-	store_creator.delete_content(PROCESS_STORE, session_id)
+	store_creator.init_content(PROCESS_STORE, session_id)
