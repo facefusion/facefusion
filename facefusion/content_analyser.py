@@ -156,7 +156,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		progress.set_title(translator.get('analysing'))
 		progress.count(frame_range)
 
-		content_store.clear()
+		content_store.init()
 
 		for _ in frame_range:
 			vision_frame = video_manager.read_video_frame(video_reader)

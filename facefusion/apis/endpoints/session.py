@@ -4,7 +4,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
-from facefusion import process_manager, session_context, session_manager, state_manager, translator
+from facefusion import content_store, process_manager, session_context, session_manager, state_manager, translator
 from facefusion.apis import asset_store
 from facefusion.apis.session_helper import extract_access_token, validate_api_key
 from facefusion.filesystem import is_directory, remove_directory
@@ -18,7 +18,9 @@ async def create_session(request : Request) -> JSONResponse:
 		session = session_manager.create_session()
 		session_context.set_session_id(session_id)
 		session_manager.set_session(session_id, session)
-		process_manager.init_process_state()
+
+		content_store.init()
+		process_manager.init()
 
 		return JSONResponse(
 		{
@@ -81,8 +83,10 @@ async def destroy_session(request : Request) -> JSONResponse:
 			}, status_code = HTTP_404_NOT_FOUND)
 
 		asset_store.delete_assets(session_id)
-		process_manager.clear_process_state()
 		session_manager.clear_session(session_id)
+
+		content_store.clear()
+		process_manager.clear()
 
 		return JSONResponse(
 		{

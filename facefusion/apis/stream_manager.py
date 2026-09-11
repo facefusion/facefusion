@@ -91,8 +91,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 					codec = audio_codec
 				)
 
+			content_store.init()
 			rtc_store.set_peer(session_id, rtc_peer)
-			content_store.clear()
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
 

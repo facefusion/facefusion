@@ -35,7 +35,10 @@ def cli() -> None:
 
 			if state_manager.get_item('command'):
 				logger.init(state_manager.get_item('log_level'))
-				process_manager.init_process_state()
+
+				content_store.init()
+				process_manager.init()
+
 				route(args)
 			else:
 				program.print_help()
@@ -105,7 +108,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'c5d70a17' and hash_helper.create_hash(content_store_content) == '9cd9f029'
+	return hash_helper.create_hash(content_analyser_content) == '300fe660' and hash_helper.create_hash(content_store_content) == '87333666'
 
 
 def processors_pre_check() -> bool:
