@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZE
 from facefusion import session_context, session_manager, state_manager, translator
 from facefusion.apis import asset_store
 from facefusion.apis.session_helper import extract_access_token, validate_api_key
-from facefusion.filesystem import remove_directory
+from facefusion.filesystem import is_directory, remove_directory
 
 
 async def create_session(request : Request) -> JSONResponse:
@@ -71,20 +71,21 @@ async def destroy_session(request : Request) -> JSONResponse:
 
 	if session_id:
 		session_context.set_session_id(session_id)
+		temp_path = state_manager.get_temp_path()
 
-		if remove_directory(state_manager.get_temp_path()):
-			asset_store.delete_assets(session_id)
-			session_manager.clear_session(session_id)
-
+		if is_directory(temp_path) and not remove_directory(temp_path):
 			return JSONResponse(
 			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_200_OK)
+				'message': translator.get('directory_not_removed', 'facefusion.apis')
+			}, status_code = HTTP_404_NOT_FOUND)
+
+		asset_store.delete_assets(session_id)
+		session_manager.clear_session(session_id)
 
 		return JSONResponse(
 		{
-			'message': translator.get('something_went_wrong', 'facefusion.apis')
-		}, status_code = HTTP_404_NOT_FOUND)
+			'message': translator.get('ok', 'facefusion.apis')
+		}, status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{

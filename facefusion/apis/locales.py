@@ -6,6 +6,7 @@ LOCALES : Locales =\
 	{
 		'ok': 'ok',
 		'something_went_wrong': 'something went wrong',
+		'directory_not_removed': 'directory not removed',
 		'invalid_access_token': 'invalid access token',
 		'invalid_refresh_token': 'invalid refresh token',
 		'source_asset_not_found': 'source asset not found',

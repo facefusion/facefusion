@@ -2,6 +2,7 @@ import os
 import tempfile
 from datetime import timedelta
 from typing import Iterator
+from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
@@ -183,8 +184,28 @@ def test_destroy_session(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_body = create_session_response.json()
-	access_token = create_session_body.get('access_token')
+	access_token = create_session_response.json().get('access_token')
+
+	delete_session_response = test_client.delete('/session', headers =
+	{
+		'Authorization': 'Bearer INVALID'
+	})
+
+	assert delete_session_response.status_code == 401
+
+	delete_session_response = test_client.delete('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert session_manager.find_session_id(access_token) is None
+	assert delete_session_response.status_code == 200
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
 	session_id = session_manager.find_session_id(access_token)
 	source_path = get_test_example_file('source.jpg')
 
@@ -202,15 +223,18 @@ def test_destroy_session(test_client : TestClient) -> None:
 	for asset in asset_store.get_assets(session_id).values():
 		asset_paths.append(asset.get('path'))
 
-	delete_session_response = test_client.delete('/session', headers =
-	{
-		'Authorization': 'Bearer INVALID'
-	})
-
-	assert delete_session_response.status_code == 401
+	with patch('facefusion.apis.endpoints.session.remove_directory', return_value = False):
+		delete_session_response = test_client.delete('/session', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
 	for asset_path in asset_paths:
 		assert os.path.exists(asset_path) is True
+
+	assert delete_session_response.json().get('message') == 'directory not removed'
+	assert session_manager.find_session_id(access_token) == session_id
+	assert delete_session_response.status_code == 404
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
