@@ -1,16 +1,24 @@
-from facefusion.types import ProcessState
+from facefusion import store_creator
+from facefusion.session_context import get_session_id
+from facefusion.types import ProcessState, Store
 
-PROCESS_STATE : ProcessState = 'pending'
+PROCESS_STORE : Store = store_creator.create_store('pending')
+
+
+def init_process_state() -> None:
+	store_creator.init_content(PROCESS_STORE, get_session_id())
 
 
 def get_process_state() -> ProcessState:
-	return PROCESS_STATE
+	return store_creator.get_content(PROCESS_STORE, get_session_id())
 
 
 def set_process_state(process_state : ProcessState) -> None:
-	global PROCESS_STATE
+	store_creator.set_content(PROCESS_STORE, get_session_id(), process_state)
 
-	PROCESS_STATE = process_state
+
+def clear_process_state() -> None:
+	store_creator.delete_content(PROCESS_STORE, get_session_id())
 
 
 def is_checking() -> bool:

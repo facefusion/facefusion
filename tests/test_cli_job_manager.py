@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -6,6 +7,7 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, count_step_total, init_jobs
+from facefusion.session_context import resolve_local_id
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_job_file
 
 
@@ -32,8 +34,10 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
+	jobs_path = os.path.join(get_test_jobs_directory(), resolve_local_id())
+
 	clear_jobs(get_test_jobs_directory())
-	init_jobs(get_test_jobs_directory())
+	init_jobs(jobs_path)
 
 
 def test_job_list() -> None:
