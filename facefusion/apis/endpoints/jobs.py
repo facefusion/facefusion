@@ -8,9 +8,8 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, H
 
 import facefusion.choices
 import facefusion.core
-from facefusion import args_helper, session_context, session_manager, state_manager, translator
+from facefusion import args_helper, session_context, state_manager, translator
 from facefusion.apis import jobs_helper
-from facefusion.apis.session_helper import extract_access_token
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
 from facefusion.jobs import job_helper, job_manager, job_runner
 
@@ -118,8 +117,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 async def update_job(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
 	action = request.query_params.get('action')
-	access_token = extract_access_token(request.scope)
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_context.get_session_id()
 
 	if action == 'submit':
 		if job_manager.submit_job(job_id):
@@ -211,9 +209,6 @@ async def create_step(request : Request) -> JSONResponse:
 		step_args['source_paths'] = state_manager.get_item('source_paths')
 
 	if state_manager.get_item('target_path'):
-		access_token = extract_access_token(request.scope)
-		session_id = session_manager.find_session_id(access_token)
-		session_context.set_session_id(session_id)
 		temp_path = state_manager.get_temp_path()
 
 		step_args['target_path'] = state_manager.get_item('target_path')

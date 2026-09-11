@@ -2,9 +2,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
-from facefusion import args_helper, capability_store, session_manager, state_manager, translator
+from facefusion import args_helper, capability_store, session_context, state_manager, translator
 from facefusion.apis import asset_store
-from facefusion.apis.session_helper import extract_access_token
 
 
 async def get_state(request : Request) -> JSONResponse:
@@ -50,10 +49,9 @@ async def set_state(request : Request) -> Response:
 async def select_source(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_ids = body.get('asset_ids')
-	access_token = extract_access_token(request.scope)
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_context.get_session_id()
 
-	if isinstance(asset_ids, list) and session_id:
+	if isinstance(asset_ids, list):
 		source_paths = []
 
 		for asset_id in asset_ids:
@@ -76,10 +74,9 @@ async def select_source(request : Request) -> JSONResponse:
 async def select_target(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_id = body.get('asset_id')
-	access_token = extract_access_token(request.scope)
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_context.get_session_id()
 
-	if isinstance(asset_id, str) and session_id:
+	if isinstance(asset_id, str):
 		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:

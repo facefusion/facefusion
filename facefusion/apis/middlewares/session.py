@@ -2,7 +2,7 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_426_UPGRADE_REQUIRED
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from facefusion import session_manager, translator
+from facefusion import session_context, session_manager, translator
 from facefusion.apis.session_helper import extract_access_token
 
 
@@ -15,6 +15,7 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 
 			if session_id:
 				if session_manager.validate_session(session_id):
+					session_context.set_session_id(session_id)
 					return await app(scope, receive, send)
 
 				response = JSONResponse(
