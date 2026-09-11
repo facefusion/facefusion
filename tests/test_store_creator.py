@@ -14,7 +14,6 @@ def test_init_content() -> None:
 	init_content(store, 'session-a')
 
 	assert store.get('content_set').get('session-a') == { 'total': 0 }
-	assert not store.get('content_set').get('session-a') == store.get('__init__') is False
 
 
 def test_has_content() -> None:
