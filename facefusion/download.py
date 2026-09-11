@@ -53,6 +53,7 @@ def get_static_download_size(url : str) -> int:
 
 	for line in lines:
 		__line__ = line.decode().lower()
+
 		if 'content-length:' in __line__:
 			_, content_length = __line__.split('content-length:')
 			return int(content_length)

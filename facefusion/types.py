@@ -151,7 +151,6 @@ CapabilityStore = TypedDict('CapabilityStore',
 CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-UpdateProgress : TypeAlias = Callable[[int], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
