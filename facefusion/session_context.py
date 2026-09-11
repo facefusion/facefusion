@@ -1,5 +1,5 @@
-import getpass
 import hashlib
+import uuid
 from contextvars import ContextVar
 from functools import lru_cache
 from typing import Optional
@@ -19,4 +19,4 @@ def set_session_id(session_id : SessionId) -> None:
 
 @lru_cache()
 def resolve_local_id() -> SessionId:
-	return hashlib.sha1(getpass.getuser().encode()).hexdigest()
+	return hashlib.sha1(str(uuid.getnode()).encode()).hexdigest()
