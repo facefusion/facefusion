@@ -13,7 +13,11 @@ STATE_SET : Store = store_creator.create_store({})
 def init() -> None:
 	session_id = get_session_id()
 	local_id = resolve_local_id()
-	store_creator.set_content(STATE_SET, session_id, deepcopy(store_creator.get_content(STATE_SET, local_id)))
+
+	if session_id == local_id:
+		store_creator.init_content(STATE_SET, session_id)
+	else:
+		store_creator.set_content(STATE_SET, session_id, deepcopy(store_creator.get_content(STATE_SET, local_id)))
 
 
 def get_state() -> Union[State, ProcessorState]:
