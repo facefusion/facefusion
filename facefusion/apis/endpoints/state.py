@@ -2,7 +2,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
-from facefusion import args_helper, capability_store, session_context, state_manager, translator
+from facefusion import args_helper, capability_store, state_manager, translator
 from facefusion.apis import asset_store
 
 
@@ -49,13 +49,12 @@ async def set_state(request : Request) -> Response:
 async def select_source(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_ids = body.get('asset_ids')
-	session_id = session_context.get_session_id()
 
 	if isinstance(asset_ids, list):
 		source_paths = []
 
 		for asset_id in asset_ids:
-			asset = asset_store.get_asset(session_id, asset_id)
+			asset = asset_store.get_asset(asset_id)
 
 			if asset:
 				source_paths.append(asset.get('path'))
@@ -74,10 +73,9 @@ async def select_source(request : Request) -> JSONResponse:
 async def select_target(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_id = body.get('asset_id')
-	session_id = session_context.get_session_id()
 
 	if isinstance(asset_id, str):
-		asset = asset_store.get_asset(session_id, asset_id)
+		asset = asset_store.get_asset(asset_id)
 
 		if asset:
 			state_manager.set_item('target_path', asset.get('path'))
