@@ -2,7 +2,7 @@
 import numpy
 import pytest
 
-from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_creator import average_face_geometry, get_many_faces, get_one_face, refill_faces
 from facefusion.face_store import clear_faces
@@ -13,6 +13,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
+	inference_manager.init()
 
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
