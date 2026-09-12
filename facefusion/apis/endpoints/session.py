@@ -4,7 +4,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
-from facefusion import content_store, inference_manager, process_manager, session_context, session_manager, state_manager, translator, video_manager
+from facefusion import content_store, face_store, inference_manager, process_manager, session_context, session_manager, state_manager, translator, video_manager
 from facefusion.apis import asset_store
 from facefusion.apis.session_helper import validate_api_key
 from facefusion.apis.stream_manager import destroy_stream
@@ -22,6 +22,7 @@ async def create_session(request : Request) -> JSONResponse:
 
 		state_manager.init()
 		content_store.init()
+		face_store.init()
 		inference_manager.init()
 		video_manager.init()
 		process_manager.init()
@@ -88,6 +89,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 
 	state_manager.clear()
 	content_store.clear()
+	face_store.clear()
 	inference_manager.clear()
 	video_manager.clear()
 	process_manager.clear()
