@@ -3,7 +3,7 @@ from starlette.responses import Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 from starlette.websockets import WebSocket, WebSocketState
 
-from facefusion import rtc_store, session_context
+from facefusion import rtc_store
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video
 
@@ -23,11 +23,9 @@ async def post_stream(request : Request) -> Response:
 	{
 		'Location': request.url_for('delete_stream').path
 	}
-	session_id = session_context.get_session_id()
-
-	if not rtc_store.has_peer(session_id):
+	if not rtc_store.has_peer():
 		sdp_offer = await request.body()
-		sdp_answer = process_video(session_id, sdp_offer.decode())
+		sdp_answer = process_video(sdp_offer.decode())
 
 		if sdp_answer:
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp', headers = headers)
@@ -39,9 +37,7 @@ async def post_stream(request : Request) -> Response:
 
 
 async def delete_stream(request : Request) -> Response:
-	session_id = session_context.get_session_id()
-
-	if destroy_stream(session_id):
+	if destroy_stream():
 		return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)

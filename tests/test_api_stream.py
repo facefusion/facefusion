@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, rtc, rtc_store, session_manager, state_manager
+from facefusion import metadata, rtc, rtc_store, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api, pre_check
 from facefusion.download import conditional_download
@@ -36,7 +36,7 @@ def before_all() -> None:
 def before_each() -> None:
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
-	rtc_store.clear()
+	rtc_store.delete_peer()
 
 
 @pytest.fixture(scope = 'module')
@@ -157,7 +157,9 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 		'Content-Type': 'application/sdp'
 	})
 
-	assert rtc_store.has_peer(session_id) is True
+	session_context.set_session_id(session_id)
+
+	assert rtc_store.has_peer() is True
 
 	post_response = test_client.post('/stream', content = sdp_offer, headers =
 	{
@@ -166,7 +168,9 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	})
 
 	assert post_response.status_code == 409
-	assert rtc_store.has_peer(session_id) is True
+	session_context.set_session_id(session_id)
+
+	assert rtc_store.has_peer() is True
 
 	delete_response = test_client.delete('/stream', headers =
 	{
@@ -174,7 +178,7 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	})
 
 	assert delete_response.status_code == 200
-	assert rtc_store.has_peer(session_id) is False
+	assert rtc_store.has_peer() is False
 
 	post_response = test_client.post('/stream', content = 'invalid', headers =
 	{

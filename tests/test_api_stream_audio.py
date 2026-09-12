@@ -35,7 +35,7 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	rtc_store.clear()
+	rtc_store.delete_peer()
 
 
 def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -> threading.Event:
