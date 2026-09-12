@@ -159,10 +159,11 @@ Token : TypeAlias = str
 SessionId : TypeAlias = str
 Session = TypedDict('Session',
 {
-	'access_token' : Token,
-	'refresh_token' : Token,
+	'access_token' : NotRequired[Token],
+	'refresh_token' : NotRequired[Token],
+	'owner_id' : NotRequired[SessionId],
 	'created_at' : datetime,
-	'expires_at' : datetime
+	'expires_at' : NotRequired[datetime]
 })
 
 StoreContent : TypeAlias = Any

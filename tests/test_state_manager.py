@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import Iterator
 
 import pytest
 
-from facefusion import store_creator
+from facefusion import session_manager, store_creator
 from facefusion.session_context import resolve_local_id, set_session_id
-from facefusion.state_manager import STATE_SET, clear, get_item, get_state, init, init_item, set_item, set_state
+from facefusion.state_manager import STATE_SET, clear, clone_state, get_item, get_state, init, init_item, set_item, set_state
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -14,6 +15,8 @@ def before_each() -> Iterator[None]:
 	set_session_id(local_id)
 	clear()
 	store_creator.delete_content(STATE_SET, 'session-a')
+	store_creator.delete_content(STATE_SET, 'session-a1')
+	session_manager.clear_session('session-a1')
 
 	yield
 
@@ -46,6 +49,20 @@ def test_set_state() -> None:
 	set_state({ 'video_memory_strategy': 'strict' })
 
 	assert get_state() == { 'video_memory_strategy': 'strict' }
+
+
+def test_clone_state() -> None:
+	init_item('video_memory_strategy', 'tolerant')
+	session_manager.set_session('session-a1', { 'owner_id': resolve_local_id(), 'created_at': datetime.now() })
+	set_session_id('session-a1')
+	clone_state()
+	set_item('video_memory_strategy', 'strict')
+
+	assert get_state() == { 'video_memory_strategy': 'strict' }
+
+	set_session_id(resolve_local_id())
+
+	assert get_state() == { 'video_memory_strategy': 'tolerant' }
 
 
 def test_clear() -> None:
