@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_manager, state_manager, translator, video_manager
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_manager, state_manager, store_creator, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -311,7 +311,7 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	session_manager.fork_session()
+	fork_id = session_manager.fork_session()
 	state_manager.clone_state()
 
 	video_manager.init()
@@ -325,6 +325,9 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	is_done = common_pre_check() and processors_pre_check() and conditional_process() == 0
 	session_manager.join_session()
+
+	for store in [ state_manager.STATE_SET, content_store.CONTENT_STORE, process_manager.PROCESS_STORE, video_manager.VIDEO_POOL_STORE ]:
+		store_creator.delete_content(store, fork_id)
 
 	return is_done
 

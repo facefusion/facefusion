@@ -21,13 +21,13 @@ def before_each() -> Iterator[None]:
 
 def test_fork_session() -> None:
 	local_id = resolve_local_id()
-	session_id = fork_session()
+	fork_id = fork_session()
 
-	assert get_session_id() == session_id
+	assert get_session_id() == fork_id
 	assert resolve_owner_id() == local_id
-	assert get_session(session_id).get('owner_id') == local_id
-	assert get_session(session_id).get('access_token') is None
-	assert get_session(session_id).get('expires_at') is None
+	assert get_session(fork_id).get('owner_id') == local_id
+	assert get_session(fork_id).get('access_token') is None
+	assert get_session(fork_id).get('expires_at') is None
 
 	join_session()
 
@@ -94,8 +94,8 @@ def test_clear_session() -> None:
 
 def test_join_session() -> None:
 	local_id = resolve_local_id()
-	session_id = fork_session()
+	fork_id = fork_session()
 	join_session()
 
 	assert get_session_id() == local_id
-	assert get_session(session_id) is None
+	assert get_session(fork_id) is None

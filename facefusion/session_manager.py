@@ -22,25 +22,25 @@ def create_session() -> Session:
 
 
 def fork_session() -> SessionId:
+	fork_id = secrets.token_urlsafe(16)
 	owner_id = get_session_id()
-	session_id = secrets.token_urlsafe(16)
 	session : Session =\
 	{
 		'owner_id': owner_id,
 		'created_at': datetime.now()
 	}
 
-	set_session_id(session_id)
-	set_session(session_id, session)
+	set_session_id(fork_id)
+	set_session(fork_id, session)
 
-	return session_id
+	return fork_id
 
 
 def join_session() -> None:
-	session_id = get_session_id()
+	fork_id = get_session_id()
 	owner_id = resolve_owner_id()
 
-	clear_session(session_id)
+	clear_session(fork_id)
 	set_session_id(owner_id)
 
 
