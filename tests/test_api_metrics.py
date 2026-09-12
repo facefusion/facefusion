@@ -17,7 +17,7 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	session_manager.SESSIONS.clear()
+	session_manager.API_SESSIONS.clear()
 
 
 @pytest.fixture(scope = 'module')

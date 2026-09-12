@@ -17,9 +17,9 @@ async def create_session(request : Request) -> JSONResponse:
 
 	if validate_api_key(body.get('api_key')):
 		session_id = secrets.token_urlsafe(16)
-		session = session_manager.create_session()
+		session = session_manager.create_api_session()
 		session_context.set_session_id(session_id)
-		session_manager.set_session(session_id, session)
+		session_manager.set_api_session(session_id, session)
 
 		state_manager.init()
 		asset_store.init()
@@ -47,7 +47,7 @@ async def create_session(request : Request) -> JSONResponse:
 
 async def get_session(request : Request) -> JSONResponse:
 	session_id = session_context.get_session_id()
-	session = session_manager.get_session(session_id)
+	session = session_manager.get_api_session(session_id)
 
 	return JSONResponse(
 	{
@@ -61,10 +61,10 @@ async def get_session(request : Request) -> JSONResponse:
 async def refresh_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
-	for session_id, session in session_manager.SESSIONS.items():
-		if session.get('refresh_token') == body.get('refresh_token') and session_manager.validate_session(session_id):
-			__session__ = session_manager.create_session()
-			session_manager.set_session(session_id, __session__)
+	for session_id, session in session_manager.API_SESSIONS.items():
+		if session.get('refresh_token') == body.get('refresh_token') and session_manager.validate_api_session(session_id):
+			__session__ = session_manager.create_api_session()
+			session_manager.set_api_session(session_id, __session__)
 
 			return JSONResponse(
 			{
@@ -97,7 +97,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 
 	destroy_stream()
 	video_manager.clear()
-	session_manager.clear_session(session_id)
+	session_manager.clear_api_session(session_id)
 
 	stores =\
 	[

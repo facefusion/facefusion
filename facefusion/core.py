@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_manager, state_manager, store_creator, translator, video_manager
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -37,6 +37,9 @@ def cli() -> None:
 
 			if state_manager.get_item('command'):
 				logger.init(state_manager.get_item('log_level'))
+
+				session_id = session_context.get_session_id()
+				session_manager.set_cli_session(session_id, session_manager.create_cli_session())
 
 				content_store.init()
 				face_store.init()

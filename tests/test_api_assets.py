@@ -44,7 +44,7 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('temp_frame_format', 'png')
-	session_manager.SESSIONS.clear()
+	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 
 	yield
@@ -77,7 +77,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 		})
 		create_session_body = create_session_response.json()
 		access_token = create_session_body.get('access_token')
-		session_id = session_manager.find_session_id(access_token)
+		session_id = session_manager.find_api_session_id(access_token)
 		session_context.set_session_id(session_id)
 
 		with open(source_path, 'rb') as source_file:
@@ -281,7 +281,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	session_context.set_session_id(session_id)
 
 	source_path = get_test_example_file('source.jpg')
@@ -351,7 +351,7 @@ def test_delete_asset(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	session_context.set_session_id(session_id)
 
 	source_path = get_test_example_file('source.jpg')

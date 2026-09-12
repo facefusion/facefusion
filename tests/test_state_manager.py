@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Iterator
 
 import pytest
 
-from facefusion import session_manager, store_creator
+from facefusion import store_creator
 from facefusion.session_context import resolve_local_id, set_session_id
+from facefusion.session_manager import fork_session, join_session
 from facefusion.state_manager import STATE_SET, clear, clone_state, get_item, get_state, init, init_item, set_item, set_state
 
 
@@ -16,7 +16,6 @@ def before_each() -> Iterator[None]:
 	clear()
 	store_creator.delete_content(STATE_SET, 'session-a')
 	store_creator.delete_content(STATE_SET, 'session-a1')
-	session_manager.clear_session('session-a1')
 
 	yield
 
@@ -53,16 +52,17 @@ def test_set_state() -> None:
 
 def test_clone_state() -> None:
 	init_item('video_memory_strategy', 'tolerant')
-	session_manager.set_session('session-a1', { 'owner_id': resolve_local_id(), 'created_at': datetime.now() })
-	set_session_id('session-a1')
+	fork_id = fork_session()
 	clone_state()
 	set_item('video_memory_strategy', 'strict')
 
 	assert get_state() == { 'video_memory_strategy': 'strict' }
 
-	set_session_id(resolve_local_id())
+	join_session()
 
 	assert get_state() == { 'video_memory_strategy': 'tolerant' }
+
+	store_creator.delete_content(STATE_SET, fork_id)
 
 
 def test_clear() -> None:

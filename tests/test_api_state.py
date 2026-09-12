@@ -73,7 +73,7 @@ def before_each() -> Iterator[None]:
 	local_id = session_context.resolve_local_id()
 
 	session_context.set_session_id(local_id)
-	session_manager.SESSIONS.clear()
+	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 
 	yield
@@ -176,7 +176,7 @@ def test_select_source_assets(test_client : TestClient) -> None:
 
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	session_context.set_session_id(session_id)
 	source_paths =\
 	[
@@ -226,7 +226,7 @@ def test_select_target_assets(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	session_context.set_session_id(session_id)
 	target_path = get_test_example_file('target-240p.jpg')
 	asset_id = asset_store.create_asset('target', target_path).get('id')
