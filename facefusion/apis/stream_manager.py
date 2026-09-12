@@ -1,13 +1,14 @@
 import ctypes
 import threading
 from collections.abc import AsyncIterator
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future
+from contextvars import copy_context
 from queue import Queue
 from typing import Optional, Tuple
 
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, rtc, rtc_store, session_context, state_manager, streamer
+from facefusion import content_store, rtc, rtc_store, state_manager, streamer, thread_helper
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.content_analyser import analyse_frame
@@ -94,7 +95,11 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			content_store.clear()
 			rtc_store.set_peer(session_id, rtc_peer)
 
-			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
+			threading.Thread(
+				target = copy_context().run,
+				args = (run_peer_loop, session_id, rtc_peer),
+				daemon = True
+			).start()
 
 			return sdp_answer
 
@@ -104,20 +109,35 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 
 
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	session_context.set_session_id(session_id)
 	execution_thread_count = state_manager.get_item('execution_thread_count')
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = execution_thread_count)
 	audio_queue : Queue[Tuple[Time, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)
-	video_executor = ThreadPoolExecutor(max_workers = execution_thread_count, initializer = session_context.set_session_id, initargs = (session_id,))
+	video_executor = thread_helper.create_executor(execution_thread_count)
 
-	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer.get('video'), video_queue, video_executor), daemon = True)
-	video_encoder_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
+	video_receiver_thread = threading.Thread(
+		target = copy_context().run,
+		args = (receive_video_frames, rtc_peer.get('video'), video_queue, video_executor),
+		daemon = True
+	)
+	video_encoder_thread = threading.Thread(
+		target = copy_context().run,
+		args = (run_video_encode_loop, rtc_peer, video_queue),
+		daemon = True
+	)
 	video_receiver_thread.start()
 	video_encoder_thread.start()
 
 	if rtc_peer.get('audio'):
-		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer.get('audio'), audio_queue), daemon = True)
-		audio_encoder_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_queue), daemon = True)
+		audio_receiver_thread = threading.Thread(
+			target = copy_context().run,
+			args = (receive_audio_frames, rtc_peer.get('audio'), audio_queue),
+			daemon = True
+		)
+		audio_encoder_thread = threading.Thread(
+			target = copy_context().run,
+			args = (run_audio_encode_loop, rtc_peer, audio_queue),
+			daemon = True
+		)
 		audio_receiver_thread.start()
 		audio_encoder_thread.start()
 		audio_receiver_thread.join()

@@ -1,7 +1,7 @@
 
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
 from .assert_helper import get_test_example_file, get_test_examples_directory
@@ -9,6 +9,8 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
+
 	process_manager.start()
 
 	conditional_download(get_test_examples_directory(),

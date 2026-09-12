@@ -16,6 +16,8 @@ from .assert_helper import get_test_example_file, get_test_examples_directory, g
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
+
 	create_program()
 
 	conditional_download(get_test_examples_directory(),

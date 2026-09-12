@@ -25,6 +25,8 @@ from facefusion.workflows.core import detect_workflow_mode
 
 
 def cli() -> None:
+	state_manager.init()
+
 	if pre_check():
 		signal.signal(signal.SIGINT, signal_exit)
 		program = create_program()

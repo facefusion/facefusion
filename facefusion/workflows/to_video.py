@@ -1,11 +1,11 @@
 from collections import deque
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future
 from typing import Deque
 
 import cv2
 import numpy
 
-from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.media_helper import restrict_trim_frame
@@ -81,7 +81,7 @@ def process_memory_frames() -> ErrorCode:
 
 			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index'))
 
-			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
+			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()
 
 				for frame_index in temp_frame_range:

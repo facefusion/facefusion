@@ -8,6 +8,7 @@ from facefusion.libraries import aom as aom_module
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
 	aom_module.pre_check()
