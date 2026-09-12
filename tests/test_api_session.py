@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, process_manager, rtc, rtc_store, session_context, session_manager, state_manager
+from facefusion import metadata, process_manager, rtc, rtc_store, session_context, session_manager, state_manager, store_creator
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -277,8 +277,8 @@ def test_destroy_session(test_client : TestClient) -> None:
 	})
 
 	assert session_manager.find_session_id(access_token) is None
-	assert asset_store.get_assets() == {}
-	assert rtc_store.has_peer() is False
+	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
+	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
 	assert delete_session_response.status_code == 200
 
 	for asset_path in asset_paths:

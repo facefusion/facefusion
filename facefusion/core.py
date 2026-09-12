@@ -326,7 +326,15 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	is_done = common_pre_check() and processors_pre_check() and conditional_process() == 0
 	session_manager.join_session()
 
-	for store in [ state_manager.STATE_SET, content_store.CONTENT_STORE, process_manager.PROCESS_STORE, video_manager.VIDEO_POOL_STORE ]:
+	stores =\
+	[
+		state_manager.STATE_SET,
+		content_store.CONTENT_STORE,
+		process_manager.PROCESS_STORE,
+		video_manager.VIDEO_POOL_STORE
+	]
+
+	for store in stores:
 		store_creator.delete_content(store, fork_id)
 
 	return is_done

@@ -51,11 +51,12 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 
 
 def find_inference_pool(inference_context : str) -> Optional[InferencePool]:
-	inference_pool_sets = list(INFERENCE_POOL_STORE.get('content_set').values())
+	inference_pool_values = list(INFERENCE_POOL_STORE.get('content_set').values())
 
-	for inference_pool_set in inference_pool_sets:
+	for inference_pool_set in inference_pool_values:
 		if inference_pool_set.get(inference_context):
 			return inference_pool_set.get(inference_context)
+
 	return None
 
 
