@@ -8,7 +8,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, H
 
 import facefusion.choices
 import facefusion.core
-from facefusion import args_helper, session_context, state_manager, translator
+from facefusion import args_helper, state_manager, translator
 from facefusion.apis import jobs_helper
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -117,7 +117,6 @@ async def update_jobs(request : Request) -> JSONResponse:
 async def update_job(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
 	action = request.query_params.get('action')
-	session_id = session_context.get_session_id()
 
 	if action == 'submit':
 		if job_manager.submit_job(job_id):
@@ -135,7 +134,7 @@ async def update_job(request : Request) -> JSONResponse:
 		if job_id in job_manager.find_job_ids('queued'):
 			run_job_tasks = BackgroundTasks()
 			run_job_tasks.add_task(partial(job_runner.run_job, job_id, facefusion.core.process_step))
-			run_job_tasks.add_task(partial(jobs_helper.capture_output_asset, job_id, session_id))
+			run_job_tasks.add_task(partial(jobs_helper.capture_output_asset, job_id))
 
 			return JSONResponse(
 			{
@@ -151,7 +150,7 @@ async def update_job(request : Request) -> JSONResponse:
 		if job_id in job_manager.find_job_ids('failed'):
 			retry_job_tasks = BackgroundTasks()
 			retry_job_tasks.add_task(partial(job_runner.retry_job, job_id, facefusion.core.process_step))
-			retry_job_tasks.add_task(partial(jobs_helper.capture_output_asset, job_id, session_id))
+			retry_job_tasks.add_task(partial(jobs_helper.capture_output_asset, job_id))
 
 			return JSONResponse(
 			{

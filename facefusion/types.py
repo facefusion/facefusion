@@ -323,7 +323,6 @@ VideoAsset = TypedDict('VideoAsset',
 
 AssetMetadata : TypeAlias = AudioMetadata | ImageMetadata | VideoMetadata
 AssetSet : TypeAlias = Dict[AssetId, AudioAsset | ImageAsset | VideoAsset]
-AssetStore : TypeAlias = Dict[SessionId, AssetSet]
 
 AssetAction = Literal['capture']
 AssetSubject = Literal['frame', 'face']

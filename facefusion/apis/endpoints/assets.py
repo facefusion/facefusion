@@ -5,7 +5,7 @@ from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
 
-from facefusion import session_context, translator
+from facefusion import translator
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files
 from facefusion.filesystem import remove_file
@@ -13,8 +13,7 @@ from facefusion.vision import is_vision_frames, to_strip_buffer
 
 
 async def get_assets(request : Request) -> Response:
-	session_id = session_context.get_session_id()
-	asset_set = asset_store.get_assets(session_id)
+	asset_set = asset_store.get_assets()
 	assets = []
 
 	if asset_set:
@@ -39,9 +38,8 @@ async def get_assets(request : Request) -> Response:
 
 
 async def get_asset(request : Request) -> Response:
-	session_id = session_context.get_session_id()
 	asset_id = request.path_params.get('asset_id')
-	asset = asset_store.get_asset(session_id, asset_id)
+	asset = asset_store.get_asset(asset_id)
 
 	if asset:
 		if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture':
@@ -86,7 +84,6 @@ async def get_asset(request : Request) -> Response:
 
 
 async def upload_assets(request : Request) -> Response:
-	session_id = session_context.get_session_id()
 	asset_type = request.query_params.get('type')
 
 	if asset_type in [ 'source', 'target' ]:
@@ -100,7 +97,7 @@ async def upload_assets(request : Request) -> Response:
 				asset_ids : List[str] = []
 
 				for asset_path in asset_paths:
-					asset = asset_store.create_asset(session_id, asset_type, asset_path)
+					asset = asset_store.create_asset(asset_type, asset_path)
 
 					if asset:
 						asset_id = asset.get('id')
@@ -120,8 +117,7 @@ async def upload_assets(request : Request) -> Response:
 
 
 async def delete_assets(request : Request) -> Response:
-	session_id = session_context.get_session_id()
-	asset_set = asset_store.get_assets(session_id)
+	asset_set = asset_store.get_assets()
 	asset_ids : List[str] = []
 
 	if asset_set:
@@ -130,18 +126,17 @@ async def delete_assets(request : Request) -> Response:
 				asset_ids.append(asset.get('id'))
 
 		for asset_id in asset_ids:
-			asset_store.delete_asset(session_id, asset_id)
+			asset_store.delete_asset(asset_id)
 
 	return Response(status_code = HTTP_200_OK)
 
 
 async def delete_asset(request : Request) -> Response:
-	session_id = session_context.get_session_id()
 	asset_id = request.path_params.get('asset_id')
-	asset = asset_store.get_asset(session_id, asset_id)
+	asset = asset_store.get_asset(asset_id)
 
 	if asset and remove_file(asset.get('path')):
-		asset_store.delete_asset(session_id, asset_id)
+		asset_store.delete_asset(asset_id)
 		return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)
