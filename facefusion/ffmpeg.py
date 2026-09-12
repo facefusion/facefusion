@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from functools import lru_cache
 from types import SimpleNamespace
-from typing import List, Optional, cast
+from typing import BinaryIO, List, Optional, cast
 
 import facefusion.choices
 from facefusion import cli_progress, ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
@@ -41,10 +41,10 @@ def run_ffmpeg_with_progress(commands : List[Command], progress : SimpleNamespac
 	return process
 
 
-def run_ffmpeg_with_pipe(commands : List[Command], file_content : Buffer) -> subprocess.Popen[Buffer]:
+def run_ffmpeg_with_pipe(commands : List[Command], file : BinaryIO) -> subprocess.Popen[Buffer]:
 	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-	process.communicate(input = file_content)
+	process = subprocess.Popen(commands, stdin = file, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+	process.communicate()
 	return process
 
 
@@ -359,7 +359,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def sanitize_audio(file_content : Buffer, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_audio(file : BinaryIO, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
@@ -367,7 +367,7 @@ def sanitize_audio(file_content : Buffer, asset_path : str, security_strategy : 
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.force_output(asset_path)
 		)
-		return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
+		return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -375,20 +375,20 @@ def sanitize_audio(file_content : Buffer, asset_path : str, security_strategy : 
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 
-def sanitize_image(file_content : Buffer, asset_path : str) -> bool:
+def sanitize_image(file : BinaryIO, asset_path : str) -> bool:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 
-def sanitize_video(file_content : Buffer, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_video(file : BinaryIO, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
 		available_video_encoders = get_static_available_encoder_set().get('video')
 		commands = ffmpeg_builder.chain(
@@ -401,7 +401,7 @@ def sanitize_video(file_content : Buffer, asset_path : str, security_strategy : 
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.force_output(asset_path)
 		)
-		return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
+		return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -410,7 +410,7 @@ def sanitize_video(file_content : Buffer, asset_path : str, security_strategy : 
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:

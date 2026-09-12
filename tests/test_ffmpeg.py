@@ -249,43 +249,45 @@ def test_replace_audio() -> None:
 
 def test_sanitize_audio() -> None:
 	file_path = get_test_example_file('source.wav')
-	file_content = open(file_path, 'rb').read()
 	output_paths =\
 	[
 		get_test_output_path('test-sanitize-audio-strict.mp3'),
 		get_test_output_path('test-sanitize-audio-moderate.wav')
 	]
 
-	assert sanitize_audio(file_content, output_paths[0], 'strict') is True
-	assert probe_audio_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'mp3'
+	with open(file_path, 'rb') as file:
+		assert sanitize_audio(file, output_paths[0], 'strict') is True
+		assert probe_audio_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'mp3'
 
-	assert sanitize_audio(file_content, output_paths[1], 'moderate') is True
-	assert probe_audio_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'pcm_s16le'
+	with open(file_path, 'rb') as file:
+		assert sanitize_audio(file, output_paths[1], 'moderate') is True
+		assert probe_audio_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'pcm_s16le'
 
 
 def test_sanitize_image() -> None:
 	file_path = get_test_example_file('source.jpg')
-	file_content = open(file_path, 'rb').read()
 	output_path = get_test_output_path('test-sanitize-image.jpg')
 
-	assert sanitize_image(file_content, output_path) is True
-	assert is_image(output_path) is True
+	with open(file_path, 'rb') as file:
+		assert sanitize_image(file, output_path) is True
+		assert is_image(output_path) is True
 
 
 def test_sanitize_video() -> None:
 	file_path = get_test_example_file('target-240p-h265.mp4')
-	file_content = open(file_path, 'rb').read()
 	output_paths =\
 	[
 		get_test_output_path('test-sanitize-video-strict.mp4'),
 		get_test_output_path('test-sanitize-video-moderate.mp4')
 	]
 
-	assert sanitize_video(file_content, output_paths[0], 'strict') is True
-	assert probe_video_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
+	with open(file_path, 'rb') as file:
+		assert sanitize_video(file, output_paths[0], 'strict') is True
+		assert probe_video_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
 
-	assert sanitize_video(file_content, output_paths[1], 'moderate') is True
-	assert probe_video_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
+	with open(file_path, 'rb') as file:
+		assert sanitize_video(file, output_paths[1], 'moderate') is True
+		assert probe_video_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
 
 
 def test_fix_audio_encoder() -> None:

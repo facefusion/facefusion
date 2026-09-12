@@ -75,17 +75,16 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		asset_file_name = uuid.uuid4().hex
 		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
-		file_content = await upload_file.read()
 
 		process_manager.start()
 
-		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, file_content, asset_path, api_security_strategy):
+		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, file_content, asset_path):
+		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, upload_file.file, asset_path):
 			asset_paths.append(asset_path)
 
-		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, file_content, asset_path, api_security_strategy):
+		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
 		process_manager.end()
