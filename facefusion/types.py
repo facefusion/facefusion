@@ -501,10 +501,8 @@ DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
-AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]
-InferencePoolSet : TypeAlias = Dict[AppContext, Dict[str, InferencePool]]
 
 JobOutputSet : TypeAlias = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
