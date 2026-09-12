@@ -3,6 +3,7 @@ from copy import copy
 from typing import List, Optional
 
 import facefusion.choices
+from facefusion import state_manager
 from facefusion.filesystem import create_directory, get_file_name, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
@@ -10,14 +11,9 @@ from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
 from facefusion.types import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
-JOBS_PATH : Optional[str] = None
-
 
 def init_jobs(jobs_path : str) -> bool:
-	global JOBS_PATH
-
-	JOBS_PATH = jobs_path
-	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in facefusion.choices.job_statuses ]
+	job_status_paths = [ os.path.join(jobs_path, job_status) for job_status in facefusion.choices.job_statuses ]
 
 	for job_status_path in job_status_paths:
 		create_directory(job_status_path)
@@ -91,13 +87,14 @@ def find_jobs(job_status : JobStatus) -> JobSet:
 
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
-	job_pattern = os.path.join(JOBS_PATH, job_status, '*.json')
-	job_paths = resolve_file_pattern(job_pattern)
-	job_paths.sort(key = os.path.getmtime)
+	jobs_path = state_manager.get_jobs_path()
+	job_file_pattern = os.path.join(jobs_path, job_status, '*.json')
+	job_file_paths = resolve_file_pattern(job_file_pattern)
+	job_file_paths.sort(key = os.path.getmtime)
 	job_ids = []
 
-	for job_path in job_paths:
-		job_id = get_file_name(job_path)
+	for job_file_path in job_file_paths:
+		job_id = get_file_name(job_file_path)
 		job_ids.append(job_id)
 	return job_ids
 
@@ -240,23 +237,25 @@ def delete_job_file(job_id : str) -> bool:
 
 
 def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
+	jobs_path = state_manager.get_jobs_path()
 	job_file_name = get_job_file_name(job_id)
 
 	if job_file_name:
-		return os.path.join(JOBS_PATH, job_status, job_file_name)
+		return os.path.join(jobs_path, job_status, job_file_name)
 	return None
 
 
 def find_job_path(job_id : str) -> Optional[str]:
+	jobs_path = state_manager.get_jobs_path()
 	job_file_name = get_job_file_name(job_id)
 
 	if job_file_name:
 		for job_status in facefusion.choices.job_statuses:
-			job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
-			job_paths = resolve_file_pattern(job_pattern)
+			job_file_pattern = os.path.join(jobs_path, job_status, job_file_name)
+			job_file_paths = resolve_file_pattern(job_file_pattern)
 
-			for job_path in job_paths:
-				return job_path
+			for job_file_path in job_file_paths:
+				return job_file_path
 	return None
 
 

@@ -3,8 +3,15 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager
+from facefusion import metadata, session_manager, state_manager
 from facefusion.apis.core import create_api
+from .assert_helper import get_test_jobs_directory
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	state_manager.init()
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 
 
 @pytest.fixture(scope = 'function', autouse = True)

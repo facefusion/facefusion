@@ -1,16 +1,46 @@
+import os
 from time import sleep
 
 import pytest
 
+from facefusion import state_manager
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.session_context import resolve_local_id, set_session_id
 from .assert_helper import get_test_jobs_directory
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	state_manager.init()
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
+	local_id = resolve_local_id()
+
+	set_session_id(local_id)
 	clear_jobs(get_test_jobs_directory())
-	init_jobs(get_test_jobs_directory())
+	init_jobs(state_manager.get_jobs_path())
+
+
+def test_init_jobs() -> None:
+	local_id = resolve_local_id()
+
+	set_session_id('session-a')
+	state_manager.init()
+
+	assert init_jobs(state_manager.get_jobs_path()) is True
+	assert os.path.isdir(os.path.join(get_test_jobs_directory(), 'session-a', 'drafted')) is True
+
+	create_job('job-test-init-jobs')
+
+	assert find_job_ids('drafted') == [ 'job-test-init-jobs' ]
+
+	set_session_id(local_id)
+
+	assert find_job_ids('drafted') == []
 
 
 def test_create_job() -> None:

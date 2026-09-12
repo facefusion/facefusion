@@ -2,15 +2,22 @@ from time import sleep
 
 import pytest
 
+from facefusion import state_manager
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.jobs.job_manager import clear_jobs, create_job, init_jobs
 from .assert_helper import get_test_jobs_directory
 
 
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	state_manager.init()
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
+
+
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	clear_jobs(get_test_jobs_directory())
-	init_jobs(get_test_jobs_directory())
+	init_jobs(state_manager.get_jobs_path())
 
 
 def test_compose_job_list() -> None:

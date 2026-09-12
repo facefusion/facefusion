@@ -14,6 +14,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory, g
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
@@ -37,7 +38,7 @@ def before_all() -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	clear_jobs(get_test_jobs_directory())
-	init_jobs(get_test_jobs_directory())
+	init_jobs(state_manager.get_jobs_path())
 	prepare_test_output_directory()
 
 

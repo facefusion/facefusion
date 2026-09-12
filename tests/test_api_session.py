@@ -14,7 +14,7 @@ from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import RtcPeer, Session
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -36,6 +36,7 @@ def before_each() -> Iterator[None]:
 
 	session_context.set_session_id(local_id)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	session_manager.SESSIONS.clear()
 	asset_store.delete_assets()
 

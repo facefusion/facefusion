@@ -12,7 +12,7 @@ from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import VideoCodec
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -22,6 +22,7 @@ def before_all() -> None:
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('processors', [])
 
 	pre_check()

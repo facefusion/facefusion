@@ -9,6 +9,7 @@ from facefusion.apis import asset_store
 from facefusion.apis.session_helper import validate_api_key
 from facefusion.apis.stream_manager import destroy_stream
 from facefusion.filesystem import is_directory, remove_directory
+from facefusion.jobs import job_manager
 
 
 async def create_session(request : Request) -> JSONResponse:
@@ -28,6 +29,9 @@ async def create_session(request : Request) -> JSONResponse:
 		video_manager.init()
 		process_manager.init()
 		rtc_store.init()
+
+		jobs_path = state_manager.get_jobs_path()
+		job_manager.init_jobs(jobs_path)
 
 		return JSONResponse(
 		{

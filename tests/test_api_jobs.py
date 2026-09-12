@@ -37,8 +37,9 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])
 	state_manager.init_item('target_path', get_test_example_file('target-240p.mp4'))
 	state_manager.init_item('temp_path', get_test_jobs_directory())
+	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	clear_jobs(get_test_jobs_directory())
-	init_jobs(get_test_jobs_directory())
+	init_jobs(state_manager.get_jobs_path())
 
 	yield
 
@@ -62,6 +63,8 @@ def test_get_jobs(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	get_jobs_response = test_client.get('/jobs?status=invalid', headers =
 	{
@@ -83,6 +86,22 @@ def test_get_jobs(test_client : TestClient) -> None:
 	assert 'job-test-get-jobs' in get_jobs_body
 	assert get_jobs_response.status_code == 200
 
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	get_jobs_response = test_client.get('/jobs?status=drafted', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_jobs_body = get_jobs_response.json()
+
+	assert get_jobs_body == {}
+	assert get_jobs_response.status_code == 200
+
 
 def test_get_job(test_client : TestClient) -> None:
 	get_job_response = test_client.get('/jobs/job-test-get-job')
@@ -95,6 +114,8 @@ def test_get_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	get_job_response = test_client.get('/jobs/job-test-unknown', headers =
 	{
@@ -116,6 +137,22 @@ def test_get_job(test_client : TestClient) -> None:
 	assert get_job_body.get('version') == '1'
 	assert get_job_response.status_code == 200
 
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+
+	get_job_response = test_client.get('/jobs/job-test-get-job', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	get_job_body = get_job_response.json()
+
+	assert get_job_body.get('message') == 'job not found'
+	assert get_job_response.status_code == 404
+
 
 def test_create_job(test_client : TestClient) -> None:
 	create_job_response = test_client.post('/jobs')
@@ -128,6 +165,8 @@ def test_create_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	create_job_response = test_client.post('/jobs', headers =
 	{
@@ -167,6 +206,8 @@ def test_submit_jobs(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	submit_jobs_response = test_client.patch('/jobs?action=invalid', headers =
 	{
@@ -218,6 +259,8 @@ def test_submit_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=invalid', headers =
 	{
@@ -269,6 +312,8 @@ def test_run_jobs(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	run_jobs_response = test_client.patch('/jobs?action=run', headers =
 	{
@@ -315,6 +360,8 @@ def test_run_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	create_job('job-test-run-job')
 
@@ -362,6 +409,8 @@ def test_retry_jobs(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
 	{
@@ -410,6 +459,8 @@ def test_retry_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
 	{
@@ -458,6 +509,8 @@ def test_delete_jobs(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	delete_jobs_response = test_client.delete('/jobs', headers =
 	{
@@ -491,6 +544,8 @@ def test_delete_job(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	delete_job_response = test_client.delete('/jobs/job-test-unknown', headers =
 	{
@@ -526,6 +581,8 @@ def test_create_step(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	create_job('job-test-create-step')
 
@@ -606,6 +663,8 @@ def test_delete_step(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	create_job('job-test-delete-step')
 
