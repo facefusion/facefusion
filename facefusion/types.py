@@ -157,13 +157,17 @@ Content : TypeAlias = Dict[str, Any]
 
 Token : TypeAlias = str
 SessionId : TypeAlias = str
-Session = TypedDict('Session',
+ApiSession = TypedDict('ApiSession',
 {
-	'access_token' : NotRequired[Token],
-	'refresh_token' : NotRequired[Token],
-	'owner_id' : NotRequired[SessionId],
+	'access_token' : Token,
+	'refresh_token' : Token,
 	'created_at' : datetime,
-	'expires_at' : NotRequired[datetime]
+	'expires_at' : datetime
+})
+CliSession = TypedDict('CliSession',
+{
+	'owner_id' : SessionId,
+	'created_at' : datetime
 })
 
 StoreContent : TypeAlias = Any

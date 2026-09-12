@@ -11,10 +11,10 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 		access_token = extract_access_token(scope)
 
 		if access_token:
-			session_id = session_manager.find_session_id(access_token)
+			session_id = session_manager.find_api_session_id(access_token)
 
 			if session_id:
-				if session_manager.validate_session(session_id):
+				if session_manager.validate_api_session(session_id):
 					session_context.set_session_id(session_id)
 					return await app(scope, receive, send)
 

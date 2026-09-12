@@ -13,7 +13,7 @@ from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import RtcPeer, Session
+from facefusion.types import ApiSession, RtcPeer
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
 
@@ -37,7 +37,7 @@ def before_each() -> Iterator[None]:
 	session_context.set_session_id(local_id)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
-	session_manager.SESSIONS.clear()
+	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 
 	yield
@@ -117,9 +117,9 @@ def test_get_session(test_client : TestClient) -> None:
 
 	assert get_session_response.status_code == 200
 
-	session_id = session_manager.find_session_id(create_session_body.get('access_token'))
-	session : Session = session_manager.get_session(session_id)
-	session_manager.set_session(session_id,
+	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))
+	session : ApiSession = session_manager.get_api_session(session_id)
+	session_manager.set_api_session(session_id,
 	{
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
@@ -150,6 +150,15 @@ def test_refresh_session(test_client : TestClient) -> None:
 	assert refresh_session_response.status_code == 401
 
 	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session_context.set_session_id(session_id)
+	session_manager.fork_session()
+
+	refresh_session_response = test_client.put('/session', json = {})
+
+	assert refresh_session_response.status_code == 401
+
+	session_manager.join_session()
 
 	refresh_session_response = test_client.put('/session', json =
 	{
@@ -159,7 +168,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 	assert refresh_session_body.get('access_token')
 	assert refresh_session_body.get('refresh_token')
-	assert session_manager.find_session_id(access_token) is None
+	assert session_manager.find_api_session_id(access_token) is None
 	assert refresh_session_response.status_code == 200
 
 	refresh_session_response = test_client.put('/session', json =
@@ -175,9 +184,9 @@ def test_refresh_session(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 
-	session_id = session_manager.find_session_id(create_session_body.get('access_token'))
-	session : Session = session_manager.get_session(session_id)
-	session_manager.set_session(session_id,
+	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))
+	session : ApiSession = session_manager.get_api_session(session_id)
+	session_manager.set_api_session(session_id,
 	{
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
@@ -199,7 +208,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'client_version': metadata.get('version')
 	})
 	access_token = create_session_response.json().get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	jobs_path = os.path.join(get_test_jobs_directory(), session_id)
 
 	delete_session_response = test_client.delete('/session', headers =
@@ -216,7 +225,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	})
 
 	assert os.path.isdir(jobs_path) is False
-	assert session_manager.find_session_id(access_token) is None
+	assert session_manager.find_api_session_id(access_token) is None
 	assert delete_session_response.status_code == 200
 
 	create_session_response = test_client.post('/session', json =
@@ -224,7 +233,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'client_version': metadata.get('version')
 	})
 	access_token = create_session_response.json().get('access_token')
-	session_id = session_manager.find_session_id(access_token)
+	session_id = session_manager.find_api_session_id(access_token)
 	session_context.set_session_id(session_id)
 	source_path = get_test_example_file('source.jpg')
 
@@ -252,7 +261,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 		assert os.path.exists(asset_path) is True
 
 	assert delete_session_response.json().get('message') == 'directory not removed'
-	assert session_manager.find_session_id(access_token) == session_id
+	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 404
 
 	peer_connection = rtc.create_peer_connection()
@@ -276,7 +285,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert session_manager.find_session_id(access_token) is None
+	assert session_manager.find_api_session_id(access_token) is None
 	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
 	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
 	assert delete_session_response.status_code == 200
