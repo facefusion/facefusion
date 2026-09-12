@@ -5,24 +5,32 @@ from typing import Optional, cast
 
 import numpy
 
-from facefusion import ffmpeg, ffprobe, frame_store, vision
+from facefusion import ffmpeg, ffprobe, frame_store, store_creator, vision
 from facefusion.common_helper import get_first, get_last
-from facefusion.types import Fps, Resolution, VideoPoolSet, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
+from facefusion.session_context import get_session_id
+from facefusion.types import Fps, Resolution, Store, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
 
-VIDEO_POOL_SET : VideoPoolSet =\
+VIDEO_POOL_STORE : Store = store_creator.create_store(
 {
 	'reader': {},
 	'writer': {}
-}
+})
+
+
+def init() -> None:
+	session_id = get_session_id()
+	store_creator.init_content(VIDEO_POOL_STORE, session_id)
 
 
 def get_reader(video_path : str, context : str) -> VideoReader:
-	reader_id = hashlib.sha1((video_path + '_' + context).encode()).hexdigest()
+	session_id = get_session_id()
+	reader_id = hashlib.sha1((video_path + '_' + context + '_' + session_id).encode()).hexdigest()
+	video_pool = store_creator.get_content(VIDEO_POOL_STORE, session_id)
 
-	if reader_id not in VIDEO_POOL_SET.get('reader'):
+	if reader_id not in video_pool.get('reader'):
 		video_metadata = ffprobe.extract_static_video_metadata(video_path)
 
-		VIDEO_POOL_SET['reader'][reader_id] =\
+		video_pool['reader'][reader_id] =\
 		{
 			'id': reader_id,
 			'file_path': video_path,
@@ -31,7 +39,7 @@ def get_reader(video_path : str, context : str) -> VideoReader:
 			'frame_index': 0
 		}
 
-	return VIDEO_POOL_SET.get('reader').get(reader_id)
+	return video_pool.get('reader').get(reader_id)
 
 
 def conditional_seek_video_reader(video_reader : VideoReader, frame_index : int = 0) -> None:
@@ -116,8 +124,11 @@ def close_video_reader(video_reader : VideoReader) -> None:
 
 
 def get_writer(video_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> VideoWriter:
-	if video_path not in VIDEO_POOL_SET.get('writer'):
-		VIDEO_POOL_SET['writer'][video_path] =\
+	session_id = get_session_id()
+	video_pool = store_creator.get_content(VIDEO_POOL_STORE, session_id)
+
+	if video_path not in video_pool.get('writer'):
+		video_pool['writer'][video_path] =\
 		{
 			'id': uuid.uuid4().hex,
 			'file_path': video_path,
@@ -129,7 +140,7 @@ def get_writer(video_path : str, temp_video_fps : Fps, temp_video_resolution : R
 			}
 		}
 
-	return VIDEO_POOL_SET.get('writer').get(video_path)
+	return video_pool.get('writer').get(video_path)
 
 
 def write_video_frame(video_writer : VideoWriter, vision_frame : VisionFrame) -> None:
@@ -143,13 +154,15 @@ def close_video_writer(video_writer : VideoWriter) -> bool:
 	return video_writer.get('process').returncode == 0
 
 
-def clear_video_pool() -> None:
-	for video_reader in VIDEO_POOL_SET.get('reader').values():
+def clear() -> None:
+	session_id = get_session_id()
+	video_pool = store_creator.get_content(VIDEO_POOL_STORE, session_id)
+
+	for video_reader in video_pool.get('reader').values():
 		close_video_reader(video_reader)
 		frame_store.clear_frames(video_reader.get('id'))
 
-	for video_writer in VIDEO_POOL_SET.get('writer').values():
+	for video_writer in video_pool.get('writer').values():
 		close_video_writer(video_writer)
 
-	VIDEO_POOL_SET['reader'].clear()
-	VIDEO_POOL_SET['writer'].clear()
+	store_creator.init_content(VIDEO_POOL_STORE, session_id)

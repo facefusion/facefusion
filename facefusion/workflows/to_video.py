@@ -177,7 +177,7 @@ def finalize_video(start_time : float) -> ErrorCode:
 
 def conditional_clear_video_pool() -> None:
 	if state_manager.get_item('workflow_mode') == 'image-to-video':
-		video_manager.clear_video_pool()
+		video_manager.clear()
 
 
 def conditional_restrict_video_fps() -> Fps:

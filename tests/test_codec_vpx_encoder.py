@@ -4,7 +4,7 @@ import cv2
 import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
-from facefusion import state_manager
+from facefusion import state_manager, video_manager
 from facefusion.codecs.vpx_encoder import create, destroy, encode
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -18,6 +18,8 @@ from facefusion.vision import read_video_frame
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
+	video_manager.init()
 
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4' ])
 

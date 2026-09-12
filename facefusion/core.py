@@ -8,7 +8,7 @@ from time import time
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, inference_manager, logger, process_manager, session_manager, state_manager, translator
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, hash_helper, inference_manager, logger, process_manager, session_manager, state_manager, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -41,6 +41,7 @@ def cli() -> None:
 				content_store.init()
 				inference_manager.init()
 				process_manager.init()
+				video_manager.init()
 
 				route(args)
 			else:
@@ -311,6 +312,8 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
 	session_manager.fork_session()
 	state_manager.clone_state()
+
+	video_manager.init()
 
 	cli_args = args_helper.extract_cli_args(state_manager.get_state())
 	args = cli_args.copy()
