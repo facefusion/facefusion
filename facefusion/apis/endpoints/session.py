@@ -81,8 +81,15 @@ async def refresh_session(request : Request) -> JSONResponse:
 async def destroy_session(request : Request) -> JSONResponse:
 	session_id = session_context.get_session_id()
 	temp_path = state_manager.get_temp_path()
+	jobs_path = state_manager.get_jobs_path()
 
 	if is_directory(temp_path) and not remove_directory(temp_path):
+		return JSONResponse(
+		{
+			'message': translator.get('directory_not_removed', 'facefusion.apis')
+		}, status_code = HTTP_404_NOT_FOUND)
+
+	if is_directory(jobs_path) and not remove_directory(jobs_path):
 		return JSONResponse(
 		{
 			'message': translator.get('directory_not_removed', 'facefusion.apis')
