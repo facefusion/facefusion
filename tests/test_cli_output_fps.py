@@ -4,7 +4,7 @@ import sys
 import numpy
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager, video_manager
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
 from facefusion.types import Fps, WorkflowStrategy
@@ -17,6 +17,9 @@ def before_all() -> None:
 	state_manager.init()
 
 	process_manager.start()
+
+	video_manager.init()
+
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',

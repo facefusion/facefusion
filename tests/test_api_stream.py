@@ -33,10 +33,17 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
 	session_manager.SESSIONS.clear()
-	asset_store.clear()
+	asset_store.delete_assets()
 	rtc_store.delete_peer()
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 @pytest.fixture(scope = 'module')
@@ -144,6 +151,7 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	})
 	access_token = create_session_response.json().get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	peer_connection = rtc.create_peer_connection()
 	rtc.add_video_track(peer_connection, 'sendrecv', 'vp8', 96)

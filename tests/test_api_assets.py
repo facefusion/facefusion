@@ -5,7 +5,7 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import ffmpeg, ffmpeg_builder, metadata, process_manager, session_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -37,11 +37,18 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	session_manager.SESSIONS.clear()
-	asset_store.clear()
+	asset_store.delete_assets()
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 @pytest.fixture(scope = 'module')
@@ -70,6 +77,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 		create_session_body = create_session_response.json()
 		access_token = create_session_body.get('access_token')
 		session_id = session_manager.find_session_id(access_token)
+		session_context.set_session_id(session_id)
 
 		with open(source_path, 'rb') as source_file:
 			upload_response = test_client.post('/assets?type=source', headers =
@@ -81,7 +89,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 			])
 
 		asset_ids = upload_response.json().get('asset_ids')
-		asset = asset_store.get_asset(session_id, asset_ids[0])
+		asset = asset_store.get_asset(asset_ids[0])
 
 		assert asset.get('media') == 'image'
 		assert asset.get('type') == 'source'
@@ -100,12 +108,12 @@ def test_upload_assets(test_client : TestClient) -> None:
 
 		asset_ids = upload_response.json().get('asset_ids')
 
-		assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
-		assert asset_store.get_asset(session_id, asset_ids[0]).get('type') == 'target'
-		assert asset_store.get_asset(session_id, asset_ids[0]).get('format') == 'jpeg'
-		assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
-		assert asset_store.get_asset(session_id, asset_ids[1]).get('type') == 'target'
-		assert asset_store.get_asset(session_id, asset_ids[1]).get('format') == 'mp4'
+		assert asset_store.get_asset(asset_ids[0]).get('media') == 'image'
+		assert asset_store.get_asset(asset_ids[0]).get('type') == 'target'
+		assert asset_store.get_asset(asset_ids[0]).get('format') == 'jpeg'
+		assert asset_store.get_asset(asset_ids[1]).get('media') == 'video'
+		assert asset_store.get_asset(asset_ids[1]).get('type') == 'target'
+		assert asset_store.get_asset(asset_ids[1]).get('format') == 'mp4'
 		assert upload_response.status_code == 201
 
 		with open(audio_path, 'rb') as audio_file:
@@ -118,7 +126,7 @@ def test_upload_assets(test_client : TestClient) -> None:
 			])
 
 		asset_ids = upload_response.json().get('asset_ids')
-		asset = asset_store.get_asset(session_id, asset_ids[0])
+		asset = asset_store.get_asset(asset_ids[0])
 
 		assert asset.get('media') == 'audio'
 		assert asset.get('type') == 'source'
@@ -273,6 +281,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	source_path = get_test_example_file('source.jpg')
 	target_image_path = get_test_example_file('target-240p.jpg')
@@ -299,7 +308,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 
 	asset_paths = []
 
-	for asset in asset_store.get_assets(session_id).values():
+	for asset in asset_store.get_assets().values():
 		asset_paths.append(asset.get('path'))
 
 	for asset_path in asset_paths:
@@ -327,7 +336,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert asset_store.get_assets(session_id) is None
+	assert asset_store.get_assets() == {}
 	assert delete_response.status_code == 200
 
 	for asset_path in asset_paths:
@@ -342,6 +351,7 @@ def test_delete_asset(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 
 	source_path = get_test_example_file('source.jpg')
 
@@ -355,7 +365,7 @@ def test_delete_asset(test_client : TestClient) -> None:
 		])
 
 	asset_ids = upload_response.json().get('asset_ids')
-	asset_path = asset_store.get_asset(session_id, asset_ids[0]).get('path')
+	asset_path = asset_store.get_asset(asset_ids[0]).get('path')
 
 	assert os.path.exists(asset_path) is True
 
@@ -380,7 +390,7 @@ def test_delete_asset(test_client : TestClient) -> None:
 	})
 
 	assert os.path.exists(asset_path) is False
-	assert asset_store.get_asset(session_id, asset_ids[0]) is None
+	assert asset_store.get_asset(asset_ids[0]) is None
 	assert delete_response.status_code == 200
 
 	delete_response = test_client.request('DELETE', '/assets/' + asset_ids[0], headers =

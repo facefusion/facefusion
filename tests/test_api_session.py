@@ -31,10 +31,17 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	session_manager.SESSIONS.clear()
-	asset_store.clear()
+	asset_store.delete_assets()
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 @pytest.fixture(scope = 'module')
@@ -213,6 +220,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	})
 	access_token = create_session_response.json().get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 	source_path = get_test_example_file('source.jpg')
 
 	with open(source_path, 'rb') as source_file:
@@ -226,7 +234,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 
 	asset_paths = []
 
-	for asset in asset_store.get_assets(session_id).values():
+	for asset in asset_store.get_assets().values():
 		asset_paths.append(asset.get('path'))
 
 	with patch('facefusion.apis.endpoints.session.remove_directory', return_value = False):
@@ -264,7 +272,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	})
 
 	assert session_manager.find_session_id(access_token) is None
-	assert asset_store.get_assets(session_id) is None
+	assert asset_store.get_assets() == {}
 	assert rtc_store.has_peer() is False
 	assert delete_session_response.status_code == 200
 

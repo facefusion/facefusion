@@ -4,7 +4,7 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import capability_store, ffmpeg, ffmpeg_builder, metadata, process_manager, session_manager, state_manager
+from facefusion import capability_store, ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -68,9 +68,16 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
 	session_manager.SESSIONS.clear()
-	asset_store.clear()
+	asset_store.delete_assets()
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 @pytest.fixture(scope = 'module')
@@ -169,6 +176,7 @@ def test_select_source_assets(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
@@ -176,8 +184,8 @@ def test_select_source_assets(test_client : TestClient) -> None:
 	]
 	asset_ids =\
 	[
-		asset_store.create_asset(session_id, 'source', source_paths[0]).get('id'),
-		asset_store.create_asset(session_id, 'source', source_paths[1]).get('id')
+		asset_store.create_asset('source', source_paths[0]).get('id'),
+		asset_store.create_asset('source', source_paths[1]).get('id')
 	]
 
 	select_response = test_client.put('/state?action=select&type=source', json =
@@ -218,8 +226,9 @@ def test_select_target_assets(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 	access_token = create_session_body.get('access_token')
 	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
 	target_path = get_test_example_file('target-240p.jpg')
-	asset_id = asset_store.create_asset(session_id, 'target', target_path).get('id')
+	asset_id = asset_store.create_asset('target', target_path).get('id')
 
 	select_response = test_client.put('/state?action=select&type=target', json=
 	{

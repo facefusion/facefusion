@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import metadata, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -28,14 +28,21 @@ def before_all() -> None:
 
 
 @pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
+def before_each() -> Iterator[None]:
+	local_id = session_context.resolve_local_id()
+
+	session_context.set_session_id(local_id)
 	session_manager.SESSIONS.clear()
-	asset_store.clear()
+	asset_store.delete_assets()
 	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])
 	state_manager.init_item('target_path', get_test_example_file('target-240p.mp4'))
 	state_manager.init_item('temp_path', get_test_jobs_directory())
 	clear_jobs(get_test_jobs_directory())
 	init_jobs(get_test_jobs_directory())
+
+	yield
+
+	session_context.set_session_id(local_id)
 
 
 @pytest.fixture(scope = 'module')
