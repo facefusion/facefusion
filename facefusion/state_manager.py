@@ -5,6 +5,7 @@ from typing import Union
 from facefusion import store_creator
 from facefusion.processors.types import ProcessorState, ProcessorStateKey
 from facefusion.session_context import get_session_id, resolve_local_id
+from facefusion.session_manager import resolve_owner_id
 from facefusion.types import Args, State, StateKey, StateValue, Store
 
 STATE_SET : Store = store_creator.create_store({})
@@ -29,6 +30,12 @@ def get_state() -> Union[State, ProcessorState]:
 def set_state(state : Union[State, ProcessorState]) -> None:
 	session_id = get_session_id()
 	store_creator.set_content(STATE_SET, session_id, state)
+
+
+def clone_state() -> None:
+	session_id = get_session_id()
+	owner_id = resolve_owner_id()
+	store_creator.set_content(STATE_SET, session_id, deepcopy(store_creator.get_content(STATE_SET, owner_id)))
 
 
 def clear() -> None:
@@ -62,13 +69,13 @@ def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:
 
 def get_jobs_path() -> str:
 	jobs_path = get_item('jobs_path')
-	session_id = get_session_id()
+	owner_id = resolve_owner_id()
 
-	return os.path.join(jobs_path, session_id)
+	return os.path.join(jobs_path, owner_id)
 
 
 def get_temp_path() -> str:
 	temp_path = get_item('temp_path')
-	session_id = get_session_id()
+	owner_id = resolve_owner_id()
 
-	return os.path.join(temp_path, session_id)
+	return os.path.join(temp_path, owner_id)

@@ -11,7 +11,7 @@ from facefusion.common_helper import is_windows
 from facefusion.execution import create_inference_providers, get_onnxruntime_version, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
-from facefusion.session_context import get_session_id
+from facefusion.session_manager import resolve_owner_id
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferenceProvider, Store
 
@@ -19,16 +19,16 @@ INFERENCE_POOL_STORE : Store = store_creator.create_store({})
 
 
 def init() -> None:
-	session_id = get_session_id()
-	store_creator.init_content(INFERENCE_POOL_STORE, session_id)
+	owner_id = resolve_owner_id()
+	store_creator.init_content(INFERENCE_POOL_STORE, owner_id)
 
 
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
 	while process_manager.is_checking():
 		sleep(0.5)
 
-	session_id = get_session_id()
-	inference_pool_set = store_creator.get_content(INFERENCE_POOL_STORE, session_id)
+	owner_id = resolve_owner_id()
+	inference_pool_set = store_creator.get_content(INFERENCE_POOL_STORE, owner_id)
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
 	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
@@ -51,7 +51,9 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 
 
 def find_inference_pool(inference_context : str) -> Optional[InferencePool]:
-	for inference_pool_set in INFERENCE_POOL_STORE.get('content_set').values():
+	inference_pool_sets = list(INFERENCE_POOL_STORE.get('content_set').values())
+
+	for inference_pool_set in inference_pool_sets:
 		if inference_pool_set.get(inference_context):
 			return inference_pool_set.get(inference_context)
 	return None
@@ -70,8 +72,8 @@ def create_inference_pool(model_source_set : DownloadSet, inference_providers : 
 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
-	session_id = get_session_id()
-	inference_pool_set = store_creator.get_content(INFERENCE_POOL_STORE, session_id)
+	owner_id = resolve_owner_id()
+	inference_pool_set = store_creator.get_content(INFERENCE_POOL_STORE, owner_id)
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
 
@@ -86,8 +88,8 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 
 
 def clear() -> None:
-	session_id = get_session_id()
-	store_creator.init_content(INFERENCE_POOL_STORE, session_id)
+	owner_id = resolve_owner_id()
+	store_creator.init_content(INFERENCE_POOL_STORE, owner_id)
 
 
 def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> InferenceSession:
