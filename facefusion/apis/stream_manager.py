@@ -13,7 +13,7 @@ from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.content_analyser import analyse_frame
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, Time, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, Time, VideoCodec, VisionFrame
 from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_static_images, to_buffer
 
 
@@ -41,7 +41,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 
 	if rtc.get_payload_type(sdp_offer, 'vp9'):
@@ -93,11 +93,11 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 				)
 
 			content_store.clear()
-			rtc_store.set_peer(session_id, rtc_peer)
+			rtc_store.set_peer(rtc_peer)
 
 			threading.Thread(
 				target = copy_context().run,
-				args = (run_peer_loop, session_id, rtc_peer),
+				args = (run_peer_loop, rtc_peer),
 				daemon = True
 			).start()
 
@@ -108,7 +108,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 	return None
 
 
-def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+def run_peer_loop(rtc_peer : RtcPeer) -> None:
 	execution_thread_count = state_manager.get_item('execution_thread_count')
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = execution_thread_count)
 	audio_queue : Queue[Tuple[Time, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)
@@ -147,12 +147,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
 
-	rtc_store.delete_peer(session_id)
+	rtc_store.delete_peer()
 
 
-def destroy_stream(session_id : SessionId) -> bool:
-	if rtc_store.has_peer(session_id):
-		rtc_store.delete_peer(session_id)
-		return not rtc_store.has_peer(session_id)
+def destroy_stream() -> bool:
+	if rtc_store.has_peer():
+		rtc_store.delete_peer()
+		return not rtc_store.has_peer()
 
 	return False

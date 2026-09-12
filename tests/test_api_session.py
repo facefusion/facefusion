@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, process_manager, rtc, rtc_store, session_manager, state_manager
+from facefusion import metadata, process_manager, rtc, rtc_store, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -255,7 +255,8 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'sender_bitrate': ctypes.c_uint(0),
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
-	rtc_store.set_peer(session_id, rtc_peer)
+	session_context.set_session_id(session_id)
+	rtc_store.set_peer(rtc_peer)
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
@@ -264,7 +265,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 
 	assert session_manager.find_session_id(access_token) is None
 	assert asset_store.get_assets(session_id) is None
-	assert rtc_store.has_peer(session_id) is False
+	assert rtc_store.has_peer() is False
 	assert delete_session_response.status_code == 200
 
 	for asset_path in asset_paths:

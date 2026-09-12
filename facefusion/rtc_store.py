@@ -1,27 +1,38 @@
 from typing import Optional
 
-from facefusion import rtc
-from facefusion.types import RtcPeer, RtcStore, SessionId
+from facefusion import rtc, store_creator
+from facefusion.session_manager import resolve_owner_id
+from facefusion.types import RtcPeer, Store
 
-RTC_STORE : RtcStore = {}
-
-
-def has_peer(session_id : SessionId) -> bool:
-	return session_id in RTC_STORE
+RTC_STORE : Store = store_creator.create_store(None)
 
 
-def get_peer(session_id : SessionId) -> Optional[RtcPeer]:
-	return RTC_STORE.get(session_id)
+def init() -> None:
+	owner_id = resolve_owner_id()
+	store_creator.init_content(RTC_STORE, owner_id)
 
 
-def set_peer(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	RTC_STORE[session_id] = rtc_peer
+def has_peer() -> bool:
+	owner_id = resolve_owner_id()
+
+	return bool(store_creator.get_content(RTC_STORE, owner_id))
 
 
-def delete_peer(session_id : SessionId) -> None:
-	if session_id in RTC_STORE:
-		rtc.delete_peer(RTC_STORE.pop(session_id))
+def get_peer() -> Optional[RtcPeer]:
+	owner_id = resolve_owner_id()
+
+	return store_creator.get_content(RTC_STORE, owner_id)
 
 
-def clear() -> None:
-	RTC_STORE.clear()
+def set_peer(rtc_peer : RtcPeer) -> None:
+	owner_id = resolve_owner_id()
+	store_creator.set_content(RTC_STORE, owner_id, rtc_peer)
+
+
+def delete_peer() -> None:
+	owner_id = resolve_owner_id()
+	rtc_peer = store_creator.get_content(RTC_STORE, owner_id)
+
+	if rtc_peer:
+		rtc.delete_peer(rtc_peer)
+		store_creator.init_content(RTC_STORE, owner_id)
