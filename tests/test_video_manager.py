@@ -3,13 +3,13 @@ import tempfile
 import numpy
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, state_manager
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear_video_pool, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, drain_video_reader, get_reader, get_writer, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import clear, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, drain_video_reader, get_reader, get_writer, init, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -18,6 +18,9 @@ def before_all() -> None:
 	state_manager.init()
 
 	process_manager.start()
+
+	init()
+
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
@@ -42,7 +45,23 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	clear_video_pool()
+	clear()
+
+
+def test_init() -> None:
+	local_id = session_context.resolve_local_id()
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
+
+	session_context.set_session_id('session-a')
+	state_manager.init()
+	init()
+
+	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame').get('id') == video_reader.get('id')
+
+	clear()
+	session_context.set_session_id(local_id)
+
+	assert get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame') is video_reader
 
 
 def test_get_reader() -> None:
@@ -186,7 +205,7 @@ def test_close_video_writer() -> None:
 	assert close_video_writer(video_writer) is True
 
 
-def test_clear_video_pool() -> None:
+def test_clear() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(state_manager.get_temp_path(), target_path)
 	video_reader = get_reader(target_path, 'select_video_frames')
@@ -194,7 +213,7 @@ def test_clear_video_pool() -> None:
 
 	read_video_frames(video_reader, 0, 4)
 	write_video_frame(video_writer, read_video_frame(video_reader))
-	clear_video_pool()
+	clear()
 
 	if is_windows():
 		assert video_reader.get('process').returncode == 1
