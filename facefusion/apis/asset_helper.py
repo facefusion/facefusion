@@ -65,7 +65,10 @@ def validate_frame_resolution(resolution : str) -> bool:
 	resolution_limit = 4096
 	frame_width, frame_height = unpack_resolution(resolution)
 
-	return frame_width < resolution_limit and frame_height < resolution_limit
+	if frame_width > resolution_limit or frame_height > resolution_limit:
+		return False
+
+	return True
 
 
 def validate_file_size(upload_files : List[UploadFile]) -> bool:
