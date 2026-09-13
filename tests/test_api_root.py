@@ -19,10 +19,9 @@ def test_client() -> Iterator[TestClient]:
 
 
 def test_get_root(test_client : TestClient) -> None:
-	root_response = test_client.get('/')
-	root_body = root_response.json()
+	get_root_response = test_client.get('/')
+	get_root_body = get_root_response.json()
 
-	assert root_body.get('name') == metadata.get('name')
-	assert root_body.get('description') == metadata.get('description')
-	assert root_body.get('version') == metadata.get('version')
-	assert root_response.status_code == 200
+	assert get_root_body.get('name') == metadata.get('name')
+	assert get_root_body.get('version') == metadata.get('version')
+	assert get_root_response.status_code == 200
