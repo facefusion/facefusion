@@ -247,6 +247,15 @@ def test_submit_jobs(test_client : TestClient) -> None:
 	assert find_job_ids('queued') == [ 'job-test-submit-jobs' ]
 	assert submit_jobs_response.status_code == 200
 
+	submit_jobs_response = test_client.patch('/jobs?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_jobs_body = submit_jobs_response.json()
+
+	assert submit_jobs_body.get('message') == 'jobs not submitted'
+	assert submit_jobs_response.status_code == 409
+
 
 def test_submit_job(test_client : TestClient) -> None:
 	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=submit')
@@ -300,6 +309,15 @@ def test_submit_job(test_client : TestClient) -> None:
 	assert find_job_ids('queued') == [ 'job-test-submit-job' ]
 	assert submit_job_response.status_code == 200
 
+	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	submit_job_body = submit_job_response.json()
+
+	assert submit_job_body.get('message') == 'job not submitted'
+	assert submit_job_response.status_code == 409
+
 
 def test_run_jobs(test_client : TestClient) -> None:
 	run_jobs_response = test_client.patch('/jobs?action=run')
@@ -321,7 +339,7 @@ def test_run_jobs(test_client : TestClient) -> None:
 	})
 	run_jobs_body = run_jobs_response.json()
 
-	assert run_jobs_body.get('message') == 'jobs not run'
+	assert run_jobs_body.get('message') == 'jobs not started'
 	assert run_jobs_response.status_code == 400
 
 	create_job('job-test-run-jobs')
@@ -371,7 +389,7 @@ def test_run_job(test_client : TestClient) -> None:
 	})
 	run_job_body = run_job_response.json()
 
-	assert run_job_body.get('message') == 'job not run'
+	assert run_job_body.get('message') == 'job not started'
 	assert run_job_response.status_code == 400
 
 	test_client.post('/jobs/job-test-run-job?action=add', headers =
@@ -447,6 +465,17 @@ def test_retry_jobs(test_client : TestClient) -> None:
 		assert retry_jobs_response.status_code == 202
 		assert retry_jobs_mock.called is True
 
+	create_job('job-test-retry-jobs-queued')
+	move_job_file('job-test-retry-jobs-queued', 'queued')
+	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	retry_jobs_body = retry_jobs_response.json()
+
+	assert retry_jobs_body.get('message') == 'jobs not retried'
+	assert retry_jobs_response.status_code == 409
+
 
 def test_retry_job(test_client : TestClient) -> None:
 	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry')
@@ -496,6 +525,17 @@ def test_retry_job(test_client : TestClient) -> None:
 		assert retry_job_body.get('message') == 'ok'
 		assert retry_job_response.status_code == 202
 		assert retry_job_mock.called is True
+
+	create_job('job-test-retry-job-queued')
+	move_job_file('job-test-retry-job-queued', 'queued')
+	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	retry_job_body = retry_job_response.json()
+
+	assert retry_job_body.get('message') == 'job not retried'
+	assert retry_job_response.status_code == 409
 
 
 def test_delete_jobs(test_client : TestClient) -> None:

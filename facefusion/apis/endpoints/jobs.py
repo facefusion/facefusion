@@ -4,7 +4,7 @@ from functools import partial
 from starlette.background import BackgroundTask, BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
 import facefusion.choices
 import facefusion.core
@@ -69,6 +69,12 @@ async def update_jobs(request : Request) -> JSONResponse:
 	action = request.query_params.get('action')
 
 	if action == 'submit':
+		if job_manager.find_job_ids('queued'):
+			return JSONResponse(
+			{
+				'message': translator.get('job_all_not_submitted', 'facefusion.apis')
+			}, status_code = HTTP_409_CONFLICT)
+
 		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
 			return JSONResponse(
 			{
@@ -91,10 +97,16 @@ async def update_jobs(request : Request) -> JSONResponse:
 
 		return JSONResponse(
 		{
-			'message': translator.get('job_all_not_run', 'facefusion.apis')
+			'message': translator.get('job_all_not_started', 'facefusion.apis')
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
+		if job_manager.find_job_ids('queued'):
+			return JSONResponse(
+			{
+				'message': translator.get('job_all_not_retried', 'facefusion.apis')
+			}, status_code = HTTP_409_CONFLICT)
+
 		if job_manager.find_job_ids('failed'):
 			retry_jobs_task = BackgroundTask(partial(job_runner.retry_jobs, facefusion.core.process_step, state_manager.get_item('halt_on_error')))
 
@@ -119,6 +131,12 @@ async def update_job(request : Request) -> JSONResponse:
 	action = request.query_params.get('action')
 
 	if action == 'submit':
+		if job_manager.find_job_ids('queued'):
+			return JSONResponse(
+			{
+				'message': translator.get('job_not_submitted', 'facefusion.apis')
+			}, status_code = HTTP_409_CONFLICT)
+
 		if job_manager.submit_job(job_id):
 			return JSONResponse(
 			{
@@ -143,10 +161,16 @@ async def update_job(request : Request) -> JSONResponse:
 
 		return JSONResponse(
 		{
-			'message': translator.get('job_not_run', 'facefusion.apis')
+			'message': translator.get('job_not_started', 'facefusion.apis')
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
+		if job_manager.find_job_ids('queued'):
+			return JSONResponse(
+			{
+				'message': translator.get('job_not_retried', 'facefusion.apis')
+			}, status_code = HTTP_409_CONFLICT)
+
 		if job_id in job_manager.find_job_ids('failed'):
 			retry_job_tasks = BackgroundTasks()
 			retry_job_tasks.add_task(partial(job_runner.retry_job, job_id, facefusion.core.process_step))
