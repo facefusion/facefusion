@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import translator
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_frame_resolution, validate_file_size
+from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_file_size, validate_frame_resolution
 from facefusion.filesystem import remove_file
 from facefusion.vision import is_vision_frames, to_strip_buffer
 
