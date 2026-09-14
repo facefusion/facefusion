@@ -65,6 +65,16 @@ def find_api_session_id(access_token : str) -> Optional[SessionId]:
 	return None
 
 
+def count_api_sessions() -> int:
+	session_total = 0
+
+	for session_id in API_SESSIONS:
+		if validate_api_session(session_id):
+			session_total += 1
+
+	return session_total
+
+
 def resolve_owner_id() -> SessionId:
 	session_id = get_session_id()
 	cli_session = get_cli_session(session_id)

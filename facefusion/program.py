@@ -947,6 +947,14 @@ def create_api_program() -> ArgumentParser:
 		default = config.get_str_value('api', 'api_security_strategy', 'strict'),
 		choices = facefusion.choices.api_security_strategies
 	)
+	group_api.add_argument(
+		'--api-session-limit',
+		help = translator.get('help.api_session_limit'),
+		type = int,
+		default = config.get_int_value('api', 'api_session_limit', '1'),
+		choices = facefusion.choices.api_session_limit_range,
+		metavar = create_int_metavar(facefusion.choices.api_session_limit_range)
+	)
 
 	return program
 

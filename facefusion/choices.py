@@ -162,6 +162,7 @@ progress_action_set : ProgressActionSet =\
 
 job_statuses : List[JobStatus] = list(get_args(JobStatus))
 
+api_session_limit_range : Sequence[int] = create_int_range(1, 100, 1)
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
 face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)

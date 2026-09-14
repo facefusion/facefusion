@@ -2,7 +2,7 @@ import secrets
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, translator, video_manager
 from facefusion.apis import asset_store
@@ -14,30 +14,37 @@ from facefusion.jobs import job_manager
 
 async def create_session(request : Request) -> JSONResponse:
 	body = await request.json()
+	session_limit = state_manager.get_item('api_session_limit')
 
 	if validate_api_key(body.get('api_key')):
-		session_id = secrets.token_urlsafe(16)
-		session = session_manager.create_api_session()
-		session_context.set_session_id(session_id)
-		session_manager.set_api_session(session_id, session)
+		if session_manager.count_api_sessions() < session_limit:
+			session_id = secrets.token_urlsafe(16)
+			session = session_manager.create_api_session()
+			session_context.set_session_id(session_id)
+			session_manager.set_api_session(session_id, session)
 
-		state_manager.init()
-		asset_store.init()
-		content_store.init()
-		face_store.init()
-		inference_manager.init()
-		video_manager.init()
-		process_manager.init()
-		rtc_store.init()
+			state_manager.init()
+			asset_store.init()
+			content_store.init()
+			face_store.init()
+			inference_manager.init()
+			video_manager.init()
+			process_manager.init()
+			rtc_store.init()
 
-		jobs_path = state_manager.get_jobs_path()
-		job_manager.init_jobs(jobs_path)
+			jobs_path = state_manager.get_jobs_path()
+			job_manager.init_jobs(jobs_path)
+
+			return JSONResponse(
+			{
+				'access_token': session.get('access_token'),
+				'refresh_token': session.get('refresh_token')
+			}, status_code = HTTP_201_CREATED)
 
 		return JSONResponse(
 		{
-			'access_token': session.get('access_token'),
-			'refresh_token': session.get('refresh_token')
-		}, status_code = HTTP_201_CREATED)
+			'message': translator.get('session_limit_reached', 'facefusion.apis')
+		}, status_code = HTTP_503_SERVICE_UNAVAILABLE)
 
 	return JSONResponse(
 	{

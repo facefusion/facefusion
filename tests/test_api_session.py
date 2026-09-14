@@ -37,6 +37,7 @@ def before_each() -> Iterator[None]:
 	session_context.set_session_id(local_id)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
+	state_manager.init_item('api_session_limit', 10)
 	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 

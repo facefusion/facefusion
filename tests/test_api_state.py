@@ -15,6 +15,7 @@ from .assert_helper import get_test_example_file, get_test_examples_directory, g
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
+	state_manager.init_item('api_session_limit', 10)
 
 	process_manager.start()
 	program = ArgumentParser()
