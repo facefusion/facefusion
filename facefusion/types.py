@@ -234,7 +234,7 @@ VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'm
 
 AssetId : TypeAlias = str
 AssetType = Literal['source', 'target', 'output']
-MediaType = Literal['image', 'video', 'audio']
+MediaType = Literal['audio', 'image', 'video']
 AudioMetadata = TypedDict('AudioMetadata',
 {
 	'duration' : Duration,

@@ -62,7 +62,7 @@ async def get_asset(request : Request) -> Response:
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'download':
-		if asset:
+		if asset and asset.get('media') in [ 'audio', 'image', 'video' ]:
 			asset_path = asset.get('path')
 
 			if os.path.exists(asset_path):
