@@ -38,11 +38,12 @@ async def get_assets(request : Request) -> Response:
 
 
 async def get_asset(request : Request) -> Response:
+	action = request.query_params.get('action')
 	asset_id = request.path_params.get('asset_id')
 	asset = asset_store.get_asset(asset_id)
 
-	if asset:
-		if asset.get('media') in [ 'image', 'video' ] and request.query_params.get('action') == 'capture':
+	if action == 'capture':
+		if asset and asset.get('media') in [ 'image', 'video' ]:
 			resolution = request.query_params.get('resolution')
 			frame_indexes = request.query_params.getlist('frame_index')
 			vision_frames = []
@@ -58,14 +59,18 @@ async def get_asset(request : Request) -> Response:
 			if is_vision_frames(vision_frames):
 				return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
 
-			return Response(status_code = HTTP_400_BAD_REQUEST)
+		return Response(status_code = HTTP_400_BAD_REQUEST)
 
-		if request.query_params.get('action') == 'download':
+	if action == 'download':
+		if asset:
 			asset_path = asset.get('path')
 
 			if os.path.exists(asset_path):
 				return FileResponse(asset_path, filename = asset.get('name'))
 
+		return Response(status_code = HTTP_400_BAD_REQUEST)
+
+	if asset:
 		return JSONResponse(
 		{
 			'id': asset.get('id'),
