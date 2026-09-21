@@ -1,5 +1,7 @@
 import importlib
 import random
+import threading
+from contextvars import copy_context
 from functools import lru_cache
 from time import sleep, time
 from typing import List, Optional
@@ -11,7 +13,7 @@ from facefusion.common_helper import is_windows
 from facefusion.execution import create_inference_providers, get_onnxruntime_version, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
-from facefusion.session_manager import resolve_owner_id
+from facefusion.session_manager import resolve_owner_id, validate_api_session
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferenceProvider, Store
 
@@ -21,6 +23,14 @@ INFERENCE_POOL_STORE : Store = store_creator.create_store({})
 def init() -> None:
 	owner_id = resolve_owner_id()
 	store_creator.init_content(INFERENCE_POOL_STORE, owner_id)
+
+
+def listen() -> None:
+	threading.Thread(
+		target = copy_context().run,
+		args = (conditional_destroy,),
+		daemon = True
+	).start()
 
 
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
@@ -91,6 +101,15 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 def clear() -> None:
 	owner_id = resolve_owner_id()
 	store_creator.init_content(INFERENCE_POOL_STORE, owner_id)
+
+
+def conditional_destroy() -> None:
+	owner_id = resolve_owner_id()
+
+	while validate_api_session(owner_id):
+		sleep(10)
+
+	store_creator.delete_content(INFERENCE_POOL_STORE, owner_id)
 
 
 def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> InferenceSession:

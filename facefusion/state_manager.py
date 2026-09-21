@@ -1,11 +1,14 @@
 import os
+import threading
+from contextvars import copy_context
 from copy import deepcopy
+from time import sleep
 from typing import Union
 
 from facefusion import store_creator
 from facefusion.processors.types import ProcessorState, ProcessorStateKey
 from facefusion.session_context import get_session_id, resolve_local_id
-from facefusion.session_manager import resolve_owner_id
+from facefusion.session_manager import resolve_owner_id, validate_api_session
 from facefusion.types import Args, State, StateKey, StateValue, Store
 
 STATE_SET : Store = store_creator.create_store({})
@@ -19,6 +22,14 @@ def init() -> None:
 		store_creator.init_content(STATE_SET, session_id)
 	else:
 		store_creator.set_content(STATE_SET, session_id, deepcopy(store_creator.get_content(STATE_SET, local_id)))
+
+
+def listen() -> None:
+	threading.Thread(
+		target = copy_context().run,
+		args = (conditional_destroy,),
+		daemon = True
+	).start()
 
 
 def get_state() -> Union[State, ProcessorState]:
@@ -41,6 +52,15 @@ def clone_state() -> None:
 def clear() -> None:
 	session_id = get_session_id()
 	store_creator.init_content(STATE_SET, session_id)
+
+
+def conditional_destroy() -> None:
+	session_id = get_session_id()
+
+	while validate_api_session(session_id):
+		sleep(10)
+
+	store_creator.delete_content(STATE_SET, session_id)
 
 
 def collect_state(args : Args) -> Union[State, ProcessorState]:

@@ -1,12 +1,15 @@
+import threading
 import uuid
+from contextvars import copy_context
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Optional, cast
 
 from facefusion import store_creator
 from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata
 from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
 from facefusion.filesystem import get_file_format, get_file_name, get_file_size
-from facefusion.session_manager import resolve_owner_id
+from facefusion.session_manager import resolve_owner_id, validate_api_session
 from facefusion.types import AssetId, AssetSet, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, Store, VideoAsset, VideoFormat
 
 ASSET_STORE : Store = store_creator.create_store({})
@@ -15,6 +18,14 @@ ASSET_STORE : Store = store_creator.create_store({})
 def init() -> None:
 	owner_id = resolve_owner_id()
 	store_creator.init_content(ASSET_STORE, owner_id)
+
+
+def listen() -> None:
+	threading.Thread(
+		target = copy_context().run,
+		args = (conditional_destroy,),
+		daemon = True
+	).start()
 
 
 def create_asset(asset_type : AssetType, asset_path : str) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
@@ -95,3 +106,12 @@ def delete_asset(asset_id : AssetId) -> None:
 def delete_assets() -> None:
 	owner_id = resolve_owner_id()
 	store_creator.init_content(ASSET_STORE, owner_id)
+
+
+def conditional_destroy() -> None:
+	owner_id = resolve_owner_id()
+
+	while validate_api_session(owner_id):
+		sleep(10)
+
+	store_creator.delete_content(ASSET_STORE, owner_id)

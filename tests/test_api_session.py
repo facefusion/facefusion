@@ -1,4 +1,3 @@
-import ctypes
 import os
 import tempfile
 from datetime import timedelta
@@ -8,12 +7,12 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, process_manager, rtc, rtc_store, session_context, session_manager, state_manager, store_creator
+from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, video_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import ApiSession, RtcPeer
+from facefusion.types import ApiSession
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
 
@@ -265,31 +264,70 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 404
 
-	peer_connection = rtc.create_peer_connection()
-	rtc_peer : RtcPeer =\
-	{
-		'peer_connection': peer_connection,
-		'video':
-		{
-			'sender_track': rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96),
-			'receiver_track': 0,
-			'codec': 'vp8'
-		},
-		'sender_bitrate': ctypes.c_uint(0),
-		'receiver_bitrate': ctypes.c_uint(0)
-	}
-	session_context.set_session_id(session_id)
-	rtc_store.set_peer(rtc_peer)
-
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 
 	assert session_manager.find_api_session_id(access_token) is None
-	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
-	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
 	assert delete_session_response.status_code == 200
 
 	for asset_path in asset_paths:
 		assert os.path.exists(asset_path) is False
+
+
+def test_conditional_destroy(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session : ApiSession = session_manager.get_api_session(session_id)
+	local_id = session_context.resolve_local_id()
+
+	session_manager.set_api_session(session_id,
+	{
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at'),
+		'expires_at': session.get('expires_at') - timedelta(hours = 1)
+	})
+	session_context.set_session_id(session_id)
+
+	assert session_manager.validate_api_session(session_id) is False
+	assert store_creator.has_content(state_manager.STATE_SET, session_id) is True
+	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is True
+	assert store_creator.has_content(content_store.CONTENT_STORE, session_id) is True
+	assert store_creator.has_content(face_store.FACE_STORE, session_id) is True
+	assert store_creator.has_content(inference_manager.INFERENCE_POOL_STORE, session_id) is True
+	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is True
+	assert store_creator.has_content(process_manager.PROCESS_STORE, session_id) is True
+	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is True
+
+	state_manager.conditional_destroy()
+	asset_store.conditional_destroy()
+	content_store.conditional_destroy()
+	face_store.conditional_destroy()
+	inference_manager.conditional_destroy()
+	video_manager.conditional_destroy()
+	process_manager.conditional_destroy()
+	rtc_store.conditional_destroy()
+	session_manager.conditional_destroy()
+
+	assert store_creator.has_content(state_manager.STATE_SET, session_id) is False
+	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
+	assert store_creator.has_content(content_store.CONTENT_STORE, session_id) is False
+	assert store_creator.has_content(face_store.FACE_STORE, session_id) is False
+	assert store_creator.has_content(inference_manager.INFERENCE_POOL_STORE, session_id) is False
+	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is False
+	assert store_creator.has_content(process_manager.PROCESS_STORE, session_id) is False
+	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
+	assert store_creator.has_content(state_manager.STATE_SET, local_id) is True
+	assert session_manager.get_api_session(session_id) is None
+
+	video_manager.conditional_destroy()
+	rtc_store.conditional_destroy()
+
+	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is False
+	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False

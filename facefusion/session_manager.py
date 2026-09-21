@@ -1,5 +1,8 @@
 import secrets
+import threading
+from contextvars import copy_context
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Dict
 from typing import Optional
 
@@ -110,3 +113,20 @@ def clear_api_session(session_id : SessionId) -> None:
 def clear_cli_session(session_id : SessionId) -> None:
 	if session_id in CLI_SESSIONS:
 		del CLI_SESSIONS[session_id]
+
+
+def listen() -> None:
+	threading.Thread(
+		target = copy_context().run,
+		args = (conditional_destroy,),
+		daemon = True
+	).start()
+
+
+def conditional_destroy() -> None:
+	session_id = get_session_id()
+
+	while validate_api_session(session_id):
+		sleep(10)
+
+	clear_api_session(session_id)
