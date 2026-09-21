@@ -62,7 +62,7 @@ def destroy_audio_decoder(audio_codec : AudioCodec, audio_decoder : OpusDecoder)
 def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], audio_buffer : Buffer, audio_timestamp : int) -> None:
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 
-	if audio_frame:
+	if audio_frame and audio_queue.qsize() < audio_queue.maxsize:
 		audio_frame = numpy.frombuffer(audio_frame, dtype = numpy.float32)
 		audio_time = rtc.convert_timestamp_to_time(audio_codec, audio_timestamp)
 		audio_queue.put((audio_time, audio_frame))
