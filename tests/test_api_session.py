@@ -98,6 +98,8 @@ def test_create_session(test_client : TestClient) -> None:
 
 	del os.environ['FACEFUSION_API_KEY']
 
+	assert test_client.post('/session', content = 'invalid').status_code == 400
+
 
 def test_get_session(test_client : TestClient) -> None:
 	get_session_response = test_client.get('/session')
@@ -200,6 +202,8 @@ def test_refresh_session(test_client : TestClient) -> None:
 	})
 
 	assert refresh_session_response.status_code == 401
+
+	assert test_client.put('/session', content = 'invalid').status_code == 400
 
 
 def test_destroy_session(test_client : TestClient) -> None:

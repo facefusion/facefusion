@@ -16,6 +16,7 @@ from facefusion.apis.endpoints.root import get_root
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
+from facefusion.apis.middlewares.exception import create_exception_guard
 from facefusion.apis.middlewares.session import create_session_guard
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 
@@ -68,6 +69,7 @@ def create_api() -> Starlette:
 	]
 
 	api = Starlette(routes = routes)
+	api.add_middleware(create_exception_guard)
 	api.add_middleware(CORSMiddleware, allow_origins = [ '*' ], allow_methods = [ '*' ], allow_headers = [ '*' ])
 
 	return api
