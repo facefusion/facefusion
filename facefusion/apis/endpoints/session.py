@@ -21,6 +21,7 @@ async def create_session(request : Request) -> JSONResponse:
 			session = session_manager.create_api_session()
 			session_context.set_session_id(session_id)
 			session_manager.set_api_session(session_id, session)
+			session_manager.observe_api_session(session_id)
 
 			state_manager.init()
 			asset_store.init()
@@ -30,11 +31,10 @@ async def create_session(request : Request) -> JSONResponse:
 			video_manager.init()
 			process_manager.init()
 			rtc_store.init()
+			store_manager.observe_session(session_id)
 
 			jobs_path = state_manager.get_jobs_path()
 			job_manager.init_jobs(jobs_path)
-			session_manager.observe_api_session(session_id)
-			store_manager.observe_session(session_id)
 
 			return JSONResponse(
 			{
