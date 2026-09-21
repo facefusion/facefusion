@@ -3,6 +3,7 @@ from typing import List
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
+from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
@@ -70,6 +71,7 @@ def create_api() -> Starlette:
 
 	api = Starlette(routes = routes)
 	api.add_middleware(create_exception_guard)
+	api.add_middleware(RequestBodyLimitMiddleware, max_body_size = 512 * 1024 * 1024)
 	api.add_middleware(CORSMiddleware, allow_origins = [ '*' ], allow_methods = [ '*' ], allow_headers = [ '*' ])
 
 	return api
