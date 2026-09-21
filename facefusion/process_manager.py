@@ -1,11 +1,6 @@
-import threading
-from contextvars import copy_context
-from time import sleep
-
 from facefusion import store_creator
 from facefusion.session_context import get_session_id
-from facefusion.session_manager import validate_api_session
-from facefusion.types import ProcessState, Store
+from facefusion.types import ProcessState, SessionId, Store
 
 PROCESS_STORE : Store = store_creator.create_store('pending')
 
@@ -13,14 +8,6 @@ PROCESS_STORE : Store = store_creator.create_store('pending')
 def init() -> None:
 	session_id = get_session_id()
 	store_creator.init_content(PROCESS_STORE, session_id)
-
-
-def listen() -> None:
-	threading.Thread(
-		target = copy_context().run,
-		args = (conditional_destroy,),
-		daemon = True
-	).start()
 
 
 def get_state() -> ProcessState:
@@ -71,10 +58,6 @@ def clear() -> None:
 	store_creator.init_content(PROCESS_STORE, session_id)
 
 
-def conditional_destroy() -> None:
-	session_id = get_session_id()
-
-	while validate_api_session(session_id):
-		sleep(10)
-
+def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(PROCESS_STORE, session_id)
+

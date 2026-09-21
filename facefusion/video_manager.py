@@ -1,9 +1,6 @@
 import hashlib
-import threading
 import uuid
-from contextvars import copy_context
 from io import BufferedReader
-from time import sleep
 from typing import Optional, cast
 
 import numpy
@@ -11,8 +8,7 @@ import numpy
 from facefusion import ffmpeg, ffprobe, frame_store, store_creator, vision
 from facefusion.common_helper import get_first, get_last
 from facefusion.session_context import get_session_id
-from facefusion.session_manager import validate_api_session
-from facefusion.types import Fps, Resolution, Store, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
+from facefusion.types import Fps, Resolution, SessionId, Store, VideoReader, VideoWriter, VisionFrame, VisionFrameSet
 
 VIDEO_POOL_STORE : Store = store_creator.create_store(
 {
@@ -24,14 +20,6 @@ VIDEO_POOL_STORE : Store = store_creator.create_store(
 def init() -> None:
 	session_id = get_session_id()
 	store_creator.init_content(VIDEO_POOL_STORE, session_id)
-
-
-def listen() -> None:
-	threading.Thread(
-		target = copy_context().run,
-		args = (conditional_destroy,),
-		daemon = True
-	).start()
 
 
 def get_reader(video_path : str, context : str) -> VideoReader:
@@ -180,12 +168,7 @@ def clear() -> None:
 	store_creator.init_content(VIDEO_POOL_STORE, session_id)
 
 
-def conditional_destroy() -> None:
-	session_id = get_session_id()
-
-	while validate_api_session(session_id):
-		sleep(10)
-
+def destroy(session_id : SessionId) -> None:
 	video_pool = store_creator.get_content(VIDEO_POOL_STORE, session_id)
 
 	if video_pool:

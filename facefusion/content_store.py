@@ -1,11 +1,6 @@
-import threading
-from contextvars import copy_context
-from time import sleep
-
 from facefusion import store_creator
 from facefusion.session_context import get_session_id
-from facefusion.session_manager import validate_api_session
-from facefusion.types import Store
+from facefusion.types import SessionId, Store
 
 CONTENT_STORE : Store = store_creator.create_store(
 {
@@ -17,14 +12,6 @@ CONTENT_STORE : Store = store_creator.create_store(
 def init() -> None:
 	session_id = get_session_id()
 	store_creator.init_content(CONTENT_STORE, session_id)
-
-
-def listen() -> None:
-	threading.Thread(
-		target = copy_context().run,
-		args = (conditional_destroy,),
-		daemon = True
-	).start()
 
 
 def tick(step : int = 30) -> bool:
@@ -62,10 +49,6 @@ def clear() -> None:
 	store_creator.init_content(CONTENT_STORE, session_id)
 
 
-def conditional_destroy() -> None:
-	session_id = get_session_id()
-
-	while validate_api_session(session_id):
-		sleep(10)
-
+def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(CONTENT_STORE, session_id)
+

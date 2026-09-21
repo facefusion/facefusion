@@ -2,9 +2,9 @@ import secrets
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_429_TOO_MANY_REQUESTS
 
-from facefusion import content_store, face_store, inference_manager, process_manager, rtc_store, session_context, session_manager, state_manager, translator, video_manager
+from facefusion import content_store, face_store, inference_manager, process_manager, rtc_store, session_context, session_manager, state_manager, store_manager, translator, video_manager
 from facefusion.apis import asset_store
 from facefusion.apis.session_helper import validate_api_key
 from facefusion.filesystem import is_directory, remove_directory
@@ -21,34 +21,20 @@ async def create_session(request : Request) -> JSONResponse:
 			session = session_manager.create_api_session()
 			session_context.set_session_id(session_id)
 			session_manager.set_api_session(session_id, session)
-			session_manager.listen()
 
 			state_manager.init()
-			state_manager.listen()
-
 			asset_store.init()
-			asset_store.listen()
-
 			content_store.init()
-			content_store.listen()
-
 			face_store.init()
-			face_store.listen()
-
 			inference_manager.init()
-			inference_manager.listen()
-
 			video_manager.init()
-			video_manager.listen()
-
 			process_manager.init()
-			process_manager.listen()
-
 			rtc_store.init()
-			rtc_store.listen()
 
 			jobs_path = state_manager.get_jobs_path()
 			job_manager.init_jobs(jobs_path)
+			session_manager.observe_api_session(session_id)
+			store_manager.observe_session(session_id)
 
 			return JSONResponse(
 			{
@@ -59,7 +45,7 @@ async def create_session(request : Request) -> JSONResponse:
 		return JSONResponse(
 		{
 			'message': translator.get('session_limit_reached', 'facefusion.apis')
-		}, status_code = HTTP_503_SERVICE_UNAVAILABLE)
+		}, status_code = HTTP_429_TOO_MANY_REQUESTS)
 
 	return JSONResponse(
 	{
@@ -118,6 +104,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 		}, status_code = HTTP_404_NOT_FOUND)
 
 	session_manager.clear_api_session(session_id)
+	store_manager.destroy(session_id)
 
 	return JSONResponse(
 	{

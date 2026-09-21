@@ -1,7 +1,7 @@
 import secrets
 import threading
-from contextvars import copy_context
 from datetime import datetime, timedelta
+from functools import partial
 from time import sleep
 from typing import Dict
 from typing import Optional
@@ -33,6 +33,13 @@ def create_cli_session() -> CliSession:
 	}
 
 	return cli_session
+
+
+def observe_api_session(session_id : SessionId) -> None:
+	threading.Thread(
+		target = partial(conditional_clear_api_session, session_id),
+		daemon = True
+	).start()
 
 
 def fork_session() -> SessionId:
@@ -115,17 +122,7 @@ def clear_cli_session(session_id : SessionId) -> None:
 		del CLI_SESSIONS[session_id]
 
 
-def listen() -> None:
-	threading.Thread(
-		target = copy_context().run,
-		args = (conditional_destroy,),
-		daemon = True
-	).start()
-
-
-def conditional_destroy() -> None:
-	session_id = get_session_id()
-
+def conditional_clear_api_session(session_id : SessionId) -> None:
 	while validate_api_session(session_id):
 		sleep(10)
 

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, video_manager
+from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, store_manager, video_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -270,13 +270,14 @@ def test_destroy_session(test_client : TestClient) -> None:
 	})
 
 	assert session_manager.find_api_session_id(access_token) is None
+	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
 	assert delete_session_response.status_code == 200
 
 	for asset_path in asset_paths:
 		assert os.path.exists(asset_path) is False
 
 
-def test_conditional_destroy(test_client : TestClient) -> None:
+def test_destroy_session_content(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -293,9 +294,9 @@ def test_conditional_destroy(test_client : TestClient) -> None:
 		(content_store, content_store.CONTENT_STORE),
 		(face_store, face_store.FACE_STORE),
 		(inference_manager, inference_manager.INFERENCE_POOL_STORE),
-		(video_manager, video_manager.VIDEO_POOL_STORE),
 		(process_manager, process_manager.PROCESS_STORE),
-		(rtc_store, rtc_store.RTC_STORE)
+		(rtc_store, rtc_store.RTC_STORE),
+		(video_manager, video_manager.VIDEO_POOL_STORE)
 	]
 
 	session_manager.set_api_session(session_id,
@@ -305,23 +306,19 @@ def test_conditional_destroy(test_client : TestClient) -> None:
 		'created_at': session.get('created_at'),
 		'expires_at': session.get('expires_at') - timedelta(hours = 1)
 	})
-	session_context.set_session_id(session_id)
-
-	assert session_manager.validate_api_session(session_id) is False
 
 	for session_module, store in stores:
 		assert store_creator.has_content(store, session_id) is True
 
-		session_module.conditional_destroy()
+	store_manager.destroy(session_id)
+	session_manager.conditional_clear_api_session(session_id)
 
+	for session_module, store in stores:
 		assert store_creator.has_content(store, session_id) is False
 
-	session_manager.conditional_destroy()
+		session_module.destroy(session_id)
+
+		assert store_creator.has_content(store, session_id) is False
 
 	assert store_creator.has_content(state_manager.STATE_SET, local_id) is True
 	assert session_manager.get_api_session(session_id) is None
-
-	for session_module, store in stores:
-		session_module.conditional_destroy()
-
-		assert store_creator.has_content(store, session_id) is False
