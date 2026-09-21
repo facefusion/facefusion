@@ -286,6 +286,18 @@ def test_conditional_destroy(test_client : TestClient) -> None:
 	session : ApiSession = session_manager.get_api_session(session_id)
 	local_id = session_context.resolve_local_id()
 
+	stores =\
+	[
+		(state_manager, state_manager.STATE_SET),
+		(asset_store, asset_store.ASSET_STORE),
+		(content_store, content_store.CONTENT_STORE),
+		(face_store, face_store.FACE_STORE),
+		(inference_manager, inference_manager.INFERENCE_POOL_STORE),
+		(video_manager, video_manager.VIDEO_POOL_STORE),
+		(process_manager, process_manager.PROCESS_STORE),
+		(rtc_store, rtc_store.RTC_STORE)
+	]
+
 	session_manager.set_api_session(session_id,
 	{
 		'access_token': session.get('access_token'),
@@ -296,38 +308,20 @@ def test_conditional_destroy(test_client : TestClient) -> None:
 	session_context.set_session_id(session_id)
 
 	assert session_manager.validate_api_session(session_id) is False
-	assert store_creator.has_content(state_manager.STATE_SET, session_id) is True
-	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is True
-	assert store_creator.has_content(content_store.CONTENT_STORE, session_id) is True
-	assert store_creator.has_content(face_store.FACE_STORE, session_id) is True
-	assert store_creator.has_content(inference_manager.INFERENCE_POOL_STORE, session_id) is True
-	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is True
-	assert store_creator.has_content(process_manager.PROCESS_STORE, session_id) is True
-	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is True
 
-	state_manager.conditional_destroy()
-	asset_store.conditional_destroy()
-	content_store.conditional_destroy()
-	face_store.conditional_destroy()
-	inference_manager.conditional_destroy()
-	video_manager.conditional_destroy()
-	process_manager.conditional_destroy()
-	rtc_store.conditional_destroy()
+	for session_module, store in stores:
+		assert store_creator.has_content(store, session_id) is True
+
+		session_module.conditional_destroy()
+
+		assert store_creator.has_content(store, session_id) is False
+
 	session_manager.conditional_destroy()
 
-	assert store_creator.has_content(state_manager.STATE_SET, session_id) is False
-	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
-	assert store_creator.has_content(content_store.CONTENT_STORE, session_id) is False
-	assert store_creator.has_content(face_store.FACE_STORE, session_id) is False
-	assert store_creator.has_content(inference_manager.INFERENCE_POOL_STORE, session_id) is False
-	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is False
-	assert store_creator.has_content(process_manager.PROCESS_STORE, session_id) is False
-	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
 	assert store_creator.has_content(state_manager.STATE_SET, local_id) is True
 	assert session_manager.get_api_session(session_id) is None
 
-	video_manager.conditional_destroy()
-	rtc_store.conditional_destroy()
+	for session_module, store in stores:
+		session_module.conditional_destroy()
 
-	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, session_id) is False
-	assert store_creator.has_content(rtc_store.RTC_STORE, session_id) is False
+		assert store_creator.has_content(store, session_id) is False
