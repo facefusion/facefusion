@@ -6,7 +6,7 @@ from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
-from facefusion.jobs.job_runner import collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
+from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
 from facefusion.types import Args
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
@@ -287,6 +287,35 @@ def test_finalize_steps() -> None:
 	assert is_test_output_file('output-2.mp4') is True
 	assert is_test_output_file('output-3.jpg') is True
 	assert is_test_output_sequence(get_test_output_path('output-4')) is True
+
+
+def test_clean_steps() -> None:
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('output-1.mp4')
+	}
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_output_path('output-2.jpg')
+	}
+
+	create_job('job-test-clean-steps')
+	add_step('job-test-clean-steps', args_1)
+	add_step('job-test-clean-steps', args_2)
+
+	copy_file(args_1.get('target_path'), get_test_output_path('output-1-job-test-clean-steps-0.mp4'))
+	copy_file(args_2.get('target_path'), get_test_output_path('output-2-job-test-clean-steps-1.jpg'))
+
+	assert is_test_output_file('output-1-job-test-clean-steps-0.mp4') is True
+	assert is_test_output_file('output-2-job-test-clean-steps-1.jpg') is True
+
+	assert clean_steps('job-test-clean-steps') is True
+	assert is_test_output_file('output-1-job-test-clean-steps-0.mp4') is False
+	assert is_test_output_file('output-2-job-test-clean-steps-1.jpg') is False
 
 
 def test_collect_output_set() -> None:

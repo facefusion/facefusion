@@ -187,10 +187,12 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotation_matrix, rotation_size = create_rotation_matrix_and_size(face_angle, model_size)
+
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, model_size)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotation_matrix, rotation_size)
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+
 	face_landmark_68, face_heatmap = forward_with_2dfan4(crop_vision_frame)
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64 * 256
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotation_matrix))
@@ -198,6 +200,7 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 	face_landmark_score_68 = numpy.amax(face_heatmap, axis = (2, 3))
 	face_landmark_score_68 = numpy.mean(face_landmark_score_68)
 	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0, 0.9 ], [ 0, 1 ])
+
 	return face_landmark_68, face_landmark_score_68
 
 
@@ -224,17 +227,20 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotation_matrix, rotation_size = create_rotation_matrix_and_size(face_angle, model_size)
+
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, model_size)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotation_matrix, rotation_size)
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
+
 	prediction = forward_with_peppa_wutz(crop_vision_frame)
 	face_landmark_68 = prediction.reshape(-1, 3)[:, :2] / 64 * model_size[0]
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotation_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_score_68 = prediction.reshape(-1, 3)[:, 2].mean()
 	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0, 0.95 ], [ 0, 1 ])
+
 	return face_landmark_68, face_landmark_score_68
 
 
