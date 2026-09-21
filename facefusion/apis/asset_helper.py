@@ -71,16 +71,6 @@ def validate_frame_resolution(resolution : str) -> bool:
 	return True
 
 
-def validate_file_size(upload_files : List[UploadFile]) -> bool:
-	size_limit = 512 * 1024 * 1024
-
-	for upload_file in upload_files:
-		if upload_file.size > size_limit:
-			return False
-
-	return True
-
-
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')

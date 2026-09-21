@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import translator
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_file_size, validate_frame_resolution
+from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_frame_resolution
 from facefusion.filesystem import remove_file
 from facefusion.vision import is_vision_frames, to_strip_buffer
 
@@ -97,7 +97,7 @@ async def upload_assets(request : Request) -> Response:
 		form = await request.form()
 		upload_files = form.getlist('file')
 
-		if upload_files and validate_file_size(upload_files) and validate_asset_files(upload_files):
+		if upload_files and validate_asset_files(upload_files):
 			asset_paths = await save_asset_files(upload_files)
 
 			if asset_paths:
