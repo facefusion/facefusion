@@ -46,10 +46,12 @@ def resolve_lock(vision_frame : VisionFrame) -> threading.Lock:
 
 	if is_vision_frame(vision_frame):
 		vision_hash = create_hash(vision_frame.tobytes())
+
 		return face_store.setdefault(vision_hash,
 		{
 			'lock': threading.Lock()
 		}).get('lock')
+
 	return threading.Lock()
 
 
