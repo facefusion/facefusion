@@ -11,7 +11,6 @@ def setup() -> None:
 
 	if not environment_ready:
 		if is_linux():
-			os.environ['OMP_NUM_THREADS'] = '1'
 			os.environ['MALLOC_ARENA_MAX'] = '4'
 			os.environ['ENVIRONMENT_READY'] = '1'
 
@@ -32,7 +31,6 @@ def setup() -> None:
 			os.execv(sys.executable, [ sys.executable ] + sys.argv)
 
 		if is_windows():
-			os.environ['OMP_NUM_THREADS'] = '1'
 			os.environ['ENVIRONMENT_READY'] = '1'
 
 			if conda_prefix:
