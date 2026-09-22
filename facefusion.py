@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import os
+from facefusion import environment
 
-os.environ['OMP_NUM_THREADS'] = '1'
+environment.setup()
 
-from facefusion import conda, core
+from facefusion import core
 
 if __name__ == '__main__':
-	conda.setup()
 	core.cli()
