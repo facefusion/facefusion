@@ -42,7 +42,25 @@ async def get_job(request : Request) -> JSONResponse:
 	job = job_manager.read_job_file(job_id)
 
 	if job:
-		return JSONResponse(job, status_code = HTTP_200_OK)
+		steps = []
+
+		for job_step in job.get('steps'):
+			steps.append(
+			{
+				'args':
+				{
+					'processors': job_step.get('args').get('processors')
+				},
+				'status': job_step.get('status')
+			})
+
+		return JSONResponse(
+		{
+			'version': job.get('version'),
+			'date_created': job.get('date_created'),
+			'date_updated': job.get('date_updated'),
+			'steps': steps
+		}, status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{

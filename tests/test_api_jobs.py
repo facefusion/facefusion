@@ -1,4 +1,3 @@
-import os
 from typing import Iterator
 from unittest.mock import patch
 
@@ -646,16 +645,15 @@ def test_create_step(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	get_job_body = get_job_response.json()
-	step_args = get_job_body.get('steps')[0].get('args')
+	job_step = get_job_body.get('steps')[0]
 
-	access_session_id = session_manager.find_api_session_id(access_token)
-
-	assert step_args ==\
+	assert job_step ==\
 	{
-		'processors': [ 'face_swapper' ],
-		'source_paths': [ get_test_example_file('source.jpg') ],
-		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': os.path.join(get_test_jobs_directory(), access_session_id, 'job-test-create-step.mp4')
+		'args':
+		{
+			'processors': [ 'face_swapper' ]
+		},
+		'status': 'drafted'
 	}
 
 	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
