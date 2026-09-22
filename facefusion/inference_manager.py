@@ -4,7 +4,7 @@ from functools import lru_cache
 from time import sleep, time
 from typing import List, Optional
 
-from onnxruntime import InferenceSession
+import onnxruntime
 
 from facefusion import logger, process_manager, state_manager, store_creator, translator
 from facefusion.common_helper import is_windows
@@ -97,12 +97,12 @@ def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(INFERENCE_POOL_STORE, session_id)
 
 
-def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> InferenceSession:
+def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> onnxruntime.InferenceSession:
 	model_file_name = get_file_name(model_path)
 	start_time = time()
 
 	try:
-		inference_session = InferenceSession(model_path, providers = inference_providers)
+		inference_session = onnxruntime.InferenceSession(model_path, providers = inference_providers)
 		logger.debug(translator.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 
