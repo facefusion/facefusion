@@ -10,14 +10,17 @@ from facefusion import translator
 
 def create_exception_guard(app : ASGIApp) -> ASGIApp:
 	async def middleware(scope : Scope, receive : Receive, send : Send) -> None:
-		try:
-			await app(scope, receive, send)
-		except (ClientDisconnect, JSONDecodeError):
-			response = JSONResponse(
-			{
-				'message': translator.get('something_went_wrong', 'facefusion.apis')
-			}, status_code = HTTP_400_BAD_REQUEST)
+		if scope.get('type') == 'http':
+			try:
+				return await app(scope, receive, send)
+			except (ClientDisconnect, JSONDecodeError, UnicodeDecodeError):
+				response = JSONResponse(
+				{
+					'message': translator.get('something_went_wrong', 'facefusion.apis')
+				}, status_code = HTTP_400_BAD_REQUEST)
 
-			await response(scope, receive, send)
+				return await response(scope, receive, send)
+
+		return await app(scope, receive, send)
 
 	return middleware
