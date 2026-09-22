@@ -200,8 +200,11 @@ def pack_resolution(resolution : Resolution) -> str:
 
 
 def unpack_resolution(resolution : str) -> Resolution:
-	width, height = map(int, resolution.split('x'))
-	return width, height
+	width, _, height = resolution.partition('x')
+
+	if width.isdigit() and height.isdigit():
+		return int(width), int(height)
+	return 0, 0
 
 
 def detect_frame_orientation(vision_frame : VisionFrame) -> Orientation:

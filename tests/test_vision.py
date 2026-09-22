@@ -240,6 +240,7 @@ def test_pack_resolution() -> None:
 def test_unpack_resolution() -> None:
 	assert unpack_resolution('0x0') == (0, 0)
 	assert unpack_resolution('2x2') == (2, 2)
+	assert unpack_resolution('invalid') == (0, 0)
 
 
 def test_calc_histogram_difference() -> None:

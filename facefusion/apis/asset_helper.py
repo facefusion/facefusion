@@ -62,13 +62,16 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 
 
 def validate_frame_resolution(resolution : str) -> bool:
-	resolution_limit = 4096
-	frame_width, frame_height = unpack_resolution(resolution)
+	resolution_min = 64
+	resolution_max = 4096
 
-	if frame_width > resolution_limit or frame_height > resolution_limit:
-		return False
+	if resolution:
+		frame_width, frame_height = unpack_resolution(resolution)
 
-	return True
+		if resolution_min < frame_width < resolution_max and resolution_min < frame_height < resolution_max:
+			return True
+
+	return False
 
 
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
