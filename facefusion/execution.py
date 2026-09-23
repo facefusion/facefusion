@@ -66,7 +66,7 @@ def create_inference_providers(execution_device_id : int, execution_providers : 
 				})
 			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), inference_option_set))
 
-		if execution_provider in [ 'directml', 'rocm' ]:
+		if execution_provider == 'directml':
 			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id

@@ -411,8 +411,8 @@ ModelInitializer : TypeAlias = NDArray[Any]
 LibraryOptions : TypeAlias = Dict[str, Any]
 LibrarySet : TypeAlias = Dict[str, LibraryOptions]
 
-ExecutionProvider = Literal['cuda', 'tensorrt', 'rocm', 'migraphx', 'coreml', 'openvino', 'qnn', 'directml', 'cpu']
-ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'MIGraphXExecutionProvider', 'QNNExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
+ExecutionProvider = Literal['cuda', 'tensorrt', 'migraphx', 'coreml', 'openvino', 'qnn', 'directml', 'cpu']
+ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'MIGraphXExecutionProvider', 'QNNExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet : TypeAlias = Dict[ExecutionProvider, ExecutionProviderValue]
 InferenceProvider : TypeAlias = Any
 InferenceOptionSet : TypeAlias = Dict[str, Any]

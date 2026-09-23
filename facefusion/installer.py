@@ -31,7 +31,6 @@ if is_windows():
 	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '2.5.0')
 if is_linux():
 	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.27.1')
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.22.2.post3')
 
 
 def cli() -> None:

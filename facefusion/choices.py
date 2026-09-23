@@ -107,7 +107,6 @@ execution_provider_set : ExecutionProviderSet =\
 {
 	'cuda': 'CUDAExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider',
-	'rocm': 'ROCMExecutionProvider',
 	'migraphx': 'MIGraphXExecutionProvider',
 	'coreml': 'CoreMLExecutionProvider',
 	'openvino': 'OpenVINOExecutionProvider',
