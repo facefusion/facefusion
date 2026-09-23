@@ -103,7 +103,10 @@ def create_inference_session(model_path : str, inference_providers : List[Infere
 
 	try:
 		session_options = onnxruntime.SessionOptions()
-		session_options.intra_op_num_threads = 1
+
+		if has_execution_provider('cuda') or has_execution_provider('tensorrt'):
+			session_options.intra_op_num_threads = 1
+
 		inference_session = onnxruntime.InferenceSession(model_path, session_options, inference_providers)
 		logger.debug(translator.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
