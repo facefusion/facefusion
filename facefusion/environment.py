@@ -1,6 +1,8 @@
 import os
+import signal
+import subprocess
 import sys
-from typing import List
+from typing import List, NoReturn
 
 from facefusion.common_helper import is_linux, is_windows
 
@@ -16,7 +18,7 @@ def setup() -> None:
 			setup_windows()
 
 
-def setup_linux() -> None:
+def setup_linux() -> NoReturn:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 
 	os.environ['OMP_NUM_THREADS'] = '1'
@@ -40,7 +42,7 @@ def setup_linux() -> None:
 	os.execv(sys.executable, [ sys.executable ] + sys.argv)
 
 
-def setup_windows() -> None:
+def setup_windows() -> NoReturn:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 
 	os.environ['OMP_NUM_THREADS'] = '1'
@@ -58,3 +60,7 @@ def setup_windows() -> None:
 			if os.getenv('PATH'):
 				library_paths.append(os.getenv('PATH'))
 			os.environ['PATH'] = os.pathsep.join(library_paths)
+
+	signal.signal(signal.SIGINT, signal.SIG_IGN)
+	process = subprocess.run([ sys.executable ] + sys.argv)
+	sys.exit(process.returncode)
