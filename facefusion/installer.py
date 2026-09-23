@@ -6,6 +6,7 @@ import sys
 from argparse import ArgumentParser, HelpFormatter
 from functools import partial
 from types import FrameType
+from typing import NoReturn
 
 from facefusion import metadata
 from facefusion.common_helper import is_linux, is_windows
@@ -43,7 +44,7 @@ def cli() -> None:
 	run(program)
 
 
-def signal_exit(signum : int, frame : FrameType) -> None:
+def signal_exit(signum : int, frame : FrameType) -> NoReturn:
 	sys.exit(0)
 
 
