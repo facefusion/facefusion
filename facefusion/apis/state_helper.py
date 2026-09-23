@@ -12,6 +12,9 @@ def validate_argument_value(key : StateKey, value : StateValue) -> bool:
 	if State.__annotations__.get(key) is bool:
 		return isinstance(value, bool)
 
+	if State.__annotations__.get(key) is list:
+		return isinstance(value, list)
+
 	return True
 
 
@@ -23,9 +26,6 @@ def cast_argument_value(key : StateKey, value : StateValue) -> StateValue:
 		return cast_float(value)
 
 	if State.__annotations__.get(key) is bool:
-		if isinstance(value, bool):
-			return value
-
 		return cast_bool(value)
 
 	return value

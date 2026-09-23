@@ -34,9 +34,10 @@ async def set_state(request : Request) -> Response:
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
 
+		choices = capability_store.get_api_capability_set().get(key).get('choices')
 		__value__ = cast_argument_value(key, value)
 
-		if not validate_argument_value(key, __value__):
+		if not validate_argument_value(key, __value__) or choices and __value__ not in choices:
 			return JSONResponse(
 			{
 				'message': translator.get('invalid_state_value', 'facefusion.apis')
