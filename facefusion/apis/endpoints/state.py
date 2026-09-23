@@ -4,6 +4,7 @@ from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOU
 
 from facefusion import args_helper, capability_store, state_manager, translator
 from facefusion.apis import asset_store
+from facefusion.apis.state_helper import cast_argument_value, validate_argument_value
 
 
 async def get_state(request : Request) -> JSONResponse:
@@ -33,7 +34,15 @@ async def set_state(request : Request) -> Response:
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
 
-		__api_args__[key] = value
+		__value__ = cast_argument_value(key, value)
+
+		if not validate_argument_value(key, __value__):
+			return JSONResponse(
+			{
+				'message': translator.get('invalid_state_value', 'facefusion.apis')
+			}, status_code = HTTP_400_BAD_REQUEST)
+
+		__api_args__[key] = __value__
 
 	if __api_args__:
 

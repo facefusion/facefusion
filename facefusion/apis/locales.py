@@ -11,6 +11,7 @@ LOCALES : Locales =\
 		'invalid_refresh_token': 'invalid refresh token',
 		'session_limit_reached': 'session limit reached',
 		'invalid_state_key': 'invalid state key',
+		'invalid_state_value': 'invalid state value',
 		'source_asset_not_found': 'source asset not found',
 		'target_asset_not_found': 'target asset not found',
 		'invalid_job_status': 'invalid job status',
