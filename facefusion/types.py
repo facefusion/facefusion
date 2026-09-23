@@ -469,8 +469,8 @@ MemoryMetrics = TypedDict('MemoryMetrics',
 })
 NetworkMetrics = TypedDict('NetworkMetrics',
 {
-	'sent' : ValueAndUnit,
-	'received' : ValueAndUnit
+	'up' : ValueAndUnit,
+	'down' : ValueAndUnit
 })
 ProcessorMetrics = TypedDict('ProcessorMetrics',
 {

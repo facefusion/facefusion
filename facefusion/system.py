@@ -259,12 +259,12 @@ def detect_network_metrics() -> NetworkMetrics:
 
 	return\
 	{
-		'sent':
+		'up':
 		{
 			'value': int(network_io.bytes_sent / (1024 * 1024)),
 			'unit': 'MB'
 		},
-		'received':
+		'down':
 		{
 			'value': int(network_io.bytes_recv / (1024 * 1024)),
 			'unit': 'MB'

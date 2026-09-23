@@ -97,12 +97,14 @@ def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(INFERENCE_POOL_STORE, session_id)
 
 
-def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> onnxruntime.InferenceSession:
+def create_inference_session(model_path : str, inference_providers : List[InferenceProvider]) -> Optional[onnxruntime.InferenceSession]:
 	model_file_name = get_file_name(model_path)
 	start_time = time()
 
 	try:
-		inference_session = onnxruntime.InferenceSession(model_path, providers = inference_providers)
+		session_options = onnxruntime.SessionOptions()
+		session_options.intra_op_num_threads = 1
+		inference_session = onnxruntime.InferenceSession(model_path, session_options, inference_providers)
 		logger.debug(translator.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 

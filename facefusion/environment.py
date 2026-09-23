@@ -19,6 +19,7 @@ def setup() -> None:
 def setup_linux() -> None:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 
+	os.environ['OMP_NUM_THREADS'] = '1'
 	os.environ['MALLOC_ARENA_MAX'] = '4'
 	os.environ['ENVIRONMENT_READY'] = '1'
 
@@ -42,6 +43,7 @@ def setup_linux() -> None:
 def setup_windows() -> None:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 
+	os.environ['OMP_NUM_THREADS'] = '1'
 	os.environ['ENVIRONMENT_READY'] = '1'
 
 	if conda_prefix:
