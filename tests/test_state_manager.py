@@ -45,7 +45,7 @@ def test_get_state() -> None:
 
 
 def test_set_state() -> None:
-	set_state({ 'video_memory_strategy': 'strict' })
+	set_state({ 'video_memory_strategy': 'strict' }) #type:ignore[arg-type]
 
 	assert get_state() == { 'video_memory_strategy': 'strict' }
 
