@@ -1,7 +1,8 @@
-from typing import Literal, get_args, get_origin
+from typing import Literal, get_origin
 
 from facefusion import capability_store
 from facefusion.common_helper import cast_bool, cast_float, cast_int
+from facefusion.normalizer import normalize_color, normalize_space
 from facefusion.processors.types import ProcessorState
 from facefusion.types import State, StateKey, StateValue
 
@@ -22,9 +23,12 @@ def validate_argument_value(key : StateKey, value : StateValue) -> bool:
 
 	if get_origin(argument_type) is list:
 		if choices:
-			return isinstance(value, list) and value in choices
+			return isinstance(value, list) and all(choice in choices for choice in value)
 
 		return isinstance(value, list)
+
+	if get_origin(argument_type) is tuple:
+		return isinstance(value, tuple)
 
 	if get_origin(argument_type) is Literal:
 		if choices:
@@ -46,5 +50,11 @@ def cast_argument_value(key : StateKey, value : StateValue) -> StateValue:
 
 	if argument_type is bool:
 		return cast_bool(value)
+
+	if key in [ 'face_detector_margin', 'face_mask_padding' ]:
+		return normalize_space(value)
+
+	if key in [ 'background_remover_fill_color', 'background_remover_despill_color' ]:
+		return normalize_color(value)
 
 	return value

@@ -102,8 +102,7 @@ Fps : TypeAlias = float
 Duration : TypeAlias = float
 Time : TypeAlias = float
 Color : TypeAlias = Tuple[int, int, int, int]
-Padding : TypeAlias = Tuple[int, int, int, int]
-Margin : TypeAlias = Tuple[int, int, int, int]
+Space : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
@@ -621,7 +620,7 @@ State = TypedDict('State',
 	'benchmark_cycle_count' : int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
-	'face_detector_margin' : Margin,
+	'face_detector_margin' : Space,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_aligner_model' : FaceAlignerModel,
@@ -642,7 +641,7 @@ State = TypedDict('State',
 	'face_mask_areas' : List[FaceMaskArea],
 	'face_mask_regions' : List[FaceMaskRegion],
 	'face_mask_blur' : float,
-	'face_mask_padding' : Padding,
+	'face_mask_padding' : Space,
 	'voice_extractor_model' : VoiceExtractorModel,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,

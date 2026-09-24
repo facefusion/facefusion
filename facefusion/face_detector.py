@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotation_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, Margin, ModelSet, Score, VisionFrame
+from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, Space, VisionFrame
 from facefusion.vision import restrict_frame, unpack_resolution
 
 
@@ -187,7 +187,7 @@ def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sc
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
 
 
-def prepare_margin(vision_frame : VisionFrame) -> Margin:
+def prepare_margin(vision_frame : VisionFrame) -> Space:
 	margin_top = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[0], [ 0, 100 ], [ 0, 0.5 ]))
 	margin_right = int(vision_frame.shape[1] * numpy.interp(state_manager.get_item('face_detector_margin')[1], [ 0, 100 ], [ 0, 0.5 ]))
 	margin_bottom = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[2], [ 0, 100 ], [ 0, 0.5 ]))

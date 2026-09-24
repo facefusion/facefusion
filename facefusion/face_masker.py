@@ -9,7 +9,7 @@ from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskArea, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskArea, FaceMaskRegion, InferencePool, Mask, ModelSet, Space, VisionFrame
 
 
 @lru_cache()
@@ -185,7 +185,7 @@ def pre_check() -> bool:
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-def create_box_mask(crop_vision_frame : VisionFrame, face_mask_blur : float, face_mask_padding : Padding) -> Mask:
+def create_box_mask(crop_vision_frame : VisionFrame, face_mask_blur : float, face_mask_padding : Space) -> Mask:
 	crop_size = crop_vision_frame.shape[:2][::-1]
 	blur_amount = int(crop_size[0] * 0.5 * face_mask_blur)
 	blur_area = max(blur_amount // 2, 1)
