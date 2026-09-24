@@ -153,10 +153,10 @@ def test_upload_assets(test_client : TestClient) -> None:
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		{
-			'file': ('invalid.txt', 'invalid'.encode(), 'text/plain')
+			'file': ('invalid', 'invalid'.encode())
 		})
 
-		assert upload_response.status_code == 415
+		assert upload_response.status_code == 400
 
 	state_manager.init_item('api_security_strategy', 'strict')
 
