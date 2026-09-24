@@ -2,9 +2,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
-from facefusion import args_helper, capability_store, state_manager, translator
+from facefusion import args_helper, state_manager, translator
 from facefusion.apis import asset_store
-from facefusion.apis.state_helper import cast_argument_value, validate_argument_value
+from facefusion.apis.state_helper import cast_argument_value, validate_argument_key, validate_argument_value
 
 
 async def get_state(request : Request) -> JSONResponse:
@@ -25,19 +25,17 @@ async def set_state(request : Request) -> Response:
 		return await select_target(request)
 
 	body = await request.json()
-	api_args = capability_store.get_api_arguments()
 
 	for key, value in body.items():
-		if key not in api_args:
+		if not validate_argument_key(key):
 			return JSONResponse(
 			{
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
 
-		choices = capability_store.get_api_capability_set().get(key).get('choices')
 		__value__ = cast_argument_value(key, value)
 
-		if not validate_argument_value(key, __value__) or choices and __value__ not in choices:
+		if not validate_argument_value(key, __value__):
 			return JSONResponse(
 			{
 				'message': translator.get('invalid_state_value', 'facefusion.apis')
