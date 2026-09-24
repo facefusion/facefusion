@@ -525,6 +525,7 @@ Job = TypedDict('Job',
 JobSet : TypeAlias = Dict[str, Job]
 
 StateValue : TypeAlias = Any
+StateType : TypeAlias = Any
 StateKey = Literal\
 [
 	'command',

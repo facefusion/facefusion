@@ -1,6 +1,6 @@
 from typing import List, Literal, TypedDict
 
-from facefusion.types import Mask, VisionFrame
+from facefusion.types import Color, Mask, VisionFrame
 
 BackgroundRemoverInputs = TypedDict('BackgroundRemoverInputs',
 {
@@ -10,3 +10,10 @@ BackgroundRemoverInputs = TypedDict('BackgroundRemoverInputs',
 })
 
 BackgroundRemoverModel = Literal['ben_2', 'birefnet_general', 'birefnet_portrait', 'corridor_key_1024', 'corridor_key_2048', 'isnet_general', 'modnet', 'ormbg', 'rmbg_1.4', 'rmbg_2.0', 'silueta', 'u2net_cloth', 'u2net_general', 'u2net_human', 'u2netp']
+
+State = TypedDict('State',
+{
+	'background_remover_model' : BackgroundRemoverModel,
+	'background_remover_fill_color' : Color,
+	'background_remover_despill_color' : Color
+})

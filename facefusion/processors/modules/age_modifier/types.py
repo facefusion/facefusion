@@ -16,3 +16,9 @@ AgeModifierInputs = TypedDict('AgeModifierInputs',
 AgeModifierModel = Literal['fran', 'styleganex_age']
 
 AgeModifierDirection : TypeAlias = NDArray[Any]
+
+State = TypedDict('State',
+{
+	'age_modifier_model' : AgeModifierModel,
+	'age_modifier_direction' : int
+})

@@ -16,3 +16,10 @@ FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 
 FaceEnhancerWeight : TypeAlias = NDArray[Any]
+
+State = TypedDict('State',
+{
+	'face_enhancer_model' : FaceEnhancerModel,
+	'face_enhancer_blend' : int,
+	'face_enhancer_weight' : float
+})

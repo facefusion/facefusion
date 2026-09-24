@@ -16,3 +16,9 @@ DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 DeepSwapperModel : TypeAlias = str
 
 DeepSwapperMorph : TypeAlias = NDArray[Any]
+
+State = TypedDict('State',
+{
+	'deep_swapper_model' : DeepSwapperModel,
+	'deep_swapper_morph' : int
+})

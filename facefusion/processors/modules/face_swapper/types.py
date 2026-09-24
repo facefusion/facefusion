@@ -16,3 +16,10 @@ FaceSwapperModel = Literal['alphaface_256', 'blendswap_256', 'ghost_1_256', 'gho
 FaceSwapperWeight : TypeAlias = float
 
 FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
+
+State = TypedDict('State',
+{
+	'face_swapper_model' : FaceSwapperModel,
+	'face_swapper_pixel_boost' : str,
+	'face_swapper_weight' : FaceSwapperWeight
+})

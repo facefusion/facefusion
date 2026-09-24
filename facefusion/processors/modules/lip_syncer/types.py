@@ -17,3 +17,9 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 LipSyncerModel = Literal['edtalk_256', 'wav2lip_96', 'wav2lip_gan_96']
 
 LipSyncerWeight : TypeAlias = NDArray[Any]
+
+State = TypedDict('State',
+{
+	'lip_syncer_model' : LipSyncerModel,
+	'lip_syncer_weight' : float
+})

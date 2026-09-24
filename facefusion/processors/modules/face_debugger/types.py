@@ -12,3 +12,8 @@ FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 })
 
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask']
+
+State = TypedDict('State',
+{
+	'face_debugger_items' : List[FaceDebuggerItem]
+})
