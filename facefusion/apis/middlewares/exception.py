@@ -1,5 +1,6 @@
 from json import JSONDecodeError
 
+from python_multipart.exceptions import MultipartParseError
 from starlette.requests import ClientDisconnect
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_400_BAD_REQUEST
@@ -14,7 +15,7 @@ def create_exception_guard(app : ASGIApp) -> ASGIApp:
 		if scope.get('type') == 'http':
 			try:
 				return await app(scope, receive, send)
-			except (JSONDecodeError, UnicodeDecodeError):
+			except (JSONDecodeError, MultipartParseError, UnicodeDecodeError):
 				response = JSONResponse(
 				{
 					'message': translator.get('something_went_wrong', 'facefusion.apis')
