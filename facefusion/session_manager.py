@@ -124,6 +124,6 @@ def clear_cli_session(session_id : SessionId) -> None:
 
 def conditional_clear_api_session(session_id : SessionId) -> None:
 	while validate_api_session(session_id):
-		sleep(10)
+		sleep(1)
 
 	clear_api_session(session_id)

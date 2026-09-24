@@ -22,7 +22,7 @@ def observe_session(session_id : SessionId) -> None:
 
 def conditional_destroy(session_id : SessionId) -> None:
 	while session_manager.validate_api_session(session_id):
-		sleep(10)
+		sleep(1)
 
 	destroy(session_id)
 
