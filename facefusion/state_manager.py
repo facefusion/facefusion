@@ -52,7 +52,7 @@ def collect_state(args : Args) -> Union[State, ProcessorState]:
 	{
 		key: get_item(key) for key in args
 	}
-	return state
+	return state #type:ignore[return-value]
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : StateValue) -> None:

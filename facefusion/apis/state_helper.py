@@ -39,7 +39,7 @@ def validate_argument_value(key : StateKey, value : StateValue) -> bool:
 	return True
 
 
-def cast_argument_value(key : StateKey, value : StateValue) -> StateValue:
+def normalize_argument_value(key : StateKey, value : StateValue) -> StateValue:
 	argument_type = (State.__annotations__ | ProcessorState.__annotations__).get(key)
 
 	if argument_type is int:
@@ -51,10 +51,10 @@ def cast_argument_value(key : StateKey, value : StateValue) -> StateValue:
 	if argument_type is bool:
 		return cast_bool(value)
 
-	if key in [ 'face_detector_margin', 'face_mask_padding' ]:
-		return normalize_space(value)
-
 	if key in [ 'background_remover_fill_color', 'background_remover_despill_color' ]:
 		return normalize_color(value)
+
+	if key in [ 'face_detector_margin', 'face_mask_padding' ]:
+		return normalize_space(value)
 
 	return value

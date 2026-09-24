@@ -21,7 +21,7 @@ def thread_semaphore() -> threading.Semaphore:
 
 
 def conditional_thread_semaphore() -> Union[threading.Semaphore, ContextManager[None]]:
-	if is_windows() and has_execution_provider('directml') or is_linux() and has_execution_provider('migraphx') or is_linux() and has_execution_provider('rocm'):
+	if is_windows() and has_execution_provider('directml') or is_linux() and has_execution_provider('migraphx'):
 		return THREAD_SEMAPHORE
 	return NULL_CONTEXT
 
