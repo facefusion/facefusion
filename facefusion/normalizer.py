@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import Any, Optional
 
 from facefusion.types import Color, Fps, Space
 
 
-def normalize_color(channels : Optional[List[int]]) -> Optional[Color]:
-	if isinstance(channels, list):
+def normalize_color(channels : Any) -> Optional[Color]:
+	if isinstance(channels, (list, tuple)):
 		if channels and len(channels) == 1:
 			return tuple([ channels[0], channels[0], channels[0], 255 ]) #type:ignore[return-value]
 		if channels and len(channels) == 2:
@@ -16,8 +16,8 @@ def normalize_color(channels : Optional[List[int]]) -> Optional[Color]:
 	return None
 
 
-def normalize_space(spaces : Optional[List[int]]) -> Optional[Space]:
-	if isinstance(spaces, list):
+def normalize_space(spaces : Any) -> Optional[Space]:
+	if isinstance(spaces, (list, tuple)):
 		if spaces and len(spaces) == 1:
 			return tuple([spaces[0]] * 4) #type:ignore[return-value]
 		if spaces and len(spaces) == 2:
@@ -29,7 +29,7 @@ def normalize_space(spaces : Optional[List[int]]) -> Optional[Space]:
 	return None
 
 
-def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
+def normalize_fps(fps : Any) -> Optional[Fps]:
 	if isinstance(fps, (int, float)):
 		return max(1.0, min(fps, 60.0))
 	return None
