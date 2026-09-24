@@ -58,6 +58,8 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 		if media_type == 'video' and facefusion.choices.video_set.get(file_format) not in available_encoder_set.get('video'): #type:ignore[call-overload]
 			return False
 
+		return media_type in [ 'audio', 'image', 'video' ]
+
 	return True
 
 
