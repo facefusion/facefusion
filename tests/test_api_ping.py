@@ -4,6 +4,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager, state_manager
+from facefusion.apis import websocket_store
 from facefusion.apis.core import create_api
 from .assert_helper import get_test_jobs_directory
 
@@ -38,3 +39,7 @@ def test_ping(test_client : TestClient) -> None:
 		'access_token.' + create_session_body.get('access_token')
 	]) as websocket:
 		assert websocket
+
+		websocket_store.destroy(session_manager.find_api_session_id(create_session_body.get('access_token')))
+
+		assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }

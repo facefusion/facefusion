@@ -91,7 +91,14 @@ def test_stream_image(test_client : TestClient) -> None:
 		websocket.send_bytes(source_content)
 		output_buffer = websocket.receive_bytes()
 
-	assert create_hash(output_buffer) == '0142782f'
+		assert create_hash(output_buffer) == '0142782f'
+
+		test_client.delete('/session', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])

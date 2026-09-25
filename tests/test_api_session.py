@@ -8,7 +8,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, store_manager, video_manager
-from facefusion.apis import asset_store
+from facefusion.apis import asset_store, websocket_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
@@ -300,7 +300,8 @@ def test_destroy_session_content(test_client : TestClient) -> None:
 		(inference_manager, inference_manager.INFERENCE_POOL_STORE),
 		(process_manager, process_manager.PROCESS_STORE),
 		(rtc_store, rtc_store.RTC_STORE),
-		(video_manager, video_manager.VIDEO_POOL_STORE)
+		(video_manager, video_manager.VIDEO_POOL_STORE),
+		(websocket_store, websocket_store.WEBSOCKET_STORE)
 	]
 
 	session_manager.set_api_session(session_id,

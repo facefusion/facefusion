@@ -5,6 +5,7 @@ from pytest_mock import MockerFixture
 from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager, state_manager
+from facefusion.apis import websocket_store
 from facefusion.apis.core import create_api
 from .assert_helper import get_test_jobs_directory
 
@@ -247,3 +248,7 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('processor').get('cores').get('value') == 16
 		assert metrics_set.get('processor').get('frequency').get('value') == 3500
 		assert metrics_set.get('processor').get('utilization').get('value') == 25
+
+		websocket_store.destroy(session_manager.find_api_session_id(create_session_body.get('access_token')))
+
+		assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }

@@ -156,6 +156,15 @@ Content : TypeAlias = Dict[str, Any]
 
 Token : TypeAlias = str
 SessionId : TypeAlias = str
+Websocket : TypeAlias = Any
+WebsocketId : TypeAlias = int
+EventLoopToken : TypeAlias = Any
+SessionWebsocket = TypedDict('SessionWebsocket',
+{
+	'websocket' : Websocket,
+	'event_loop_token' : EventLoopToken
+})
+SessionWebsocketSet : TypeAlias = Dict[WebsocketId, SessionWebsocket]
 ApiSession = TypedDict('ApiSession',
 {
 	'access_token' : Token,
