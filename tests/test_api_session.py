@@ -116,7 +116,9 @@ def test_get_session(test_client : TestClient) -> None:
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
+	get_session_body = get_session_response.json()
 
+	assert get_session_body.get('refresh_token') is None
 	assert get_session_response.status_code == 200
 
 	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))

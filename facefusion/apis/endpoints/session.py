@@ -63,7 +63,6 @@ async def get_session(request : Request) -> JSONResponse:
 	return JSONResponse(
 	{
 		'access_token': session.get('access_token'),
-		'refresh_token': session.get('refresh_token'),
 		'created_at': session.get('created_at').isoformat(),
 		'expires_at': session.get('expires_at').isoformat()
 	}, status_code = HTTP_200_OK)
