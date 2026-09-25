@@ -6,7 +6,7 @@ from time import sleep
 from typing import Dict
 from typing import Optional
 
-from facefusion.session_context import get_session_id, set_session_id
+from facefusion.session_context import get_session_id, resolve_local_id, set_session_id
 from facefusion.types import ApiSession, CliSession, SessionId
 
 API_SESSIONS : Dict[SessionId, ApiSession] = {}
@@ -38,6 +38,13 @@ def create_cli_session() -> CliSession:
 def observe_api_session(session_id : SessionId) -> None:
 	threading.Thread(
 		target = partial(conditional_clear_api_session, session_id),
+		daemon = True
+	).start()
+
+
+def observe_cli_session(session_id : SessionId) -> None:
+	threading.Thread(
+		target = partial(conditional_clear_cli_session, session_id),
 		daemon = True
 	).start()
 
@@ -112,6 +119,16 @@ def validate_api_session(session_id : SessionId) -> bool:
 	return False
 
 
+def validate_cli_session(session_id : SessionId) -> bool:
+	cli_session = get_cli_session(session_id)
+
+	if cli_session:
+		owner_id = cli_session.get('owner_id')
+		return owner_id == resolve_local_id() or validate_api_session(owner_id)
+
+	return False
+
+
 def clear_api_session(session_id : SessionId) -> None:
 	if session_id in API_SESSIONS:
 		del API_SESSIONS[session_id]
@@ -127,3 +144,10 @@ def conditional_clear_api_session(session_id : SessionId) -> None:
 		sleep(1)
 
 	clear_api_session(session_id)
+
+
+def conditional_clear_cli_session(session_id : SessionId) -> None:
+	while validate_cli_session(session_id):
+		sleep(1)
+
+	clear_cli_session(session_id)

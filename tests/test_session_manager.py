@@ -5,7 +5,7 @@ from typing import Iterator
 import pytest
 
 from facefusion.session_context import get_session_id, resolve_local_id, set_session_id
-from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, create_cli_session, find_api_session_id, fork_session, get_api_session, get_cli_session, join_session, resolve_owner_id, set_api_session, set_cli_session, validate_api_session
+from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, create_cli_session, find_api_session_id, fork_session, get_api_session, get_cli_session, join_session, resolve_owner_id, set_api_session, set_cli_session, validate_api_session, validate_cli_session
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -114,6 +114,30 @@ def test_validate_api_session() -> None:
 	clear_api_session(session_id)
 
 	assert validate_api_session(session_id) is False
+
+
+def test_validate_cli_session() -> None:
+	local_fork_id = fork_session()
+
+	assert validate_cli_session(local_fork_id) is True
+
+	join_session()
+
+	assert validate_cli_session(local_fork_id) is False
+
+	session_id = secrets.token_urlsafe(16)
+
+	set_api_session(session_id, create_api_session())
+	set_session_id(session_id)
+	fork_id = fork_session()
+
+	assert validate_cli_session(fork_id) is True
+
+	clear_api_session(session_id)
+
+	assert validate_cli_session(fork_id) is False
+
+	clear_cli_session(fork_id)
 
 
 def test_clear_api_session() -> None:

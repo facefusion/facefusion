@@ -13,15 +13,29 @@ def get_stores() -> List[ModuleType]:
 	return [ state_manager, asset_store, content_store, face_store, inference_manager, process_manager, rtc_store, video_manager ]
 
 
-def observe_session(session_id : SessionId) -> None:
+def observe_api_session(session_id : SessionId) -> None:
 	threading.Thread(
-		target = partial(conditional_destroy, session_id),
+		target = partial(conditional_api_destroy, session_id),
 		daemon = True
 	).start()
 
 
-def conditional_destroy(session_id : SessionId) -> None:
+def observe_cli_session(session_id : SessionId) -> None:
+	threading.Thread(
+		target = partial(conditional_cli_destroy, session_id),
+		daemon = True
+	).start()
+
+
+def conditional_api_destroy(session_id : SessionId) -> None:
 	while session_manager.validate_api_session(session_id):
+		sleep(1)
+
+	destroy(session_id)
+
+
+def conditional_cli_destroy(session_id : SessionId) -> None:
+	while session_manager.validate_cli_session(session_id):
 		sleep(1)
 
 	destroy(session_id)
