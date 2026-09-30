@@ -20,10 +20,10 @@ def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
 
 @lru_cache()
 def get_onnxruntime_version() -> Tuple[int, int, int]:
-	version_split = onnxruntime.__version__.split('.')
+	version_split = onnxruntime.get_version_string().split('.')
 	major_version = int(version_split[0])
 	minor_version = int(version_split[1])
-	patch_version = int(version_split[2].split('+')[0])
+	patch_version = int(version_split[2])
 
 	return major_version, minor_version, patch_version
 
