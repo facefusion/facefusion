@@ -17,7 +17,11 @@ from facefusion.vision import is_vision_frame, obscure_frame, read_static_images
 def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
 	video_time, video_future = video_queue.get()
-	video_pack = video_future.result()
+	video_pack = BufferPack(buffer = bytes(), resolution = (0, 0))
+
+	if not video_future.exception():
+		video_pack = video_future.result()
+
 	video_buffer = video_pack.get('buffer')
 	video_resolution = video_pack.get('resolution')
 
@@ -49,7 +53,10 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Fu
 			frame_index += 1
 
 			video_time, video_future = video_queue.get()
-			video_pack = video_future.result()
+
+			if not video_future.exception():
+				video_pack = video_future.result()
+
 			video_buffer = video_pack.get('buffer')
 			video_resolution = video_pack.get('resolution')
 
