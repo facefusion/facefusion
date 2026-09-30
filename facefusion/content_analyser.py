@@ -1,14 +1,17 @@
 from functools import lru_cache
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy
 from tqdm import tqdm
 
+import facefusion.choices
 from facefusion import inference_manager, state_manager, translator, video_manager
+from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.execution import has_execution_provider
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import Detection, DownloadScope, DownloadSet, Fps, InferencePool, ModelSet, VisionFrame
+from facefusion.types import Detection, DownloadScope, DownloadSet, Fps, InferencePool, InferenceProvider, ModelSet, VisionFrame
 from facefusion.vision import detect_video_fps, fit_contain_frame, is_vision_frame, read_image
 
 STREAM_COUNTER = 0
@@ -115,6 +118,13 @@ def get_inference_pool() -> InferencePool:
 def clear_inference_pool() -> None:
 	model_names = [ 'nsfw_1', 'nsfw_2', 'nsfw_3' ]
 	inference_manager.clear_inference_pool(__name__, model_names)
+
+
+def override_inference_providers() -> List[InferenceProvider]:
+	if is_macos() and has_execution_provider('coreml'):
+		return [ facefusion.choices.execution_provider_set.get('cpu') ]
+
+	return []
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
