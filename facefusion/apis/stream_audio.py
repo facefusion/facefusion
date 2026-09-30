@@ -7,7 +7,7 @@ import numpy
 from facefusion import rtc
 from facefusion.apis.stream_event import create_receive_event, destroy_receive_event
 from facefusion.codecs import opus_decoder, opus_encoder
-from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPeer, RtcPeerAudio, Time
+from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPeer, RtcPeerAudio, Time, Timestamp
 
 
 def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
@@ -59,7 +59,7 @@ def destroy_audio_decoder(audio_codec : AudioCodec, audio_decoder : OpusDecoder)
 		opus_decoder.destroy(audio_decoder)
 
 
-def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], audio_buffer : Buffer, audio_timestamp : int) -> None:
+def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_queue : Queue[Tuple[Time, AudioFrame]], audio_buffer : Buffer, audio_timestamp : Timestamp) -> None:
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 
 	if audio_frame and audio_queue.qsize() < audio_queue.maxsize:

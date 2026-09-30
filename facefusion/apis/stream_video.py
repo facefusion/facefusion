@@ -10,7 +10,7 @@ from facefusion import rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event, destroy_receive_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.content_analyser import analyse_stream
-from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack, Resolution, RtcPeer, RtcPeerVideo, Time, Timestamp, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 from facefusion.vision import is_vision_frame, obscure_frame, read_static_images
 
 
@@ -180,7 +180,7 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : int) -> None:
+def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : Timestamp) -> None:
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if is_vision_frame(vision_frame) and video_queue.qsize() < video_queue.maxsize:

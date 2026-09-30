@@ -101,6 +101,7 @@ SampleRate : TypeAlias = int
 Fps : TypeAlias = float
 Duration : TypeAlias = float
 Time : TypeAlias = float
+Timestamp : TypeAlias = int
 Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
@@ -126,7 +127,7 @@ BufferPack = TypedDict('BufferPack',
 	'resolution' : Resolution
 })
 
-FrameHandler : TypeAlias = Callable[[Buffer, int], None]
+FrameHandler : TypeAlias = Callable[[Buffer, Timestamp], None]
 
 Args : TypeAlias = Dict[str, Any]
 

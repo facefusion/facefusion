@@ -2,7 +2,7 @@ import ctypes
 from typing import Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, BitRate, Buffer, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, Time, VideoCodec
+from facefusion.types import AudioCodec, BitRate, Buffer, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, Time, Timestamp, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -47,7 +47,7 @@ def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffe
 	return None
 
 
-def send_video(rtc_peer : RtcPeer, video_buffer : Buffer, video_timestamp : int) -> None:
+def send_video(rtc_peer : RtcPeer, video_buffer : Buffer, video_timestamp : Timestamp) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peer.get('video'):
@@ -61,7 +61,7 @@ def send_video(rtc_peer : RtcPeer, video_buffer : Buffer, video_timestamp : int)
 	return None
 
 
-def send_audio(rtc_peer : RtcPeer, audio_buffer : Buffer, audio_timestamp : int) -> None:
+def send_audio(rtc_peer : RtcPeer, audio_buffer : Buffer, audio_timestamp : Timestamp) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peer.get('audio'):
@@ -235,13 +235,13 @@ def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> i
 	return 0
 
 
-def convert_time_to_timestamp(codec : AudioCodec | VideoCodec, time : Time) -> int:
+def convert_time_to_timestamp(codec : AudioCodec | VideoCodec, time : Time) -> Timestamp:
 	if codec == 'opus':
 		return int(time * 48000)
 	return int(time * 90000)
 
 
-def convert_timestamp_to_time(codec : AudioCodec | VideoCodec, timestamp : int) -> Time:
+def convert_timestamp_to_time(codec : AudioCodec | VideoCodec, timestamp : Timestamp) -> Time:
 	if codec == 'opus':
 		return timestamp / 48000
 	return timestamp / 90000
