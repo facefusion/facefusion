@@ -19,8 +19,10 @@ def before_all() -> None:
 
 @pytest.mark.parametrize('onnxruntime_version, is_shared',
 [
-	((1, 24, 4), True),
+	((1, 25, 1), True),
 	((1, 26, 0), False),
+	((1, 27, 0), False),
+	((1, 28, 0), False),
 	((1, 29, 0), True)
 ])
 def test_get_inference_pool(onnxruntime_version : Tuple[int, int, int], is_shared : bool) -> None:

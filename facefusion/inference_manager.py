@@ -28,7 +28,7 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
-	has_arena_leak = has_execution_provider('cuda') and (1, 24, 4) < get_onnxruntime_version() < (1, 29, 0)
+	has_arena_leak = has_execution_provider('cuda') and (1, 25, 1) < get_onnxruntime_version() < (1, 29, 0)
 	app_context = detect_app_context()
 
 	for execution_device_id in execution_device_ids:
