@@ -20,7 +20,7 @@ LOCALES =\
 }
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.29.0')
+	'default': ('onnxruntime', '1.30.0')
 }
 if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda@12'] = ('onnxruntime-gpu', '1.24.4')
