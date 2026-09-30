@@ -31,7 +31,7 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	inference_pool_set = store_creator.get_content(INFERENCE_POOL_STORE, owner_id)
 	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = state_manager.get_item('execution_providers')
-	has_arena_leak = has_execution_provider('cuda') and get_onnxruntime_version() > (1, 24, 4)
+	has_arena_leak = has_execution_provider('cuda') and (1, 25, 1) < get_onnxruntime_version() < (1, 29, 0)
 
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)

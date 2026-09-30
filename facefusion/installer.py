@@ -24,11 +24,11 @@ ONNXRUNTIME_SET =\
 }
 if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda@12'] = ('onnxruntime-gpu', '1.24.4')
-	ONNXRUNTIME_SET['cuda@13'] = ('onnxruntime-gpu', '1.29.0')
+	ONNXRUNTIME_SET['cuda@13'] = ('onnxruntime-gpu', '1.30.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.24.1')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.24.4')
-	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '2.5.0')
+	ONNXRUNTIME_SET['qnn'] = ('onnxruntime-qnn', '2.6.0')
 if is_linux():
 	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.27.1')
 

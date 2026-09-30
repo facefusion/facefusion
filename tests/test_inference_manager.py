@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import Iterator
+from typing import Iterator, Tuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -51,35 +51,32 @@ def test_init() -> None:
 	assert get_inference_pool('facefusion.content_analyser', model_names, model_source_set) is local_inference_pool
 
 
-def test_get_inference_pool() -> None:
+@pytest.mark.parametrize('onnxruntime_version, is_shared',
+[
+	((1, 25, 1), True),
+	((1, 26, 0), False),
+	((1, 27, 0), False),
+	((1, 28, 0), False),
+	((1, 29, 0), True)
+])
+def test_get_inference_pool(onnxruntime_version : Tuple[int, int, int], is_shared : bool) -> None:
 	model_names = [ 'nsfw_1', 'nsfw_2', 'nsfw_3' ]
 	_, model_source_set = content_analyser.collect_model_downloads()
 
 	with patch('facefusion.inference_manager.has_execution_provider', return_value = True):
-		with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = (1, 26, 0)):
+		with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = onnxruntime_version):
 			session_context.set_session_id('session-a')
 			state_manager.init()
 			init()
 			session_a_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
-
-			assert isinstance(session_a_inference_pool.get('nsfw_1'), InferenceSession)
 
 			session_context.set_session_id('session-b')
 			state_manager.init()
 			init()
 			session_b_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
-			assert isinstance(session_b_inference_pool.get('nsfw_1'), InferenceSession)
-			assert not session_a_inference_pool.get('nsfw_1') is session_b_inference_pool.get('nsfw_1')
-
-	with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = (1, 24, 4)):
-		session_context.set_session_id('session-c')
-		state_manager.init()
-		init()
-		session_c_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
-
-		assert isinstance(session_c_inference_pool.get('nsfw_1'), InferenceSession)
-		assert session_c_inference_pool.get('nsfw_1') is session_a_inference_pool.get('nsfw_1')
+	assert isinstance(session_a_inference_pool.get('nsfw_1'), InferenceSession)
+	assert (session_a_inference_pool.get('nsfw_1') is session_b_inference_pool.get('nsfw_1')) == is_shared
 
 
 def test_clear() -> None:
