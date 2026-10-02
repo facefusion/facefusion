@@ -1,3 +1,4 @@
+import os
 from typing import Iterator
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ from facefusion import metadata, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_steps_status
+from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, get_steps, init_jobs, move_job_file, set_steps_status
 from facefusion.program import create_program
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
@@ -83,7 +84,7 @@ def test_get_jobs(test_client : TestClient) -> None:
 	})
 	get_jobs_body = get_jobs_response.json()
 
-	assert 'job-test-get-jobs' in get_jobs_body
+	assert list(get_jobs_body.get('job-test-get-jobs').keys()) == [ 'version', 'date_created', 'date_updated' ]
 	assert get_jobs_response.status_code == 200
 
 	create_session_response = test_client.post('/session', json =
@@ -280,6 +281,14 @@ def test_submit_job(test_client : TestClient) -> None:
 	assert submit_job_body.get('message') == 'invalid job action'
 	assert submit_job_response.status_code == 400
 
+	submit_job_response = test_client.patch('/jobs/job-test-submit-job', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert submit_job_response.json().get('message') == 'invalid job action'
+	assert submit_job_response.status_code == 400
+
 	create_job('job-test-submit-job')
 
 	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=submit', headers =
@@ -298,6 +307,21 @@ def test_submit_job(test_client : TestClient) -> None:
 	{
 		'processors': [ 'face_swapper' ]
 	})
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert submit_job_response.json().get('message') == 'job not submitted'
+	assert find_job_ids('drafted') == [ 'job-test-submit-job' ]
+	assert submit_job_response.status_code == 400
 
 	submit_job_response = test_client.patch('/jobs/job-test-submit-job?action=submit', headers =
 	{
@@ -405,15 +429,30 @@ def test_run_job(test_client : TestClient) -> None:
 	})
 
 	with patch('facefusion.jobs.job_runner.run_job', return_value = True) as run_job_mock:
-		run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
+		with patch('facefusion.apis.jobs_helper.capture_output_asset') as capture_output_asset_mock:
+			run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			})
+			run_job_body = run_job_response.json()
+
+			assert run_job_body.get('message') == 'ok'
+			assert run_job_response.status_code == 202
+			assert run_job_mock.call_args.args[0] == 'job-test-run-job'
+			assert capture_output_asset_mock.call_args.args[0] == 'job-test-run-job'
+
+	create_job('job-test-run-job-drafted')
+
+	with patch('facefusion.jobs.job_runner.run_job', return_value = True) as run_job_mock:
+		run_job_response = test_client.patch('/jobs/job-test-run-job-drafted?action=run', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		})
 		run_job_body = run_job_response.json()
 
-		assert run_job_body.get('message') == 'ok'
-		assert run_job_response.status_code == 202
-		assert run_job_mock.called is True
+		assert run_job_body.get('message') == 'job not started'
+		assert run_job_mock.called is False
+		assert run_job_response.status_code == 400
 
 
 def test_retry_jobs(test_client : TestClient) -> None:
@@ -516,15 +555,30 @@ def test_retry_job(test_client : TestClient) -> None:
 	move_job_file('job-test-retry-job', 'failed')
 
 	with patch('facefusion.jobs.job_runner.retry_job', return_value = True) as retry_job_mock:
-		retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
+		with patch('facefusion.apis.jobs_helper.capture_output_asset') as capture_output_asset_mock:
+			retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			})
+			retry_job_body = retry_job_response.json()
+
+			assert retry_job_body.get('message') == 'ok'
+			assert retry_job_response.status_code == 202
+			assert retry_job_mock.call_args.args[0] == 'job-test-retry-job'
+			assert capture_output_asset_mock.call_args.args[0] == 'job-test-retry-job'
+
+	create_job('job-test-retry-job-drafted')
+
+	with patch('facefusion.jobs.job_runner.retry_job', return_value = True) as retry_job_mock:
+		retry_job_response = test_client.patch('/jobs/job-test-retry-job-drafted?action=retry', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		})
 		retry_job_body = retry_job_response.json()
 
-		assert retry_job_body.get('message') == 'ok'
-		assert retry_job_response.status_code == 202
-		assert retry_job_mock.called is True
+		assert retry_job_body.get('message') == 'job not retried'
+		assert retry_job_mock.called is False
+		assert retry_job_response.status_code == 400
 
 	create_job('job-test-retry-job-queued')
 	move_job_file('job-test-retry-job-queued', 'queued')
@@ -598,6 +652,21 @@ def test_delete_job(test_client : TestClient) -> None:
 
 	create_job('job-test-delete-job')
 
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	delete_job_response = test_client.delete('/jobs/job-test-delete-job', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert delete_job_response.json().get('message') == 'job not deleted'
+	assert find_job_ids('drafted') == [ 'job-test-delete-job' ]
+	assert delete_job_response.status_code == 404
+
 	delete_job_response = test_client.delete('/jobs/job-test-delete-job', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
@@ -656,18 +725,47 @@ def test_create_step(test_client : TestClient) -> None:
 		'status': 'drafted'
 	}
 
-	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ],
+		'jobs_path': 'invalid',
+		'temp_path': 'invalid',
+		'output_path': 'invalid',
+		'execution_providers': [ 'invalid' ]
+	})
+	step_args = get_steps('job-test-create-step')[1].get('args')
+
+	assert step_args.get('processors') == [ 'face_swapper' ]
+	assert step_args.get('jobs_path') is None
+	assert step_args.get('temp_path') is None
+	assert step_args.get('execution_providers') is None
+	assert step_args.get('source_paths') == [ get_test_example_file('source.jpg') ]
+	assert step_args.get('target_path') == get_test_example_file('target-240p.mp4')
+	assert step_args.get('output_path') == os.path.join(get_test_jobs_directory(), session_id, 'job-test-create-step.mp4')
+	assert create_step_response.status_code == 201
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
 	}, json =
 	{
 		'processors': [ 'face_swapper' ]
 	})
 
+	assert create_step_response.json().get('message') == 'step not added'
 	assert count_step_total('job-test-create-step') == 2
-	assert create_step_response.status_code == 201
+	assert create_step_response.status_code == 400
 
-	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=remix', headers =
+	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=insert', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	}, json =
@@ -677,6 +775,41 @@ def test_create_step(test_client : TestClient) -> None:
 
 	assert count_step_total('job-test-create-step') == 3
 	assert create_step_response.status_code == 201
+
+	create_step_response = test_client.post('/jobs/job-test-create-step/9?action=insert', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert create_step_response.json().get('message') == 'step not inserted'
+	assert count_step_total('job-test-create-step') == 3
+	assert create_step_response.status_code == 400
+
+	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=remix', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert count_step_total('job-test-create-step') == 4
+	assert create_step_response.status_code == 201
+
+	create_step_response = test_client.post('/jobs/job-test-create-step/9?action=remix', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	assert create_step_response.json().get('message') == 'step not remixed'
+	assert count_step_total('job-test-create-step') == 4
+	assert create_step_response.status_code == 400
 
 	create_step_response = test_client.post('/jobs/job-test-create-step?action=invalid', headers =
 	{
@@ -723,6 +856,29 @@ def test_delete_step(test_client : TestClient) -> None:
 	{
 		'processors': [ 'face_swapper' ]
 	})
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert delete_step_response.json().get('message') == 'step not removed'
+	assert count_step_total('job-test-delete-step') == 1
+	assert delete_step_response.status_code == 404
+
+	delete_step_response = test_client.delete('/jobs/job-test-delete-step/1', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert count_step_total('job-test-delete-step') == 1
+	assert delete_step_response.status_code == 404
 
 	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0', headers =
 	{

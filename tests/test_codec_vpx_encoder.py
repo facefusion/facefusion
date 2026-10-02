@@ -1,3 +1,4 @@
+import struct
 from unittest.mock import patch
 
 import cv2
@@ -5,7 +6,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager, video_manager
-from facefusion.codecs.vpx_encoder import create, destroy, encode
+from facefusion.codecs.vpx_encoder import create, destroy, encode, update_bitrate, update_resolution
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -50,6 +51,33 @@ def test_encode(video_codec : VxpVideoCodec) -> None:
 
 	if is_macos():
 		pytest.skip()
+
+
+@pytest.mark.parametrize('video_codec', [ 'vp8', 'vp9' ])
+def test_update_resolution(video_codec : VxpVideoCodec) -> None:
+	vpx_encoder = create(video_codec, (320, 240), 1000, 8, 16)
+
+	assert update_resolution(vpx_encoder, (160, 120)) is True
+	assert struct.unpack_from('I', vpx_encoder, 64 + 12)[0] == 160
+	assert struct.unpack_from('I', vpx_encoder, 64 + 16)[0] == 120
+
+	with patch('facefusion.libraries.vpx.create_static_library', return_value = None):
+		assert update_resolution(vpx_encoder, (320, 240)) is False
+
+	assert struct.unpack_from('I', vpx_encoder, 64 + 12)[0] == 160
+
+
+@pytest.mark.parametrize('video_codec', [ 'vp8', 'vp9' ])
+def test_update_bitrate(video_codec : VxpVideoCodec) -> None:
+	vpx_encoder = create(video_codec, (320, 240), 1000, 8, 16)
+
+	assert update_bitrate(vpx_encoder, 2000) is True
+	assert struct.unpack_from('I', vpx_encoder, 64 + 112)[0] == 2000
+
+	with patch('facefusion.libraries.vpx.create_static_library', return_value = None):
+		assert update_bitrate(vpx_encoder, 3000) is False
+
+	assert struct.unpack_from('I', vpx_encoder, 64 + 112)[0] == 2000
 
 
 @pytest.mark.parametrize('video_codec', [ 'vp8', 'vp9' ])

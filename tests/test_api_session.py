@@ -100,6 +100,42 @@ def test_create_session(test_client : TestClient) -> None:
 
 	assert test_client.post('/session', content = 'invalid').status_code == 400
 
+	session_manager.API_SESSIONS.clear()
+	state_manager.init_item('api_session_limit', 1)
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+
+	assert create_session_response.status_code == 201
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+
+	assert create_session_response.json().get('message') == 'session limit reached'
+	assert session_manager.count_api_sessions() == 1
+	assert create_session_response.status_code == 429
+
+	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))
+	session : ApiSession = session_manager.get_api_session(session_id)
+	session_manager.set_api_session(session_id,
+	{
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at'),
+		'expires_at': session.get('expires_at') - timedelta(hours = 1)
+	})
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+
+	assert create_session_response.status_code == 201
+
 
 def test_get_session(test_client : TestClient) -> None:
 	get_session_response = test_client.get('/session')
@@ -118,8 +154,24 @@ def test_get_session(test_client : TestClient) -> None:
 	})
 	get_session_body = get_session_response.json()
 
+	assert get_session_body.get('access_token') == create_session_body.get('access_token')
 	assert get_session_body.get('refresh_token') is None
 	assert get_session_response.status_code == 200
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('refresh_token')
+	})
+
+	assert get_session_response.json().get('message') == 'invalid access token'
+	assert get_session_response.status_code == 401
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Basic ' + create_session_body.get('access_token')
+	})
+
+	assert get_session_response.status_code == 401
 
 	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))
 	session : ApiSession = session_manager.get_api_session(session_id)
@@ -173,7 +225,30 @@ def test_refresh_session(test_client : TestClient) -> None:
 	assert refresh_session_body.get('access_token')
 	assert refresh_session_body.get('refresh_token')
 	assert session_manager.find_api_session_id(access_token) is None
+	assert session_manager.find_api_session_id(refresh_session_body.get('access_token')) == session_id
 	assert refresh_session_response.status_code == 200
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_session_response.status_code == 401
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + refresh_session_body.get('access_token')
+	})
+
+	assert get_session_response.json().get('access_token') == refresh_session_body.get('access_token')
+	assert get_session_response.status_code == 200
+
+	refresh_session_response = test_client.put('/session', json =
+	{
+		'refresh_token': refresh_session_body.get('access_token')
+	})
+
+	assert refresh_session_response.status_code == 401
 
 	refresh_session_response = test_client.put('/session', json =
 	{
@@ -225,14 +300,41 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert os.path.isdir(jobs_path) is True
 	assert delete_session_response.status_code == 401
 
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+	second_session_id = session_manager.find_api_session_id(second_access_token)
+
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 
 	assert os.path.isdir(jobs_path) is False
+	assert os.path.isdir(os.path.join(get_test_jobs_directory(), second_session_id)) is True
 	assert session_manager.find_api_session_id(access_token) is None
+	assert session_manager.find_api_session_id(second_access_token) == second_session_id
 	assert delete_session_response.status_code == 200
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+
+	with patch('facefusion.apis.endpoints.session.remove_directory', return_value = False):
+		delete_session_response = test_client.delete('/session', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+	assert os.path.isdir(os.path.join(get_test_jobs_directory(), session_id)) is True
+	assert delete_session_response.json().get('message') == 'directory not removed'
+	assert session_manager.find_api_session_id(access_token) == session_id
+	assert delete_session_response.status_code == 404
 
 	create_session_response = test_client.post('/session', json =
 	{

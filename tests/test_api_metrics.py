@@ -1,10 +1,13 @@
-from typing import Iterator
+from functools import partial
+from typing import Iterator, List
 
+import anyio
 import pytest
 from pytest_mock import MockerFixture
-from starlette.testclient import TestClient
+from starlette.testclient import TestClient, WebSocketDenialResponse
+from starlette.types import Message
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import metadata, session_manager, state_manager, store_creator
 from facefusion.apis import websocket_store
 from facefusion.apis.core import create_api
 from .assert_helper import get_test_jobs_directory
@@ -157,6 +160,20 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 	])
 
 
+async def receive_connect() -> Message:
+	return\
+	{
+		'type': 'websocket.connect'
+	}
+
+
+async def disconnect_on_send(messages : List[Message], message : Message) -> None:
+	if message.get('type') == 'websocket.send':
+		raise OSError
+
+	messages.append(message)
+
+
 def test_get_metrics(test_client : TestClient) -> None:
 	metrics_response = test_client.get('/metrics')
 
@@ -216,6 +233,15 @@ def test_get_metrics_not_found(test_client : TestClient, mocker : MockerFixture)
 
 
 def test_websocket_metrics(test_client : TestClient) -> None:
+	with pytest.raises(WebSocketDenialResponse) as websocket_denial:
+		with test_client.websocket_connect('/metrics', subprotocols =
+		[
+			'access_token.invalid'
+		]):
+			pass
+
+	assert websocket_denial.value.status_code == 401
+
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -252,3 +278,37 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		websocket_store.destroy(session_manager.find_api_session_id(create_session_body.get('access_token')))
 
 		assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	messages : List[Message] = []
+	scope =\
+	{
+		'type': 'websocket',
+		'scheme': 'ws',
+		'path': '/metrics',
+		'raw_path': '/metrics'.encode(),
+		'root_path': '',
+		'query_string': bytes(),
+		'headers':
+		[
+			('sec-websocket-protocol'.encode(), ('access_token.' + access_token).encode())
+		],
+		'subprotocols':
+		[
+			'access_token.' + access_token
+		],
+		'client': ('testclient', 50000),
+		'server': ('testserver', 80)
+	}
+
+	anyio.run(test_client.app, scope, receive_connect, partial(disconnect_on_send, messages))
+
+	assert messages[0].get('type') == 'websocket.accept'
+	assert messages[0].get('subprotocol') == 'access_token.' + access_token
+	assert len(messages) == 1
+	assert store_creator.get_content(websocket_store.WEBSOCKET_STORE, session_id) == {}

@@ -1,9 +1,10 @@
 
+import cv2
 import pytest
 
 from facefusion import face_detector, ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_detector import detect_with_retinaface, detect_with_scrfd, detect_with_yolo_face, detect_with_yunet
+from facefusion.face_detector import detect_faces, detect_faces_by_angle, detect_with_retinaface, detect_with_scrfd, detect_with_yolo_face, detect_with_yunet
 from facefusion.face_helper import apply_nms, get_nms_threshold
 from facefusion.vision import read_static_image
 from .assert_helper import get_test_example_file, get_test_examples_directory
@@ -37,6 +38,8 @@ def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
 	state_manager.init_item('face_detector_model', 'many')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	state_manager.init_item('face_detector_score', 0.5)
 
 	face_detector.pre_check()
@@ -62,6 +65,28 @@ def before_all() -> None:
 @pytest.fixture(autouse = True)
 def before_each() -> None:
 	face_detector.clear_inference_pool()
+
+
+def test_detect_faces() -> None:
+	state_manager.set_item('face_detector_model', 'yunet')
+	source_frame = read_static_image(get_test_example_file('source.jpg'))
+	bounding_boxes, face_scores, face_landmarks_5 = detect_faces(source_frame)
+	keep_indices = apply_nms(bounding_boxes, face_scores, 0.5, get_nms_threshold('yunet', [ 0 ]))
+
+	assert len(keep_indices) == 1
+	assert len(face_landmarks_5) == len(bounding_boxes)
+
+	state_manager.set_item('face_detector_model', 'many')
+
+
+def test_detect_faces_by_angle() -> None:
+	source_frame = cv2.rotate(read_static_image(get_test_example_file('source.jpg')), cv2.ROTATE_90_CLOCKWISE)
+	bounding_boxes, face_scores, face_landmarks_5 = detect_faces_by_angle(source_frame, 90)
+	keep_indices = apply_nms(bounding_boxes, face_scores, 0.5, get_nms_threshold('many', [ 90 ]))
+	bounding_box = bounding_boxes[keep_indices[0]]
+
+	assert len(keep_indices) == 1
+	assert bounding_box[2] - bounding_box[0] > bounding_box[3] - bounding_box[1]
 
 
 def test_detect_with_retinaface() -> None:

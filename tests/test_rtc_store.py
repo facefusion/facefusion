@@ -1,11 +1,12 @@
 import ctypes
 from typing import Iterator
+from unittest.mock import patch
 
 import pytest
 
-from facefusion import rtc, session_context, session_manager, state_manager
+from facefusion import rtc, session_context, session_manager, state_manager, store_creator
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.rtc_store import delete_peer, get_peer, has_peer, init, set_peer
+from facefusion.rtc_store import RTC_STORE, delete_peer, destroy, get_peer, has_peer, init, set_peer
 from facefusion.types import RtcPeer
 
 
@@ -75,6 +76,15 @@ def test_init() -> None:
 
 	session_manager.join_session()
 	delete_peer()
+	rtc_peer = create_rtc_peer()
+	set_peer(rtc_peer)
+	session_manager.fork_session()
+	init()
+	session_manager.join_session()
+
+	assert has_peer() is False
+
+	rtc.delete_peer(rtc_peer)
 	session_context.set_session_id(local_id)
 
 
@@ -95,6 +105,12 @@ def test_get_peer() -> None:
 
 	assert get_peer() is rtc_peer
 
+	session_manager.fork_session()
+
+	assert get_peer() is rtc_peer
+
+	session_manager.join_session()
+
 
 def test_set_peer() -> None:
 	rtc_peer = create_rtc_peer()
@@ -103,10 +119,54 @@ def test_set_peer() -> None:
 
 	assert get_peer() is rtc_peer
 
+	rtc_peer = create_rtc_peer()
+	delete_peer()
+	session_manager.fork_session()
+	set_peer(rtc_peer)
+	session_manager.join_session()
+
+	assert get_peer() is rtc_peer
+
 
 def test_delete_peer() -> None:
-	set_peer(create_rtc_peer())
-	delete_peer()
+	rtc_peer = create_rtc_peer()
+
+	set_peer(rtc_peer)
+
+	with patch('facefusion.rtc.delete_peer', side_effect = rtc.delete_peer) as rtc_mock:
+		delete_peer()
+		delete_peer()
+
+		rtc_mock.assert_called_once_with(rtc_peer)
 
 	assert has_peer() is False
 	assert get_peer() is None
+	assert store_creator.has_content(RTC_STORE, session_context.resolve_local_id()) is True
+
+	set_peer(create_rtc_peer())
+	session_manager.fork_session()
+	delete_peer()
+	session_manager.join_session()
+
+	assert has_peer() is False
+
+
+def test_destroy() -> None:
+	local_id = session_context.resolve_local_id()
+	rtc_peer = create_rtc_peer()
+	local_rtc_peer = create_rtc_peer()
+
+	session_context.set_session_id('session-a')
+	init()
+	set_peer(rtc_peer)
+	session_context.set_session_id(local_id)
+	set_peer(local_rtc_peer)
+
+	with patch('facefusion.rtc.delete_peer', side_effect = rtc.delete_peer) as rtc_mock:
+		destroy('session-a')
+		destroy('session-a')
+
+		rtc_mock.assert_called_once_with(rtc_peer)
+
+	assert store_creator.has_content(RTC_STORE, 'session-a') is False
+	assert get_peer() is local_rtc_peer

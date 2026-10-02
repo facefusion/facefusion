@@ -6,7 +6,7 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
-from facefusion.types import Resolution, Scale
+from facefusion.types import Resolution, Scale, WorkflowStrategy
 from facefusion.vision import detect_image_resolution, detect_video_resolution
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, prepare_test_output_directory
 
@@ -56,16 +56,20 @@ def test_output_image_scale(output_image_scale : Scale, output_image_resolution 
 	assert detect_image_resolution(output_file_path) == output_image_resolution
 
 
-@pytest.mark.parametrize('output_video_scale, output_video_resolution',
+@pytest.mark.parametrize('workflow_strategy, output_video_scale, output_video_resolution',
 [
-	(0.5, (212, 112)),
-	(1.0, (426, 226)),
-	(2.0, (852, 452)),
-	(8.0, (3408, 1808))
+	('disk', 0.5, (212, 112)),
+	('memory', 0.5, (212, 112)),
+	('disk', 1.0, (426, 226)),
+	('memory', 1.0, (426, 226)),
+	('disk', 2.0, (852, 452)),
+	('memory', 2.0, (852, 452)),
+	('disk', 8.0, (3408, 1808)),
+	('memory', 8.0, (3408, 1808))
 ])
-def test_output_video_scale(output_video_scale : Scale, output_video_resolution : Resolution) -> None:
-	output_file_path = get_test_output_path('test-output-video-scale-' + str(output_video_scale) + '.mp4')
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', output_file_path, '--trim-frame-end', '1', '--output-video-scale', str(output_video_scale) ]
+def test_output_video_scale(workflow_strategy : WorkflowStrategy, output_video_scale : Scale, output_video_resolution : Resolution) -> None:
+	output_file_path = get_test_output_path('test-output-video-scale-' + workflow_strategy + '-' + str(output_video_scale) + '.mp4')
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-video', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', output_file_path, '--trim-frame-end', '1', '--output-video-scale', str(output_video_scale) ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert detect_video_resolution(output_file_path) == output_video_resolution

@@ -8,8 +8,8 @@ def test_find_argument_group() -> None:
 	program.add_argument_group('test-1')
 	program.add_argument_group('test-2')
 
-	assert find_argument_group(program, 'test-1')
-	assert find_argument_group(program, 'test-2')
+	assert find_argument_group(program, 'test-1').title == 'test-1'
+	assert find_argument_group(program, 'test-2').title == 'test-2'
 	assert find_argument_group(program, 'test-3') is None
 
 

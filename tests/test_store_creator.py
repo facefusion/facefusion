@@ -1,3 +1,5 @@
+import pytest
+
 from facefusion.store_creator import create_store, delete_content, get_content, has_content, init_content, set_content
 
 
@@ -14,6 +16,24 @@ def test_init_content() -> None:
 	init_content(store, 'session-a')
 
 	assert store.get('content_set').get('session-a') == { 'total': 0 }
+
+	store.get('content_set').get('session-a')['total'] += 1
+	init_content(store, 'session-b')
+
+	assert store.get('__init__') == { 'total': 0 }
+	assert store.get('content_set').get('session-a') == { 'total': 1 }
+	assert store.get('content_set').get('session-b') == { 'total': 0 }
+
+
+@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #21')
+def test_init_content_with_existing_content() -> None:
+	store = create_store({ 'total': 0 })
+
+	init_content(store, 'session-a')
+	store.get('content_set').get('session-a')['total'] += 1
+	init_content(store, 'session-a')
+
+	assert store.get('content_set').get('session-a') == { 'total': 1 }
 
 
 def test_has_content() -> None:

@@ -9,7 +9,9 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, run_audio_encode_loop
+from facefusion.apis.stream_audio import create_audio_decoder, decode_audio_frame, handle_audio_frame, receive_audio_frames, run_audio_encode_loop
+from facefusion.codecs import opus_encoder
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
@@ -105,6 +107,31 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	_, temp_audio_frame = audio_queue.get_nowait()
 
 	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())
+
+
+def test_decode_audio_frame() -> None:
+	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
+	audio_sample = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
+	audio_frame = audio_sample.reshape(-1, 2)[:960]
+	audio_encoder = opus_encoder.create(48000, 2)
+	audio_decoder = create_audio_decoder('opus')
+	encode_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 2)
+	decode_buffer = decode_audio_frame('opus', audio_decoder, encode_buffer)
+
+	assert len(decode_buffer) == 960 * 2 * 4
+
+	if is_linux() or is_windows():
+		assert create_hash(decode_buffer) == 'cadd63d1'
+
+	if is_macos():
+		assert create_hash(decode_buffer) == '92f7997d'
+
+	assert decode_audio_frame('invalid', audio_decoder, encode_buffer) is None #type:ignore[arg-type]
+
+
+def test_create_audio_decoder() -> None:
+	assert create_audio_decoder('opus')
+	assert create_audio_decoder('invalid') is None #type:ignore[arg-type]
 
 
 def test_handle_audio_frame() -> None:

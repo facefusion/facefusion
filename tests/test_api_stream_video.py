@@ -5,7 +5,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from queue import Queue
 from typing import Tuple
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import cv2
 import pytest
@@ -18,7 +18,7 @@ from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
 from facefusion.types import Buffer, BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
-from facefusion.vision import is_vision_frame, read_video_frame
+from facefusion.vision import is_vision_frame, obscure_frame, read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -56,10 +56,44 @@ def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96), ('vp9', 98) ])
 def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	resize_video_frame = cv2.resize(video_frame, (320, 180))
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': 0,
+		'video':
+		{
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': video_codec
+		},
+		'sender_bitrate': ctypes.c_uint(4000),
+		'receiver_bitrate': ctypes.c_uint(8000)
+	}
+	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
+
+	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
+		with ThreadPoolExecutor(max_workers = 1) as executor:
+			video_queue.put((0.1, executor.submit(process_video_frame, [], video_frame)))
+			video_queue.put((0.2, executor.submit(process_video_frame, [], resize_video_frame)))
+			empty_future : Future[BufferPack] = Future()
+			empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
+			video_queue.put((0.0, empty_future))
+
+			with patch('facefusion.rtc.send_video') as send_video_mock:
+				with patch('facefusion.apis.stream_video.update_video_encoder_resolution', wraps = update_video_encoder_resolution) as update_video_encoder_resolution_mock:
+					with patch('facefusion.apis.stream_video.update_video_encoder_bitrate', wraps = update_video_encoder_bitrate) as update_video_encoder_bitrate_mock:
+						run_video_encode_loop(rtc_peer, video_queue)
+
+	assert send_video_mock.call_count == 2
+	update_video_encoder_resolution_mock.assert_called_once_with(video_codec, ANY, (320, 180))
+	update_video_encoder_bitrate_mock.assert_called_once_with(video_codec, ANY, 4000)
+	assert rtc_peer.get('sender_bitrate').value == 0
+	assert rtc_peer.get('receiver_bitrate').value == 0
+
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
-	rtc_peer : RtcPeer =\
+	rtc_peer =\
 	{
 		'peer_connection': peer_connection,
 		'audio':
@@ -78,7 +112,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
+	video_queue = Queue(maxsize = 30)
 
 	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
 		with ThreadPoolExecutor(max_workers = 1) as executor:
@@ -87,7 +121,7 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 			with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
 				encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
 				encode_loop_thread.start()
-				empty_future : Future[BufferPack] = Future()
+				empty_future = Future()
 				empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
 				video_queue.put((0.0, empty_future))
 				encode_loop_thread.join(timeout = 5.0)
@@ -135,6 +169,22 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 		assert create_hash(video_buffer) == '38d00e2a'
 
 
+def test_process_video_frame() -> None:
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+
+	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
+		video_pack = process_video_frame([], video_frame)
+
+	assert video_pack.get('buffer') == cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	assert video_pack.get('resolution') == (426, 226)
+
+	with patch('facefusion.apis.stream_video.analyse_stream', return_value = True):
+		video_pack = process_video_frame([], video_frame)
+
+	assert video_pack.get('buffer') == cv2.cvtColor(obscure_frame(video_frame), cv2.COLOR_BGR2YUV_I420).tobytes()
+	assert video_pack.get('resolution') == (426, 226)
+
+
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
 def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
@@ -165,6 +215,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 			assert create_hash(decode_buffer) == 'a994fa02'
 
 	assert decode_video_frame(video_codec, video_decoder, bytes()) is None
+	assert encode_video_frame('invalid', video_encoder, input_buffer, (426, 226), 0) == bytes() #type:ignore[arg-type]
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -186,6 +237,7 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 	destroy_video_decoder(video_codec, video_decoder)
 
 	assert decode_video_frame(video_codec, video_decoder, encode_buffer) is None
+	assert create_video_decoder('invalid') is None #type:ignore[arg-type]
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -205,6 +257,8 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 		assert aom_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
 	if video_codec in [ 'vp8', 'vp9' ]:
 		assert vpx_encoder.encode(video_encoder, input_buffer, (426, 226), 1) == bytes()
+
+	assert create_video_encoder('invalid', (426, 226), 4000) is None #type:ignore[arg-type]
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -230,6 +284,8 @@ def test_update_video_encoder_resolution(video_codec : VideoCodec) -> None:
 
 	if video_codec == 'vp9':
 		assert struct.unpack_from('I', video_encoder, 64 + 12)[0] == 320
+
+	assert update_video_encoder_resolution('invalid', video_encoder, (320, 180)) is False #type:ignore[arg-type]
 
 	destroy_video_encoder(video_codec, video_encoder)
 
@@ -257,6 +313,8 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 
 	if video_codec == 'vp9':
 		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
+
+	assert update_video_encoder_bitrate('invalid', video_encoder, 6000) is False #type:ignore[arg-type]
 
 	destroy_video_encoder(video_codec, video_encoder)
 

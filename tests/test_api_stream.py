@@ -197,6 +197,13 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	assert delete_response.status_code == 200
 	assert rtc_store.has_peer() is False
 
+	delete_response = test_client.delete('/stream', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 404
+
 	post_response = test_client.post('/stream', content = 'invalid', headers =
 	{
 		'Authorization': 'Bearer ' + access_token,

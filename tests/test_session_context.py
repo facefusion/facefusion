@@ -1,3 +1,4 @@
+from contextvars import Context
 from typing import Iterator
 
 import pytest
@@ -24,9 +25,21 @@ def test_get_session_id() -> None:
 	set_session_id('session-a')
 
 	assert get_session_id() == 'session-a'
+	assert Context().run(get_session_id) == local_id
+
+
+def test_set_session_id() -> None:
+	set_session_id('session-a')
+
+	assert get_session_id() == 'session-a'
+
+	Context().run(set_session_id, 'session-b')
+
+	assert get_session_id() == 'session-a'
 
 
 def test_resolve_local_id() -> None:
 	local_id = resolve_local_id()
 
 	assert resolve_local_id() == local_id
+	assert len(local_id) == 40

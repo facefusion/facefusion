@@ -1,3 +1,4 @@
+import struct
 from unittest.mock import patch
 
 import cv2
@@ -5,7 +6,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager, video_manager
-from facefusion.codecs.aom_encoder import create, destroy, encode
+from facefusion.codecs.aom_encoder import create, destroy, encode, update_bitrate, update_resolution
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -43,6 +44,31 @@ def test_encode() -> None:
 
 	if is_macos():
 		pytest.skip()
+
+
+def test_update_resolution() -> None:
+	aom_encoder = create((320, 240), 1000, 8, 16)
+
+	assert update_resolution(aom_encoder, (160, 120)) is True
+	assert struct.unpack_from('I', aom_encoder, 128 + 12)[0] == 160
+	assert struct.unpack_from('I', aom_encoder, 128 + 16)[0] == 120
+
+	with patch('facefusion.libraries.aom.create_static_library', return_value = None):
+		assert update_resolution(aom_encoder, (320, 240)) is False
+
+	assert struct.unpack_from('I', aom_encoder, 128 + 12)[0] == 160
+
+
+def test_update_bitrate() -> None:
+	aom_encoder = create((320, 240), 1000, 8, 16)
+
+	assert update_bitrate(aom_encoder, 2000) is True
+	assert struct.unpack_from('I', aom_encoder, 128 + 136)[0] == 2000
+
+	with patch('facefusion.libraries.aom.create_static_library', return_value = None):
+		assert update_bitrate(aom_encoder, 3000) is False
+
+	assert struct.unpack_from('I', aom_encoder, 128 + 136)[0] == 2000
 
 
 def test_destroy() -> None:

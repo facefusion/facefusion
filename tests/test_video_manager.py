@@ -3,13 +3,13 @@ import tempfile
 import numpy
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, state_manager, store_creator
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
-from facefusion.video_manager import clear, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, drain_video_reader, get_reader, get_writer, init, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
+from facefusion.video_manager import VIDEO_POOL_STORE, clear, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, destroy, drain_video_reader, get_reader, get_writer, init, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -71,6 +71,8 @@ def test_get_reader() -> None:
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('frame_total') == 270
+	assert video_reader.get('file_path') == get_test_example_file('target-240p-25fps.mp4')
+	assert video_reader.get('frame_index') == 0
 
 	assert get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame') is video_reader
 	assert not get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames').get('id') == video_reader.get('id')
@@ -87,6 +89,51 @@ def test_conditional_seek_video_reader() -> None:
 		conditional_seek_video_reader(video_reader, frame_index)
 
 		assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(frame_index)) is True
+
+	video_process = video_reader.get('process')
+	conditional_seek_video_reader(video_reader, 30)
+
+	assert video_reader.get('process') is video_process
+	assert video_reader.get('frame_index') == 30
+
+	conditional_seek_video_reader(video_reader, 158)
+
+	assert video_reader.get('process') is video_process
+	assert video_reader.get('frame_index') == 158
+
+	conditional_seek_video_reader(video_reader, 158)
+
+	assert video_reader.get('process') is video_process
+	assert video_reader.get('frame_index') == 158
+
+	conditional_seek_video_reader(video_reader, 10)
+
+	assert not video_reader.get('process').pid == video_process.pid
+	assert video_reader.get('frame_index') == 10
+	assert numpy.array_equal(read_video_frame(video_reader), video_frames.get(10)) is True
+
+	video_process = video_reader.get('process')
+	conditional_seek_video_reader(video_reader, 140)
+
+	assert not video_reader.get('process').pid == video_process.pid
+	assert video_reader.get('frame_index') == 140
+
+	conditional_seek_video_reader(video_reader, 1000)
+
+	assert video_reader.get('frame_index') == 269
+	assert read_video_frame(video_reader).shape == (226, 426, 3)
+	assert read_video_frame(video_reader) is None
+
+
+@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #10')
+def test_conditional_seek_video_reader_with_negative_frame_index() -> None:
+	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'read_video_frame')
+	conditional_seek_video_reader(video_reader, 0)
+	video_frame = read_video_frame(video_reader)
+	conditional_seek_video_reader(video_reader, -5)
+
+	assert video_reader.get('frame_index') == 0
+	assert numpy.array_equal(read_video_frame(video_reader), video_frame) is True
 
 
 def test_seek_video_reader() -> None:
@@ -152,6 +199,25 @@ def test_collect_video_frames() -> None:
 	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24 ]
 	assert video_reader.get('frame_index') == 25
 
+	video_process = video_reader.get('process')
+	collect_video_frames(video_reader, 41, 42)
+
+	assert video_reader.get('process') is video_process
+	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42 ]
+	assert video_reader.get('frame_index') == 43
+
+	collect_video_frames(video_reader, 60, 61)
+
+	assert not video_reader.get('process').pid == video_process.pid
+	assert sorted(get_frame_store(video_reader.get('id'))) == [ 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 60, 61 ]
+	assert video_reader.get('frame_index') == 62
+
+	video_process = video_reader.get('process')
+	collect_video_frames(video_reader, 5, 6)
+
+	assert not video_reader.get('process').pid == video_process.pid
+	assert video_reader.get('frame_index') == 7
+
 
 def test_close_video_reader() -> None:
 	video_reader = get_reader(get_test_example_file('target-240p-25fps.mp4'), 'select_video_frames')
@@ -169,8 +235,10 @@ def test_close_video_reader() -> None:
 def test_get_writer() -> None:
 	target_path = get_test_example_file('target-240p-25fps.mp4')
 	create_temp_directory(state_manager.get_temp_path(), target_path)
-	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+	video_writer = get_writer(target_path, 25.0, (426, 226), (212, 112), 30.0)
 
+	assert video_writer.get('file_path') == target_path
+	assert video_writer.get('metadata') == { 'fps': 30.0, 'resolution': (212, 112) }
 	assert get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0) is video_writer
 
 
@@ -192,6 +260,22 @@ def test_write_video_frame() -> None:
 	assert video_metadata.get('fps') == 25.0
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('color_transfer') == 'bt709'
+
+	clear()
+	video_reader = get_reader(target_path, 'read_video_frame')
+	video_writer = get_writer(target_path, 25.0, (426, 226), (212, 112), 30.0)
+
+	for frame_index in range(50):
+		write_video_frame(video_writer, read_video_frame(video_reader))
+
+	assert close_video_writer(video_writer) is True
+
+	video_metadata = extract_video_metadata(get_temp_file_path(state_manager.get_temp_path(), target_path))
+
+	assert video_metadata.get('duration') == 2.0
+	assert video_metadata.get('frame_total') == 60
+	assert video_metadata.get('fps') == 30.0
+	assert video_metadata.get('resolution') == (212, 112)
 
 
 def test_close_video_writer() -> None:
@@ -222,3 +306,39 @@ def test_clear() -> None:
 		assert video_reader.get('process').returncode == -9
 
 	assert video_writer.get('process').returncode == 0
+
+
+def test_destroy() -> None:
+	local_id = session_context.resolve_local_id()
+	target_path = get_test_example_file('target-240p-25fps.mp4')
+
+	session_context.set_session_id('session-b')
+	state_manager.init()
+	init()
+	create_temp_directory(state_manager.get_temp_path(), target_path)
+	video_reader = get_reader(target_path, 'select_video_frames')
+	video_writer = get_writer(target_path, 25.0, (426, 226), (426, 226), 25.0)
+
+	read_video_frames(video_reader, 0, 4)
+	write_video_frame(video_writer, read_video_frame(video_reader))
+	session_context.set_session_id(local_id)
+
+	assert sorted(get_frame_store(video_reader.get('id'))) == [ 0, 1, 2, 3, 4 ]
+
+	destroy('session-b')
+
+	if is_windows():
+		assert video_reader.get('process').returncode == 1
+
+	if is_linux() or is_macos():
+		assert video_reader.get('process').returncode == -9
+
+	assert video_writer.get('process').returncode == 0
+	assert get_frame_store(video_reader.get('id')) == {}
+	assert store_creator.has_content(VIDEO_POOL_STORE, 'session-b') is False
+	assert store_creator.has_content(VIDEO_POOL_STORE, local_id) is True
+
+	destroy('session-b')
+	state_manager.destroy('session-b')
+
+	assert store_creator.has_content(VIDEO_POOL_STORE, 'session-b') is False

@@ -39,6 +39,12 @@ def test_set_frame() -> None:
 
 	assert get_frame_store('reader-1').get(5) is target_frame
 
+	target_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 1)
+	set_frame('reader-1', 5, target_frame)
+
+	assert get_frame_store('reader-1').get(5) is target_frame
+	assert sorted(get_frame_store('reader-1')) == [ 5 ]
+
 
 def test_select_frame_set() -> None:
 	first_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 0)
@@ -53,6 +59,10 @@ def test_select_frame_set() -> None:
 	assert select_frame_set('reader-1', 2, 6).get(5) is fifth_frame
 	assert select_frame_set('reader-1', 8, 12) == {}
 
+	select_frame_set('reader-1', 2, 6).clear()
+
+	assert sorted(get_frame_store('reader-1')) == [ 2, 5 ]
+
 
 def test_reduce_frames() -> None:
 	target_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 0)
@@ -64,6 +74,14 @@ def test_reduce_frames() -> None:
 
 	assert sorted(get_frame_store('reader-1')) == [ 4, 5, 6 ]
 
+	reduce_frames('reader-1', 20, 30)
+
+	assert get_frame_store('reader-1') == {}
+
+	reduce_frames('reader-2', 0, 9)
+
+	assert get_frame_store('reader-2') == {}
+
 
 def test_clear_frames() -> None:
 	target_frame = read_video_frame(get_test_example_file('target-240p.mp4'), 0)
@@ -73,4 +91,8 @@ def test_clear_frames() -> None:
 	clear_frames('reader-1')
 
 	assert get_frame_store('reader-1') == {}
+	assert get_frame_store('reader-2').get(0) is target_frame
+
+	clear_frames('reader-1')
+
 	assert get_frame_store('reader-2').get(0) is target_frame

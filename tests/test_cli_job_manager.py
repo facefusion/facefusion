@@ -5,7 +5,8 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, count_step_total, init_jobs
+from facefusion.jobs.job_helper import get_step_output_path
+from facefusion.jobs.job_manager import clear_jobs, count_step_total, get_steps, init_jobs
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_job_file
 
 
@@ -185,6 +186,13 @@ def test_job_remix() -> None:
 
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-remix-step') == 3
+	assert get_steps('test-job-remix-step')[1].get('args').get('target_path') == get_step_output_path('test-job-remix-step', 0, get_test_output_path('test-job-remix-step.jpg'))
+	assert get_steps('test-job-remix-step')[2].get('args').get('target_path') == get_step_output_path('test-job-remix-step', 1, get_test_output_path('test-job-remix-step.jpg'))
+
+	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '99', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
+
+	assert subprocess.run(commands).returncode == 1
+	assert count_step_total('test-job-remix-step') == 3
 
 
 def test_job_insert_step() -> None:
@@ -208,6 +216,11 @@ def test_job_insert_step() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '-1', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-insert-step') == 3
+
+	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '99', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
+
+	assert subprocess.run(commands).returncode == 1
 	assert count_step_total('test-job-insert-step') == 3
 
 

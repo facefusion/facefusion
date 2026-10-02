@@ -71,6 +71,22 @@ def test_track_faces() -> None:
 
 	assert len(track_faces(target_vision_frames, 0.3)) == 0
 
+	target_vision_frame = read_static_video_frame(target_path, 0)
+	multi_face_vision_frame = numpy.hstack([ target_vision_frame, target_vision_frame ])
+	target_face = get_one_face(get_many_faces([ target_vision_frame ]))
+	track_faces_refill = track_faces([ target_vision_frame, target_vision_frame, empty_vision_frame, target_vision_frame, target_vision_frame ], 0.3)
+
+	assert len(track_faces_refill) == 1
+	assert get_first(track_faces_refill).origin == 'refill'
+	assert get_first(track_faces_refill).bounding_box.round(2).tolist() == target_face.bounding_box.round(2).tolist()
+
+	track_faces_detect = track_faces([ empty_vision_frame, target_vision_frame, target_vision_frame ], 0.3)
+
+	assert len(track_faces_detect) == 1
+	assert get_first(track_faces_detect).origin == 'detect'
+	assert len(track_faces([ multi_face_vision_frame, multi_face_vision_frame, multi_face_vision_frame ], 0.3)) == 2
+	assert track_faces([ target_vision_frame, empty_vision_frame, empty_vision_frame ], 0.3) == []
+
 
 def test_create_face_tracks() -> None:
 	target_vision_frame = read_static_video_frame(get_test_example_file('target-240p.mp4'), 0)
@@ -106,3 +122,22 @@ def test_select_face_track() -> None:
 
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_overlap, 0.3) is face_track_overlap
 	assert select_face_track([ face_track_overlap, face_track_distant ], face_distant, 0.3) == {}
+	assert select_face_track([], face_overlap, 0.3) == {}
+
+	face_track_closer =\
+	{
+		0 : face._replace(bounding_box = numpy.array([ 11, 11, 51, 51 ]))
+	}
+
+	assert select_face_track([ face_track_overlap, face_track_closer ], face_overlap, 0.3) is face_track_closer
+	assert select_face_track([ face_track_closer, face_track_overlap ], face_overlap, 0.3) is face_track_closer
+
+	face_track_moving =\
+	{
+		0 : face._replace(bounding_box = numpy.array([ 200, 200, 240, 240 ])),
+		1 : face._replace(bounding_box = numpy.array([ 12, 12, 52, 52 ]))
+	}
+
+	assert select_face_track([ face_track_moving ], face_overlap, 0.3) is face_track_moving
+	assert select_face_track([ face_track_moving ], face_distant, 0.3) == {}
+	assert select_face_track([ face_track_overlap ], face_overlap, 0.9) == {}

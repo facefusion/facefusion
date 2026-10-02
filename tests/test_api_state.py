@@ -48,6 +48,27 @@ def before_all() -> None:
 		scopes = [ 'api' ],
 		groups = [ 'paths' ]
 	)
+	capability_store.register_capability_set(
+		[
+			program.add_argument(
+				'--face-selector-mode',
+				choices = [ 'many', 'one', 'reference' ]
+			)
+		],
+		scopes = [ 'api' ],
+		groups = [ 'face_selector' ]
+	)
+	capability_store.register_capability_set(
+		[
+			program.add_argument(
+				'--output-video-quality',
+				type = int,
+				choices = range(0, 101)
+			)
+		],
+		scopes = [ 'api' ],
+		groups = [ 'output_creation' ]
+	)
 
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 
@@ -106,6 +127,32 @@ def test_get_state(test_client : TestClient) -> None:
 	get_state_body = get_state_response.json()
 
 	assert get_state_body.get('execution_providers') == [ 'cpu' ]
+	assert get_state_body.get('jobs_path') is None
+	assert get_state_body.get('api_session_limit') is None
+	assert get_state_response.status_code == 200
+
+	test_client.put('/state', json =
+	{
+		'execution_providers': [ 'cuda' ]
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_session_body = second_session_response.json()
+
+	get_state_response = test_client.get('/state', headers =
+	{
+		'Authorization': 'Bearer ' + second_session_body.get('access_token')
+	})
+	get_state_body = get_state_response.json()
+
+	assert get_state_body.get('execution_providers') == [ 'cpu' ]
+	assert state_manager.get_item('execution_providers') == [ 'cpu' ]
 	assert get_state_response.status_code == 200
 
 
@@ -144,7 +191,7 @@ def test_set_state(test_client : TestClient) -> None:
 	})
 	set_state_body = set_state_response.json()
 
-	assert set_state_body.get('invalid') is None
+	assert set_state_body.get('message') == 'invalid state key'
 	assert set_state_response.status_code == 400
 
 	set_state_response = test_client.put('/state', json =
@@ -160,6 +207,57 @@ def test_set_state(test_client : TestClient) -> None:
 	assert set_state_body.get('execution_providers') is None
 	assert set_state_body.get('invalid') is None
 	assert set_state_response.status_code == 400
+
+	set_state_response = test_client.put('/state', json =
+	{
+		'jobs_path': 'invalid'
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+	set_state_body = set_state_response.json()
+
+	assert set_state_body.get('message') == 'invalid state key'
+	assert set_state_response.status_code == 400
+
+	set_state_response = test_client.put('/state', json =
+	{
+		'face_selector_mode': 'one',
+		'output_video_quality': '50'
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+	set_state_body = set_state_response.json()
+
+	assert set_state_body.get('face_selector_mode') == 'one'
+	assert set_state_body.get('output_video_quality') == 50
+	assert set_state_response.status_code == 200
+
+	for key, value in [ ('face_selector_mode', 'invalid'), ('output_video_quality', 101), ('output_video_quality', 'invalid'), ('execution_providers', 'invalid') ]:
+		set_state_response = test_client.put('/state', json =
+		{
+			'execution_providers': [ 'cpu' ],
+			key: value
+		}, headers =
+		{
+			'Authorization': 'Bearer ' + create_session_body.get('access_token')
+		})
+		set_state_body = set_state_response.json()
+
+		assert set_state_body.get('message') == 'invalid state value'
+		assert set_state_response.status_code == 400
+
+	get_state_response = test_client.get('/state', headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+	get_state_body = get_state_response.json()
+
+	assert get_state_body.get('execution_providers') == [ 'cuda' ]
+	assert get_state_body.get('face_selector_mode') == 'one'
+	assert get_state_body.get('output_video_quality') == 50
+	assert get_state_response.status_code == 200
 
 	set_state_response = test_client.put('/state', json = {}, headers =
 	{
@@ -205,6 +303,7 @@ def test_select_source_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
+	assert select_response.json().get('message') == 'source asset not found'
 	assert select_response.status_code == 404
 
 	select_response = test_client.put('/state?action=select&type=source', json =
@@ -217,6 +316,36 @@ def test_select_source_assets(test_client : TestClient) -> None:
 	select_body = select_response.json()
 
 	assert select_body.get('source_paths') == source_paths
+	assert select_response.status_code == 200
+
+	select_response = test_client.put('/state?action=select&type=source', json =
+	{
+		'asset_ids': [ asset_ids[0], 'invalid' ]
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	select_body = select_response.json()
+
+	assert select_body.get('source_paths') == [ source_paths[0] ]
+	assert select_response.status_code == 200
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	select_response = test_client.put('/state?action=select&type=source', json =
+	{
+		'asset_ids': asset_ids
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+	select_body = select_response.json()
+
+	assert select_body.get('source_paths') == []
 	assert select_response.status_code == 200
 
 
@@ -260,3 +389,40 @@ def test_select_target_assets(test_client : TestClient) -> None:
 
 	assert select_body.get('target_path') == target_path
 	assert select_response.status_code == 200
+
+	select_response = test_client.put('/state?action=select&type=target', json =
+	{
+		'asset_id': [ asset_id ]
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert select_response.json().get('message') == 'target asset not found'
+	assert select_response.status_code == 404
+
+	second_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	second_access_token = second_session_response.json().get('access_token')
+
+	select_response = test_client.put('/state?action=select&type=target', json =
+	{
+		'asset_id': asset_id
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+	select_body = select_response.json()
+
+	assert select_body.get('message') == 'target asset not found'
+	assert select_response.status_code == 404
+
+	get_state_response = test_client.get('/state', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert get_state_response.json().get('target_path') is None
+	assert get_state_response.status_code == 200

@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffprobe_builder
-from facefusion.ffprobe_builder import chain, format_to_key_value, run, select_stream, set_input, show_stream_entries
+from facefusion.ffprobe_builder import chain, format_to_key_value, run, select_stream, set_input, show_format_entries, show_stream_entries
 
 
 def test_run() -> None:
@@ -25,6 +25,11 @@ def test_select_stream() -> None:
 def test_show_stream_entries() -> None:
 	assert show_stream_entries([ 'duration' ]) == [ '-show_entries', 'stream=duration' ]
 	assert show_stream_entries([ 'duration', 'sample_rate' ]) == [ '-show_entries', 'stream=duration,sample_rate' ]
+
+
+def test_show_format_entries() -> None:
+	assert show_format_entries([ 'duration' ]) == [ '-show_entries', 'format=duration' ]
+	assert show_format_entries([ 'duration', 'bit_rate' ]) == [ '-show_entries', 'format=duration,bit_rate' ]
 
 
 def test_format_to_key_value() -> None:

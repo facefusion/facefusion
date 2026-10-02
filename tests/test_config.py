@@ -13,7 +13,8 @@ def before_all() -> None:
 		'str':
 		{
 			'valid': 'a',
-			'unset': ''
+			'unset': '',
+			'blank': ' '
 		},
 		'int':
 		{
@@ -47,12 +48,17 @@ def test_get_str_value() -> None:
 	assert config.get_str_value('str', 'valid') == 'a'
 	assert config.get_str_value('str', 'unset', 'b') == 'b'
 	assert config.get_str_value('str', 'unset') is None
+	assert config.get_str_value('str', 'blank', 'b') == 'b'
 	assert config.get_str_value('str', 'invalid') is None
 
 
 def test_get_int_value() -> None:
 	assert config.get_int_value('int', 'valid') == 1
+	assert isinstance(config.get_int_value('int', 'valid'), int) is True
 	assert config.get_int_value('int', 'unset', '1') == 1
+	assert isinstance(config.get_int_value('int', 'unset', '1'), int) is True
+	assert config.get_int_value('int', 'unset', '1.5') is None
+	assert config.get_int_value('int', 'unset', 'invalid') is None
 	assert config.get_int_value('int', 'unset') is None
 	assert config.get_int_value('int', 'invalid') is None
 
@@ -60,6 +66,8 @@ def test_get_int_value() -> None:
 def test_get_float_value() -> None:
 	assert config.get_float_value('float', 'valid') == 1.0
 	assert config.get_float_value('float', 'unset', '1.0') == 1.0
+	assert config.get_float_value('float', 'unset', '1.5') == 1.5
+	assert config.get_float_value('float', 'unset', 'invalid') is None
 	assert config.get_float_value('float', 'unset') is None
 	assert config.get_float_value('float', 'invalid') is None
 
@@ -67,6 +75,8 @@ def test_get_float_value() -> None:
 def test_get_bool_value() -> None:
 	assert config.get_bool_value('bool', 'valid') is True
 	assert config.get_bool_value('bool', 'unset', 'False') is False
+	assert config.get_bool_value('bool', 'unset', 'True') is True
+	assert config.get_bool_value('bool', 'unset', 'invalid') is None
 	assert config.get_bool_value('bool', 'unset') is None
 	assert config.get_bool_value('bool', 'invalid') is None
 

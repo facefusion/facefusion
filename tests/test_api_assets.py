@@ -2,10 +2,12 @@ import os
 import tempfile
 from typing import Iterator
 
+import cv2
+import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -34,6 +36,22 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
 	)
+
+	state_manager.init_item('execution_device_ids', [ 0 ])
+	state_manager.init_item('execution_providers', [ 'cpu' ])
+	state_manager.init_item('download_providers', [ 'github' ])
+	state_manager.init_item('face_detector_angles', [ 0 ])
+	state_manager.init_item('face_detector_model', 'yolo_face')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	state_manager.init_item('face_detector_score', 0.5)
+	state_manager.init_item('face_aligner_model', 'many')
+	state_manager.init_item('face_aligner_score', 0.5)
+
+	face_classifier.pre_check()
+	face_detector.pre_check()
+	face_aligner.pre_check()
+	face_recognizer.pre_check()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -87,11 +105,14 @@ def test_upload_assets(test_client : TestClient) -> None:
 				'Authorization': 'Bearer ' + access_token
 			}, files =
 			[
-				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+				('file', ('source.jpg', source_file.read() + 'invalid'.encode(), 'image/jpeg'))
 			])
 
 		asset_ids = upload_response.json().get('asset_ids')
 		asset = asset_store.get_asset(asset_ids[0])
+
+		with open(asset.get('path'), 'rb') as asset_file:
+			assert asset_file.read().count('invalid'.encode()) == 0
 
 		assert asset.get('media') == 'image'
 		assert asset.get('type') == 'source'
@@ -105,10 +126,13 @@ def test_upload_assets(test_client : TestClient) -> None:
 			}, files =
 			[
 				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
-				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
+				('file', ('target-240p.mp4', target_video_file.read() + 'invalid'.encode(), 'video/mp4'))
 			])
 
 		asset_ids = upload_response.json().get('asset_ids')
+
+		with open(asset_store.get_asset(asset_ids[1]).get('path'), 'rb') as asset_file:
+			assert asset_file.read().count('invalid'.encode()) == 0
 
 		assert asset_store.get_asset(asset_ids[0]).get('media') == 'image'
 		assert asset_store.get_asset(asset_ids[0]).get('type') == 'target'
@@ -158,7 +182,83 @@ def test_upload_assets(test_client : TestClient) -> None:
 
 		assert upload_response.status_code == 400
 
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		{
+			'file': ('source.jpg', 'invalid'.encode(), 'image/jpeg')
+		})
+
+		assert upload_response.status_code == 415
+
+		upload_response = test_client.post('/assets?type=source', content = 'invalid', headers =
+		{
+			'Authorization': 'Bearer ' + access_token,
+			'Content-Type': 'multipart/form-data; boundary=invalid',
+			'Content-Length': str(512 * 1024 * 1024 + 1)
+		})
+
+		assert upload_response.status_code == 413
+
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+			], data =
+			{
+				'invalid': 'invalid'
+			})
+
+		assert upload_response.status_code == 400
+
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('../../source.jpg', source_file.read(), 'image/jpeg'))
+			])
+
+		asset_ids = upload_response.json().get('asset_ids')
+		asset_path = asset_store.get_asset(asset_ids[0]).get('path')
+
+		assert os.path.dirname(asset_path) == os.path.join(tempfile.gettempdir(), session_id)
+		assert asset_store.get_asset(asset_ids[0]).get('name') == os.path.splitext(os.path.basename(asset_path))[0]
+		assert upload_response.status_code == 201
+
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=output', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+			])
+
+		assert upload_response.status_code == 400
+
 	state_manager.init_item('api_security_strategy', 'strict')
+
+	with open(audio_path, 'rb') as audio_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.mp3', audio_file.read() + 'invalid'.encode(), 'audio/mpeg'))
+		])
+
+	asset_ids = upload_response.json().get('asset_ids')
+
+	with open(asset_store.get_asset(asset_ids[0]).get('path'), 'rb') as asset_file:
+		assert asset_file.read().count('invalid'.encode()) == 0
+
+	assert upload_response.status_code == 201
 
 
 def test_get_assets(test_client : TestClient) -> None:
@@ -215,6 +315,7 @@ def test_get_assets(test_client : TestClient) -> None:
 
 	assert len(assets) == 3
 	assert assets[0].get('media') == 'image'
+	assert assets[0].get('path') is None
 	assert assets[1].get('media') == 'image'
 	assert assets[2].get('media') == 'video'
 
@@ -271,8 +372,89 @@ def test_get_asset(test_client : TestClient) -> None:
 	assert get_body.get('media') == 'image'
 	assert get_body.get('format') == 'jpeg'
 	assert get_body.get('metadata').get('resolution') == [ 1024, 1024 ]
+	assert get_body.get('path') is None
 
 	assert get_response.status_code == 200
+
+	get_response = test_client.get('/assets/invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_response.json().get('message') == 'something went wrong'
+	assert get_response.status_code == 404
+
+	session_context.set_session_id(session_manager.find_api_session_id(access_token))
+	asset_path = asset_store.get_asset(asset_ids[0]).get('path')
+
+	get_response = test_client.get('/assets/' + asset_ids[0] + '?action=download', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert get_response.status_code == 400
+
+	get_response = test_client.get('/assets/' + asset_ids[0] + '?action=download', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	with open(asset_path, 'rb') as asset_file:
+		assert get_response.content == asset_file.read()
+
+	assert get_response.status_code == 200
+
+	with open(source_path, 'rb') as source_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+
+	remove_asset_id = upload_response.json().get('asset_ids')[0]
+	os.remove(asset_store.get_asset(remove_asset_id).get('path'))
+
+	get_response = test_client.get('/assets/' + remove_asset_id + '?action=download', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_response.status_code == 400
+
+	get_response = test_client.get('/assets/' + asset_ids[0] + '?action=capture&subject=frame&resolution=128x128', headers =
+	{
+		'Authorization': 'Bearer ' + second_access_token
+	})
+
+	assert get_response.status_code == 400
+
+	get_response = test_client.get('/assets/' + asset_ids[0] + '?action=capture&subject=frame&resolution=128x128', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_response.headers.get('Content-Type') == 'image/jpeg'
+	assert cv2.imdecode(numpy.frombuffer(get_response.content, numpy.uint8), cv2.IMREAD_COLOR).shape == (128, 128, 3)
+	assert get_response.status_code == 200
+
+	get_response = test_client.get('/assets/' + asset_ids[0] + '?action=capture&subject=face&resolution=128x256', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_response.headers.get('Content-Type') == 'image/jpeg'
+	assert cv2.imdecode(numpy.frombuffer(get_response.content, numpy.uint8), cv2.IMREAD_COLOR).shape == (256, 128, 3)
+	assert get_response.status_code == 200
+
+	for query in [ 'action=capture&subject=invalid&resolution=128x128', 'action=capture&subject=frame&resolution=invalid', 'action=capture&subject=frame&resolution=64x64', 'action=capture&subject=frame&resolution=4096x4096', 'action=capture&subject=frame' ]:
+		get_response = test_client.get('/assets/' + asset_ids[0] + '?' + query, headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert get_response.status_code == 400
 
 
 def test_delete_assets(test_client : TestClient) -> None:

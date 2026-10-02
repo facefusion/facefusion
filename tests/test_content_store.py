@@ -1,7 +1,7 @@
 import pytest
 
-from facefusion import session_context
-from facefusion.content_store import calculate_rate, clear, get_hit, init, set_hit, tick
+from facefusion import session_context, store_creator
+from facefusion.content_store import CONTENT_STORE, calculate_rate, clear, destroy, get_hit, init, set_hit, tick
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -17,13 +17,29 @@ def test_init() -> None:
 
 	session_context.set_session_id('session-a')
 	init()
+	tick()
 	set_hit()
 
 	assert get_hit() == 1
+	assert calculate_rate() == 3000.0
 
 	session_context.set_session_id(local_id)
 
 	assert get_hit() == 0
+	assert calculate_rate() == 0.0
+
+	set_hit()
+
+	assert calculate_rate() == 0.0
+
+
+def test_tick() -> None:
+	for _ in range(29):
+		assert tick() is False
+
+	assert tick() is True
+	assert tick(2) is False
+	assert tick(2) is True
 
 
 def test_get_hit() -> None:
@@ -50,6 +66,7 @@ def test_calculate_rate() -> None:
 	set_hit()
 
 	assert calculate_rate() == 30.0
+	assert calculate_rate(10) == 10.0
 
 
 def test_clear() -> None:
@@ -59,3 +76,21 @@ def test_clear() -> None:
 
 	assert get_hit() == 0
 	assert calculate_rate() == 0.0
+
+
+def test_destroy() -> None:
+	local_id = session_context.resolve_local_id()
+
+	set_hit()
+	session_context.set_session_id('session-a')
+	init()
+	set_hit()
+	session_context.set_session_id(local_id)
+	destroy('session-a')
+
+	assert store_creator.has_content(CONTENT_STORE, 'session-a') is False
+	assert get_hit() == 1
+
+	destroy('session-a')
+
+	assert store_creator.has_content(CONTENT_STORE, 'session-a') is False
