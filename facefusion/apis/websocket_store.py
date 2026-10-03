@@ -1,5 +1,4 @@
-from anyio.from_thread import run
-from anyio.lowlevel import current_token
+import asyncio
 
 from facefusion import store_creator
 from facefusion.session_manager import resolve_owner_id
@@ -20,7 +19,7 @@ def set_websocket(websocket : Websocket) -> None:
 		store_creator.get_content(WEBSOCKET_STORE, owner_id)[id(websocket)] =\
 		{
 			'websocket': websocket,
-			'event_loop_token': current_token()
+			'event_loop': asyncio.get_running_loop()
 		}
 
 
@@ -38,4 +37,4 @@ def destroy(session_id : SessionId) -> None:
 
 	if session_websocket_set:
 		for session_websocket in session_websocket_set.values():
-			run(session_websocket.get('websocket').close, token = session_websocket.get('event_loop_token'))
+			asyncio.run_coroutine_threadsafe(session_websocket.get('websocket').close(), session_websocket.get('event_loop')).result()

@@ -1,6 +1,6 @@
+import asyncio
 import secrets
 
-from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_429_TOO_MANY_REQUESTS
@@ -106,7 +106,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 		}, status_code = HTTP_404_NOT_FOUND)
 
 	session_manager.clear_api_session(session_id)
-	await run_in_threadpool(store_manager.destroy, session_id)
+	await asyncio.to_thread(store_manager.destroy, session_id)
 
 	return JSONResponse(
 	{

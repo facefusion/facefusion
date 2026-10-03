@@ -43,7 +43,7 @@ def before_each() -> Iterator[None]:
 	set_session_id(local_id)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_process_image() -> None:
 	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
 	websocket_mock = AsyncMock()
@@ -67,7 +67,7 @@ async def test_process_image() -> None:
 		assert create_hash(websocket_mock.send_bytes.call_args[0][0]) == '0142782f'
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_receive_vision_frames() -> None:
 	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
 	websocket_mock = AsyncMock()

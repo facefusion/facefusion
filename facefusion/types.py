@@ -1,3 +1,4 @@
+import asyncio
 import ctypes
 import subprocess
 from collections import namedtuple
@@ -159,11 +160,11 @@ Token : TypeAlias = str
 SessionId : TypeAlias = str
 Websocket : TypeAlias = Any
 WebsocketId : TypeAlias = int
-EventLoopToken : TypeAlias = Any
+EventLoop : TypeAlias = asyncio.AbstractEventLoop
 SessionWebsocket = TypedDict('SessionWebsocket',
 {
 	'websocket' : Websocket,
-	'event_loop_token' : EventLoopToken
+	'event_loop' : EventLoop
 })
 SessionWebsocketSet : TypeAlias = Dict[WebsocketId, SessionWebsocket]
 ApiSession = TypedDict('ApiSession',
