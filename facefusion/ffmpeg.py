@@ -359,60 +359,69 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def sanitize_audio(file : BinaryIO, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_audio(file : BinaryIO, audio_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
+			ffmpeg_builder.select_media_stream('0:a:0'),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.abort_empty_stream(),
-			ffmpeg_builder.force_output(asset_path)
+			ffmpeg_builder.force_output(audio_path)
 		)
 		return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
+		ffmpeg_builder.select_media_stream('0:a:0'),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.abort_empty_stream(),
-		ffmpeg_builder.force_output(asset_path)
+		ffmpeg_builder.force_output(audio_path)
 	)
 	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 
-def sanitize_image(file : BinaryIO, asset_path : str) -> bool:
+def sanitize_image(file : BinaryIO, image_path : str) -> bool:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
-		ffmpeg_builder.force_output(asset_path)
+		ffmpeg_builder.force_output(image_path)
 	)
 	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 
-def sanitize_video(file : BinaryIO, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_video(file : BinaryIO, video_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+	output_video_preset = state_manager.get_item('output_video_preset')
+
 	if security_strategy == 'strict':
-		available_video_encoders = get_static_available_encoder_set().get('video')
+		video_format = get_file_format(video_path)
+		video_encoder = facefusion.choices.video_set.get(video_format) #type:ignore[call-overload]
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
-			ffmpeg_builder.set_video_encoder(available_video_encoders[0]),
-			ffmpeg_builder.set_video_preset(available_video_encoders[0], 'ultrafast'),
-			ffmpeg_builder.set_pixel_format(available_video_encoders[0]),
+			ffmpeg_builder.select_media_stream('0:v:0'),
+			ffmpeg_builder.select_media_stream('0:a:0?'),
+			ffmpeg_builder.set_video_encoder(video_encoder),
+			ffmpeg_builder.set_video_preset(video_encoder, output_video_preset),
+			ffmpeg_builder.set_pixel_format(video_encoder),
 			ffmpeg_builder.deep_copy_video(),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.abort_empty_stream(),
-			ffmpeg_builder.force_output(asset_path)
+			ffmpeg_builder.force_output(video_path)
 		)
 		return run_ffmpeg_with_pipe(commands, file).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
+		ffmpeg_builder.select_media_stream('0:v:0'),
+		ffmpeg_builder.select_media_stream('0:a:0?'),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.abort_empty_stream(),
-		ffmpeg_builder.force_output(asset_path)
+		ffmpeg_builder.force_output(video_path)
 	)
 	return run_ffmpeg_with_pipe(commands, file).returncode == 0
 

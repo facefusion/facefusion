@@ -65,42 +65,43 @@ def before_all() -> None:
 	)
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 			ffmpeg_builder.set_video_encoder('libx265'),
+			[
+				'-an'
+			],
 			ffmpeg_builder.set_faststart('mp4'),
-			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-start.mp4'))
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-h265.mp4'))
 		)
 	)
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
-			ffmpeg_builder.set_video_encoder('libx265'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mp4'))
 		)
 	)
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
-			[
-				'-stream_loop',
-				'4'
-			],
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
-			ffmpeg_builder.set_audio_encoder('aac'),
+			ffmpeg_builder.set_audio_encoder('alac'),
 			ffmpeg_builder.set_faststart('mp4'),
-			ffmpeg_builder.set_output(get_test_example_file('source-moov-start.m4a'))
+			ffmpeg_builder.set_output(get_test_example_file('source.m4a'))
 		)
 	)
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
-			[
-				'-stream_loop',
-				'4'
-			],
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
-			ffmpeg_builder.set_audio_encoder('aac'),
+			ffmpeg_builder.set_audio_encoder('alac'),
 			ffmpeg_builder.set_output(get_test_example_file('source-moov-end.m4a'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			ffmpeg_builder.copy_video_encoder(),
+			ffmpeg_builder.set_faststart('mp4'),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p.m4a'))
 		)
 	)
 
@@ -276,33 +277,28 @@ def test_replace_audio() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 
 
-def test_sanitize_audio() -> None:
-	file_paths =\
-	[
-		get_test_example_file('source-moov-start.m4a'),
-		get_test_example_file('source-moov-end.m4a')
-	]
-	output_paths =\
-	[
-		get_test_output_path('test-sanitize-audio-strict-valid.m4a'),
-		get_test_output_path('test-sanitize-audio-strict-invalid.m4a'),
-		get_test_output_path('test-sanitize-audio-moderate-valid.m4a'),
-		get_test_output_path('test-sanitize-audio-moderate-invalid.m4a')
-	]
+def test_sanitize_audio_with_strict() -> None:
+	with open(get_test_example_file('source.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-strict-valid.m4a'), 'strict') is True
+		assert probe_audio_entries(get_test_output_path('test-sanitize-audio-with-strict-valid.m4a'), [ 'codec_name' ]).get('codec_name') == 'aac'
 
-	with open(file_paths[0], 'rb') as file:
-		assert sanitize_audio(file, output_paths[0], 'strict') is True
-		assert probe_audio_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'aac'
+	with open(get_test_example_file('source-moov-end.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-strict-invalid-1.m4a'), 'strict') is False
 
-	with open(file_paths[1], 'rb') as file:
-		assert sanitize_audio(file, output_paths[1], 'strict') is False
+	with open(get_test_example_file('target-240p.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-strict-invalid-2.m4a'), 'strict') is False
 
-	with open(file_paths[0], 'rb') as file:
-		assert sanitize_audio(file, output_paths[2], 'moderate') is True
-		assert probe_audio_entries(output_paths[2], [ 'codec_name' ]).get('codec_name') == 'aac'
 
-	with open(file_paths[1], 'rb') as file:
-		assert sanitize_audio(file, output_paths[3], 'moderate') is False
+def test_sanitize_audio_with_moderate() -> None:
+	with open(get_test_example_file('source.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-moderate-valid.m4a'), 'moderate') is True
+		assert probe_audio_entries(get_test_output_path('test-sanitize-audio-with-moderate-valid.m4a'), [ 'codec_name' ]).get('codec_name') == 'alac'
+
+	with open(get_test_example_file('source-moov-end.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-moderate-invalid-1.m4a'), 'moderate') is False
+
+	with open(get_test_example_file('target-240p.m4a'), 'rb') as file:
+		assert sanitize_audio(file, get_test_output_path('test-sanitize-audio-with-moderate-invalid-2.m4a'), 'moderate') is False
 
 
 def test_sanitize_image() -> None:
@@ -314,33 +310,28 @@ def test_sanitize_image() -> None:
 		assert is_image(output_path) is True
 
 
-def test_sanitize_video() -> None:
-	file_paths =\
-	[
-		get_test_example_file('target-240p-moov-start.mp4'),
-		get_test_example_file('target-240p-moov-end.mp4')
-	]
-	output_paths =\
-	[
-		get_test_output_path('test-sanitize-video-strict-valid.mp4'),
-		get_test_output_path('test-sanitize-video-strict-invalid.mp4'),
-		get_test_output_path('test-sanitize-video-moderate-valid.mp4'),
-		get_test_output_path('test-sanitize-video-moderate-invalid.mp4')
-	]
+def test_sanitize_video_with_strict() -> None:
+	with open(get_test_example_file('target-240p-h265.mp4'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-strict-valid.mp4'), 'strict') is True
+		assert probe_video_entries(get_test_output_path('test-sanitize-video-with-strict-valid.mp4'), [ 'codec_name' ]).get('codec_name') == 'h264'
 
-	with open(file_paths[0], 'rb') as file:
-		assert sanitize_video(file, output_paths[0], 'strict') is True
-		assert probe_video_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
+	with open(get_test_example_file('target-240p-moov-end.mp4'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-strict-invalid-1.mp4'), 'strict') is False
 
-	with open(file_paths[1], 'rb') as file:
-		assert sanitize_video(file, output_paths[1], 'strict') is False
+	with open(get_test_example_file('source.m4a'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-strict-invalid-2.mp4'), 'strict') is False
 
-	with open(file_paths[0], 'rb') as file:
-		assert sanitize_video(file, output_paths[2], 'moderate') is True
-		assert probe_video_entries(output_paths[2], [ 'codec_name' ]).get('codec_name') == 'hevc'
 
-	with open(file_paths[1], 'rb') as file:
-		assert sanitize_video(file, output_paths[3], 'moderate') is False
+def test_sanitize_video_with_moderate() -> None:
+	with open(get_test_example_file('target-240p-h265.mp4'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-moderate-valid.mp4'), 'moderate') is True
+		assert probe_video_entries(get_test_output_path('test-sanitize-video-with-moderate-valid.mp4'), [ 'codec_name' ]).get('codec_name') == 'hevc'
+
+	with open(get_test_example_file('target-240p-moov-end.mp4'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-moderate-invalid-1.mp4'), 'moderate') is False
+
+	with open(get_test_example_file('source.m4a'), 'rb') as file:
+		assert sanitize_video(file, get_test_output_path('test-sanitize-video-with-moderate-invalid-2.mp4'), 'moderate') is False
 
 
 def test_fix_audio_encoder() -> None:

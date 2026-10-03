@@ -22,10 +22,10 @@ def before_all() -> None:
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
-			ffmpeg_builder.set_video_duration(1.9),
+			ffmpeg_builder.set_video_duration(2),
 			ffmpeg_builder.set_audio_sample_rate(48000),
 			ffmpeg_builder.set_audio_channel_total(2),
-			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch.wav'))
+			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch-2s.wav'))
 		)
 	)
 	for video_format in [ 'mkv', 'mov' ]:
@@ -46,12 +46,12 @@ def test_extract_audio_metadata() -> None:
 	assert audio_metadata.get('frame_total') == 167040
 	assert audio_metadata.get('bit_rate') == 128000
 
-	audio_metadata = extract_audio_metadata(get_test_example_file('source-48000khz-2ch.wav'))
+	audio_metadata = extract_audio_metadata(get_test_example_file('source-48000khz-2ch-2s.wav'))
 
 	assert audio_metadata.get('sample_rate') == 48000
 	assert audio_metadata.get('channel_total') == 2
-	assert audio_metadata.get('frame_total') == 91200
-	assert audio_metadata.get('bit_rate') == 1536328
+	assert audio_metadata.get('frame_total') == 96000
+	assert audio_metadata.get('bit_rate') == 1536312
 
 
 def test_extract_video_metadata() -> None:
