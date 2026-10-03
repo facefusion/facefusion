@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import capture_video, chain, concat, convert_color_space, enforce_pixel_format, keep_video_alpha, restrict_color_transfer, run, seek_to, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_output_format, set_stream_mode, set_stream_quality, set_thread_count, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import abort_empty_stream, capture_video, chain, concat, convert_color_space, enforce_pixel_format, keep_video_alpha, restrict_color_transfer, run, seek_to, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_output_format, set_stream_mode, set_stream_quality, set_thread_count, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
 
 
 def test_run() -> None:
@@ -166,5 +166,9 @@ def test_enforce_pixel_format() -> None:
 def test_set_stream_quality() -> None:
 	assert set_stream_quality(500) == [ '-b:v', '500k' ]
 	assert set_stream_quality(2000) == [ '-b:v', '2000k' ]
+
+
+def test_abort_empty_stream() -> None:
+	assert abort_empty_stream() == [ '-abort_on', 'empty_output_stream' ]
 
 

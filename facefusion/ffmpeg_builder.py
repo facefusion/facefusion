@@ -95,6 +95,10 @@ def set_stream_quality(stream_quality : int) -> List[Command]:
 	return [ '-b:v', str(stream_quality) + 'k' ]
 
 
+def abort_empty_stream() -> List[Command]:
+	return [ '-abort_on', 'empty_output_stream' ]
+
+
 def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 

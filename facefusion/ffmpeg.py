@@ -365,6 +365,7 @@ def sanitize_audio(file : BinaryIO, asset_path : str, security_strategy : ApiSec
 			ffmpeg_builder.set_input('pipe:0'),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
+			ffmpeg_builder.abort_empty_stream(),
 			ffmpeg_builder.force_output(asset_path)
 		)
 		return run_ffmpeg_with_pipe(commands, file).returncode == 0
@@ -373,6 +374,7 @@ def sanitize_audio(file : BinaryIO, asset_path : str, security_strategy : ApiSec
 		ffmpeg_builder.set_input('pipe:0'),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
+		ffmpeg_builder.abort_empty_stream(),
 		ffmpeg_builder.force_output(asset_path)
 	)
 	return run_ffmpeg_with_pipe(commands, file).returncode == 0
@@ -399,6 +401,7 @@ def sanitize_video(file : BinaryIO, asset_path : str, security_strategy : ApiSec
 			ffmpeg_builder.deep_copy_video(),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
+			ffmpeg_builder.abort_empty_stream(),
 			ffmpeg_builder.force_output(asset_path)
 		)
 		return run_ffmpeg_with_pipe(commands, file).returncode == 0
@@ -408,6 +411,7 @@ def sanitize_video(file : BinaryIO, asset_path : str, security_strategy : ApiSec
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
+		ffmpeg_builder.abort_empty_stream(),
 		ffmpeg_builder.force_output(asset_path)
 	)
 	return run_ffmpeg_with_pipe(commands, file).returncode == 0
