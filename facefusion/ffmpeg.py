@@ -9,7 +9,7 @@ import facefusion.choices
 from facefusion import cli_progress, ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata
+from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, ImageEncoder, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata
 
 
 def run_ffmpeg_with_progress(commands : List[Command], progress : SimpleNamespace) -> subprocess.Popen[Buffer]:
@@ -144,16 +144,16 @@ def get_available_encoder_set() -> EncoderSet:
 			audio_encoder = line.split()[1]
 
 			if audio_encoder in facefusion.choices.audio_encoders and audio_encoder not in available_encoder_set.get('audio'):
-				available_encoder_set['audio'].append(audio_encoder) #type:ignore[arg-type]
+				available_encoder_set['audio'].append(cast(AudioEncoder, audio_encoder))
 
 		if line.startswith(' v'):
 			vision_encoder = line.split()[1]
 
 			if vision_encoder in facefusion.choices.image_encoders and vision_encoder not in available_encoder_set.get('image'):
-				available_encoder_set['image'].append(vision_encoder) #type:ignore[arg-type]
+				available_encoder_set['image'].append(cast(ImageEncoder, vision_encoder))
 
 			if vision_encoder in facefusion.choices.video_encoders and vision_encoder not in available_encoder_set.get('video'):
-				available_encoder_set['video'].append(vision_encoder) #type:ignore[arg-type]
+				available_encoder_set['video'].append(cast(VideoEncoder, vision_encoder))
 
 	return available_encoder_set
 

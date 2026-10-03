@@ -10,7 +10,7 @@ from facefusion import translator
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_frame_resolution
 from facefusion.filesystem import remove_file
-from facefusion.types import AssetType
+from facefusion.types import AssetType, ImageAsset, VideoAsset
 from facefusion.vision import is_vision_frames, to_strip_buffer
 
 
@@ -53,10 +53,10 @@ async def get_asset(request : Request) -> Response:
 			if validate_frame_resolution(resolution):
 
 				if request.query_params.get('subject') == 'frame':
-					vision_frames = capture_asset_frames(asset, frame_indexes, resolution) #type:ignore[arg-type]
+					vision_frames = capture_asset_frames(cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 				if request.query_params.get('subject') == 'face':
-					vision_frames = capture_asset_faces(asset, frame_indexes, resolution) #type:ignore[arg-type]
+					vision_frames = capture_asset_faces(cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 			if is_vision_frames(vision_frames):
 				return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
