@@ -26,8 +26,8 @@ def run_ffmpeg_with_progress(commands : List[Command], progress : SimpleNamespac
 					process.terminate()
 
 				if 'frame=' in __line__:
-					_, frame_index = __line__.split('frame=')
-					frame_index = int(frame_index)
+					_, __frame_index__ = __line__.split('frame=')
+					frame_index = int(__frame_index__)
 
 					progress.seek(frame_index)
 
