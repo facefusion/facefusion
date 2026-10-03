@@ -1,5 +1,6 @@
 import os
 from functools import partial
+from typing import cast
 
 from starlette.background import BackgroundTask, BackgroundTasks
 from starlette.requests import Request
@@ -12,10 +13,11 @@ from facefusion import args_helper, state_manager, translator
 from facefusion.apis import jobs_helper
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
 from facefusion.jobs import job_helper, job_manager, job_runner
+from facefusion.types import JobStatus
 
 
 async def get_jobs(request : Request) -> JSONResponse:
-	job_status = request.query_params.get('status')
+	job_status = cast(JobStatus, request.query_params.get('status'))
 
 	if job_status in facefusion.choices.job_statuses:
 		__job_set__ = {}

@@ -63,6 +63,6 @@ def handle_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, au
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 
 	if audio_frame and audio_queue.qsize() < audio_queue.maxsize:
-		audio_frame = numpy.frombuffer(audio_frame, dtype = numpy.float32)
+		__audio_frame__ = numpy.frombuffer(audio_frame, dtype = numpy.float32)
 		audio_time = rtc.convert_timestamp_to_time(audio_codec, audio_timestamp)
-		audio_queue.put((audio_time, audio_frame))
+		audio_queue.put((audio_time, __audio_frame__))
