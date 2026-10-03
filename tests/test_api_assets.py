@@ -36,6 +36,82 @@ def before_all() -> None:
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
 	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			[
+				'-stream_loop',
+				'-1'
+			],
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-stream_loop',
+				'-1'
+			],
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			[
+				'-map',
+				'0:v',
+				'-map',
+				'1:a',
+				'-t',
+				'16',
+				'-b:v',
+				'2100k'
+			],
+			ffmpeg_builder.set_video_encoder('libx265'),
+			ffmpeg_builder.set_video_preset('libx265', 'ultrafast'),
+			ffmpeg_builder.set_audio_encoder('aac'),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mp4'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			[
+				'-stream_loop',
+				'-1'
+			],
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-stream_loop',
+				'-1'
+			],
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			[
+				'-map',
+				'0:v',
+				'-map',
+				'1:a',
+				'-t',
+				'22',
+				'-b:v',
+				'4200k'
+			],
+			ffmpeg_builder.set_video_encoder('libx264'),
+			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
+			ffmpeg_builder.set_audio_encoder('aac'),
+			ffmpeg_builder.set_faststart('mp4'),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-faststart.mp4'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p-moov-end.mp4')),
+			ffmpeg_builder.copy_video_encoder(),
+			ffmpeg_builder.copy_audio_encoder(),
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mov'))
+		)
+	)
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			[
+				'-stream_loop',
+				'4'
+			],
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			ffmpeg_builder.set_audio_encoder('aac'),
+			ffmpeg_builder.set_output(get_test_example_file('source-moov-end.m4a'))
+		)
+	)
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
@@ -259,6 +335,81 @@ def test_upload_assets(test_client : TestClient) -> None:
 		assert asset_file.read().count('invalid'.encode()) == 0
 
 	assert upload_response.status_code == 201
+
+
+def test_upload_assets_with_faststart(test_client : TestClient) -> None:
+	for security_strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', security_strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		access_token = create_session_response.json().get('access_token')
+		session_context.set_session_id(session_manager.find_api_session_id(access_token))
+
+		with open(get_test_example_file('target-240p-faststart.mp4'), 'rb') as target_file:
+			upload_response = test_client.post('/assets?type=target', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('target-240p-faststart.mp4', target_file.read(), 'video/mp4'))
+			])
+
+		asset_ids = upload_response.json().get('asset_ids')
+
+		assert asset_store.get_asset(asset_ids[0]).get('media') == 'video'
+		assert upload_response.status_code == 201
+
+
+@pytest.mark.xfail(strict = True, raises = ValueError, reason = 'TESTING_AND_FIXING.md #5')
+def test_upload_assets_with_moov_at_end(test_client : TestClient) -> None:
+	for security_strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', security_strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		access_token = create_session_response.json().get('access_token')
+		session_context.set_session_id(session_manager.find_api_session_id(access_token))
+
+		for file_name, content_type in [ ('target-240p-moov-end.mp4', 'video/mp4'), ('target-240p-moov-end.mov', 'video/quicktime') ]:
+			with open(get_test_example_file(file_name), 'rb') as target_file:
+				upload_response = test_client.post('/assets?type=target', headers =
+				{
+					'Authorization': 'Bearer ' + access_token
+				}, files =
+				[
+					('file', (file_name, target_file.read(), content_type))
+				])
+
+			assert upload_response.status_code == 201
+
+
+@pytest.mark.xfail(strict = True, raises = ValueError, reason = 'TESTING_AND_FIXING.md #24')
+def test_upload_assets_with_moov_at_end_audio(test_client : TestClient) -> None:
+	for security_strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', security_strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		access_token = create_session_response.json().get('access_token')
+		session_context.set_session_id(session_manager.find_api_session_id(access_token))
+
+		with open(get_test_example_file('source-moov-end.m4a'), 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source-moov-end.m4a', source_file.read(), 'audio/mp4'))
+			])
+
+		assert upload_response.status_code == 201
 
 
 def test_get_assets(test_client : TestClient) -> None:

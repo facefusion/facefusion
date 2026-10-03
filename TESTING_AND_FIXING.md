@@ -44,9 +44,10 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 
 | # | Scope | Priority | Module | Bug | Fix validated |
 |---|-------|----------|--------|-----|---------------|
+| 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24) | yes |
+| 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`) | no, suggestion only |
 | 1 | v4-regression | P0 critical | workflows/to_video.py | memory strategy (default) drops original audio | yes |
 | 2 | v4-regression | P1 high | workflows/to_video.py | disk strategy trim truncates audio | yes (same diff as 1) |
-| 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | sanitize_video fails on moov-at-end MP4 (API uploads) | yes |
 | 16 | v4-only | P1 high | apis/endpoints/stream.py | dead /stream websocket stays in store, crashes the session sweeper | no, suggestion only |
 | 3 | v4-only | P2 medium | ffmpeg.spawn_frames | audio-to-image trim start yields truncated video | yes |
 | 11 | v4-only | P2 medium | ffmpeg.replace_audio | audio-to-image trim: audio track not offset (lip desync) | no, suggestion only |
@@ -74,11 +75,12 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 9 | master+v4 | won't fix | workflows/core.py | voice_extractor runs without a processor needing it | by design |
 
 Suggested order:
-1. **[v4-regression]**: bugs 1 and 2. One diff; this should unblock default runs.
-2. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
-3. **[v4-only]**: bugs 5, 16, 3, 11, 7, 15, 17, 19, 21, 18.
+1. **[top bug, v4-only]**: bugs 5 and 24 together. Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
+2. **[v4-regression]**: bugs 1 and 2. One diff; this should unblock default runs.
+3. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
+4. **[v4-only]**: bugs 16, 3, 11, 7, 15, 17, 19, 21, 18.
 
-Bugs 12 to 23 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
+Bugs 12 to 24 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
 
 Test results on the scratch copies, run over test_ffmpeg, test_workflow, test_image_to_video, test_audio_to_image(_as_frames), test_filesystem, test_video_manager and test_temp_helper:
 
@@ -105,6 +107,7 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
 | 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | 5 | tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end | AssertionError |
+| 5, 24 | tests/test_api_assets.py::test_upload_assets_with_moov_at_end | ValueError |
 | 6 | tests/test_filesystem.py::test_move_file_to_missing_directory | FileNotFoundError |
 | 7 | tests/test_workflow.py::test_conditional_get_source_audio_frame_with_frames_mode | AssertionError |
 | 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
@@ -112,6 +115,7 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 21 | tests/test_store_creator.py::test_init_content_with_existing_content | AssertionError |
 | 22 | tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source | AssertionError |
 | 23 | tests/test_download.py::test_conditional_download_with_missing_url | AssertionError |
+| 24 | tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio | ValueError |
 
 Checked against the patched copy (`regress/patched`):
 - **#1, #2, #3, #4, #6, #7, #8, #10:** turn into XPASS(strict).
@@ -339,7 +343,7 @@ Apply the same change in both functions.
 
 
 ## 5. sanitize_video fails on moov-at-end MP4 over pipe:0
-**[v4-only] · P1 high (API uploads of plain ffmpeg/camera MP4s)** · `facefusion/ffmpeg.py`, `facefusion/apis/asset_helper.py`
+**[v4-only] · P1 high, top bug (API uploads of plain ffmpeg/camera MP4s; fix together with 24)** · `facefusion/ffmpeg.py`, `facefusion/apis/asset_helper.py`
 
 ### Evidence
 - `media/b5.py`, non-faststart `target-2s-audio.mp4`:
@@ -347,6 +351,9 @@ Apply the same change in both functions.
   - moderate returns `True` but writes a **262-byte file with no streams**. ffmpeg exits 0 after `partial file` / `Error during demuxing`.
 - Faststart copy: both strategies work.
 - patched (`media/b5_patched.py`): all four combinations return `True` with 50 frames.
+- Realistic uploads: `tests/test_api_assets.py` `before_all` builds `target-240p-moov-end.mp4`. It is HEVC with AAC audio, 16s and 4.3 MB, with a 28-byte `ftyp` and `mdat` before a 17.7 KB `moov`. It also builds a `.mov` remux of it, whose `mdat` content starts at offset 36. Through `POST /assets`, both crash with **500** in both strategies; the details are under bug 24.
+- The control `target-240p-faststart.mp4` is H.264 with AAC, 22s and 11.7 MB, with `moov` at offset 40. It uploads with 201 (`test_upload_assets_with_faststart`).
+- Only a small video-only file (191 KB, stream copy) failed gracefully with 415.
 - master: n/a, there is no `sanitize_video`.
 
 ### Cause
@@ -940,3 +947,48 @@ Also consider having `get_static_download_size` return 0 for non-2xx responses.
 
 ### Test
 `tests/test_download.py::test_conditional_download_with_missing_url`.
+
+
+## 24. Uploads with the index at the end crash with 500
+**[v4-only] · P1 high, top bug (fix together with 5)** · `facefusion/apis/asset_store.py`, `facefusion/ffprobe.py`, `facefusion/ffmpeg.py` (`sanitize_video`, `sanitize_audio`)
+
+### Evidence
+Through the API in-process, `POST /assets`. The fixtures are built in `tests/test_api_assets.py` `before_all`:
+
+| Upload | Layout | strict | moderate |
+|--------|--------|--------|----------|
+| `target-240p-faststart.mp4` (H.264 + AAC, 11.7 MB) | `moov` first | 201 | 201 |
+| `target-240p-moov-end.mp4` (HEVC + AAC, 4.3 MB) | `mdat`, then `moov` at the end | **500** | **500** |
+| `target-240p-moov-end.mov` (remux of the mp4) | `mdat` content at offset 36, then `moov` at the end | **500** | **500** |
+| `source-moov-end.m4a` (AAC, 170 KB) | `mdat`, then `moov` at the end | **500** | **500** |
+
+Piping the moov-at-end mp4 or mov into ffmpeg (`-i pipe:0`) logs `partial file`, exits **0**, and writes a file whose `format=duration` is `N/A`.
+
+Traceback, video:
+```
+facefusion/apis/endpoints/assets.py:107  upload_assets -> asset_store.create_asset(asset_type, asset_path)
+facefusion/apis/asset_store.py:72        create_asset -> extract_video_metadata(asset_path)
+facefusion/ffprobe.py:102                ValueError: could not convert string to float: 'N/A'
+```
+Traceback, audio:
+```
+facefusion/apis/asset_store.py:42        create_asset -> extract_audio_metadata(asset_path)
+facefusion/ffprobe.py:75                 ValueError: could not convert string to float: 'N/A'
+```
+
+### Cause
+Two problems combine:
+1. **Bug 5.** `sanitize_video` and `sanitize_audio` read the upload through `pipe:0`, and with the index at the end ffmpeg cannot seek back. ffmpeg still exits 0, so the sanitizer returns True and leaves a broken asset.
+2. **Unguarded parsing.** `extract_video_metadata` and `extract_audio_metadata` convert ffprobe entries without checking them. `create_asset` therefore raises instead of returning None, which would give a 415. The exception middleware does not handle `ValueError`, so the client gets a 500. The same unguarded conversions exist on master, but there they are only reached with local files.
+
+### Suggested fix
+- Write the upload to a temp file and pass ffmpeg the path, as in bug 5. This makes these uploads work.
+- Make the metadata readers return None when an entry is missing or `N/A`, and have `create_asset` return None. Any other broken asset then gives a graceful 415 instead of a 500.
+- Optionally, have the sanitizers check the output (for example a non-empty duration) instead of trusting ffmpeg's exit code.
+
+### Tests
+- `tests/test_api_assets.py::test_upload_assets_with_moov_at_end` (mp4 and mov, both strategies; strict xfail, `raises = ValueError`)
+- `tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio` (m4a, both strategies; strict xfail, `raises = ValueError`)
+- Control: `tests/test_api_assets.py::test_upload_assets_with_faststart` (passes)
+
+If only the crash is guarded, both xfail tests fail with an `AssertionError` (415), so `raises` keeps them from staying hidden. Once spooling lands, they pass.
