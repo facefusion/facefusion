@@ -80,7 +80,7 @@ def test_set_loop() -> None:
 def test_set_stream_mode() -> None:
 	assert set_stream_mode('udp') == [ '-f', 'mpegts' ]
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
-	assert set_stream_mode('invalid') == []
+	assert set_stream_mode('invalid') == [] #type:ignore[arg-type]
 
 
 def test_set_stream_quality() -> None:
@@ -293,7 +293,7 @@ def test_map_nvenc_preset() -> None:
 	assert map_nvenc_preset('slow') == 'slow'
 	assert map_nvenc_preset('slower') == 'slow'
 	assert map_nvenc_preset('veryslow') == 'slow'
-	assert map_nvenc_preset('invalid') is None
+	assert map_nvenc_preset('invalid') is None #type:ignore[arg-type]
 
 
 def test_map_amf_preset() -> None:
@@ -306,7 +306,7 @@ def test_map_amf_preset() -> None:
 	assert map_amf_preset('slow') == 'quality'
 	assert map_amf_preset('slower') == 'quality'
 	assert map_amf_preset('veryslow') == 'quality'
-	assert map_amf_preset('invalid') is None
+	assert map_amf_preset('invalid') is None #type:ignore[arg-type]
 
 
 def test_map_qsv_preset() -> None:
@@ -319,4 +319,4 @@ def test_map_qsv_preset() -> None:
 	assert map_qsv_preset('slow') == 'slow'
 	assert map_qsv_preset('slower') == 'slower'
 	assert map_qsv_preset('veryslow') == 'veryslow'
-	assert map_qsv_preset('invalid') is None
+	assert map_qsv_preset('invalid') is None #type:ignore[arg-type]

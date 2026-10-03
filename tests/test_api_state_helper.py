@@ -14,11 +14,11 @@ def before_all() -> None:
 
 def test_validate_argument_key() -> None:
 	assert validate_argument_key('face_detector_score') is True
-	assert validate_argument_key('face_swapper_model') is True
+	assert validate_argument_key('face_swapper_model') is True #type:ignore[arg-type]
 	assert validate_argument_key('jobs_path') is False
 	assert validate_argument_key('temp_path') is False
 	assert validate_argument_key('api_session_limit') is False
-	assert validate_argument_key('invalid') is False
+	assert validate_argument_key('invalid') is False #type:ignore[arg-type]
 
 
 def test_validate_argument_value() -> None:
@@ -61,9 +61,9 @@ def test_normalize_argument_value() -> None:
 	assert normalize_argument_value('halt_on_error', 'True') is True
 	assert normalize_argument_value('halt_on_error', 'False') is False
 	assert normalize_argument_value('halt_on_error', 'invalid') is None
-	assert normalize_argument_value('background_remover_fill_color', [ 255 ]) == (255, 255, 255, 255)
-	assert normalize_argument_value('background_remover_despill_color', [ 0, 255, 0 ]) == (0, 255, 0, 255)
-	assert normalize_argument_value('background_remover_fill_color', 'invalid') is None
+	assert normalize_argument_value('background_remover_fill_color', [ 255 ]) == (255, 255, 255, 255) #type:ignore[arg-type]
+	assert normalize_argument_value('background_remover_despill_color', [ 0, 255, 0 ]) == (0, 255, 0, 255) #type:ignore[arg-type]
+	assert normalize_argument_value('background_remover_fill_color', 'invalid') is None #type:ignore[arg-type]
 	assert normalize_argument_value('face_detector_margin', [ 1, 2 ]) == (1, 2, 1, 2)
 	assert normalize_argument_value('face_mask_padding', [ 1 ]) == (1, 1, 1, 1)
 	assert normalize_argument_value('face_mask_padding', 'invalid') is None

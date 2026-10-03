@@ -203,7 +203,7 @@ def test_sort_faces_by_order() -> None:
 	assert sort_faces_by_order(faces, 'large-small') == [ face_b, face_d, face_a, face_c ]
 	assert sort_faces_by_order(faces, 'best-worst') == [ face_b, face_c, face_a, face_d ]
 	assert sort_faces_by_order(faces, 'worst-best') == [ face_d, face_a, face_c, face_b ]
-	assert sort_faces_by_order(faces, 'invalid') == [ face_a, face_b, face_c, face_d ]
+	assert sort_faces_by_order(faces, 'invalid') == [ face_a, face_b, face_c, face_d ] #type:ignore[arg-type]
 
 
 def test_get_bounding_box_left() -> None:

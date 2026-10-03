@@ -16,4 +16,4 @@ def test_restrict_trim_frame() -> None:
 	assert restrict_trim_frame(270, 270, 271) == (270, 270)
 	assert restrict_trim_frame(0, 124, 224) == (0, 0)
 	assert restrict_trim_frame(0, None, None) == (0, 0)
-	assert restrict_trim_frame(270, 'invalid', 'invalid') == (0, 270)
+	assert restrict_trim_frame(270, 'invalid', 'invalid') == (0, 270) #type:ignore[arg-type]

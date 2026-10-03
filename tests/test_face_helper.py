@@ -71,7 +71,7 @@ def test_warp_face_by_bounding_box() -> None:
 
 
 def test_warp_face_by_translation() -> None:
-	crop_vision_frame, affine_matrix = warp_face_by_translation(create_split_vision_frame(), (-50, -25), 0.5, (100, 80))
+	crop_vision_frame, affine_matrix = warp_face_by_translation(create_split_vision_frame(), numpy.array([ -50, -25 ]), 0.5, (100, 80))
 
 	assert crop_vision_frame.shape == (80, 100, 3)
 	assert crop_vision_frame[10, 24].tolist() == [ 0, 0, 0 ]

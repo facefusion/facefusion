@@ -9,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 from _pytest.logging import LogCaptureFixture
 
+import facefusion.choices
 import facefusion.ffmpeg
 from facefusion import cli_progress, ffmpeg, ffmpeg_builder, ffprobe, ffprobe_builder, process_manager, state_manager
 from facefusion.download import conditional_download
@@ -435,7 +436,7 @@ def test_restore_audio() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 	state_manager.init_item('output_video_encoder', 'libx264')
 	target_path = get_test_example_file('target-240p-48khz.mp4')
-	test_set =\
+	trim_test_set =\
 	[
 		(get_test_output_path('test-restore-audio-0-50.mp4'), 0, 50, { 'duration': '2.000000' }),
 		(get_test_output_path('test-restore-audio-25-75.mp4'), 25, 75, { 'duration': '2.000000' }),
@@ -443,7 +444,7 @@ def test_restore_audio() -> None:
 		(get_test_output_path('test-restore-audio-124-224.mp4'), 124, 224, {})
 	]
 
-	for output_path, trim_frame_start, trim_frame_end, audio_entries in test_set:
+	for output_path, trim_frame_start, trim_frame_end, audio_entries in trim_test_set:
 		create_temp_directory(state_manager.get_temp_path(), output_path)
 		extract_frames(target_path, output_path, (426, 226), 25.0, trim_frame_start, trim_frame_end)
 		merge_video(target_path, output_path, 25.0, 25.0, (426, 226), trim_frame_start, trim_frame_end)
@@ -576,7 +577,7 @@ def test_sanitize_video() -> None:
 
 @pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #5')
 def test_sanitize_video_with_moov_at_end() -> None:
-	for security_strategy in [ 'strict', 'moderate' ]:
+	for security_strategy in facefusion.choices.api_security_strategies:
 		output_path = get_test_output_path('test-sanitize-video-with-moov-at-end-' + security_strategy + '.mp4')
 
 		with open(get_test_example_file('target-240p-16khz.mp4'), 'rb') as file:

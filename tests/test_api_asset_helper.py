@@ -9,6 +9,7 @@ from facefusion import face_aligner, face_classifier, face_detector, face_recogn
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, detect_media_type_by_format, detect_media_type_by_path, extract_image_metadata, read_asset_frames, validate_asset_files, validate_frame_resolution
 from facefusion.apis.asset_store import create_asset, init
 from facefusion.download import conditional_download
+from facefusion.types import AudioAsset, ImageAsset, VideoAsset
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -107,9 +108,9 @@ def test_validate_frame_resolution() -> None:
 
 
 def test_read_asset_frames() -> None:
-	image_asset = create_asset('source', get_test_example_file('source.jpg'))
-	video_asset = create_asset('target', get_test_example_file('target-240p.mp4'))
-	audio_asset = create_asset('source', get_test_example_file('source.mp3'))
+	image_asset : ImageAsset = create_asset('source', get_test_example_file('source.jpg')) #type:ignore[assignment]
+	video_asset : VideoAsset = create_asset('target', get_test_example_file('target-240p.mp4')) #type:ignore[assignment]
+	audio_asset : AudioAsset = create_asset('source', get_test_example_file('source.mp3')) #type:ignore[assignment]
 
 	assert len(read_asset_frames(image_asset, [])) == 1
 	assert read_asset_frames(image_asset, [])[0].shape == (1024, 1024, 3)
@@ -117,12 +118,12 @@ def test_read_asset_frames() -> None:
 	assert len(read_asset_frames(video_asset, [ '0', '10' ])) == 2
 	assert read_asset_frames(video_asset, [ '0' ])[0].shape == (226, 426, 3)
 	assert read_asset_frames(video_asset, [ 'invalid', '-1' ]) == []
-	assert read_asset_frames(audio_asset, [ '0' ]) == []
+	assert read_asset_frames(audio_asset, [ '0' ]) == [] #type:ignore[arg-type]
 
 
 def test_capture_asset_frames() -> None:
-	image_asset = create_asset('source', get_test_example_file('source.jpg'))
-	video_asset = create_asset('target', get_test_example_file('target-240p.mp4'))
+	image_asset : ImageAsset = create_asset('source', get_test_example_file('source.jpg')) #type:ignore[assignment]
+	video_asset : VideoAsset = create_asset('target', get_test_example_file('target-240p.mp4')) #type:ignore[assignment]
 	capture_vision_frames = capture_asset_frames(image_asset, [], '128x256')
 
 	assert len(capture_vision_frames) == 1
@@ -135,8 +136,8 @@ def test_capture_asset_frames() -> None:
 
 
 def test_capture_asset_faces() -> None:
-	image_asset = create_asset('source', get_test_example_file('source.jpg'))
-	video_asset = create_asset('target', get_test_example_file('target-240p.mp4'))
+	image_asset : ImageAsset = create_asset('source', get_test_example_file('source.jpg')) #type:ignore[assignment]
+	video_asset : VideoAsset = create_asset('target', get_test_example_file('target-240p.mp4')) #type:ignore[assignment]
 	capture_vision_frames = capture_asset_faces(image_asset, [], '128x256')
 
 	assert len(capture_vision_frames) == 1

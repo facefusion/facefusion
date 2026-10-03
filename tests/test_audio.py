@@ -84,7 +84,7 @@ def test_convert_hertz_to_mel() -> None:
 def test_convert_mel_to_hertz() -> None:
 	assert convert_mel_to_hertz(numpy.array(0.0)) == 0.0
 	assert round(convert_mel_to_hertz(numpy.array(781.1728387480312)).item(), 4) == 700.0
-	assert round(convert_mel_to_hertz(convert_hertz_to_mel(1000)).item(), 4) == 1000.0
+	assert round(convert_mel_to_hertz(numpy.array(convert_hertz_to_mel(1000))).item(), 4) == 1000.0
 
 
 def test_create_mel_filter_bank() -> None:

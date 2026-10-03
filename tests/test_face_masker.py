@@ -166,7 +166,7 @@ def test_create_area_mask() -> None:
 	assert mouth_mask[155, 125].round(2) == 1.0
 	assert mouth_mask[60, 125].round(2) == 0.0
 	assert mouth_mask[155, 90].round(2) == 0.0
-	assert numpy.array_equal(create_area_mask(crop_vision_frame, face_landmark_68, [ 'invalid', 'mouth' ]), mouth_mask) is True
+	assert numpy.array_equal(create_area_mask(crop_vision_frame, face_landmark_68, [ 'invalid', 'mouth' ]), mouth_mask) is True #type:ignore[list-item]
 
 	face_mask = create_area_mask(crop_vision_frame, face_landmark_68, [ 'upper-face', 'lower-face' ])
 

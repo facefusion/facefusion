@@ -6,6 +6,7 @@ from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download, conditional_download_hashes, conditional_download_sources, get_static_download_size, ping_static_url, resolve_download_url, resolve_download_url_by_provider, validate_hash_paths, validate_source_paths
 from facefusion.filesystem import get_file_size, is_file, remove_file
 from facefusion.hash_helper import create_hash
+from facefusion.types import DownloadSet
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, get_test_outputs_directory, prepare_test_output_directory
 
 
@@ -75,7 +76,7 @@ def test_static_ping_url() -> None:
 
 
 def test_conditional_download_hashes() -> None:
-	hash_set =\
+	hash_set : DownloadSet =\
 	{
 		'fairface':
 		{
@@ -114,7 +115,7 @@ def test_conditional_download_hashes() -> None:
 
 @pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #22')
 def test_conditional_download_hashes_with_invalid_hash() -> None:
-	hash_set =\
+	hash_set : DownloadSet =\
 	{
 		'invalid':
 		{
@@ -128,7 +129,7 @@ def test_conditional_download_hashes_with_invalid_hash() -> None:
 
 
 def test_conditional_download_sources() -> None:
-	source_set =\
+	source_set : DownloadSet =\
 	{
 		'fairface':
 		{
@@ -170,7 +171,7 @@ def test_conditional_download_sources() -> None:
 @pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #22')
 def test_conditional_download_sources_with_invalid_source() -> None:
 	create_test_source(get_test_output_path('test-conditional-download-sources-with-invalid-source.onnx'), 'invalid')
-	source_set =\
+	source_set : DownloadSet =\
 	{
 		'invalid':
 		{
