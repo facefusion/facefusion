@@ -1,7 +1,7 @@
 import asyncio
 import os
 import uuid
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from starlette.datastructures import UploadFile
 
@@ -10,7 +10,7 @@ from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.face_creator import get_many_faces
 from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
-from facefusion.types import ImageAsset, ImageMetadata, MediaType, VideoAsset, VisionFrame
+from facefusion.types import AudioFormat, ImageAsset, ImageFormat, ImageMetadata, MediaType, VideoAsset, VideoFormat, VisionFrame
 from facefusion.vision import detect_image_resolution, fit_contain_frame, is_vision_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
@@ -49,13 +49,13 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 		file_format = get_file_format(upload_file.filename)
 		media_type = detect_media_type_by_format(file_format)
 
-		if media_type == 'audio' and facefusion.choices.audio_set.get(file_format) not in available_encoder_set.get('audio'): #type:ignore[call-overload]
+		if media_type == 'audio' and facefusion.choices.audio_set.get(cast(AudioFormat, file_format)) not in available_encoder_set.get('audio'):
 			return False
 
-		if media_type == 'image' and facefusion.choices.image_set.get(file_format) not in available_encoder_set.get('image'): #type:ignore[call-overload]
+		if media_type == 'image' and facefusion.choices.image_set.get(cast(ImageFormat, file_format)) not in available_encoder_set.get('image'):
 			return False
 
-		if media_type == 'video' and facefusion.choices.video_set.get(file_format) not in available_encoder_set.get('video'): #type:ignore[call-overload]
+		if media_type == 'video' and facefusion.choices.video_set.get(cast(VideoFormat, file_format)) not in available_encoder_set.get('video'):
 			return False
 
 		return media_type in [ 'audio', 'image', 'video' ]
