@@ -33,7 +33,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_video_fps(video_fps),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
 			)
-		)
+		).wait()
 
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')

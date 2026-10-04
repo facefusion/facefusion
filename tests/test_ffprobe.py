@@ -27,7 +27,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_audio_channel_total(2),
 			ffmpeg_builder.set_output(get_test_example_file('source-48000khz-2ch-2s.wav'))
 		)
-	)
+	).wait()
 	for video_format in [ 'mkv', 'mov' ]:
 		ffmpeg.run_ffmpeg(
 			ffmpeg_builder.chain(
@@ -35,7 +35,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_video_duration(1),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-1s.' + video_format))
 			)
-		)
+		).wait()
 
 
 def test_extract_audio_metadata() -> None:

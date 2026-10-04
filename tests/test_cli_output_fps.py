@@ -40,7 +40,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.force_output(get_test_example_file('target-240p-30frames-' + str(output_video_fps) + 'fps.mp4'))
 			)
-		)
+		).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
