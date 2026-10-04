@@ -28,7 +28,9 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 
 				if 'frame=' in __line__:
 					_, frame_number = __line__.split('frame=')
-					update_progress(int(frame_number))
+					__frame_number__ = int(frame_number)
+
+					update_progress(__frame_number__)
 
 			if log_level == 'debug':
 				log_debug(process)
@@ -36,6 +38,9 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 		except subprocess.TimeoutExpired:
 			continue
 		return process
+
+	if process_manager.is_stopping():
+		process.terminate()
 
 	return process
 
