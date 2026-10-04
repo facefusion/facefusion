@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager, video_manager
 from facefusion.download import conditional_download
-from facefusion.vision import calculate_histogram_difference, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_image_resolution, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_image_resolution, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
@@ -196,14 +196,14 @@ def test_detect_video_duration() -> None:
 	assert detect_video_duration('invalid') == 0
 
 
-def test_restrict_trim_frame() -> None:
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
+def test_restrict_video_range() -> None:
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
 
 
 def test_detect_video_resolution() -> None:

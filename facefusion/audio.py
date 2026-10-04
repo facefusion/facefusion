@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.filesystem import is_audio
-from facefusion.media_helper import restrict_trim_frame
+from facefusion.normalizer import normalize_range
 from facefusion.types import Audio, AudioFrame, Duration, Fps, Mel, MelFilterBank, Spectrogram
 from facefusion.voice_extractor import batch_extract_voice
 
@@ -166,6 +166,6 @@ def detect_audio_duration(audio_path : str) -> Duration:
 	return 0
 
 
-def restrict_trim_audio_frame(audio_path : str, fps : Fps, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
+def restrict_audio_range(audio_path : str, fps : Fps, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
 	audio_frame_total = count_audio_frame_total(audio_path, fps)
-	return restrict_trim_frame(audio_frame_total, trim_frame_start, trim_frame_end)
+	return normalize_range(audio_frame_total, trim_frame_start, trim_frame_end)

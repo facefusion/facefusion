@@ -8,17 +8,17 @@ import numpy
 from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
-from facefusion.media_helper import restrict_trim_frame
+from facefusion.normalizer import normalize_range
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Fps, Resolution, VisionFrame
-from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_video_frame, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
+from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_video_frame, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution
 from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_vision_frame
 
 
 def analyse_video() -> ErrorCode:
-	trim_frame_start, trim_frame_end = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = restrict_video_range(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 	if content_analyser.analyse_video(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end):
 		return 3
@@ -26,7 +26,7 @@ def analyse_video() -> ErrorCode:
 
 
 def create_temp_frames() -> ErrorCode:
-	trim_frame_start, trim_frame_end = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = restrict_video_range(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
@@ -65,7 +65,7 @@ def process_memory_frame(frame_index : int, temp_video_resolution : Resolution, 
 
 
 def process_memory_frames() -> ErrorCode:
-	trim_frame_start, trim_frame_end = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = restrict_video_range(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
@@ -118,7 +118,7 @@ def process_memory_frames() -> ErrorCode:
 
 def merge_frames() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = normalize_range(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = conditional_scale_resolution()
 	temp_video_fps = conditional_restrict_video_fps()
 	output_fps = conditional_get_output_fps()
@@ -136,7 +136,7 @@ def merge_frames() -> ErrorCode:
 
 def restore_audio() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = normalize_range(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(translator.get('skipping_audio'), __name__)

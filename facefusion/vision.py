@@ -9,7 +9,7 @@ from cv2.typing import Size
 from facefusion import ffprobe, video_manager
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
-from facefusion.media_helper import restrict_trim_frame
+from facefusion.normalizer import normalize_range
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.types import Buffer, ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 
@@ -118,7 +118,7 @@ def count_video_frame_total(video_path : str) -> int:
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
 	if is_video(video_path):
 		video_fps = detect_video_fps(video_path)
-		trim_frame_start, trim_frame_end = restrict_trim_video_frame(video_path, trim_frame_start, trim_frame_end)
+		trim_frame_start, trim_frame_end = restrict_video_range(video_path, trim_frame_start, trim_frame_end)
 		extract_frame_start = resolve_extract_frame_index(video_fps, fps, trim_frame_start)
 		extract_frame_end = resolve_extract_frame_index(video_fps, fps, trim_frame_end)
 
@@ -158,9 +158,9 @@ def detect_video_duration(video_path : str) -> Duration:
 	return 0
 
 
-def restrict_trim_video_frame(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
+def restrict_video_range(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
 	video_frame_total = count_video_frame_total(video_path)
-	return restrict_trim_frame(video_frame_total, trim_frame_start, trim_frame_end)
+	return normalize_range(video_frame_total, trim_frame_start, trim_frame_end)
 
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:

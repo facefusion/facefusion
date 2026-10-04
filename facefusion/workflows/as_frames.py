@@ -1,7 +1,7 @@
 import os
 
 from facefusion import ffmpeg, logger, state_manager, translator
-from facefusion.audio import restrict_trim_audio_frame
+from facefusion.audio import restrict_audio_range
 from facefusion.common_helper import get_first
 from facefusion.filesystem import are_images, copy_file, create_directory, filter_audio_paths, resolve_file_paths
 from facefusion.temp_helper import resolve_temp_frame_paths
@@ -16,7 +16,7 @@ def create_temp_frames() -> ErrorCode:
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
-	trim_frame_start, trim_frame_end = restrict_trim_audio_frame(source_audio_path, output_audio_fps, state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = restrict_audio_range(source_audio_path, output_audio_fps, state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 	if ffmpeg.spawn_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution, output_audio_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('spawning_frames_succeeded'), __name__)

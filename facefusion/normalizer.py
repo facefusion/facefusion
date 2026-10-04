@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from facefusion.types import Color, Fps, Space
 
@@ -27,6 +27,20 @@ def normalize_space(spaces : Any) -> Optional[Space]:
 		if spaces and len(spaces) == 4:
 			return tuple(spaces)
 	return None
+
+
+def normalize_range(total : int, start : Optional[int], end : Optional[int]) -> Tuple[int, int]:
+	if isinstance(start, int):
+		start = max(0, min(start, total))
+	if isinstance(end, int):
+		end = max(0, min(end, total))
+	if isinstance(start, int) and isinstance(end, int):
+		return start, end
+	if isinstance(start, int):
+		return start, total
+	if isinstance(end, int):
+		return 0, end
+	return 0, total
 
 
 def normalize_fps(fps : Any) -> Optional[Fps]:
