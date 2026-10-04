@@ -167,10 +167,9 @@ def restore_audio() -> ErrorCode:
 def finalize_video(start_time : float) -> ErrorCode:
 	if is_video(state_manager.get_item('output_path')):
 		logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
-	else:
-		logger.error(translator.get('processing_video_failed'), __name__)
-		return 1
-	return 0
+		return 0
+	logger.error(translator.get('processing_video_failed'), __name__)
+	return 1
 
 
 def conditional_clear_video_pool() -> None:

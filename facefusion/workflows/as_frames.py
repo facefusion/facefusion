@@ -40,7 +40,6 @@ def copy_temp_frames() -> ErrorCode:
 def finalize_frames(start_time : float) -> ErrorCode:
 	if are_images(resolve_file_paths(state_manager.get_item('output_path'))):
 		logger.info(translator.get('processing_frames_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
-	else:
-		logger.error(translator.get('processing_frames_failed'), __name__)
-		return 1
-	return 0
+		return 0
+	logger.error(translator.get('processing_frames_failed'), __name__)
+	return 1
