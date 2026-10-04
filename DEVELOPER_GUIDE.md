@@ -67,6 +67,8 @@ Assets
 
 Upload as multipart with one or more parts named `file`. The format is taken from the file extension, uploads are re-encoded and stripped of metadata, `--api-security-strategy moderate` copies audio and video streams instead. Request bodies are capped at 512 MiB.
 
+MP4, MOV and M4A files are read as a stream and need their `moov` atom at the front, files that carry it at the end are rejected. Clients can fix this before uploading, either by remuxing with `-movflags +faststart` or by reordering the bytes themselves.
+
 | Media | Formats                                       |
 |-------|-----------------------------------------------|
 | audio | flac, m4a, mp3, ogg, opus, wav                |
