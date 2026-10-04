@@ -1,12 +1,12 @@
 import os
 import subprocess
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import facefusion.choices
 from facefusion import cli_progress, curl_builder, logger, process_manager, state_manager, translator
-from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
+from facefusion.filesystem import get_file_extension, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Buffer, Command, DownloadProvider, DownloadSet
 
@@ -73,85 +73,44 @@ def ping_static_url(url : str) -> bool:
 	return process.returncode == 0
 
 
-def conditional_download_hashes(hash_set : DownloadSet) -> bool:
-	hash_paths = [ hash_set.get(hash_key).get('path') for hash_key in hash_set.keys() ]
-
+def conditional_download_files(file_set : DownloadSet) -> bool:
 	process_manager.check()
-	_, invalid_hash_paths = validate_hash_paths(hash_paths)
-	if invalid_hash_paths:
-		for index in hash_set:
-			if hash_set.get(index).get('path') in invalid_hash_paths:
-				invalid_hash_url = hash_set.get(index).get('url')
-				if invalid_hash_url:
-					download_directory_path = os.path.dirname(hash_set.get(index).get('path'))
-					conditional_download(download_directory_path, [ invalid_hash_url ])
 
-	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
+	for file in file_set.values():
+		file_url = file.get('url')
+		file_path = file.get('path')
 
-	for valid_hash_path in valid_hash_paths:
-		valid_hash_file_name = get_file_name(valid_hash_path)
-		logger.debug(translator.get('validating_hash_succeeded').format(hash_file_name = valid_hash_file_name), __name__)
-	for invalid_hash_path in invalid_hash_paths:
-		invalid_hash_file_name = get_file_name(invalid_hash_path)
-		logger.error(translator.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
+		if not validate_file(file_path) and file_url:
+			conditional_download(os.path.dirname(file_path), [ file_url ])
 
+	is_valid = conditional_validate_files(file_set)
 	process_manager.end()
-	return not invalid_hash_paths
+
+	return is_valid
 
 
-def conditional_download_sources(source_set : DownloadSet) -> bool:
-	source_paths = [ source_set.get(source_key).get('path') for source_key in source_set.keys() ]
+def conditional_validate_files(file_set : DownloadSet) -> bool:
+	for file in file_set.values():
+		file_path = file.get('path')
+		file_name = os.path.basename(file_path)
 
-	process_manager.check()
-	_, invalid_source_paths = validate_source_paths(source_paths)
-	if invalid_source_paths:
-		for index in source_set:
-			if source_set.get(index).get('path') in invalid_source_paths:
-				invalid_source_url = source_set.get(index).get('url')
-				if invalid_source_url:
-					download_directory_path = os.path.dirname(source_set.get(index).get('path'))
-					conditional_download(download_directory_path, [ invalid_source_url ])
+		if not validate_file(file_path):
+			logger.error(translator.get('validating_file_failed').format(file_name = file_name), __name__)
 
-	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
+			if remove_file(file_path):
+				logger.error(translator.get('deleting_corrupt_file').format(file_name = file_name), __name__)
 
-	for valid_source_path in valid_source_paths:
-		valid_source_file_name = get_file_name(valid_source_path)
-		logger.debug(translator.get('validating_source_succeeded').format(source_file_name = valid_source_file_name), __name__)
-	for invalid_source_path in invalid_source_paths:
-		invalid_source_file_name = get_file_name(invalid_source_path)
-		logger.error(translator.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__)
+			return False
 
-		if remove_file(invalid_source_path):
-			logger.error(translator.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__)
+		logger.debug(translator.get('validating_file_succeeded').format(file_name = file_name), __name__)
 
-	process_manager.end()
-	return not invalid_source_paths
+	return True
 
 
-def validate_hash_paths(hash_paths : List[str]) -> Tuple[List[str], List[str]]:
-	valid_hash_paths = []
-	invalid_hash_paths = []
-
-	for hash_path in hash_paths:
-		if is_file(hash_path):
-			valid_hash_paths.append(hash_path)
-		else:
-			invalid_hash_paths.append(hash_path)
-
-	return valid_hash_paths, invalid_hash_paths
-
-
-def validate_source_paths(source_paths : List[str]) -> Tuple[List[str], List[str]]:
-	valid_source_paths = []
-	invalid_source_paths = []
-
-	for source_path in source_paths:
-		if validate_hash(source_path):
-			valid_source_paths.append(source_path)
-		else:
-			invalid_source_paths.append(source_path)
-
-	return valid_source_paths, invalid_source_paths
+def validate_file(file_path : str) -> bool:
+	if get_file_extension(file_path) == '.hash':
+		return is_file(file_path)
+	return validate_hash(file_path)
 
 
 def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:

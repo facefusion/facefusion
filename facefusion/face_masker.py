@@ -6,7 +6,7 @@ import numpy
 
 import facefusion.choices
 from facefusion import inference_manager, state_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskArea, FaceMaskRegion, InferencePool, Mask, ModelSet, Space, VisionFrame
@@ -182,7 +182,7 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 def pre_check() -> bool:
 	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+	return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 
 
 def create_box_mask(crop_vision_frame : VisionFrame, face_mask_blur : float, face_mask_padding : Space) -> Mask:

@@ -11,7 +11,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.common_helper import is_macos, is_windows
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path
 from facefusion.normalizer import normalize_color
@@ -542,7 +542,7 @@ def pre_check() -> bool:
 		if not common_module.pre_check():
 			return False
 
-	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+	return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 
 
 def pre_process(mode : ProcessMode) -> bool:

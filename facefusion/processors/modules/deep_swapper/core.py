@@ -11,7 +11,7 @@ import facefusion.capability_store
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.common_helper import create_int_metavar, get_middle
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
+from facefusion.download import conditional_download_files, resolve_download_url_by_provider
 from facefusion.face_creator import scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
@@ -317,7 +317,7 @@ def pre_check() -> bool:
 			return False
 
 	if model_hash_set and model_source_set:
-		return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+		return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 	return True
 
 

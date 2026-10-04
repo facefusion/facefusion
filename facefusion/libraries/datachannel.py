@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Optional, Type
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
+from facefusion.download import conditional_download_files, resolve_download_url_by_provider
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import LibrarySet
 
@@ -139,7 +139,7 @@ def pre_check() -> bool:
 	library_hash_set = create_static_library_set().get('hashes')
 	library_source_set = create_static_library_set().get('sources')
 
-	return conditional_download_hashes(library_hash_set) and conditional_download_sources(library_source_set)
+	return conditional_download_files(library_hash_set) and conditional_download_files(library_source_set)
 
 
 @lru_cache

@@ -5,7 +5,7 @@ import numpy
 import scipy
 
 from facefusion import inference_manager, state_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import Audio, AudioChunk, DownloadScope, DownloadSet, InferencePool, ModelSet, Voice, VoiceChunk
@@ -121,7 +121,7 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 def pre_check() -> bool:
 	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+	return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 
 
 def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Voice:
