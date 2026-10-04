@@ -12,6 +12,8 @@ git checkout v4-beta
 python facefusion.py api --api-session-limit 32
 ```
 
+The `v4` branch can be checked out instead, it already contains the feedback from the beta phase but is considered unstable. Recent changes are listed in [beta updates](BETA_UPDATES.md).
+
 The API options can be passed as arguments or set in the `[api]` section of `facefusion.ini`.
 
 | Option                    | Default     | Choices              |
