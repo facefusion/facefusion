@@ -10,7 +10,7 @@ import uvicorn
 import facefusion.apis.core
 from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
 from facefusion.args_helper import apply_args
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_files
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
@@ -116,7 +116,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == '459cfd3f' and hash_helper.create_hash(content_store_content) == '77e47f71'
+	return hash_helper.create_hash(content_analyser_content) == 'c39e7c00' and hash_helper.create_hash(content_store_content) == '77e47f71'
 
 
 def processors_pre_check() -> bool:
@@ -144,7 +144,7 @@ def force_download() -> ErrorCode:
 				model_source_set = model.get('sources')
 
 				if model_hash_set and model_source_set:
-					if not conditional_download_hashes(model_hash_set) or not conditional_download_sources(model_source_set):
+					if not conditional_download_files(model_hash_set) or not conditional_download_files(model_source_set):
 						return 1
 
 	return 0

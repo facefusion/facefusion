@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
@@ -65,7 +65,7 @@ def pre_check() -> bool:
 	model_hash_set = get_model_options().get('hashes')
 	model_source_set = get_model_options().get('sources')
 
-	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+	return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 
 
 def calculate_face_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:

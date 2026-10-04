@@ -11,7 +11,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_aligner, face_classifier, face_detector, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.common_helper import get_first, get_middle, is_macos
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -610,7 +610,7 @@ def pre_check() -> bool:
 		if not common_module.pre_check():
 			return False
 
-	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+	return conditional_download_files(model_hash_set) and conditional_download_files(model_source_set)
 
 
 def pre_process(mode : ProcessMode) -> bool:
