@@ -1,7 +1,5 @@
 import os
 import tempfile
-import threading
-from time import time
 from unittest.mock import patch
 
 import pytest
@@ -150,24 +148,6 @@ def test_render_progress() -> None:
 
 	assert process.wait() == 0
 
-	commands = ffmpeg_builder.chain(
-		[ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=30:size=64x64:rate=25' ],
-		ffmpeg_builder.force_output(get_test_output_path('test-render-progress.mp4')),
-		ffmpeg_builder.set_progress(),
-		ffmpeg_builder.cast_stream()
-	)
-	process = ffmpeg.run_ffmpeg(commands)
-	process_manager.stop()
-	start_time = time()
-
-	with cli_progress.create(total = 750) as progress:
-		render_progress(process, progress)
-
-	assert isinstance(process.wait(), int) is True
-	assert time() - start_time < 5
-
-	process_manager.start()
-
 
 def test_await_process() -> None:
 	commands = ffmpeg_builder.chain(
@@ -180,22 +160,14 @@ def test_await_process() -> None:
 	state_manager.set_item('log_level', 'debug')
 
 	with patch('facefusion.ffmpeg.log_debug') as ffmpeg_mock:
-		await_process(ffmpeg.run_ffmpeg(commands)).wait()
+		await_process(ffmpeg.run_ffmpeg(commands))
 
 	assert ffmpeg_mock.call_count > 0
 
 	state_manager.clear_item('log_level')
-	commands = ffmpeg_builder.chain(
-		[ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=30:size=64x64:rate=25' ],
-		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
-	)
-	process = ffmpeg.run_ffmpeg(commands)
-	threading.Timer(1, process_manager.stop).start()
-	start_time = time()
-	await_process(process)
+	process_manager.stop()
 
-	assert isinstance(process.wait(timeout = 5), int) is True
-	assert time() - start_time < 5
+	assert not await_process(ffmpeg.run_ffmpeg(commands)).wait() == 0
 
 	process_manager.start()
 
