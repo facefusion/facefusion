@@ -66,12 +66,12 @@ def render() -> None:
 			)
 			FACE_SELECTOR_GENDER_DROPDOWN = gradio.Dropdown(
 				label = translator.get('uis.face_selector_gender_dropdown'),
-				choices = [ 'none' ] + facefusion.choices.face_selector_genders,
+				choices = [ 'none' ] + facefusion.choices.face_selector_genders, #type:ignore[operator]
 				value = state_manager.get_item('face_selector_gender') or 'none'
 			)
 			FACE_SELECTOR_RACE_DROPDOWN = gradio.Dropdown(
 				label = translator.get('uis.face_selector_race_dropdown'),
-				choices = [ 'none' ] + facefusion.choices.face_selector_races,
+				choices = [ 'none' ] + facefusion.choices.face_selector_races, #type:ignore[operator]
 				value = state_manager.get_item('face_selector_race') or 'none'
 			)
 		with gradio.Row():
