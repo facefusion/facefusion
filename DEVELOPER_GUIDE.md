@@ -67,6 +67,14 @@ Assets
 
 Upload as multipart with one or more parts named `file`. The format is taken from the file extension, uploads are re-encoded and stripped of metadata, `--api-security-strategy moderate` copies audio and video streams instead. Request bodies are capped at 512 MiB.
 
+| Media | `strict`                                                  | `moderate`                        |
+|-------|-----------------------------------------------------------|-----------------------------------|
+| audio | re-encoded at highest quality, metadata stripped          | streams copied, metadata stripped |
+| image | re-encoded at highest quality, metadata stripped          | same as `strict`                  |
+| video | re-encoded with the `ultrafast` preset, metadata stripped | streams copied, metadata stripped |
+
+`strict` rebuilds every file from decoded data, nothing of the original container or bitstream survives, at the cost of time and a generation loss. `moderate` keeps the original bitstream, which is fast and lossless, but passes the encoded data through unchanged.
+
 MP4, MOV and M4A files are read as a stream and need their `moov` atom at the front, files that carry it at the end are rejected. Clients can fix this before uploading, either by remuxing with `-movflags +faststart` or by reordering the bytes themselves.
 
 | Media | Formats                                       |
