@@ -71,7 +71,7 @@ def extract_audio_frames(spectrogram : Spectrogram, fps : Fps) -> List[AudioFram
 
 	for index in indices:
 		start = max(0, index - audio_step_size)
-		audio_frames.append(spectrogram[:, start:index])
+		audio_frames.append(spectrogram[:, start:index]) #type:ignore[index, misc]
 
 	return audio_frames
 

@@ -1,6 +1,6 @@
 import os
 from copy import copy
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import facefusion.choices
 from facefusion.filesystem import create_directory, get_file_name, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
@@ -8,7 +8,7 @@ from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
 from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
-from facefusion.types import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
+from facefusion.types import Args, Content, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : str = '.jobs'
 
@@ -207,7 +207,7 @@ def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
 
 def read_job_file(job_id : str) -> Optional[Job]:
 	job_path = find_job_path(job_id)
-	return read_json(job_path) #type:ignore[return-value]
+	return cast(Job, read_json(job_path))
 
 
 def create_job_file(job_id : str, job : Job) -> bool:
@@ -215,7 +215,7 @@ def create_job_file(job_id : str, job : Job) -> bool:
 
 	if not is_file(job_path):
 		job_create_path = suggest_job_path(job_id, 'drafted')
-		return write_json(job_create_path, job) #type:ignore[arg-type]
+		return write_json(job_create_path, cast(Content, job))
 	return False
 
 
@@ -224,7 +224,7 @@ def update_job_file(job_id : str, job : Job) -> bool:
 
 	if is_file(job_path):
 		job['date_updated'] = get_current_date_time().isoformat()
-		return write_json(job_path, job) #type:ignore[arg-type]
+		return write_json(job_path, cast(Content, job))
 	return False
 
 
