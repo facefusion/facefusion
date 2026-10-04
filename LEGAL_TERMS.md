@@ -104,5 +104,4 @@ General
 - Prizes and judging criteria are not changed to the disadvantage of participants
 - With fewer than five eligible entries, the deadline may be extended or the challenge cancelled without prizes
 - The FaceFusion team may disqualify entries that violate these terms at any time
-- These terms are governed by the laws of Germany
 - Should any provision be invalid, the remaining provisions stay in effect
