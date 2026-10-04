@@ -13,3 +13,5 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - image to video keeps the full audio when trimming with the `disk` workflow strategy, the audio was cut or missing before
 - closing a session no longer fails when a `/stream` client disconnected while a frame was being processed
 - a missing model download is no longer saved as an error page and no longer leaves the server stuck in checking
+- cancelling a job no longer leaves ffmpeg running when the cancel arrives between two processing steps
+- starting with `--log-level debug` no longer crashes the encoder detection
