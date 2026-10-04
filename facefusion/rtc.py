@@ -22,7 +22,7 @@ def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 
 	sdp_buffer = ctypes.create_string_buffer(8192)
 
-	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192):
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192) > 0:
 		return sdp_buffer.value.decode()
 
 	return None
@@ -34,7 +34,7 @@ def create_sdp_answer(peer_connection : PeerConnection) -> Optional[SdpAnswer]:
 
 	sdp_buffer = ctypes.create_string_buffer(8192)
 
-	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192):
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192) > 0:
 		return sdp_buffer.value.decode()
 
 	return None

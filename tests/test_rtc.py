@@ -27,10 +27,11 @@ def test_create_peer_connection() -> None:
 
 
 def test_create_sdp_offer() -> None:
-	sender_peer_connection = create_peer_connection()
-	add_video_track(sender_peer_connection, 'sendonly', 'vp8', 96)
-	add_audio_track(sender_peer_connection, 'sendonly', 'opus', 111)
-	sdp_offer = create_sdp_offer(sender_peer_connection)
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = create_peer_connection()
+	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(peer_connection)
 
 	assert 'm=video' in sdp_offer
 	assert 'VP8/90000' in sdp_offer
@@ -39,7 +40,9 @@ def test_create_sdp_offer() -> None:
 	assert 'opus/48000/2' in sdp_offer
 	assert 'a=ssrc:43 cname:audio' in sdp_offer
 
-	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_peer_connection)
+	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
+
+	assert create_sdp_offer(peer_connection) is None
 
 
 def test_create_sdp_answer() -> None:
@@ -64,6 +67,8 @@ def test_create_sdp_answer() -> None:
 
 	assert datachannel_library.rtcDeletePeerConnection(sender_peer_connection) == 0
 	assert datachannel_library.rtcDeletePeerConnection(receiver_peer_connection) == 0
+
+	assert create_sdp_answer(sender_peer_connection) is None
 
 
 def test_send_video() -> None:
@@ -138,6 +143,7 @@ def test_delete_peer() -> None:
 
 
 def test_get_payload_type() -> None:
+	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
 	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
 	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
@@ -147,7 +153,7 @@ def test_get_payload_type() -> None:
 	assert get_payload_type(sdp_offer, 'opus') == 111
 	assert get_payload_type(sdp_offer, 'av1') == 0
 
-	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
