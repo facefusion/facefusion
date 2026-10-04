@@ -32,7 +32,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file('source-' + str(crop_scale) + 'crop.jpg'))
 			)
-		)
+		).wait()
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])

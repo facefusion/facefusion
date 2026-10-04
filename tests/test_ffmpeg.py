@@ -1,12 +1,15 @@
 import os
 import tempfile
+import threading
+from time import time
+from unittest.mock import patch
 
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import cli_progress, ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
+from facefusion.ffmpeg import await_process, concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, render_progress, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_audio_entries, probe_video_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
@@ -43,7 +46,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_video_fps(video_fps),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
 			)
-		)
+		).wait()
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
 		ffmpeg.run_ffmpeg(
@@ -53,7 +56,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_audio_sample_rate(16000),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-16khz.' + output_video_format))
 			)
-		)
+		).wait()
 
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
@@ -62,7 +65,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_audio_sample_rate(48000),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-48khz.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -73,14 +76,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-h265.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
@@ -88,14 +91,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('source.m4a'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_audio_encoder('alac'),
 			ffmpeg_builder.set_output(get_test_example_file('source-moov-end.m4a'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -103,7 +106,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.m4a'))
 		)
-	)
+	).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -120,6 +123,81 @@ def get_available_encoder_set() -> EncoderSet:
 			'video': [ 'libx264' ]
 		}
 	return facefusion.ffmpeg.get_available_encoder_set()
+
+
+def test_run_ffmpeg() -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-run-ffmpeg.mp4'))
+	)
+
+	assert ffmpeg.run_ffmpeg(commands).wait() == 0
+
+
+def test_render_progress() -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-render-progress.mp4')),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
+	)
+	process = ffmpeg.run_ffmpeg(commands)
+
+	with cli_progress.create(total = 270) as progress:
+		render_progress(process, progress)
+
+		assert progress.current == 270
+
+	assert process.wait() == 0
+
+	commands = ffmpeg_builder.chain(
+		[ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=30:size=64x64:rate=25' ],
+		ffmpeg_builder.force_output(get_test_output_path('test-render-progress.mp4')),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
+	)
+	process = ffmpeg.run_ffmpeg(commands)
+	process_manager.stop()
+	start_time = time()
+
+	with cli_progress.create(total = 750) as progress:
+		render_progress(process, progress)
+
+	assert isinstance(process.wait(), int) is True
+	assert time() - start_time < 5
+
+	process_manager.start()
+
+
+def test_await_process() -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
+	)
+
+	assert await_process(ffmpeg.run_ffmpeg(commands)).returncode == 0
+
+	state_manager.set_item('log_level', 'debug')
+
+	with patch('facefusion.ffmpeg.log_debug') as ffmpeg_mock:
+		await_process(ffmpeg.run_ffmpeg(commands)).wait()
+
+	assert ffmpeg_mock.call_count > 0
+
+	state_manager.clear_item('log_level')
+	commands = ffmpeg_builder.chain(
+		[ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=30:size=64x64:rate=25' ],
+		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
+	)
+	process = ffmpeg.run_ffmpeg(commands)
+	threading.Timer(1, process_manager.stop).start()
+	start_time = time()
+	await_process(process)
+
+	assert isinstance(process.wait(timeout = 5), int) is True
+	assert time() - start_time < 5
+
+	process_manager.start()
 
 
 def test_get_available_encoder_set() -> None:

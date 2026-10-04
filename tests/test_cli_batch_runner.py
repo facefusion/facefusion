@@ -29,7 +29,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-batch-' + str(frame_index) + '.jpg'))
 			)
-		)
+		).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)

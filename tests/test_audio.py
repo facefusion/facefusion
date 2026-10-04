@@ -23,7 +23,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_output(get_test_example_file('source.wav'))
 		)
-	)
+	).wait()
 
 
 def test_get_audio_frame() -> None:

@@ -12,46 +12,35 @@ from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, ImageEncoder, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata
 
 
-def run_ffmpeg_with_progress(commands : List[Command], progress : SimpleNamespace) -> subprocess.Popen[Buffer]:
-	log_level = state_manager.get_item('log_level')
-	commands.extend(ffmpeg_builder.set_progress())
-	commands.extend(ffmpeg_builder.cast_stream())
-	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-
-	while process_manager.is_processing():
-		try:
-			while __line__ := process.stdout.readline().decode().lower():
-				if process_manager.is_stopping():
-					process.terminate()
-
-				if 'frame=' in __line__:
-					_, __frame_index__ = __line__.split('frame=')
-					frame_index = int(__frame_index__)
-
-					progress.seek(frame_index)
-
-			if log_level == 'debug':
-				log_debug(process)
-			process.wait(timeout = 0.5)
-		except subprocess.TimeoutExpired:
-			continue
-		return process
-
-	return process
-
-
-def run_ffmpeg_with_pipe(commands : List[Command], file : BinaryIO) -> subprocess.Popen[Buffer]:
-	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stdin = file, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-	process.communicate()
-	return process
-
-
 def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
-	log_level = state_manager.get_item('log_level')
 	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+	return subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+
+def pipe_ffmpeg(commands : List[Command], file : BinaryIO) -> subprocess.Popen[Buffer]:
+	commands = ffmpeg_builder.run(commands)
+	return subprocess.Popen(commands, stdin = file, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+
+def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
+	commands = ffmpeg_builder.run(commands)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.DEVNULL, stdout = subprocess.PIPE)
+
+
+def render_progress(process : subprocess.Popen[Buffer], progress : SimpleNamespace) -> None:
+	while __line__ := process.stdout.readline().decode().lower():
+		if process_manager.is_stopping():
+			process.terminate()
+
+		if 'frame=' in __line__:
+			_, __frame_index__ = __line__.split('frame=')
+			frame_index = int(__frame_index__)
+
+			progress.seek(frame_index)
+
+
+def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer]:
+	log_level = state_manager.get_item('log_level')
 
 	while process_manager.is_processing():
 		try:
@@ -66,11 +55,6 @@ def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
 		process.terminate()
 
 	return process
-
-
-def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
-	commands = ffmpeg_builder.run(commands)
-	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.DEVNULL, stdout = subprocess.PIPE)
 
 
 def create_video_reader(video_path : str, frame_index : int, video_metadata : VideoReaderMetadata) -> subprocess.Popen[Buffer]:
@@ -178,13 +162,16 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_start_number(trim_frame_start),
-		ffmpeg_builder.set_output(temp_frames_pattern)
+		ffmpeg_builder.set_output(temp_frames_pattern),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
 	)
 
 	with cli_progress.create(total = extract_frame_total) as progress:
 		progress.set_title(translator.get('extracting'))
-		process = run_ffmpeg_with_progress(commands, progress)
-		return process.returncode == 0
+		process = run_ffmpeg(commands)
+		render_progress(process, progress)
+		return await_process(process).returncode == 0
 
 
 def spawn_frames(target_path : str, output_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
@@ -197,13 +184,16 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		ffmpeg_builder.set_video_duration(duration),
 		ffmpeg_builder.set_video_fps(temp_video_fps),
 		ffmpeg_builder.set_media_resolution(vision.pack_resolution(temp_video_resolution)),
-		ffmpeg_builder.set_output(temp_frames_pattern)
+		ffmpeg_builder.set_output(temp_frames_pattern),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
 	)
 
 	with cli_progress.create(total = spawn_frame_total) as progress:
 		progress.set_title(translator.get('spawning'))
-		process = run_ffmpeg_with_progress(commands, progress)
-		return process.returncode == 0
+		process = run_ffmpeg(commands)
+		render_progress(process, progress)
+		return await_process(process).returncode == 0
 
 
 def copy_image(target_path : str, output_path : str, temp_image_resolution : Resolution) -> bool:
@@ -214,7 +204,7 @@ def copy_image(target_path : str, output_path : str, temp_image_resolution : Res
 		ffmpeg_builder.set_image_quality(target_path, 100),
 		ffmpeg_builder.force_output(temp_image_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
 def finalize_image(output_path : str, output_image_resolution : Resolution) -> bool:
@@ -226,7 +216,7 @@ def finalize_image(output_path : str, output_image_resolution : Resolution) -> b
 		ffmpeg_builder.set_image_quality(output_path, output_image_quality),
 		ffmpeg_builder.force_output(output_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
 def read_audio_buffer(target_path : str, audio_sample_rate : SampleRate, audio_sample_size : int, audio_channel_total : int) -> Optional[Buffer]:
@@ -272,7 +262,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
 def replace_audio(audio_path : str, output_path : str) -> bool:
@@ -296,7 +286,7 @@ def replace_audio(audio_path : str, output_path : str) -> bool:
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
 def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, output_video_fps : Fps, output_video_resolution : Resolution, trim_frame_start : int, trim_frame_end : int) -> bool:
@@ -324,13 +314,16 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 			ffmpeg_builder.convert_color_space('bt709')
 		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
-		ffmpeg_builder.force_output(temp_video_path)
+		ffmpeg_builder.force_output(temp_video_path),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
 	)
 
 	with cli_progress.create(total = merge_frame_total) as progress:
 		progress.set_title(translator.get('merging'))
-		process = run_ffmpeg_with_progress(commands, progress)
-		return process.returncode == 0
+		process = run_ffmpeg(commands)
+		render_progress(process, progress)
+		return await_process(process).returncode == 0
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
@@ -369,7 +362,9 @@ def sanitize_audio(file : BinaryIO, audio_path : str, security_strategy : ApiSec
 			ffmpeg_builder.abort_empty_stream(),
 			ffmpeg_builder.force_output(audio_path)
 		)
-		return run_ffmpeg_with_pipe(commands, file).returncode == 0
+		process = pipe_ffmpeg(commands, file)
+		process.communicate()
+		return process.returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -379,7 +374,9 @@ def sanitize_audio(file : BinaryIO, audio_path : str, security_strategy : ApiSec
 		ffmpeg_builder.abort_empty_stream(),
 		ffmpeg_builder.force_output(audio_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file).returncode == 0
+	process = pipe_ffmpeg(commands, file)
+	process.communicate()
+	return process.returncode == 0
 
 
 def sanitize_image(file : BinaryIO, image_path : str) -> bool:
@@ -389,7 +386,9 @@ def sanitize_image(file : BinaryIO, image_path : str) -> bool:
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(image_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file).returncode == 0
+	process = pipe_ffmpeg(commands, file)
+	process.communicate()
+	return process.returncode == 0
 
 
 def sanitize_video(file : BinaryIO, video_path : str, security_strategy : ApiSecurityStrategy) -> bool:
@@ -411,7 +410,9 @@ def sanitize_video(file : BinaryIO, video_path : str, security_strategy : ApiSec
 			ffmpeg_builder.abort_empty_stream(),
 			ffmpeg_builder.force_output(video_path)
 		)
-		return run_ffmpeg_with_pipe(commands, file).returncode == 0
+		process = pipe_ffmpeg(commands, file)
+		process.communicate()
+		return process.returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -423,7 +424,9 @@ def sanitize_video(file : BinaryIO, video_path : str, security_strategy : ApiSec
 		ffmpeg_builder.abort_empty_stream(),
 		ffmpeg_builder.force_output(video_path)
 	)
-	return run_ffmpeg_with_pipe(commands, file).returncode == 0
+	process = pipe_ffmpeg(commands, file)
+	process.communicate()
+	return process.returncode == 0
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
