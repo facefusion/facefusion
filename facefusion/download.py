@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import facefusion.choices
 from facefusion import cli_progress, curl_builder, logger, process_manager, state_manager, translator
-from facefusion.filesystem import get_file_extension, get_file_name, get_file_size, is_file, remove_file
+from facefusion.filesystem import get_file_extension, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Buffer, Command, DownloadProvider, DownloadSet
 
@@ -92,7 +92,7 @@ def conditional_download_files(file_set : DownloadSet) -> bool:
 def conditional_validate_files(file_set : DownloadSet) -> bool:
 	for file in file_set.values():
 		file_path = file.get('path')
-		file_name = get_file_name(file_path)
+		file_name = os.path.basename(file_path)
 
 		if not validate_file(file_path):
 			logger.error(translator.get('validating_file_failed').format(file_name = file_name), __name__)
