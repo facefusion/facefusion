@@ -15,3 +15,4 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - a missing model download is no longer saved as an error page and no longer leaves the server stuck in checking
 - cancelling a job no longer leaves ffmpeg running when the cancel arrives between two processing steps
 - starting with `--log-level debug` no longer crashes the encoder detection
+- type checking passes with mypy 2.4, the beta fails on `facefusion/ffmpeg.py` with an incompatible assignment

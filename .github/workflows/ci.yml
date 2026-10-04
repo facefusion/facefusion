@@ -14,7 +14,7 @@ jobs:
      python-version: '3.12'
   - run: pip install flake8
   - run: pip install flake8-import-order
-  - run: pip install mypy
+  - run: pip install 'mypy<2.4'
   - run: flake8 facefusion.py install.py
   - run: flake8 facefusion tests
   - run: mypy facefusion.py install.py
