@@ -1,16 +1,16 @@
 from collections import deque
 from concurrent.futures import Future
-from typing import Deque
+from typing import Deque, Tuple
 
 import cv2
 import numpy
 
 from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
+from facefusion.audio import restrict_audio_range
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
-from facefusion.normalizer import normalize_range
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import move_temp_file, resolve_temp_frame_paths
+from facefusion.temp_helper import move_temp_file
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Fps, Resolution, VisionFrame
 from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_video_frame, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution
@@ -117,8 +117,7 @@ def process_memory_frames() -> ErrorCode:
 
 
 def merge_frames() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = normalize_range(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = conditional_restrict_range()
 	output_video_resolution = conditional_scale_resolution()
 	temp_video_fps = conditional_restrict_video_fps()
 	output_fps = conditional_get_output_fps()
@@ -135,8 +134,7 @@ def merge_frames() -> ErrorCode:
 
 
 def restore_audio() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = normalize_range(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = conditional_restrict_range()
 
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(translator.get('skipping_audio'), __name__)
@@ -178,6 +176,13 @@ def finalize_video(start_time : float) -> ErrorCode:
 def conditional_clear_video_pool() -> None:
 	if state_manager.get_item('workflow_mode') == 'image-to-video':
 		video_manager.clear()
+
+
+def conditional_restrict_range() -> Tuple[int, int]:
+	if state_manager.get_item('workflow_mode') == 'image-to-video':
+		return restrict_video_range(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	return restrict_audio_range(source_audio_path, state_manager.get_item('output_audio_fps'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 
 def conditional_restrict_video_fps() -> Fps:
