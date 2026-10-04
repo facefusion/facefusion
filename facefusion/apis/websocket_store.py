@@ -1,5 +1,7 @@
 import asyncio
 
+from starlette.websockets import WebSocketState
+
 from facefusion import store_creator
 from facefusion.session_manager import resolve_owner_id
 from facefusion.types import SessionId, SessionWebsocketSet, Store, Websocket
@@ -37,4 +39,7 @@ def destroy(session_id : SessionId) -> None:
 
 	if session_websocket_set:
 		for session_websocket in session_websocket_set.values():
-			asyncio.run_coroutine_threadsafe(session_websocket.get('websocket').close(), session_websocket.get('event_loop')).result()
+			websocket = session_websocket.get('websocket')
+
+			if websocket.application_state == WebSocketState.CONNECTED:
+				asyncio.run_coroutine_threadsafe(websocket.close(), session_websocket.get('event_loop')).result()

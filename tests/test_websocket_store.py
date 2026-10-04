@@ -3,6 +3,7 @@ from typing import Iterator
 from unittest.mock import AsyncMock
 
 import pytest
+from starlette.websockets import WebSocketState
 
 from facefusion import store_creator
 from facefusion.apis.websocket_store import WEBSOCKET_STORE, delete_websocket, destroy, init, set_websocket
@@ -51,12 +52,18 @@ async def test_delete_websocket() -> None:
 
 @pytest.mark.asyncio
 async def test_destroy() -> None:
-	websocket_mock = AsyncMock()
+	websocket_mock_1 = AsyncMock(application_state = WebSocketState.CONNECTED)
+	websocket_mock_2 = AsyncMock(application_state = WebSocketState.DISCONNECTED)
 
 	set_session_id('session-a')
 	init()
-	set_websocket(websocket_mock)
+
+	set_websocket(websocket_mock_2)
+	set_websocket(websocket_mock_1)
+
 	await asyncio.to_thread(destroy, 'session-a')
 
-	websocket_mock.close.assert_awaited_once()
+	assert websocket_mock_1.close.await_count == 1
+	assert websocket_mock_2.close.await_count == 0
+
 	assert store_creator.has_content(WEBSOCKET_STORE, 'session-a') is False
