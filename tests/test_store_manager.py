@@ -3,6 +3,7 @@ from typing import Iterator
 import pytest
 
 from facefusion import state_manager, store_creator, video_manager
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.session_context import resolve_local_id, set_session_id
 from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, fork_session, set_api_session
@@ -42,7 +43,12 @@ def test_conditional_cli_destroy() -> None:
 	clear_api_session('session-a')
 	conditional_cli_destroy(fork_id)
 
-	assert video_reader.get('process').poll() == -9
+	if is_windows():
+		assert video_reader.get('process').returncode == 1
+
+	if is_linux() or is_macos():
+		assert video_reader.get('process').returncode == -9
+
 	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, fork_id) is False
 
 	clear_cli_session(fork_id)
