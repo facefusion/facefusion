@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import List, cast
 
@@ -53,10 +54,10 @@ async def get_asset(request : Request) -> Response:
 			if validate_frame_resolution(resolution):
 
 				if request.query_params.get('subject') == 'frame':
-					vision_frames = capture_asset_frames(cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
+					vision_frames = await asyncio.to_thread(capture_asset_frames, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 				if request.query_params.get('subject') == 'face':
-					vision_frames = capture_asset_faces(cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
+					vision_frames = await asyncio.to_thread(capture_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 			if is_vision_frames(vision_frames):
 				return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
