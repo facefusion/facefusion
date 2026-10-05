@@ -16,3 +16,5 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - cancelling a job no longer leaves ffmpeg running when the cancel arrives between two processing steps
 - starting with `--log-level debug` no longer crashes the encoder detection
 - type checking passes with mypy 2.4, the beta fails on `facefusion/ffmpeg.py` with an incompatible assignment
+- a session is limited to one stream, metrics and ping websocket, a second connection of the same kind is rejected
+- capturing asset frames and faces runs off the event loop, so a heavy capture no longer blocks other sessions while it decodes
