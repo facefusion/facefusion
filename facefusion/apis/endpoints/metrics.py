@@ -21,16 +21,21 @@ async def get_metrics(request : Request) -> Response:
 
 async def websocket_metrics(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
-	await websocket.accept(subprotocol = subprotocol)
-	websocket_store.set_websocket(websocket)
 
-	try:
-		while True:
-			metrics_set = get_metrics_set()
-			await websocket.send_json(metrics_set)
-			await asyncio.sleep(2)
+	if not websocket_store.has_websocket('metrics'):
+		await websocket.accept(subprotocol = subprotocol)
+		websocket_store.set_websocket('metrics', websocket)
 
-	except Exception:
-		pass
+		try:
+			while True:
+				metrics_set = get_metrics_set()
+				await websocket.send_json(metrics_set)
+				await asyncio.sleep(2)
 
-	websocket_store.delete_websocket(websocket)
+		except Exception:
+			pass
+
+		websocket_store.delete_websocket('metrics')
+
+	else:
+		await websocket.close()

@@ -159,14 +159,14 @@ Content : TypeAlias = Dict[str, Any]
 Token : TypeAlias = str
 SessionId : TypeAlias = str
 Websocket : TypeAlias = Any
-WebsocketId : TypeAlias = int
+WebsocketChannel : TypeAlias = str
 EventLoop : TypeAlias = asyncio.AbstractEventLoop
 SessionWebsocket = TypedDict('SessionWebsocket',
 {
 	'websocket' : Websocket,
 	'event_loop' : EventLoop
 })
-SessionWebsocketSet : TypeAlias = Dict[WebsocketId, SessionWebsocket]
+SessionWebsocketSet : TypeAlias = Dict[WebsocketChannel, SessionWebsocket]
 ApiSession = TypedDict('ApiSession',
 {
 	'access_token' : Token,

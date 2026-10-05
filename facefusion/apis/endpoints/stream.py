@@ -12,12 +12,17 @@ from facefusion.apis.stream_manager import destroy_stream, process_image, proces
 async def websocket_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	await websocket.accept(subprotocol = subprotocol)
-	websocket_store.set_websocket(websocket)
-	await process_image(websocket)
-	websocket_store.delete_websocket(websocket)
+	if not websocket_store.has_websocket('stream'):
+		await websocket.accept(subprotocol = subprotocol)
+		websocket_store.set_websocket('stream', websocket)
 
-	if websocket.client_state == WebSocketState.CONNECTED:
+		await process_image(websocket)
+		websocket_store.delete_websocket('stream')
+
+		if websocket.client_state == WebSocketState.CONNECTED:
+			await websocket.close()
+
+	else:
 		await websocket.close()
 
 

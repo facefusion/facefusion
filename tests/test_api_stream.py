@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 from facefusion import metadata, rtc, rtc_store, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
@@ -92,6 +93,14 @@ def test_stream_image(test_client : TestClient) -> None:
 		output_buffer = websocket.receive_bytes()
 
 		assert create_hash(output_buffer) == '0142782f'
+
+		with pytest.raises(WebSocketDisconnect) as stream_exception:
+			test_client.websocket_connect('/stream', subprotocols =
+			[
+				'access_token.' + access_token
+			]).__enter__()
+
+		assert stream_exception.value.code == 1000
 
 		test_client.delete('/session', headers =
 		{
