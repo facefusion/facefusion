@@ -97,7 +97,7 @@ async def upload_assets(request : Request) -> Response:
 	asset_type = cast(AssetType, request.query_params.get('type'))
 
 	if asset_type in [ 'source', 'target' ]:
-		form = await request.form(max_fields = 0)
+		form = await request.form(max_fields = 0, max_files = 32)
 		upload_files = cast(List[UploadFile], form.getlist('file'))
 
 		if upload_files and validate_asset_files(upload_files):
