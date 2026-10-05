@@ -29,3 +29,15 @@ The three highest ranked entries are awarded the following prizes.
 | 3rd   | 6 months PRO LLM subscription |
 
 Winners are determined by a community vote and a jury of six, weighted equally. To claim their prize, winners present their project in a short live call with the FaceFusion team, which is published for transparency towards our community.
+
+
+| Criterion     | Weight | Description                                                              |
+|---------------|--------|--------------------------------------------------------------------------|
+| Works         | 3      | Runs against the `v4-beta` tag or the `v4` branch, shown in a `demo.mp4` |
+| Usefulness    | 3      | A real user would pick it over the CLI tomorrow                          |
+| API coverage  | 2      | Sessions, state, assets, jobs, stream and metrics                        |
+| Craft         | 2      | Code quality, error handling, no secrets, tests are a bonus              |
+| Originality   | 2      | Something the FaceFusion team did not think of                           |
+| Beta feedback | 1      | Bugs and feedback reported during the challenge                          |
+
+Our jury members rate every criterion from 1 to 10, where each rating is multiplied by the weight of its criterion.
