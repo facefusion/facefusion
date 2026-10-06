@@ -18,3 +18,5 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - type checking passes with mypy 2.4, the beta fails on `facefusion/ffmpeg.py` with an incompatible assignment
 - a session is limited to one stream, metrics and ping websocket, a second connection of the same kind is rejected
 - capturing asset frames and faces runs off the event loop, so a heavy capture no longer blocks other sessions while it decodes
+- image uploads with a resolution above `4096` are rejected with `400`, which prevents decompression bombs
+- `/stream` ignores frames with a resolution above `4096` instead of decoding them
