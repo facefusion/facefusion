@@ -1,3 +1,4 @@
+import asyncio
 import ctypes
 import threading
 from collections.abc import AsyncIterator
@@ -9,6 +10,7 @@ from typing import Optional, Tuple
 from starlette.websockets import WebSocket
 
 from facefusion import content_store, rtc, rtc_store, state_manager, streamer, thread_helper
+from facefusion.apis.common_validator import validate_image_resolution
 from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
 from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
 from facefusion.content_analyser import analyse_frame
@@ -33,10 +35,13 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 	websocket_event = await websocket.receive()
 
 	while websocket_event.get('type') == 'websocket.receive':
-		vision_frame = from_buffer(websocket_event.get('bytes'))
+		vision_buffer = websocket_event.get('bytes')
 
-		if is_vision_frame(vision_frame):
-			yield vision_frame
+		if await asyncio.to_thread(validate_image_resolution, vision_buffer):
+			vision_frame = from_buffer(vision_buffer)
+
+			if is_vision_frame(vision_frame):
+				yield vision_frame
 
 		websocket_event = await websocket.receive()
 

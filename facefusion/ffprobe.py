@@ -11,6 +11,11 @@ def run_ffprobe(commands : List[Command]) -> subprocess.Popen[Buffer]:
 	return subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
+def pipe_ffprobe(commands : List[Command]) -> subprocess.Popen[Buffer]:
+	commands = ffprobe_builder.run(commands)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+
 def parse_entries(output : Buffer) -> Dict[str, str]:
 	media_entries = {}
 
@@ -47,6 +52,19 @@ def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]
 	)
 
 	output, _ = run_ffprobe(commands).communicate()
+
+	return parse_entries(output)
+
+
+def probe_buffer_entries(image_buffer : Buffer, entries : List[str]) -> Dict[str, str]:
+	commands = ffprobe_builder.chain(
+		ffprobe_builder.select_stream('v:0'),
+		ffprobe_builder.show_stream_entries(entries),
+		ffprobe_builder.format_to_key_value(),
+		ffprobe_builder.set_input('pipe:0')
+	)
+
+	output, _ = pipe_ffprobe(commands).communicate(input = image_buffer)
 
 	return parse_entries(output)
 
