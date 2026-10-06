@@ -1,4 +1,4 @@
-from facefusion.apis.api_helper import get_sec_websocket_protocol
+from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
 
 def test_get_sec_websocket_protocol() -> None:

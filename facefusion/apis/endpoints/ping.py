@@ -1,7 +1,7 @@
 from starlette.websockets import WebSocket
 
 from facefusion.apis import websocket_store
-from facefusion.apis.api_helper import get_sec_websocket_protocol
+from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
 
 async def websocket_ping(websocket : WebSocket) -> None:

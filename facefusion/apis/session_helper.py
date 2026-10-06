@@ -3,7 +3,7 @@ from typing import Optional
 from starlette.datastructures import Headers
 from starlette.types import Scope
 
-from facefusion.apis.api_helper import get_sec_websocket_protocol
+from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 from facefusion.types import Token
 
 

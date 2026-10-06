@@ -1,6 +1,6 @@
 from facefusion import ffprobe
 from facefusion.types import Buffer
-from facefusion.vision import unpack_resolution
+from facefusion.vision import pack_resolution, unpack_resolution
 
 
 def validate_resolution(resolution : str) -> bool:
@@ -15,12 +15,14 @@ def validate_resolution(resolution : str) -> bool:
 	return False
 
 
-def validate_image_resolution(image_buffer : Buffer) -> bool:
-	image_entries = ffprobe.probe_pipe_entries(image_buffer, ['width', 'height'])
-	width = image_entries.get('width')
-	height = image_entries.get('height')
+def validate_media_resolution(media_buffer : Buffer) -> bool:
+	media_entries = ffprobe.probe_pipe_entries(media_buffer, ['width', 'height'])
+	width = media_entries.get('width')
+	height = media_entries.get('height')
 
 	if width and height and width.isdigit() and height.isdigit():
-		return validate_resolution(width + 'x' + height)
+		resolution = pack_resolution((int(width), int(height)))
+
+		return validate_resolution(resolution)
 
 	return False

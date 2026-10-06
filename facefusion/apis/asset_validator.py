@@ -5,7 +5,7 @@ from starlette.datastructures import UploadFile
 import facefusion.choices
 from facefusion import ffmpeg
 from facefusion.apis.asset_helper import detect_media_type_by_format
-from facefusion.apis.common_validator import validate_image_resolution
+from facefusion.apis.media_validator import validate_media_resolution
 from facefusion.filesystem import get_file_format
 from facefusion.types import AudioFormat, ImageFormat, VideoFormat
 
@@ -48,11 +48,11 @@ def validate_asset_resolution(upload_files : List[UploadFile]) -> bool:
 		file_format = get_file_format(upload_file.filename)
 		media_type = detect_media_type_by_format(file_format)
 
-		if media_type == 'image':
-			image_buffer = upload_file.file.read()
+		if media_type in [ 'image', 'video' ]:
+			media_buffer = upload_file.file.read()
 			upload_file.file.seek(0)
 
-			if not validate_image_resolution(image_buffer):
+			if not validate_media_resolution(media_buffer):
 				return False
 
 	return True

@@ -6,7 +6,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 from starlette.websockets import WebSocket
 
 from facefusion.apis import websocket_store
-from facefusion.apis.api_helper import get_sec_websocket_protocol
+from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 from facefusion.system import get_metrics_set
 
 

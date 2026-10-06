@@ -5,8 +5,8 @@ from starlette.websockets import WebSocket, WebSocketState
 
 from facefusion import rtc_store
 from facefusion.apis import websocket_store
-from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video
+from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
