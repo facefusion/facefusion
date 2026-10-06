@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZE
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_store, session_context, session_manager, state_manager, store_manager, translator, video_manager
 from facefusion.apis import asset_store, websocket_store
-from facefusion.apis.session_helper import validate_api_key
+from facefusion.apis.session_validator import validate_api_key
 from facefusion.filesystem import is_directory, remove_directory
 from facefusion.jobs import job_manager
 

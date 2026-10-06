@@ -9,7 +9,8 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import translator
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files, validate_asset_files, validate_frame_resolution
+from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files
+from facefusion.apis.asset_validator import validate_asset_files, validate_frame_index, validate_resolution, validate_subject
 from facefusion.filesystem import remove_file
 from facefusion.types import AssetType, ImageAsset, VideoAsset
 from facefusion.vision import is_vision_frames, to_strip_buffer
@@ -47,16 +48,17 @@ async def get_asset(request : Request) -> Response:
 
 	if action == 'capture':
 		if asset and asset.get('media') in [ 'image', 'video' ]:
+			subject = request.query_params.get('subject')
 			resolution = request.query_params.get('resolution')
 			frame_indexes = request.query_params.getlist('frame_index')
 			vision_frames = []
 
-			if validate_frame_resolution(resolution):
+			if validate_frame_index(frame_indexes) and validate_subject(subject) and validate_resolution(resolution):
 
-				if request.query_params.get('subject') == 'frame':
+				if subject == 'frame':
 					vision_frames = await asyncio.to_thread(capture_asset_frames, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
-				if request.query_params.get('subject') == 'face':
+				if subject == 'face':
 					vision_frames = await asyncio.to_thread(capture_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 			if is_vision_frames(vision_frames):

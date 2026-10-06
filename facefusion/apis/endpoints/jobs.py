@@ -7,10 +7,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
-import facefusion.choices
 import facefusion.core
 from facefusion import args_helper, state_manager, translator
 from facefusion.apis import jobs_helper
+from facefusion.apis.job_validator import validate_status
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.types import JobStatus
@@ -19,7 +19,7 @@ from facefusion.types import JobStatus
 async def get_jobs(request : Request) -> JSONResponse:
 	job_status = cast(JobStatus, request.query_params.get('status'))
 
-	if job_status in facefusion.choices.job_statuses:
+	if validate_status(job_status):
 		__job_set__ = {}
 		job_set = job_manager.find_jobs(job_status)
 

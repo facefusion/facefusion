@@ -4,7 +4,8 @@ from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOU
 
 from facefusion import args_helper, state_manager, translator
 from facefusion.apis import asset_store
-from facefusion.apis.state_helper import normalize_argument_value, validate_argument_key, validate_argument_value
+from facefusion.apis.state_helper import normalize_argument_value
+from facefusion.apis.state_validator import validate_argument_key, validate_argument_value
 
 
 async def get_state(request : Request) -> JSONResponse:
