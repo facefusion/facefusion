@@ -10,7 +10,8 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from facefusion import translator
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files
-from facefusion.apis.asset_validator import validate_asset_files, validate_frame_index, validate_resolution, validate_subject
+from facefusion.apis.asset_validator import validate_asset_resolution, validate_asset_type, validate_frame_index, validate_subject
+from facefusion.apis.common_validator import validate_resolution
 from facefusion.filesystem import remove_file
 from facefusion.types import AssetType, ImageAsset, VideoAsset
 from facefusion.vision import is_vision_frames, to_strip_buffer
@@ -102,7 +103,7 @@ async def upload_assets(request : Request) -> Response:
 		form = await request.form(max_fields = 0, max_files = 32)
 		upload_files = cast(List[UploadFile], form.getlist('file'))
 
-		if upload_files and validate_asset_files(upload_files):
+		if upload_files and validate_asset_type(upload_files) and await asyncio.to_thread(validate_asset_resolution, upload_files):
 			asset_paths = await save_asset_files(upload_files)
 
 			if asset_paths:

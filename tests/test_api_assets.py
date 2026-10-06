@@ -2,6 +2,8 @@ import os
 import tempfile
 from typing import Iterator
 
+import cv2
+import numpy
 import pytest
 from starlette.testclient import TestClient
 
@@ -156,6 +158,16 @@ def test_upload_assets(test_client : TestClient) -> None:
 		{
 			'file': ('invalid', 'invalid'.encode())
 		})
+
+		assert upload_response.status_code == 400
+
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('bomb.png', cv2.imencode('.png', numpy.zeros((4097, 4097, 3), numpy.uint8))[1].tobytes(), 'image/png'))
+		])
 
 		assert upload_response.status_code == 400
 
