@@ -382,6 +382,7 @@ def sanitize_audio(file : BinaryIO, audio_path : str, security_strategy : ApiSec
 def sanitize_image(file : BinaryIO, image_path : str) -> bool:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
+		ffmpeg_builder.select_media_stream('0:v:0'),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(image_path)
