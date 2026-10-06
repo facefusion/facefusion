@@ -1,9 +1,11 @@
 from argparse import ArgumentParser
+from typing import cast
 
 import pytest
 
 from facefusion import capability_store, state_manager
 from facefusion.apis.state_validator import validate_argument_key, validate_argument_value
+from facefusion.types import StateKey
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -24,11 +26,11 @@ def before_all() -> None:
 
 
 def test_validate_argument_key() -> None:
-	assert validate_argument_key('execution_providers') is True
-	assert validate_argument_key('invalid') is False
+	assert validate_argument_key(cast(StateKey, 'execution_providers')) is True
+	assert validate_argument_key(cast(StateKey, 'invalid')) is False
 
 
 def test_validate_argument_value() -> None:
-	assert validate_argument_value('execution_providers', [ 'cpu' ]) is True
-	assert validate_argument_value('execution_providers', [ 'invalid' ]) is False
-	assert validate_argument_value('execution_providers', 'invalid') is False
+	assert validate_argument_value(cast(StateKey, 'execution_providers'), [ 'cpu' ]) is True
+	assert validate_argument_value(cast(StateKey, 'execution_providers'), [ 'invalid' ]) is False
+	assert validate_argument_value(cast(StateKey, 'execution_providers'), 'invalid') is False
