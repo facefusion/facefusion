@@ -233,7 +233,7 @@ def test_normalize_resolution() -> None:
 
 
 def test_pack_resolution() -> None:
-	assert pack_resolution((1, 1)) == '0x0'
+	assert pack_resolution((1, 1)) == '1x1'
 	assert pack_resolution((2, 2)) == '2x2'
 
 

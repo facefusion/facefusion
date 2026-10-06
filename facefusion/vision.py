@@ -67,7 +67,7 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 	if is_image(image_path):
 		image_resolution = detect_image_resolution(image_path)
 		if image_resolution < resolution:
-			return image_resolution
+			return normalize_resolution(image_resolution)
 	return resolution
 
 
@@ -174,7 +174,7 @@ def restrict_video_resolution(video_path : str, resolution : Resolution) -> Reso
 	if is_video(video_path):
 		video_resolution = detect_video_resolution(video_path)
 		if video_resolution < resolution:
-			return video_resolution
+			return normalize_resolution(video_resolution)
 	return resolution
 
 
@@ -190,12 +190,13 @@ def normalize_resolution(resolution : Tuple[float, float]) -> Resolution:
 	if width > 0 and height > 0:
 		normalize_width = round(width / 2) * 2
 		normalize_height = round(height / 2) * 2
+
 		return normalize_width, normalize_height
 	return 0, 0
 
 
 def pack_resolution(resolution : Resolution) -> str:
-	width, height = normalize_resolution(resolution)
+	width, height = resolution
 	return str(width) + 'x' + str(height)
 
 
