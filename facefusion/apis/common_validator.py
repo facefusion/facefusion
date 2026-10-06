@@ -16,7 +16,7 @@ def validate_resolution(resolution : str) -> bool:
 
 
 def validate_image_resolution(image_buffer : Buffer) -> bool:
-	image_entries = ffprobe.probe_buffer_entries(image_buffer, [ 'width', 'height' ])
+	image_entries = ffprobe.probe_pipe_entries(image_buffer, ['width', 'height'])
 	width = image_entries.get('width')
 	height = image_entries.get('height')
 

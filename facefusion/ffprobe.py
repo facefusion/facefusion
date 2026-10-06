@@ -56,7 +56,7 @@ def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]
 	return parse_entries(output)
 
 
-def probe_buffer_entries(image_buffer : Buffer, entries : List[str]) -> Dict[str, str]:
+def probe_pipe_entries(pipe_buffer : Buffer, entries : List[str]) -> Dict[str, str]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_stream('v:0'),
 		ffprobe_builder.show_stream_entries(entries),
@@ -64,7 +64,7 @@ def probe_buffer_entries(image_buffer : Buffer, entries : List[str]) -> Dict[str
 		ffprobe_builder.set_input('pipe:0')
 	)
 
-	output, _ = pipe_ffprobe(commands).communicate(input = image_buffer)
+	output, _ = pipe_ffprobe(commands).communicate(input = pipe_buffer)
 
 	return parse_entries(output)
 
