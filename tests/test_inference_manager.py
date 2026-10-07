@@ -103,7 +103,7 @@ def adjust_module() -> SimpleNamespace:
 
 
 def test_resolve_static_inference_providers(override_module : SimpleNamespace, adjust_module : SimpleNamespace) -> None:
-	state_manager.init_item('execution_providers', ['coreml'])
+	state_manager.init_item('execution_providers', [ 'coreml' ])
 	resolve_static_inference_providers.cache_clear()
 
 	with patch('facefusion.inference_manager.importlib', Mock(import_module = Mock(return_value = override_module))):

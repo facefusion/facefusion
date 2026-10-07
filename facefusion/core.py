@@ -73,7 +73,14 @@ def route(args : Args) -> None:
 			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
-		uvicorn.run(facefusion.apis.core.create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
+		uvicorn.run(
+			facefusion.apis.core.create_api(),
+			host = state_manager.get_item('api_host'),
+			port = state_manager.get_item('api_port'),
+			limit_concurrency = state_manager.get_item('api_session_limit') * 8,
+			ws_max_size = 8 * 1024 * 1024,
+			ws_max_queue = 0
+		)
 		hard_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
