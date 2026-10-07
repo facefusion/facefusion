@@ -1,9 +1,11 @@
 from argparse import ArgumentParser
+from typing import cast
 
 import pytest
 
 from facefusion import capability_store, state_manager
 from facefusion.args_helper import apply_args, extract_api_args, extract_cli_args, extract_step_args, extract_sys_args, filter_api_step_args, filter_cli_step_args
+from facefusion.types import State
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -43,19 +45,27 @@ def test_apply_args() -> None:
 
 
 def test_extract_api_args() -> None:
-	assert extract_api_args({ 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory' }
+	state = cast(State, { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' })
+
+	assert extract_api_args(state) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory' }
 
 
 def test_extract_cli_args() -> None:
-	assert extract_cli_args({ 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }
+	state = cast(State, { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' })
+
+	assert extract_cli_args(state) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }
 
 
 def test_extract_sys_args() -> None:
-	assert extract_sys_args({ 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }) == { 'video_memory_strategy': 'strict' }
+	state = cast(State, { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' })
+
+	assert extract_sys_args(state) == { 'video_memory_strategy': 'strict' }
 
 
 def test_extract_step_args() -> None:
-	assert extract_step_args({ 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' }) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory' }
+	state = cast(State, { 'workflow_mode': 'auto', 'workflow_strategy': 'memory', 'video_memory_strategy': 'strict' })
+
+	assert extract_step_args(state) == { 'workflow_mode': 'auto', 'workflow_strategy': 'memory' }
 
 
 def test_filter_api_step_args() -> None:
