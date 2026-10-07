@@ -6,7 +6,7 @@ from facefusion.download import conditional_download
 from facefusion.face_detector import detect_with_retinaface, detect_with_scrfd, detect_with_yolo_face, detect_with_yunet
 from facefusion.face_helper import apply_nms, get_nms_threshold
 from facefusion.vision import read_static_image
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

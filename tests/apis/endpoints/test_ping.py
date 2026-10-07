@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import websocket_store
 from facefusion.apis.core import create_api
-from .assert_helper import get_test_jobs_directory
+from tests.assert_helper import get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

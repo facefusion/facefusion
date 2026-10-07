@@ -5,7 +5,7 @@ import pytest
 from facefusion import session_context, session_manager, state_manager
 from facefusion.apis.asset_store import create_asset, delete_asset, delete_assets, get_asset, get_assets, init
 from facefusion.download import conditional_download
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

@@ -5,7 +5,7 @@ import pytest
 from facefusion import state_manager
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.jobs.job_manager import clear_jobs, create_job, init_jobs
-from .assert_helper import get_test_jobs_directory
+from tests.assert_helper import get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

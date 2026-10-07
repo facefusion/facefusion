@@ -10,7 +10,7 @@ from facefusion.ffprobe import extract_video_metadata
 from facefusion.frame_store import get_frame_store
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
 from facefusion.video_manager import clear, close_video_reader, close_video_writer, collect_video_frames, conditional_seek_video_reader, drain_video_reader, get_reader, get_writer, init, read_video_frame, read_video_frames, seek_video_reader, write_video_frame
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

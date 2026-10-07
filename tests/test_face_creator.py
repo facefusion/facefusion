@@ -6,7 +6,7 @@ from facefusion import face_aligner, face_classifier, face_detector, face_recogn
 from facefusion.download import conditional_download
 from facefusion.face_creator import average_face_geometry, get_many_faces, get_one_face, refill_faces
 from facefusion.vision import read_static_image
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

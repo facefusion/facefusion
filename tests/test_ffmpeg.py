@@ -13,7 +13,7 @@ from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
 from facefusion.vision import predict_video_frame_total
-from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

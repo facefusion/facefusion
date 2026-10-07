@@ -19,7 +19,7 @@ from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, vpx as vpx_module
 from facefusion.types import Buffer, BufferPack, FrameHandler, RtcPeer, RtcPeerVideo, Time, VideoCodec
 from facefusion.vision import is_vision_frame, read_video_frame
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

@@ -2,7 +2,7 @@ import pytest
 
 from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata
 from facefusion.download import conditional_download
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

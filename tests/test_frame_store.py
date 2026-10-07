@@ -4,7 +4,7 @@ from facefusion import process_manager, video_manager
 from facefusion.download import conditional_download
 from facefusion.frame_store import clear_frames, get_frame_store, reduce_frames, select_frame_set, set_frame
 from facefusion.vision import read_video_frame
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

@@ -14,7 +14,7 @@ from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.session_context import resolve_local_id, set_session_id
 from facefusion.types import RtcPeer, SessionId, VideoCodec
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

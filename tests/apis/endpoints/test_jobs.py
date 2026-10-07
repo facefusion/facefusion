@@ -10,7 +10,7 @@ from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_steps_status
 from facefusion.program import create_program
-from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

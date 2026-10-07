@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 import numpy
 import pytest
-from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
 from facefusion.codecs.opus_decoder import create, decode, destroy
@@ -12,6 +11,7 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

@@ -15,7 +15,7 @@ from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module
 from facefusion.types import AudioCodec, AudioFrame, Buffer, FrameHandler, RtcPeer, RtcPeerAudio
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

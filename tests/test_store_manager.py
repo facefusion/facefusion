@@ -8,7 +8,7 @@ from facefusion.download import conditional_download
 from facefusion.session_context import resolve_local_id, set_session_id
 from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, fork_session, set_api_session
 from facefusion.store_manager import conditional_cli_destroy
-from .assert_helper import get_test_example_file, get_test_examples_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
