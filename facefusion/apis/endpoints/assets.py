@@ -12,9 +12,10 @@ from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files
 from facefusion.apis.asset_validator import validate_asset_resolution, validate_asset_type, validate_frame_index, validate_subject
 from facefusion.apis.media_validator import validate_resolution
+from facefusion.apis.multipart_helper import create_multipart_response
 from facefusion.filesystem import remove_file
 from facefusion.types import AssetType, ImageAsset, VideoAsset
-from facefusion.vision import is_vision_frames, to_strip_buffer
+from facefusion.vision import is_vision_frames
 
 
 async def get_assets(request : Request) -> Response:
@@ -63,7 +64,7 @@ async def get_asset(request : Request) -> Response:
 					vision_frames = await asyncio.to_thread(capture_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 			if is_vision_frames(vision_frames):
-				return Response(content = to_strip_buffer(vision_frames), media_type = 'image/jpeg')
+				return create_multipart_response(vision_frames)
 
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 

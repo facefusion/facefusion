@@ -334,10 +334,6 @@ def to_buffer(vision_frame : VisionFrame) -> Buffer:
 	return bytes()
 
 
-def to_strip_buffer(vision_frames : List[VisionFrame]) -> Buffer:
-	return to_buffer(cv2.hconcat(vision_frames))
-
-
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:
 	tile_width = size[0] - 2 * size[2]
 	pad_size_top = size[1] + size[2]

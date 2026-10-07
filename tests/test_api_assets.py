@@ -287,6 +287,22 @@ def test_get_asset(test_client : TestClient) -> None:
 
 	assert get_response.status_code == 200
 
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, params =
+	{
+		'subject': 'frame',
+		'action': 'capture',
+		'resolution': '1920x1080',
+		'frame_index': [ '0', '1' ]
+	})
+
+	assert get_response.headers.get('content-type').startswith('multipart/mixed; boundary=')
+	assert get_response.content.count('Content-Type: image/jpeg'.encode()) == 1
+
+	assert get_response.status_code == 200
+
 
 def test_delete_assets(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
