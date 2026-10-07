@@ -16,6 +16,12 @@ def create_peer_connection() -> PeerConnection:
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
+def is_open(track : int) -> bool:
+	datachannel_library = datachannel_module.create_static_library()
+
+	return bool(datachannel_library.rtcIsOpen(track))
+
+
 def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')

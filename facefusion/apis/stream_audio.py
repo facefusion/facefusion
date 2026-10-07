@@ -34,7 +34,10 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tupl
 
 	audio_frame_handler = partial(handle_audio_frame, audio_codec, audio_decoder, audio_queue)
 	receive_event = create_receive_event(audio_track, audio_frame_handler)
-	receive_event.wait()
+
+	while rtc.is_open(audio_track) and not receive_event.wait(timeout = 1):
+		pass
+
 	destroy_receive_event(audio_track)
 
 	empty_audio_frame = numpy.empty(0)

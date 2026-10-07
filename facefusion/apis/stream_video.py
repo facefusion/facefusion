@@ -70,9 +70,21 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_decoder = create_video_decoder(video_codec)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
-	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
+	frame_counter : List[int] = [ 0 ]
+	idle_total = 0
+
+	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor, frame_counter)
 	receive_event = create_receive_event(video_track, video_frame_handler)
-	receive_event.wait()
+
+	while rtc.is_open(video_track) and not receive_event.wait(timeout = 1):
+		if frame_counter[0]:
+			frame_counter[0] = 0
+			idle_total = 0
+		else:
+			idle_total += 1
+			if idle_total >= 15:
+				break
+
 	destroy_receive_event(video_track)
 
 	empty_future : Future[BufferPack] = Future()
@@ -180,7 +192,8 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : Timestamp) -> None:
+def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, frame_counter : List[int], video_buffer : Buffer, video_timestamp : Timestamp) -> None:
+	frame_counter[0] += 1
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if is_vision_frame(vision_frame) and video_queue.qsize() < video_queue.maxsize:
