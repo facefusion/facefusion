@@ -24,18 +24,12 @@ def test_create_hash() -> None:
 
 
 def test_validate_hash() -> None:
-	validate_path = resolve_relative_path('../.assets/models/yunet_2023_mar.onnx')
-	hash_path = resolve_relative_path('../.assets/models/yunet_2023_mar.hash')
-
-	assert validate_hash(validate_path) is True
-	assert validate_hash(hash_path) is False
+	assert validate_hash(resolve_relative_path('../.assets/models/yunet_2023_mar.onnx')) is True
+	assert validate_hash(resolve_relative_path('../.assets/models/yunet_2023_mar.hash')) is False
 	assert validate_hash('invalid') is False
 
 
 def test_get_hash_path() -> None:
-	validate_path = resolve_relative_path('../.assets/models/yunet_2023_mar.onnx')
-	hash_path = resolve_relative_path('../.assets/models/yunet_2023_mar.hash')
-
-	assert get_hash_path(validate_path) == hash_path
+	assert get_hash_path(resolve_relative_path('../.assets/models/yunet_2023_mar.onnx')) == resolve_relative_path('../.assets/models/yunet_2023_mar.hash')
 	assert get_hash_path(resolve_relative_path('../.assets/models')) is None
 	assert get_hash_path('invalid') is None

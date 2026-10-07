@@ -19,6 +19,4 @@ def before_all() -> None:
 
 
 def test_get_static_model_initializer() -> None:
-	model_path = resolve_relative_path('../.assets/models/inswapper_128.onnx')
-
-	assert get_static_model_initializer(model_path).shape == (512, 512)
+	assert get_static_model_initializer(resolve_relative_path('../.assets/models/inswapper_128.onnx')).shape == (512, 512)
