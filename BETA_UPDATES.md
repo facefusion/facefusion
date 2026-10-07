@@ -19,4 +19,8 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - a session is limited to one stream, metrics and ping websocket, a second connection of the same kind is rejected
 - capturing asset frames and faces runs off the event loop, so a heavy capture no longer blocks other sessions while it decodes
 - image uploads with a resolution above `4096` are rejected with `400`, which prevents decompression bombs
+- video uploads with a resolution above `4096` are rejected with `400`, the check that guarded images now guards videos as well
+- an upload is limited to `32` files, further files are rejected
 - `/stream` ignores frames with a resolution above `4096` instead of decoding them
+- capturing asset frames and faces returns a `multipart/mixed` stream with one part per frame instead of a single concatenated image, which avoids building one large image
+- the API bounds the number of concurrent requests and the websocket message size and queue, which avoids an overload from too many requests at once
