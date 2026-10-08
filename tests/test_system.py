@@ -73,12 +73,12 @@ def test_detect_network_metrics() -> None:
 
 
 def test_detect_processor_metrics() -> None:
-	with patch('facefusion.system.psutil.cpu_count', return_value = 8):
+	with patch('facefusion.system.psutil.cpu_count', return_value = 16):
 		with patch('facefusion.system.psutil.cpu_freq') as cpu_freq:
-			cpu_freq.return_value.current = 3200
+			cpu_freq.return_value.current = 3000
 			with patch('facefusion.system.psutil.cpu_percent', return_value = 50):
 				processor_metrics = detect_processor_metrics()
 
-	assert processor_metrics.get('cores').get('value') == 8
-	assert processor_metrics.get('frequency').get('value') == 3200
+	assert processor_metrics.get('cores').get('value') == 16
+	assert processor_metrics.get('frequency').get('value') == 3000
 	assert processor_metrics.get('utilization').get('value') == 50
