@@ -79,7 +79,7 @@ def route(args : Args) -> None:
 			port = state_manager.get_item('api_port'),
 			limit_concurrency = state_manager.get_item('api_session_limit') * 8,
 			ws_max_size = 8 * 1024 * 1024,
-			ws_max_queue = 0
+			ws_max_queue = 8
 		)
 		hard_exit(1)
 
