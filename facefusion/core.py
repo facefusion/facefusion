@@ -20,8 +20,8 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode
-from facefusion.workflows import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
 from facefusion.workflows.core import detect_workflow_mode
+from facefusion.workflows.modules import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
 
 
 def cli() -> None:
