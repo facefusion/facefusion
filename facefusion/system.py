@@ -24,7 +24,7 @@ def get_metrics_set() -> Metrics:
 
 
 def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
-	if 'rocm' in execution_providers or 'migraphx' in execution_providers:
+	if 'migraphx' in execution_providers:
 		return detect_amd_graphic_devices()
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
 		return detect_nvidia_graphic_devices()

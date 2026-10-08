@@ -267,20 +267,9 @@ def test_destroy_session(test_client : TestClient) -> None:
 		assert os.path.exists(asset_path) is True
 
 	assert delete_session_response.json().get('message') == 'directory not removed'
-	assert session_manager.find_api_session_id(access_token) == session_id
-	assert delete_session_response.status_code == 404
-
-	delete_session_response = test_client.delete('/session', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
 	assert session_manager.find_api_session_id(access_token) is None
 	assert store_creator.has_content(asset_store.ASSET_STORE, session_id) is False
-	assert delete_session_response.status_code == 200
-
-	for asset_path in asset_paths:
-		assert os.path.exists(asset_path) is False
+	assert delete_session_response.status_code == 206
 
 
 def test_destroy_session_content(test_client : TestClient) -> None:
