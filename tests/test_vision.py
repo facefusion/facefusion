@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager, video_manager
 from facefusion.download import conditional_download
-from facefusion.vision import calculate_histogram_difference, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_image_resolution, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_video_frame_total, detect_frame_orientation, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, fit_contain_frame, fit_cover_frame, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_frame, restrict_image_resolution, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution, select_video_frames, unpack_resolution, write_image
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
@@ -241,6 +241,35 @@ def test_unpack_resolution() -> None:
 	assert unpack_resolution('0x0') == (0, 0)
 	assert unpack_resolution('2x2') == (2, 2)
 	assert unpack_resolution('invalid') == (0, 0)
+
+
+def test_detect_frame_orientation() -> None:
+	assert detect_frame_orientation(numpy.zeros((100, 200, 3), numpy.uint8)) == 'landscape'
+	assert detect_frame_orientation(numpy.zeros((200, 100, 3), numpy.uint8)) == 'portrait'
+
+
+def test_restrict_frame() -> None:
+	assert restrict_frame(numpy.zeros((200, 400, 3), numpy.uint8), (100, 100)).shape == (50, 100, 3)
+	assert restrict_frame(numpy.zeros((50, 50, 3), numpy.uint8), (100, 100)).shape == (50, 50, 3)
+
+
+def test_fit_contain_frame() -> None:
+	vision_frame = numpy.full((100, 200, 3), 255, numpy.uint8)
+	resolution = (100, 100)
+
+	assert fit_contain_frame(vision_frame, resolution).shape == (100, 100, 3)
+	assert fit_contain_frame(vision_frame, resolution)[0, 50].tolist() == [ 0, 0, 0 ]
+	assert fit_contain_frame(vision_frame, resolution)[50, 50].tolist() == [ 255, 255, 255 ]
+
+
+def test_fit_cover_frame() -> None:
+	vision_frame = numpy.full((100, 20, 3), 255, numpy.uint8)
+	vision_frame = numpy.pad(vision_frame, ((0, 0), (90, 90), (0, 0)))
+	resolution = (100, 100)
+
+	assert fit_cover_frame(vision_frame, resolution).shape == (100, 100, 3)
+	assert fit_cover_frame(vision_frame, resolution)[50, 50].tolist() == [ 255, 255, 255 ]
+	assert fit_cover_frame(vision_frame, resolution)[50, 0].tolist() == [ 0, 0, 0 ]
 
 
 def test_calc_histogram_difference() -> None:
