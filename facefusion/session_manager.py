@@ -19,7 +19,7 @@ def create_api_session() -> ApiSession:
 		'access_token': secrets.token_urlsafe(64),
 		'refresh_token': secrets.token_urlsafe(64),
 		'created_at': datetime.now(),
-		'expires_at': datetime.now() + timedelta(minutes = 10)
+		'expires_at': datetime.now() + timedelta(minutes = 5)
 	}
 
 	return api_session
