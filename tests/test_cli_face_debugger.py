@@ -43,7 +43,7 @@ def before_each() -> None:
 
 @pytest.mark.parametrize('workflow_strategy', facefusion.choices.workflow_strategies)
 def test_debug_face_to_image(workflow_strategy : WorkflowStrategy) -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-image', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-debug-face-to-image.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-image', '--workflow-strategy', workflow_strategy, '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '--face-debugger-items', 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-debug-face-to-image.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-debug-face-to-image.jpg') is True
