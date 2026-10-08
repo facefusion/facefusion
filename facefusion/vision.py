@@ -78,9 +78,8 @@ def read_static_video_frame(video_path : str, frame_index : int = 0) -> Optional
 
 def read_video_frame(video_path : str, frame_index : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		video_reader = video_manager.get_reader(video_path, 'read_video_frame')
-
 		with thread_semaphore():
+			video_reader = video_manager.get_reader(video_path, 'read_video_frame')
 			video_manager.conditional_seek_video_reader(video_reader, frame_index)
 			return video_manager.read_video_frame(video_reader)
 
