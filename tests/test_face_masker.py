@@ -31,7 +31,7 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_aligner_model', '2dfan4')
 	state_manager.init_item('face_aligner_score', 0.5)
-	state_manager.init_item('face_occluder_model', 'xseg_1')
+	state_manager.init_item('face_occluder_model', 'many')
 	state_manager.init_item('face_parser_model', 'bisenet_resnet_34')
 
 	face_classifier.pre_check()
@@ -58,6 +58,8 @@ def test_create_occlusion_mask() -> None:
 	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
 	source_face = get_one_face(get_static_faces([ source_vision_frame ]))
 	crop_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_128', (256, 256))
+
+	state_manager.set_item('face_occluder_model', 'xseg_1')
 
 	assert create_occlusion_mask(crop_vision_frame).sum() == pytest.approx(25111.992, rel = 1e-3)
 
