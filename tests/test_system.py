@@ -16,7 +16,8 @@ def before_all() -> None:
 
 
 def test_get_metrics_set() -> None:
-	assert get_metrics_set().get('graphic_devices') == []
+	with patch('facefusion.system.psutil.cpu_freq', create = True):
+		assert get_metrics_set().get('graphic_devices') == []
 
 
 def test_detect_graphic_devices() -> None:
@@ -74,7 +75,7 @@ def test_detect_network_metrics() -> None:
 
 def test_detect_processor_metrics() -> None:
 	with patch('facefusion.system.psutil.cpu_count', return_value = 16):
-		with patch('facefusion.system.psutil.cpu_freq') as cpu_freq:
+		with patch('facefusion.system.psutil.cpu_freq', create = True) as cpu_freq:
 			cpu_freq.return_value.current = 3000
 			with patch('facefusion.system.psutil.cpu_percent', return_value = 50):
 				processor_metrics = detect_processor_metrics()
