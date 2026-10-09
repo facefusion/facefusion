@@ -67,6 +67,10 @@ def join_session() -> None:
 	set_session_id(owner_id)
 
 
+def has_fork_session(owner_id : SessionId) -> bool:
+	return bool(find_cli_session_id(owner_id))
+
+
 def get_api_session(session_id : SessionId) -> Optional[ApiSession]:
 	return API_SESSIONS.get(session_id)
 
@@ -78,6 +82,13 @@ def get_cli_session(session_id : SessionId) -> Optional[CliSession]:
 def find_api_session_id(access_token : str) -> Optional[SessionId]:
 	for session_id, api_session in API_SESSIONS.items():
 		if api_session.get('access_token') == access_token:
+			return session_id
+	return None
+
+
+def find_cli_session_id(owner_id : SessionId) -> Optional[SessionId]:
+	for session_id, cli_session in list(CLI_SESSIONS.items()):
+		if cli_session.get('owner_id') == owner_id:
 			return session_id
 	return None
 
@@ -141,13 +152,13 @@ def clear_cli_session(session_id : SessionId) -> None:
 
 def conditional_clear_api_session(session_id : SessionId) -> None:
 	while validate_api_session(session_id):
-		sleep(1)
+		sleep(0.5)
 
 	clear_api_session(session_id)
 
 
 def conditional_clear_cli_session(session_id : SessionId) -> None:
 	while validate_cli_session(session_id):
-		sleep(1)
+		sleep(0.5)
 
 	clear_cli_session(session_id)

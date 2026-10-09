@@ -3,7 +3,7 @@ import secrets
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_206_PARTIAL_CONTENT, HTTP_401_UNAUTHORIZED, HTTP_429_TOO_MANY_REQUESTS
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_206_PARTIAL_CONTENT, HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT, HTTP_429_TOO_MANY_REQUESTS
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_store, session_context, session_manager, state_manager, store_manager, translator, video_manager
 from facefusion.apis import asset_store, websocket_store
@@ -92,6 +92,12 @@ async def destroy_session(request : Request) -> JSONResponse:
 	session_id = session_context.get_session_id()
 	temp_path = state_manager.get_temp_path()
 	jobs_path = state_manager.get_jobs_path()
+
+	if store_manager.is_busy():
+		return JSONResponse(
+		{
+			'message': translator.get('session_not_destroyed', 'facefusion.apis')
+		}, status_code = HTTP_409_CONFLICT)
 
 	session_manager.clear_api_session(session_id)
 	await asyncio.to_thread(store_manager.destroy, session_id)

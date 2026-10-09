@@ -41,6 +41,12 @@ def conditional_cli_destroy(session_id : SessionId) -> None:
 	destroy(session_id)
 
 
+def is_busy() -> bool:
+	owner_id = session_manager.resolve_owner_id()
+
+	return rtc_store.has_peer() or websocket_store.has_websocket('stream') or session_manager.has_fork_session(owner_id)
+
+
 def destroy(session_id : SessionId) -> None:
 	for store in get_stores():
 		store.destroy(session_id)

@@ -10,6 +10,7 @@ LOCALES : Locales =\
 		'invalid_access_token': 'invalid access token',
 		'invalid_refresh_token': 'invalid refresh token',
 		'session_limit_reached': 'session limit reached',
+		'session_not_destroyed': 'session not destroyed',
 		'invalid_state_key': 'invalid state key',
 		'invalid_state_value': 'invalid state value',
 		'source_asset_not_found': 'source asset not found',

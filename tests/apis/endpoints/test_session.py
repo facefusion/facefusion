@@ -225,6 +225,16 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert os.path.isdir(jobs_path) is True
 	assert delete_session_response.status_code == 401
 
+	with patch('facefusion.store_manager.is_busy', return_value = True):
+		delete_session_response = test_client.delete('/session', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+	assert delete_session_response.json().get('message') == 'session not destroyed'
+	assert session_manager.find_api_session_id(access_token) == session_id
+	assert delete_session_response.status_code == 409
+
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token

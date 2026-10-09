@@ -1,4 +1,5 @@
 from typing import Iterator
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +8,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.session_context import resolve_local_id, set_session_id
 from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, fork_session, set_api_session
-from facefusion.store_manager import conditional_cli_destroy
+from facefusion.store_manager import conditional_cli_destroy, is_busy
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -50,5 +51,24 @@ def test_conditional_cli_destroy() -> None:
 		assert video_reader.get('process').returncode == -9
 
 	assert store_creator.has_content(video_manager.VIDEO_POOL_STORE, fork_id) is False
+
+	clear_cli_session(fork_id)
+
+
+def test_is_busy() -> None:
+	set_session_id('session-a')
+
+	assert is_busy() is False
+
+	with patch('facefusion.rtc_store.has_peer', return_value = True):
+		assert is_busy() is True
+
+	with patch('facefusion.apis.websocket_store.has_websocket', return_value = True):
+		assert is_busy() is True
+
+	fork_id = fork_session()
+	set_session_id('session-a')
+
+	assert is_busy() is True
 
 	clear_cli_session(fork_id)
