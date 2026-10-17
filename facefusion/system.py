@@ -225,7 +225,7 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 			device_handles = amd_adlx_module.find_device_handles(amd_adlx_library)
 
 			for device_handle in device_handles:
-				#gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
 				product_info = amd_adlx_module.get_product_info(device_handle)
 				device_metrics = amd_adlx_module.get_device_metrics(amd_adlx_library, device_handle)
 
@@ -283,11 +283,11 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 					}
 				})
 
-				#ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu_vtable[1])(device_handle)
+				ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu_vtable[1])(device_handle)
 
-			#if amd_adlx_library.performance_monitoring.value:
-				#performance_monitoring_vtable = ctypes.cast(amd_adlx_library.performance_monitoring, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
-				#ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(performance_monitoring_vtable[1])(amd_adlx_library.performance_monitoring)
+			if amd_adlx_library.performance_monitoring.value:
+				performance_monitoring_vtable = ctypes.cast(amd_adlx_library.performance_monitoring, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(performance_monitoring_vtable[1])(amd_adlx_library.performance_monitoring)
 
 			amd_adlx_library.ADLXTerminate()
 
