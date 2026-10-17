@@ -39,6 +39,9 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.amdsmi_get_gpu_asic_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	library.amdsmi_get_gpu_asic_info.restype = ctypes.c_uint32
 
+	library.amdsmi_get_gpu_driver_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.amdsmi_get_gpu_driver_info.restype = ctypes.c_uint32
+
 	library.amdsmi_get_temp_metric.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_int64) ]
 	library.amdsmi_get_temp_metric.restype = ctypes.c_uint32
 
@@ -64,6 +67,18 @@ def define_product_info() -> ctypes.Structure:
 			('target_graphics_version', ctypes.c_uint64),
 			('subsystem_id', ctypes.c_uint32),
 			('reserved', ctypes.c_uint32 * 21)
+		]
+	})()
+
+
+def define_driver_info() -> ctypes.Structure:
+	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('driver_version', ctypes.c_char * 256),
+			('driver_date', ctypes.c_char * 256),
+			('driver_name', ctypes.c_char * 256)
 		]
 	})()
 

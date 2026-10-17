@@ -162,6 +162,10 @@ def detect_amd_smi() -> List[GraphicDevice]:
 			product_info = amd_smi_module.define_product_info()
 			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(product_info))
 
+			driver_info = amd_smi_module.define_driver_info()
+			amd_smi_library.amdsmi_get_gpu_driver_info(device_handle, ctypes.byref(driver_info))
+			driver_version = driver_info.driver_version.decode()
+
 			device_memory = amd_smi_module.define_device_memory()
 			amd_smi_library.amdsmi_get_gpu_vram_usage(device_handle, ctypes.byref(device_memory))
 
@@ -173,7 +177,7 @@ def detect_amd_smi() -> List[GraphicDevice]:
 
 			graphic_devices.append(
 			{
-				'driver_version': '0.0.0',
+				'driver_version': driver_version,
 				'framework':
 				{
 					'name': 'ROCm',
