@@ -5,9 +5,9 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, cancel_job, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, submit_job, submit_jobs
 from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
-from facefusion.types import Args
+from facefusion.types import Args, ErrorCode
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
 
@@ -42,16 +42,27 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
 	output_path = step_args.get('output_path')
 	target_path = step_args.get('target_path')
 
 	if output_path and not get_file_extension(output_path):
-		if create_directory(output_path):
-			return copy_file(target_path, os.path.join(output_path, os.path.basename(target_path)))
-		return False
+		if create_directory(output_path) and copy_file(target_path, os.path.join(output_path, os.path.basename(target_path))):
+			return 0
+		return 1
 
-	return copy_file(target_path, output_path)
+	if copy_file(target_path, output_path):
+		return 0
+	return 1
+
+
+def stop_process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
+	return 4
+
+
+def cancel_process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
+	cancel_job(job_id)
+	return process_step(job_id, step_index, step_args)
 
 
 def test_run_job() -> None:
@@ -101,6 +112,24 @@ def test_run_job() -> None:
 	submit_job('job-test-run-job')
 
 	assert run_job('job-test-run-job', process_step) is True
+
+	create_job('job-test-run-job-cancel')
+	add_step('job-test-run-job-cancel', args_1)
+	add_step('job-test-run-job-cancel', args_3)
+	submit_job('job-test-run-job-cancel')
+
+	assert run_job('job-test-run-job-cancel', cancel_process_step) is False
+	assert find_job_ids('drafted') == [ 'job-test-run-job-cancel' ]
+	assert get_steps('job-test-run-job-cancel')[1].get('status') == 'drafted'
+
+	create_job('job-test-run-job-stop')
+	add_step('job-test-run-job-stop', args_1)
+	submit_job('job-test-run-job-stop')
+
+	assert run_job('job-test-run-job-stop', stop_process_step) is False
+	assert find_job_ids('drafted') == [ 'job-test-run-job-cancel', 'job-test-run-job-stop' ]
+	assert get_steps('job-test-run-job-stop')[0].get('status') == 'drafted'
+	assert find_job_ids('failed') == []
 
 
 def test_run_jobs() -> None:
@@ -219,7 +248,7 @@ def test_run_steps() -> None:
 		'output_path': get_test_output_path('output-3.jpg')
 	}
 
-	assert run_steps('job-invalid', process_step) is False
+	assert run_steps('job-invalid', process_step) == 1
 
 	create_job('job-test-run-steps')
 	add_step('job-test-run-steps', args_1)
@@ -227,7 +256,12 @@ def test_run_steps() -> None:
 	add_step('job-test-run-steps', args_2)
 	add_step('job-test-run-steps', args_3)
 
-	assert run_steps('job-test-run-steps', process_step) is True
+	assert run_steps('job-test-run-steps', process_step) == 4
+
+	submit_job('job-test-run-steps')
+
+	assert run_steps('job-test-run-steps', process_step) == 0
+	assert run_steps('job-test-run-steps', stop_process_step) == 4
 
 
 def test_finalize_steps() -> None:

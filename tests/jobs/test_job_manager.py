@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from facefusion.session_context import resolve_local_id, set_session_id
 from tests.assert_helper import get_test_jobs_directory
 
@@ -114,6 +114,51 @@ def test_submit_jobs() -> None:
 
 	assert submit_jobs(halt_on_error) is True
 	assert submit_jobs(halt_on_error) is False
+
+
+def test_cancel_job() -> None:
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
+
+	assert cancel_job('job-invalid') is False
+
+	create_job('job-test-cancel-job')
+	add_step('job-test-cancel-job', args_1)
+
+	assert cancel_job('job-test-cancel-job') is False
+
+	submit_job('job-test-cancel-job')
+
+	assert cancel_job('job-test-cancel-job') is True
+	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
+	assert get_steps('job-test-cancel-job')[0].get('status') == 'drafted'
+	assert cancel_job('job-test-cancel-job') is False
+
+
+def test_cancel_jobs() -> None:
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
+	halt_on_error = True
+
+	assert cancel_jobs(halt_on_error) is False
+
+	create_job('job-test-cancel-jobs-1')
+	create_job('job-test-cancel-jobs-2')
+	add_step('job-test-cancel-jobs-1', args_1)
+	add_step('job-test-cancel-jobs-2', args_1)
+	submit_jobs(halt_on_error)
+
+	assert cancel_jobs(halt_on_error) is True
+	assert find_job_ids('queued') == []
+	assert cancel_jobs(halt_on_error) is False
 
 
 def test_delete_job() -> None:

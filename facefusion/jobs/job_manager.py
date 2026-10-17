@@ -59,6 +59,28 @@ def submit_jobs(halt_on_error : bool) -> bool:
 	return False
 
 
+def cancel_job(job_id : str) -> bool:
+	queued_job_ids = find_job_ids('queued')
+
+	if job_id in queued_job_ids:
+		return set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
+	return False
+
+
+def cancel_jobs(halt_on_error : bool) -> bool:
+	queued_job_ids = find_job_ids('queued')
+	has_error = False
+
+	if queued_job_ids:
+		for job_id in queued_job_ids:
+			if not cancel_job(job_id):
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
+	return False
+
+
 def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 

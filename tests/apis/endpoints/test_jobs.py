@@ -4,11 +4,11 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_context, session_manager, state_manager
+from facefusion import metadata, process_manager, session_context, session_manager, state_manager, store_creator
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_steps_status
+from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_step_status, set_steps_status
 from facefusion.program import create_program
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
 
@@ -317,6 +317,132 @@ def test_submit_job(test_client : TestClient) -> None:
 
 	assert submit_job_body.get('message') == 'job not submitted'
 	assert submit_job_response.status_code == 409
+
+
+def test_cancel_jobs(test_client : TestClient) -> None:
+	cancel_jobs_response = test_client.patch('/jobs?action=cancel')
+
+	assert cancel_jobs_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session_context.set_session_id(session_id)
+
+	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	cancel_jobs_body = cancel_jobs_response.json()
+
+	assert cancel_jobs_body.get('message') == 'jobs not cancelled'
+	assert cancel_jobs_response.status_code == 400
+
+	create_job('job-test-cancel-jobs')
+	test_client.post('/jobs/job-test-cancel-jobs?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	test_client.patch('/jobs?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	fork_id = session_manager.fork_session()
+	process_manager.start()
+	session_context.set_session_id(session_id)
+
+	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	cancel_jobs_body = cancel_jobs_response.json()
+
+	assert cancel_jobs_body.get('message') == 'ok'
+	assert find_job_ids('drafted') == [ 'job-test-cancel-jobs' ]
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert cancel_jobs_response.status_code == 200
+
+	session_manager.clear_cli_session(fork_id)
+	store_creator.delete_content(process_manager.PROCESS_STORE, fork_id)
+
+
+def test_cancel_job(test_client : TestClient) -> None:
+	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel')
+
+	assert cancel_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session_context.set_session_id(session_id)
+
+	create_job('job-test-cancel-job')
+	test_client.post('/jobs/job-test-cancel-job?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+
+	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	cancel_job_body = cancel_job_response.json()
+
+	assert cancel_job_body.get('message') == 'job not cancelled'
+	assert cancel_job_response.status_code == 400
+
+	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	fork_id = session_manager.fork_session()
+	process_manager.start()
+	session_context.set_session_id(session_id)
+
+	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	cancel_job_body = cancel_job_response.json()
+
+	assert cancel_job_body.get('message') == 'ok'
+	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'processing'
+	assert cancel_job_response.status_code == 200
+
+	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	set_step_status('job-test-cancel-job', 0, 'started')
+
+	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	cancel_job_body = cancel_job_response.json()
+
+	assert cancel_job_body.get('message') == 'ok'
+	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert cancel_job_response.status_code == 200
+
+	session_manager.clear_cli_session(fork_id)
+	store_creator.delete_content(process_manager.PROCESS_STORE, fork_id)
 
 
 def test_run_jobs(test_client : TestClient) -> None:

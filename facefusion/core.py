@@ -319,7 +319,7 @@ def process_batch(args : Args) -> ErrorCode:
 	return 1
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
 	step_total = job_manager.count_step_total(job_id)
 	fork_id = session_manager.fork_session()
 	session_manager.observe_cli_session(fork_id)
@@ -335,7 +335,11 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 
-	is_done = common_pre_check() and processors_pre_check() and conditional_process() == 0
+	error_code : ErrorCode = 2
+
+	if common_pre_check() and processors_pre_check():
+		error_code = conditional_process()
+
 	session_manager.join_session()
 
 	stores =\
@@ -349,7 +353,7 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	for store in stores:
 		store_creator.delete_content(store, fork_id)
 
-	return is_done
+	return error_code
 
 
 def conditional_process() -> ErrorCode:
