@@ -203,6 +203,10 @@ def count_step_total(job_id : str) -> int:
 	return 0
 
 
+def has_step_status(job_id : str, step_status : JobStepStatus) -> bool:
+	return any(step.get('status') == step_status for step in get_steps(job_id))
+
+
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
 	job = read_job_file(job_id)
 

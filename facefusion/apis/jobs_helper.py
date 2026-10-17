@@ -15,7 +15,7 @@ def create_output_asset(job_id : str) -> None:
 
 
 def cancel_job(job_id : str) -> bool:
-	is_started = is_job_started(job_id)
+	is_started = job_manager.has_step_status(job_id, 'started')
 
 	if job_manager.cancel_job(job_id):
 		if is_started:
@@ -39,10 +39,3 @@ def stop_fork_session() -> None:
 		session_context.set_session_id(fork_id)
 		process_manager.stop()
 		session_context.set_session_id(owner_id)
-
-
-def is_job_started(job_id : str) -> bool:
-	for step in job_manager.get_steps(job_id):
-		if step.get('status') == 'started':
-			return True
-	return False
