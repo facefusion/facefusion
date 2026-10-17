@@ -47,7 +47,16 @@ def detect_nvidia_ml() -> List[GraphicDevice]:
 		cuda_version = ctypes.c_int()
 		nvidia_ml_library.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
 
-		for device_handle in nvidia_ml_module.find_device_handles(nvidia_ml_library):
+		device_count = ctypes.c_uint()
+		nvidia_ml_library.nvmlDeviceGetCount_v2(ctypes.byref(device_count))
+		device_handles : List[ctypes.c_void_p] = []
+
+		for device_id in range(device_count.value):
+			device_handle = ctypes.c_void_p()
+			nvidia_ml_library.nvmlDeviceGetHandleByIndex_v2(device_id, ctypes.byref(device_handle))
+			device_handles.append(device_handle)
+
+		for device_handle in device_handles:
 			device_name = ctypes.create_string_buffer(128)
 			nvidia_ml_library.nvmlDeviceGetName(device_handle, device_name, 128)
 
@@ -134,7 +143,22 @@ def detect_amd_smi() -> List[GraphicDevice]:
 		if rocm_core_library:
 			rocm_core_library.getROCmVersion(ctypes.byref(rocm_major_version), ctypes.byref(rocm_minor_version), ctypes.byref(rocm_patch_version))
 
-		for device_handle in amd_smi_module.find_device_handles(amd_smi_library):
+		socket_count = ctypes.c_uint32()
+		amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), ctypes.POINTER(ctypes.c_void_p)())
+		socket_handles = (ctypes.c_void_p * socket_count.value)()
+		amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), socket_handles)
+		device_handles : List[ctypes.c_void_p] = []
+
+		for socket_index in range(socket_count.value):
+			device_count = ctypes.c_uint32()
+			amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), ctypes.POINTER(ctypes.c_void_p)())
+			processor_handles = (ctypes.c_void_p * device_count.value)()
+			amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), processor_handles)
+
+			for device_index in range(device_count.value):
+				device_handles.append(ctypes.c_void_p(processor_handles[device_index]))
+
+		for device_handle in device_handles:
 			product_info = amd_smi_module.define_product_info()
 			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(product_info))
 
@@ -222,12 +246,42 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 			system_vtable = ctypes.cast(amd_adlx_library.system, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
 			ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(system_vtable[9])(amd_adlx_library.system, ctypes.byref(amd_adlx_library.performance_monitoring))
 
-			device_handles = amd_adlx_module.find_device_handles(amd_adlx_library)
+			device_handles : List[ctypes.c_void_p] = []
+			device_list = ctypes.c_void_p()
+			system_vtable = ctypes.cast(amd_adlx_library.system, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+			get_device_list = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p))(system_vtable[1])
+
+			if not get_device_list(amd_adlx_library.system, ctypes.byref(device_list)):
+				device_list_vtable = ctypes.cast(device_list, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				get_device_count = ctypes.WINFUNCTYPE(ctypes.c_uint32, ctypes.c_void_p)(device_list_vtable[3])
+				get_device = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_void_p))(device_list_vtable[11])
+
+				for device_index in range(get_device_count(device_list)):
+					device_handle = ctypes.c_void_p()
+
+					if get_device(device_list, device_index, ctypes.byref(device_handle)) == 0:
+						device_handles.append(device_handle)
+
+				ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(device_list_vtable[1])(device_list)
 
 			for device_handle in device_handles:
 				gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
-				product_info = amd_adlx_module.get_product_info(device_handle)
-				device_metrics = amd_adlx_module.get_device_metrics(amd_adlx_library, device_handle)
+				product_info = amd_adlx_module.define_product_info()
+				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_vtable[7])(device_handle, ctypes.byref(product_info, type(product_info).name.offset))
+				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_vtable[11])(device_handle, ctypes.byref(product_info, type(product_info).vram_total_mb.offset))
+				device_metrics = amd_adlx_module.define_device_metrics()
+				gpu_metrics = ctypes.c_void_p()
+
+				if amd_adlx_library.performance_monitoring.value:
+					performance_monitoring_vtable = ctypes.cast(amd_adlx_library.performance_monitoring, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+					ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(performance_monitoring_vtable[18])(amd_adlx_library.performance_monitoring, device_handle, ctypes.byref(gpu_metrics))
+
+					if gpu_metrics.value:
+						gpu_metrics_vtable = ctypes.cast(gpu_metrics, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+						ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_metrics_vtable[4])(gpu_metrics, ctypes.byref(device_metrics, type(device_metrics).utilization.offset))
+						ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_metrics_vtable[7])(gpu_metrics, ctypes.byref(device_metrics, type(device_metrics).temperature.offset))
+						ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_metrics_vtable[12])(gpu_metrics, ctypes.byref(device_metrics, type(device_metrics).vram_used_mb.offset))
+						ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu_metrics_vtable[1])(gpu_metrics)
 
 				graphic_devices.append(
 				{

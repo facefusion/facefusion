@@ -1,7 +1,7 @@
 import ctypes
 import ctypes.util
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
 
 @lru_cache
@@ -49,20 +49,6 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.nvmlDeviceGetUtilizationRates.restype = ctypes.c_int
 
 	return library
-
-
-def find_device_handles(nvidia_ml_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
-	device_handles : List[ctypes.c_void_p] = []
-
-	device_count = ctypes.c_uint()
-	nvidia_ml_library.nvmlDeviceGetCount_v2(ctypes.byref(device_count))
-
-	for device_id in range(device_count.value):
-		device_handle = ctypes.c_void_p()
-		nvidia_ml_library.nvmlDeviceGetHandleByIndex_v2(device_id, ctypes.byref(device_handle))
-		device_handles.append(device_handle)
-
-	return device_handles
 
 
 def define_device_memory() -> ctypes.Structure:
