@@ -1,4 +1,5 @@
 import pytest
+from pytest_mock import MockerFixture
 
 from facefusion import content_store, core, process_manager, session_context, session_manager, state_manager, store_creator, video_manager
 from facefusion.types import ErrorCode
@@ -14,7 +15,7 @@ def before_all() -> None:
 
 
 @pytest.mark.parametrize('error_code', [ 0, 1, 2, 3, 4 ])
-def test_process_step(mocker, error_code : ErrorCode) -> None:
+def test_process_step(mocker : MockerFixture, error_code : ErrorCode) -> None:
 	local_id = session_context.resolve_local_id()
 	step_args =\
 	{
