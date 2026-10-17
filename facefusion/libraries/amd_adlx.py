@@ -55,29 +55,6 @@ def find_device_handles(amd_adlx_library : ctypes.CDLL) -> List[ctypes.c_void_p]
 	return device_handles
 
 
-def define_product_info() -> ctypes.Structure:
-	return type('ADLX_PRODUCT_INFO', (ctypes.Structure,),
-	{
-		'_fields_':
-		[
-			('name', ctypes.c_char_p),
-			('vram_total_mb', ctypes.c_uint32)
-		]
-	})()
-
-
-def define_device_metrics() -> ctypes.Structure:
-	return type('ADLX_GPU_METRICS', (ctypes.Structure,),
-	{
-		'_fields_':
-		[
-			('vram_used_mb', ctypes.c_int32),
-			('temperature', ctypes.c_double),
-			('utilization', ctypes.c_double)
-		]
-	})()
-
-
 def get_product_info(device_handle : ctypes.c_void_p) -> ctypes.Structure:
 	product_info = define_product_info()
 	gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
@@ -102,3 +79,26 @@ def get_device_metrics(amd_adlx_library : ctypes.CDLL, device_handle : ctypes.c_
 			ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu_metrics_vtable[1])(gpu_metrics)
 
 	return device_metrics
+
+
+def define_product_info() -> ctypes.Structure:
+	return type('ADLX_PRODUCT_INFO', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('name', ctypes.c_char_p),
+			('vram_total_mb', ctypes.c_uint32)
+		]
+	})()
+
+
+def define_device_metrics() -> ctypes.Structure:
+	return type('ADLX_GPU_METRICS', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('vram_used_mb', ctypes.c_int32),
+			('temperature', ctypes.c_double),
+			('utilization', ctypes.c_double)
+		]
+	})()
