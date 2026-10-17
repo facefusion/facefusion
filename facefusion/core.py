@@ -335,25 +335,24 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 
-	error_code : ErrorCode = 2
+	try:
+		if common_pre_check() and processors_pre_check():
+			return conditional_process()
+		return 2
 
-	if common_pre_check() and processors_pre_check():
-		error_code = conditional_process()
+	finally:
+		session_manager.join_session()
 
-	session_manager.join_session()
+		stores =\
+		[
+			state_manager.STATE_SET,
+			content_store.CONTENT_STORE,
+			process_manager.PROCESS_STORE,
+			video_manager.VIDEO_POOL_STORE
+		]
 
-	stores =\
-	[
-		state_manager.STATE_SET,
-		content_store.CONTENT_STORE,
-		process_manager.PROCESS_STORE,
-		video_manager.VIDEO_POOL_STORE
-	]
-
-	for store in stores:
-		store_creator.delete_content(store, fork_id)
-
-	return error_code
+		for store in stores:
+			store_creator.delete_content(store, fork_id)
 
 
 def conditional_process() -> ErrorCode:
