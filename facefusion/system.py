@@ -26,11 +26,28 @@ def get_metrics_set() -> Metrics:
 
 def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
-		return detect_nvidia_ml()
+		graphic_devices = detect_nvidia_ml()
+
+		if graphic_devices:
+			return graphic_devices
+
 	if is_linux() and 'migraphx' in execution_providers:
-		return detect_amd_smi()
+		graphic_devices = detect_amd_smi()
+
+		if graphic_devices:
+			return graphic_devices
+
 	if is_windows() and 'directml' in execution_providers:
-		return detect_amd_adlx()
+		graphic_devices = detect_amd_adlx()
+
+		if graphic_devices:
+			return graphic_devices
+
+		graphic_devices = detect_nvidia_ml()
+
+		if graphic_devices:
+			return graphic_devices
+
 	return []
 
 
