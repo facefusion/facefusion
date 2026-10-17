@@ -38,6 +38,14 @@ def test_detect_graphic_devices() -> None:
 	assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'
 	assert amd_graphic_devices[0].get('product').get('vendor') == 'AMD'
 
+	with patch('facefusion.system.common_helper.is_windows', return_value = True):
+		with patch('facefusion.system.amd_adlx_module.create_static_library', return_value = None):
+			assert detect_graphic_devices([ 'directml' ]) == []
+
+		with patch('facefusion.system.amd_adlx_module.create_static_library') as create_static_library:
+			create_static_library.return_value.ADLXInitialize.return_value = 1
+			assert detect_graphic_devices([ 'directml' ]) == []
+
 
 def test_detect_disk_metrics() -> None:
 	with patch('facefusion.system.shutil.disk_usage') as disk_usage:

@@ -6,8 +6,8 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
-from facefusion.common_helper import is_linux
-from facefusion.libraries import amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module, rocm_core as rocm_core_module
+from facefusion.common_helper import is_linux, is_windows
+from facefusion.libraries import amd_adlx as amd_adlx_module, amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module, rocm_core as rocm_core_module
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
@@ -25,14 +25,16 @@ def get_metrics_set() -> Metrics:
 
 
 def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
-	if is_linux() and 'migraphx' in execution_providers:
-		return detect_amd_graphic_devices()
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
-		return detect_nvidia_graphic_devices()
+		return detect_nvidia_ml()
+	if is_linux() and 'migraphx' in execution_providers:
+		return detect_amd_smi()
+	if is_windows() and 'directml' in execution_providers:
+		return detect_amd_adlx()
 	return []
 
 
-def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
+def detect_nvidia_ml() -> List[GraphicDevice]:
 	nvidia_ml_library = nvidia_ml_module.create_static_library()
 	graphic_devices : List[GraphicDevice] = []
 
@@ -117,7 +119,7 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 	return graphic_devices
 
 
-def detect_amd_graphic_devices() -> List[GraphicDevice]:
+def detect_amd_smi() -> List[GraphicDevice]:
 	amd_smi_library = amd_smi_module.create_static_library()
 	graphic_devices : List[GraphicDevice] = []
 
@@ -200,6 +202,94 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 			})
 
 		amd_smi_library.amdsmi_shut_down()
+
+	return graphic_devices
+
+
+def detect_amd_adlx() -> List[GraphicDevice]:
+	amd_adlx_library = amd_adlx_module.create_static_library()
+	graphic_devices : List[GraphicDevice] = []
+
+	if amd_adlx_library:
+		full_version = ctypes.c_uint64()
+		amd_adlx_library.ADLXQueryFullVersion(ctypes.byref(full_version))
+		adlx_version = ctypes.c_char_p()
+		amd_adlx_library.ADLXQueryVersion(ctypes.byref(adlx_version))
+		amd_adlx_library.system = ctypes.c_void_p()
+
+		if not amd_adlx_library.ADLXInitialize(full_version.value, ctypes.byref(amd_adlx_library.system)):
+			amd_adlx_library.performance_monitoring = ctypes.c_void_p()
+			system_vtable = ctypes.cast(amd_adlx_library.system, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+			ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(system_vtable[9])(amd_adlx_library.system, ctypes.byref(amd_adlx_library.performance_monitoring))
+
+			device_handles = amd_adlx_module.find_device_handles(amd_adlx_library)
+
+			for device_handle in device_handles:
+				#gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				product_info = amd_adlx_module.get_product_info(device_handle)
+				device_metrics = amd_adlx_module.get_device_metrics(amd_adlx_library, device_handle)
+
+				graphic_devices.append(
+				{
+					'driver_version': '0.0.0',
+					'framework':
+					{
+						'name': 'ADLX',
+						'version': adlx_version.value.decode()
+					},
+					'product':
+					{
+						'vendor': 'AMD',
+						'name': product_info.name.decode()
+					},
+					'memory':
+					{
+						'total':
+						{
+							'value': product_info.vram_total_mb // 1024,
+							'unit': 'GB'
+						},
+						'used':
+						{
+							'value': device_metrics.vram_used_mb // 1024,
+							'unit': 'GB'
+						}
+					},
+					'temperature':
+					{
+						'gpu':
+						{
+							'value': int(device_metrics.temperature),
+							'unit': 'C'
+						},
+						'memory':
+						{
+							'value': 0,
+							'unit': '%'
+						}
+					},
+					'utilization':
+					{
+						'gpu':
+						{
+							'value': int(device_metrics.utilization),
+							'unit': '%'
+						},
+						'memory':
+						{
+							'value': 0,
+							'unit': '%'
+						}
+					}
+				})
+
+				#ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu_vtable[1])(device_handle)
+
+			#if amd_adlx_library.performance_monitoring.value:
+				#performance_monitoring_vtable = ctypes.cast(amd_adlx_library.performance_monitoring, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				#ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(performance_monitoring_vtable[1])(amd_adlx_library.performance_monitoring)
+
+			amd_adlx_library.ADLXTerminate()
 
 	return graphic_devices
 
