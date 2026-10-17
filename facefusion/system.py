@@ -274,7 +274,7 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 				query_interface(device_handle, 'IADLXGPU2', ctypes.byref(gpu2_interface))
 				gpu2_vtable = ctypes.cast(gpu2_interface, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
 				driver_version = ctypes.c_char_p()
-				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(ctypes.c_char_p))(gpu2_vtable[39])(gpu2_interface, ctypes.byref(gpu_driver_version))
+				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(ctypes.c_char_p))(gpu2_vtable[39])(gpu2_interface, ctypes.byref(driver_version))
 				ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu2_vtable[1])(gpu2_interface)
 
 				product_info = amd_adlx_module.define_product_info()
