@@ -164,7 +164,6 @@ def detect_amd_smi() -> List[GraphicDevice]:
 
 			driver_info = amd_smi_module.define_driver_info()
 			amd_smi_library.amdsmi_get_gpu_driver_info(device_handle, ctypes.byref(driver_info))
-			driver_version = driver_info.driver_version.decode()
 
 			device_memory = amd_smi_module.define_device_memory()
 			amd_smi_library.amdsmi_get_gpu_vram_usage(device_handle, ctypes.byref(device_memory))
@@ -177,7 +176,7 @@ def detect_amd_smi() -> List[GraphicDevice]:
 
 			graphic_devices.append(
 			{
-				'driver_version': driver_version,
+				'driver_version': driver_info.driver_version.decode(),
 				'framework':
 				{
 					'name': 'ROCm',
@@ -270,6 +269,19 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 
 			for device_handle in device_handles:
 				gpu_vtable = ctypes.cast(device_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+				driver_version = '0.0.0'
+				gpu2_interface = ctypes.c_void_p()
+				query_interface = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_void_p))(gpu_vtable[2])
+
+				if not query_interface(device_handle, 'IADLXGPU2', ctypes.byref(gpu2_interface)):
+					gpu2_vtable = ctypes.cast(gpu2_interface, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+					gpu_driver_version = ctypes.c_char_p()
+
+					if not ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(ctypes.c_char_p))(gpu2_vtable[39])(gpu2_interface, ctypes.byref(gpu_driver_version)) and gpu_driver_version.value:
+						driver_version = gpu_driver_version.value.decode()
+
+					ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(gpu2_vtable[1])(gpu2_interface)
+
 				product_info = amd_adlx_module.define_product_info()
 				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_vtable[7])(device_handle, ctypes.byref(product_info, type(product_info).name.offset))
 				ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(gpu_vtable[11])(device_handle, ctypes.byref(product_info, type(product_info).vram_total_mb.offset))
@@ -289,7 +301,7 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 
 				graphic_devices.append(
 				{
-					'driver_version': '0.0.0',
+					'driver_version': driver_version,
 					'framework':
 					{
 						'name': 'ADLX',
