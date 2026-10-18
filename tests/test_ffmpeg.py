@@ -226,45 +226,6 @@ def test_spawn_frames() -> None:
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
 
 
-def test_merge_video() -> None:
-	test_set =\
-	[
-		(get_test_example_file('target-240p-16khz.avi'), get_test_output_path('test-merge-video-240p-16khz.avi')),
-		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_path('test-merge-video-240p-16khz.m4v')),
-		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_path('test-merge-video-240p-16khz.mkv')),
-		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_path('test-merge-video-240p-16khz.mp4')),
-		(get_test_example_file('target-240p-16khz.mov'), get_test_output_path('test-merge-video-240p-16khz.mov')),
-		(get_test_example_file('target-240p-16khz.webm'), get_test_output_path('test-merge-video-240p-16khz.webm')),
-		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_path('test-merge-video-240p-16khz.wmv'))
-	]
-	output_video_encoders = get_available_encoder_set().get('video')
-
-	for target_path, output_path in test_set:
-		for output_video_encoder in output_video_encoders:
-			state_manager.init_item('output_path', target_path)
-			state_manager.init_item('output_video_fps', 25.0)
-			state_manager.init_item('output_video_encoder', output_video_encoder)
-			create_temp_directory(state_manager.get_temp_path(), output_path)
-			extract_frames(target_path, output_path, (452, 240), 25.0, 0, 1)
-
-			assert merge_video(target_path, output_path, 25.0, 25.0, (452, 240), 0, 1) is True
-
-			clear_temp_directory(state_manager.get_temp_path(), output_path)
-
-	state_manager.init_item('output_video_encoder', 'libx264')
-
-
-def test_concat_video() -> None:
-	output_path = get_test_output_path('test-concat-video.mp4')
-	temp_output_paths =\
-	[
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-16khz.mp4')
-	]
-
-	assert concat_video(output_path, temp_output_paths) is True
-
-
 def test_read_audio_buffer() -> None:
 	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 16, 1), bytes)
 	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 16, 1), bytes)
@@ -325,6 +286,45 @@ def test_replace_audio() -> None:
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
+
+
+def test_merge_video() -> None:
+	test_set =\
+	[
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_path('test-merge-video-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_path('test-merge-video-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_path('test-merge-video-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_path('test-merge-video-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_path('test-merge-video-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_path('test-merge-video-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_path('test-merge-video-240p-16khz.wmv'))
+	]
+	output_video_encoders = get_available_encoder_set().get('video')
+
+	for target_path, output_path in test_set:
+		for output_video_encoder in output_video_encoders:
+			state_manager.init_item('output_path', target_path)
+			state_manager.init_item('output_video_fps', 25.0)
+			state_manager.init_item('output_video_encoder', output_video_encoder)
+			create_temp_directory(state_manager.get_temp_path(), output_path)
+			extract_frames(target_path, output_path, (452, 240), 25.0, 0, 1)
+
+			assert merge_video(target_path, output_path, 25.0, 25.0, (452, 240), 0, 1) is True
+
+			clear_temp_directory(state_manager.get_temp_path(), output_path)
+
+	state_manager.init_item('output_video_encoder', 'libx264')
+
+
+def test_concat_video() -> None:
+	output_path = get_test_output_path('test-concat-video.mp4')
+	temp_output_paths =\
+	[
+		get_test_example_file('target-240p-16khz.mp4'),
+		get_test_example_file('target-240p-16khz.mp4')
+	]
+
+	assert concat_video(output_path, temp_output_paths) is True
 
 
 def test_sanitize_audio_with_strict() -> None:

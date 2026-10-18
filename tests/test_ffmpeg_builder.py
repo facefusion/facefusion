@@ -36,11 +36,6 @@ def test_concat() -> None:
 	) == [ '-vf', 'trim=start_frame=0:end_frame=100,fps=30,format=yuva420p' ]
 
 
-def test_set_stream_mode() -> None:
-	assert set_stream_mode('udp') == [ '-f', 'mpegts' ]
-	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
-
-
 def test_seek_to() -> None:
 	assert seek_to(0.0) == [ '-ss', '0.0' ]
 	assert seek_to(1.5) == [ '-ss', '1.5' ]
@@ -50,11 +45,28 @@ def test_set_output_format() -> None:
 	assert set_output_format('rawvideo') == [ '-f', 'rawvideo' ]
 
 
-def test_select_frame_range() -> None:
-	assert select_frame_range(0, None, 30) == [ '-vf', 'trim=start_frame=0,fps=30' ]
-	assert select_frame_range(None, 100, 30) == [ '-vf', 'trim=end_frame=100,fps=30' ]
-	assert select_frame_range(0, 100, 30) == [ '-vf', 'trim=start_frame=0:end_frame=100,fps=30' ]
-	assert select_frame_range(None, None, 30) == [ '-vf', 'fps=30' ]
+def test_set_thread_count() -> None:
+	assert set_thread_count(8) == [ '-threads', '8' ]
+	assert set_thread_count(16) == [ '-threads', '16' ]
+
+
+def test_set_stream_mode() -> None:
+	assert set_stream_mode('udp') == [ '-f', 'mpegts' ]
+	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
+
+
+def test_set_stream_quality() -> None:
+	assert set_stream_quality(500) == [ '-b:v', '500k' ]
+	assert set_stream_quality(2000) == [ '-b:v', '2000k' ]
+
+
+def test_abort_empty_stream() -> None:
+	assert abort_empty_stream() == [ '-abort_on', 'empty_output_stream' ]
+
+
+def test_enforce_pixel_format() -> None:
+	assert enforce_pixel_format('yuv420p') == [ '-pix_fmt', 'yuv420p' ]
+	assert enforce_pixel_format('rgb24') == [ '-pix_fmt', 'rgb24' ]
 
 
 def test_restrict_color_transfer() -> None:
@@ -67,6 +79,13 @@ def test_convert_color_space() -> None:
 	assert convert_color_space('bt601') == [ '-vf', 'scale=out_color_matrix=bt601:out_range=tv,setparams=colorspace=bt601:color_primaries=bt601:color_trc=bt601' ]
 	assert convert_color_space('bt709') == [ '-vf', 'scale=out_color_matrix=bt709:out_range=tv,setparams=colorspace=bt709:color_primaries=bt709:color_trc=bt709' ]
 	assert convert_color_space('bt2020') == [ '-vf', 'scale=out_color_matrix=bt2020:out_range=tv,setparams=colorspace=bt2020:color_primaries=bt2020:color_trc=bt2020' ]
+
+
+def test_select_frame_range() -> None:
+	assert select_frame_range(0, None, 30) == [ '-vf', 'trim=start_frame=0,fps=30' ]
+	assert select_frame_range(None, 100, 30) == [ '-vf', 'trim=end_frame=100,fps=30' ]
+	assert select_frame_range(0, 100, 30) == [ '-vf', 'trim=start_frame=0:end_frame=100,fps=30' ]
+	assert select_frame_range(None, None, 30) == [ '-vf', 'fps=30' ]
 
 
 def test_set_audio_sample_size() -> None:
@@ -90,11 +109,6 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 0) == []
 	assert set_audio_quality('flac', 50) == []
 	assert set_audio_quality('flac', 100) == []
-
-
-def test_set_thread_count() -> None:
-	assert set_thread_count(8) == [ '-threads', '8' ]
-	assert set_thread_count(16) == [ '-threads', '16' ]
 
 
 def test_set_faststart() -> None:
@@ -156,19 +170,5 @@ def test_set_video_quality() -> None:
 
 def test_capture_video() -> None:
 	assert capture_video() == [ '-f', 'rawvideo', '-pix_fmt', 'rgb24' ]
-
-
-def test_enforce_pixel_format() -> None:
-	assert enforce_pixel_format('yuv420p') == [ '-pix_fmt', 'yuv420p' ]
-	assert enforce_pixel_format('rgb24') == [ '-pix_fmt', 'rgb24' ]
-
-
-def test_set_stream_quality() -> None:
-	assert set_stream_quality(500) == [ '-b:v', '500k' ]
-	assert set_stream_quality(2000) == [ '-b:v', '2000k' ]
-
-
-def test_abort_empty_stream() -> None:
-	assert abort_empty_stream() == [ '-abort_on', 'empty_output_stream' ]
 
 

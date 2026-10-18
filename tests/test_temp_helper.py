@@ -26,9 +26,9 @@ def test_get_temp_file_path() -> None:
 	assert get_temp_file_path(state_manager.get_temp_path(), get_test_example_file('target-240p.mp4')) == os.path.join(state_manager.get_temp_path(), 'facefusion', 'target-240p', 'temp.mp4')
 
 
-def test_get_temp_directory_path() -> None:
-	assert get_temp_directory_path(state_manager.get_temp_path(), get_test_example_file('target-240p.mp4')) == os.path.join(state_manager.get_temp_path(), 'facefusion', 'target-240p')
-
-
 def test_get_temp_frames_pattern() -> None:
 	assert get_temp_frames_pattern(state_manager.get_temp_path(), get_test_example_file('target-240p.mp4'), state_manager.get_item('temp_frame_format'), '%04d') == os.path.join(state_manager.get_temp_path(), 'facefusion', 'target-240p', '%04d.png')
+
+
+def test_get_temp_directory_path() -> None:
+	assert get_temp_directory_path(state_manager.get_temp_path(), get_test_example_file('target-240p.mp4')) == os.path.join(state_manager.get_temp_path(), 'facefusion', 'target-240p')

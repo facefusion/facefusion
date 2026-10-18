@@ -62,118 +62,6 @@ def test_client() -> Iterator[TestClient]:
 		yield test_client
 
 
-def test_upload_assets(test_client : TestClient) -> None:
-	upload_response = test_client.post('/assets?type=source')
-
-	assert upload_response.status_code == 401
-
-	source_path = get_test_example_file('source.jpg')
-	target_image_path = get_test_example_file('target-240p.jpg')
-	target_video_path = get_test_example_file('target-240p.mp4')
-	audio_path = get_test_example_file('source.mp3')
-
-	for security_strategy in [ 'strict', 'moderate' ]:
-		state_manager.init_item('api_security_strategy', security_strategy)
-
-		create_session_response = test_client.post('/session', json =
-		{
-			'client_version': metadata.get('version')
-		})
-		create_session_body = create_session_response.json()
-		access_token = create_session_body.get('access_token')
-		session_id = session_manager.find_api_session_id(access_token)
-		session_context.set_session_id(session_id)
-
-		with open(source_path, 'rb') as source_file:
-			upload_response = test_client.post('/assets?type=source', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
-				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
-			])
-
-		asset_ids = upload_response.json().get('asset_ids')
-		asset = asset_store.get_asset(asset_ids[0])
-
-		assert asset.get('media') == 'image'
-		assert asset.get('type') == 'source'
-		assert asset.get('format') == 'jpeg'
-		assert upload_response.status_code == 201
-
-		with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
-			upload_response = test_client.post('/assets?type=target', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
-				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
-				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
-			])
-
-		asset_ids = upload_response.json().get('asset_ids')
-
-		assert asset_store.get_asset(asset_ids[0]).get('media') == 'image'
-		assert asset_store.get_asset(asset_ids[0]).get('type') == 'target'
-		assert asset_store.get_asset(asset_ids[0]).get('format') == 'jpeg'
-		assert asset_store.get_asset(asset_ids[1]).get('media') == 'video'
-		assert asset_store.get_asset(asset_ids[1]).get('type') == 'target'
-		assert asset_store.get_asset(asset_ids[1]).get('format') == 'mp4'
-		assert upload_response.status_code == 201
-
-		with open(audio_path, 'rb') as audio_file:
-			upload_response = test_client.post('/assets?type=source', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
-				('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
-			])
-
-		asset_ids = upload_response.json().get('asset_ids')
-		asset = asset_store.get_asset(asset_ids[0])
-
-		assert asset.get('media') == 'audio'
-		assert asset.get('type') == 'source'
-		assert upload_response.status_code == 201
-
-		upload_response = test_client.post('/assets?type=invalid', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		})
-
-		assert upload_response.status_code == 400
-
-		upload_response = test_client.post('/assets?type=source', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		})
-
-		assert upload_response.status_code == 400
-
-		upload_response = test_client.post('/assets?type=source', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		{
-			'file': ('invalid', 'invalid'.encode())
-		})
-
-		assert upload_response.status_code == 400
-
-		upload_response = test_client.post('/assets?type=source', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
-			('file', ('bomb.png', cv2.imencode('.png', numpy.zeros((4097, 4097, 3), numpy.uint8))[1].tobytes(), 'image/png'))
-		])
-
-		assert upload_response.status_code == 400
-
-	state_manager.init_item('api_security_strategy', 'strict')
-
-
 def test_get_assets(test_client : TestClient) -> None:
 	get_response = test_client.get('/assets')
 
@@ -302,6 +190,118 @@ def test_get_asset(test_client : TestClient) -> None:
 	assert get_response.content.count('Content-Type: image/jpeg'.encode()) == 1
 
 	assert get_response.status_code == 200
+
+
+def test_upload_assets(test_client : TestClient) -> None:
+	upload_response = test_client.post('/assets?type=source')
+
+	assert upload_response.status_code == 401
+
+	source_path = get_test_example_file('source.jpg')
+	target_image_path = get_test_example_file('target-240p.jpg')
+	target_video_path = get_test_example_file('target-240p.mp4')
+	audio_path = get_test_example_file('source.mp3')
+
+	for security_strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', security_strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		create_session_body = create_session_response.json()
+		access_token = create_session_body.get('access_token')
+		session_id = session_manager.find_api_session_id(access_token)
+		session_context.set_session_id(session_id)
+
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+			])
+
+		asset_ids = upload_response.json().get('asset_ids')
+		asset = asset_store.get_asset(asset_ids[0])
+
+		assert asset.get('media') == 'image'
+		assert asset.get('type') == 'source'
+		assert asset.get('format') == 'jpeg'
+		assert upload_response.status_code == 201
+
+		with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
+			upload_response = test_client.post('/assets?type=target', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
+				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
+			])
+
+		asset_ids = upload_response.json().get('asset_ids')
+
+		assert asset_store.get_asset(asset_ids[0]).get('media') == 'image'
+		assert asset_store.get_asset(asset_ids[0]).get('type') == 'target'
+		assert asset_store.get_asset(asset_ids[0]).get('format') == 'jpeg'
+		assert asset_store.get_asset(asset_ids[1]).get('media') == 'video'
+		assert asset_store.get_asset(asset_ids[1]).get('type') == 'target'
+		assert asset_store.get_asset(asset_ids[1]).get('format') == 'mp4'
+		assert upload_response.status_code == 201
+
+		with open(audio_path, 'rb') as audio_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
+			])
+
+		asset_ids = upload_response.json().get('asset_ids')
+		asset = asset_store.get_asset(asset_ids[0])
+
+		assert asset.get('media') == 'audio'
+		assert asset.get('type') == 'source'
+		assert upload_response.status_code == 201
+
+		upload_response = test_client.post('/assets?type=invalid', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert upload_response.status_code == 400
+
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
+
+		assert upload_response.status_code == 400
+
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		{
+			'file': ('invalid', 'invalid'.encode())
+		})
+
+		assert upload_response.status_code == 400
+
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('bomb.png', cv2.imencode('.png', numpy.zeros((4097, 4097, 3), numpy.uint8))[1].tobytes(), 'image/png'))
+		])
+
+		assert upload_response.status_code == 400
+
+	state_manager.init_item('api_security_strategy', 'strict')
 
 
 def test_delete_assets(test_client : TestClient) -> None:
