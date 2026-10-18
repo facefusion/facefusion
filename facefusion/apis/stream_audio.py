@@ -1,5 +1,6 @@
 from functools import partial
 from queue import Queue
+from time import sleep
 from typing import Optional, Tuple
 
 import numpy
@@ -10,12 +11,12 @@ from facefusion.codecs import opus_decoder, opus_encoder
 from facefusion.types import AudioCodec, AudioFrame, Buffer, OpusDecoder, RtcPeer, RtcPeerAudio, Time, Timestamp
 
 
-def run_audio_encode_loop(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
+def send_audio_frames(rtc_peer : RtcPeer, audio_queue : Queue[Tuple[Time, AudioFrame]]) -> None:
 	audio_codec = rtc_peer.get('audio').get('codec')
 	temp_audio_time, temp_audio_frame = audio_queue.get()
 	audio_encoder = opus_encoder.create(48000, 2)
 
-	while numpy.any(temp_audio_frame):
+	while not audio_queue.is_shutdown:
 		audio_buffer = opus_encoder.encode(audio_encoder, temp_audio_frame.tobytes(), 2)
 
 		if audio_buffer:
@@ -35,13 +36,12 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_queue : Queue[Tupl
 	audio_frame_handler = partial(handle_audio_frame, audio_codec, audio_decoder, audio_queue)
 	receive_event = create_receive_event(audio_track, audio_frame_handler)
 
-	while rtc.is_open(audio_track) and not receive_event.wait(timeout = 1):
-		pass
+	while not receive_event.is_set():
+		sleep(0.5)
 
 	destroy_receive_event(audio_track)
 
-	empty_audio_frame = numpy.empty(0)
-	audio_queue.put((0.0, empty_audio_frame))
+	audio_queue.shutdown()
 	destroy_audio_decoder(audio_codec, audio_decoder)
 
 

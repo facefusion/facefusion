@@ -109,8 +109,8 @@ def route(args : Args) -> None:
 
 
 def pre_check() -> bool:
-	if sys.version_info < (3, 10):
-		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
+	if sys.version_info < (3, 13):
+		logger.error(translator.get('python_not_supported').format(version = '3.13'), __name__)
 		return False
 
 	for dependency in [ 'curl', 'ffmpeg', 'ffprobe' ]:
