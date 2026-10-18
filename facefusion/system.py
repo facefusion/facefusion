@@ -6,6 +6,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
+from facefusion.common_helper import is_linux
 from facefusion.libraries import amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module, rocm_core as rocm_core_module
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
@@ -24,7 +25,7 @@ def get_metrics_set() -> Metrics:
 
 
 def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
-	if 'migraphx' in execution_providers:
+	if is_linux() and 'migraphx' in execution_providers:
 		return detect_amd_graphic_devices()
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
 		return detect_nvidia_graphic_devices()
