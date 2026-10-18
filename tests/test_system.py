@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import state_manager
+from facefusion.common_helper import is_linux, is_windows
 from facefusion.system import detect_disk_metrics, detect_graphic_devices, detect_memory_metrics, detect_network_metrics, detect_processor_metrics, get_metrics_set
 
 
@@ -24,20 +25,20 @@ def test_detect_graphic_devices() -> None:
 	assert detect_graphic_devices([ 'cpu' ]) == []
 
 	with patch('facefusion.system.detect_nvidia_ml', return_value = [ 'nvidia_ml' ]):
+		assert detect_graphic_devices([ 'cuda' ]) == [ 'nvidia_ml' ]
+		assert detect_graphic_devices([ 'tensorrt' ]) == [ 'nvidia_ml' ]
+
+	if is_linux():
 		with patch('facefusion.system.detect_amd_smi', return_value = [ 'amd_smi' ]):
-			with patch('facefusion.system.detect_amd_adlx', return_value = [ 'amd_adlx' ]):
-				assert detect_graphic_devices([ 'cuda' ]) == [ 'nvidia_ml' ]
-				assert detect_graphic_devices([ 'tensorrt' ]) == [ 'nvidia_ml' ]
+			assert detect_graphic_devices([ 'migraphx' ]) == [ 'amd_smi' ]
 
-				with patch('facefusion.system.is_linux', return_value = True):
-					assert detect_graphic_devices([ 'migraphx' ]) == [ 'amd_smi' ]
+	if is_windows():
+		with patch('facefusion.system.detect_amd_adlx', return_value = [ 'amd_adlx' ]):
+			assert detect_graphic_devices([ 'directml' ]) == [ 'amd_adlx' ]
 
-				with patch('facefusion.system.is_windows', return_value = True):
-					assert detect_graphic_devices([ 'directml' ]) == [ 'amd_adlx' ]
-
-			with patch('facefusion.system.detect_amd_adlx', return_value = []):
-				with patch('facefusion.system.is_windows', return_value = True):
-					assert detect_graphic_devices([ 'directml' ]) == [ 'nvidia_ml' ]
+		with patch('facefusion.system.detect_amd_adlx', return_value = []):
+			with patch('facefusion.system.detect_nvidia_ml', return_value = [ 'nvidia_ml' ]):
+				assert detect_graphic_devices([ 'directml' ]) == [ 'nvidia_ml' ]
 
 
 def test_detect_disk_metrics() -> None:
