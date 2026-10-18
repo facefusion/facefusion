@@ -68,21 +68,25 @@ def test_send_audio_frames() -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 300)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 5)
 
-	audio_queue.put((0.100, audio_frame))
+	audio_queue.put((0.5, audio_frame))
 
 	encoder_mock = MagicMock()
 	encoder_mock.encode.return_value = bytes([ 1 ] * 32)
 
 	with patch('facefusion.apis.stream_audio.opus_encoder.encode', encoder_mock.encode):
-		with patch('facefusion.apis.stream_audio.rtc.send_audio') as send_audio_mock:
-			audio_loop_thread = threading.Thread(target = send_audio_frames, args = (rtc_peer, audio_queue), daemon = True)
-			audio_loop_thread.start()
-			audio_queue.put((0.0, numpy.empty(0)))
-			audio_loop_thread.join(timeout = 5.0)
+		with patch('facefusion.apis.stream_audio.opus_encoder.destroy', encoder_mock.destroy):
+			with patch('facefusion.apis.stream_audio.rtc.send_audio') as send_audio_mock:
+				audio_loop_thread = threading.Thread(target = send_audio_frames, args = (rtc_peer, audio_queue), daemon = True)
+				audio_loop_thread.start()
+				audio_queue.put((1.0, audio_frame))
+				audio_queue.put((1.5, audio_frame))
+				audio_queue.shutdown()
+				audio_loop_thread.join(timeout = 5.0)
 
 	assert encoder_mock.encode.called is True
+	assert encoder_mock.destroy.call_count == 1
 	assert send_audio_mock.called is True
 
 
@@ -105,6 +109,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	_, temp_audio_frame = audio_queue.get_nowait()
 
 	assert create_hash(temp_audio_frame.tobytes()) == create_hash(audio_frame.tobytes())
+	assert audio_queue.is_shutdown is True
 
 
 def test_handle_audio_frame() -> None:
