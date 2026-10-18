@@ -68,7 +68,7 @@ def test_send_audio_frames() -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 5)
+	audio_queue : Queue[Tuple[float, AudioFrame]] = Queue(maxsize = 1)
 
 	audio_queue.put((0.5, audio_frame))
 

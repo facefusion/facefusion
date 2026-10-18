@@ -78,7 +78,7 @@ def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None
 		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 5)
+	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 1)
 
 	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
 		with ThreadPoolExecutor(max_workers = 1) as executor:
