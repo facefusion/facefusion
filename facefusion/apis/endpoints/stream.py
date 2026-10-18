@@ -31,7 +31,6 @@ async def post_stream(request : Request) -> Response:
 	{
 		'Location': request.url_for('delete_stream').path
 	}
-
 	if not rtc_store.has_peer():
 		sdp_offer = await request.body()
 		sdp_answer = process_video(sdp_offer.decode())
