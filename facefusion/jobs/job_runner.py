@@ -3,10 +3,10 @@ import os
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import are_images, are_videos, copy_file, create_directory, is_directory, is_file, move_directory, move_file, remove_directory, remove_file, resolve_file_paths
 from facefusion.jobs import job_helper, job_manager
-from facefusion.types import JobOutputSet, JobStep, ProcessStep
+from facefusion.types import JobId, JobOutputSet, ProcessStep, Step, StepIndex
 
 
-def run_job(job_id : str, process_step : ProcessStep) -> bool:
+def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
 
 	if job_id in queued_job_ids:
@@ -32,7 +32,7 @@ def run_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	return False
 
 
-def retry_job(job_id : str, process_step : ProcessStep) -> bool:
+def retry_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	failed_job_ids = job_manager.find_job_ids('failed')
 
 	if job_id in failed_job_ids:
@@ -54,7 +54,7 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	return False
 
 
-def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> bool:
+def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
 
 	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args):
@@ -68,7 +68,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 	return False
 
 
-def run_steps(job_id : str, process_step : ProcessStep) -> bool:
+def run_steps(job_id : JobId, process_step : ProcessStep) -> bool:
 	steps = job_manager.get_steps(job_id)
 
 	if steps:
@@ -79,7 +79,7 @@ def run_steps(job_id : str, process_step : ProcessStep) -> bool:
 	return False
 
 
-def finalize_steps(job_id : str) -> bool:
+def finalize_steps(job_id : JobId) -> bool:
 	output_set = collect_output_set(job_id)
 
 	for output_path, temp_output_paths in output_set.items():
@@ -106,7 +106,7 @@ def finalize_steps(job_id : str) -> bool:
 	return True
 
 
-def clean_steps(job_id: str) -> bool:
+def clean_steps(job_id : JobId) -> bool:
 	output_set = collect_output_set(job_id)
 
 	for temp_output_paths in output_set.values():
@@ -120,7 +120,7 @@ def clean_steps(job_id: str) -> bool:
 	return True
 
 
-def collect_output_set(job_id : str) -> JobOutputSet:
+def collect_output_set(job_id : JobId) -> JobOutputSet:
 	steps = job_manager.get_steps(job_id)
 	job_output_set : JobOutputSet = {}
 

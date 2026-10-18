@@ -2,9 +2,10 @@ import hashlib
 from typing import Any, Sequence
 
 from facefusion.common_helper import cast_int
+from facefusion.types import JobId
 
 
-def sanitize_job_id(job_id : str) -> str:
+def sanitize_job_id(job_id : JobId) -> JobId:
 	__job_id__ = job_id.replace('-', '')
 
 	if __job_id__.isalnum():

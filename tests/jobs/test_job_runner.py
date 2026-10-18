@@ -7,7 +7,7 @@ from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
 from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
-from facefusion.types import Args
+from facefusion.types import Args, JobId, StepIndex
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
 
@@ -42,7 +42,7 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> bool:
 	output_path = step_args.get('output_path')
 	target_path = step_args.get('target_path')
 
