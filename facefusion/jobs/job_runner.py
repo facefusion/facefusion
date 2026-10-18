@@ -18,7 +18,6 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 		clean_steps(job_id)
 
 		if error_code == 4:
-			job_manager.cancel_job(job_id)
 			return False
 		job_manager.move_job_file(job_id, 'failed')
 	return False
@@ -72,9 +71,6 @@ def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step :
 
 			if error_code == 0 and move_step_output(job_id, step_index, step_args.get('output_path')) and job_manager.set_step_status(job_id, step_index, 'completed'):
 				return 0
-
-			if error_code == 4:
-				return 4
 
 		job_manager.set_step_status(job_id, step_index, 'failed')
 		return 1

@@ -47,17 +47,15 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 	target_path = step_args.get('target_path')
 
 	if output_path and not get_file_extension(output_path):
-		if create_directory(output_path) and copy_file(target_path, os.path.join(output_path, os.path.basename(target_path))):
+		move_path = os.path.join(output_path, os.path.basename(target_path))
+
+		if create_directory(output_path) and copy_file(target_path, move_path):
 			return 0
 		return 1
 
 	if copy_file(target_path, output_path):
 		return 0
 	return 1
-
-
-def stop_process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
-	return 4
 
 
 def cancel_process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
@@ -121,15 +119,6 @@ def test_run_job() -> None:
 	assert run_job('job-test-run-job-cancel', cancel_process_step) is False
 	assert find_job_ids('drafted') == [ 'job-test-run-job-cancel' ]
 	assert get_steps('job-test-run-job-cancel')[1].get('status') == 'drafted'
-
-	create_job('job-test-run-job-stop')
-	add_step('job-test-run-job-stop', args_1)
-	submit_job('job-test-run-job-stop')
-
-	assert run_job('job-test-run-job-stop', stop_process_step) is False
-	assert find_job_ids('drafted') == [ 'job-test-run-job-cancel', 'job-test-run-job-stop' ]
-	assert get_steps('job-test-run-job-stop')[0].get('status') == 'drafted'
-	assert find_job_ids('failed') == []
 
 
 def test_run_jobs() -> None:
@@ -261,7 +250,6 @@ def test_run_steps() -> None:
 	submit_job('job-test-run-steps')
 
 	assert run_steps('job-test-run-steps', process_step) == 0
-	assert run_steps('job-test-run-steps', stop_process_step) == 4
 
 
 def test_finalize_steps() -> None:
