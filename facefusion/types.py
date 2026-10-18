@@ -370,14 +370,14 @@ RtcPeerAudio = TypedDict('RtcPeerAudio',
 {
 	'sender_track': RtcAudioTrack,
 	'receiver_track': RtcAudioTrack,
-	'codec': AudioCodec,
+	'codec': AudioCodec
 })
 
 RtcPeerVideo = TypedDict('RtcPeerVideo',
 {
 	'sender_track': RtcVideoTrack,
 	'receiver_track': RtcVideoTrack,
-	'codec': VideoCodec,
+	'codec': VideoCodec
 })
 
 RtcPeer = TypedDict('RtcPeer',

@@ -119,7 +119,7 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 				'total':
 				{
 					'value': 24,
-				  	'unit': 'GB'
+					'unit': 'GB'
 				},
 				'used':
 				{

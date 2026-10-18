@@ -182,7 +182,7 @@ def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox,
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
 
-def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox, face_angle: Angle) -> Tuple[FaceLandmark68, Score]:
+def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
 	model_size = create_static_model_set('full').get('2dfan4').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
