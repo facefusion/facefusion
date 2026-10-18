@@ -1,7 +1,7 @@
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import suppress
 from functools import partial
-from queue import Queue
-from time import sleep
+from queue import Queue, ShutDown
 from typing import List, Optional, Tuple
 
 import cv2
@@ -17,51 +17,55 @@ from facefusion.vision import is_vision_frame, obscure_frame, read_static_images
 
 def send_video_frames(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	video_time, video_future = video_queue.get()
 	video_pack = BufferPack(buffer = bytes(), resolution = (0, 0))
 
-	if not video_future.exception():
-		video_pack = video_future.result()
-
-	video_buffer = video_pack.get('buffer')
-	video_resolution = video_pack.get('resolution')
-
-	temp_resolution : Resolution = video_pack.get('resolution')
-	temp_bitrate : BitRate = 8000
-	video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-	frame_index = 0
-
-	while not video_queue.is_shutdown:
-		sender_bitrate = rtc_peer.get('sender_bitrate').value
-
-		if video_resolution[0] - temp_resolution[0] or video_resolution[1] - temp_resolution[1]:
-			temp_resolution = video_resolution
-			update_video_encoder_resolution(video_codec, video_encoder, temp_resolution)
-
-		if sender_bitrate > 0 and sender_bitrate - temp_bitrate:
-			temp_bitrate = sender_bitrate
-			update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate)
-
-		__video_buffer__ = encode_video_frame(video_codec, video_encoder, video_buffer, temp_resolution, frame_index)
-
-		if __video_buffer__:
-			video_timestamp = rtc.convert_time_to_timestamp(video_codec, video_time)
-			rtc.send_video(rtc_peer, __video_buffer__, video_timestamp)
-
-		receiver_bitrate = rtc_peer.get('receiver_bitrate').value
-		rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
-		frame_index += 1
-
+	with suppress(ShutDown):
 		video_time, video_future = video_queue.get()
 
 		if not video_future.exception():
 			video_pack = video_future.result()
 
-		video_buffer = video_pack.get('buffer')
-		video_resolution = video_pack.get('resolution')
+	video_buffer = video_pack.get('buffer')
+	video_resolution = video_pack.get('resolution')
 
-	destroy_video_encoder(video_codec, video_encoder)
-	rtc.clear_bitrate(rtc_peer)
+	if video_buffer:
+		temp_resolution : Resolution = video_resolution
+		temp_bitrate : BitRate = 8000
+		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
+		frame_index = 0
+
+		while not video_queue.is_shutdown:
+			sender_bitrate = rtc_peer.get('sender_bitrate').value
+
+			if video_resolution[0] - temp_resolution[0] or video_resolution[1] - temp_resolution[1]:
+				temp_resolution = video_resolution
+				update_video_encoder_resolution(video_codec, video_encoder, temp_resolution)
+
+			if sender_bitrate > 0 and sender_bitrate - temp_bitrate:
+				temp_bitrate = sender_bitrate
+				update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate)
+
+			__video_buffer__ = encode_video_frame(video_codec, video_encoder, video_buffer, temp_resolution, frame_index)
+
+			if __video_buffer__:
+				video_timestamp = rtc.convert_time_to_timestamp(video_codec, video_time)
+				rtc.send_video(rtc_peer, __video_buffer__, video_timestamp)
+
+			receiver_bitrate = rtc_peer.get('receiver_bitrate').value
+			rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
+			frame_index += 1
+
+			with suppress(ShutDown):
+				video_time, video_future = video_queue.get()
+
+				if not video_future.exception():
+					video_pack = video_future.result()
+
+			video_buffer = video_pack.get('buffer')
+			video_resolution = video_pack.get('resolution')
+
+		destroy_video_encoder(video_codec, video_encoder)
+		rtc.clear_bitrate(rtc_peer)
 
 
 def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor) -> None:
@@ -73,8 +77,8 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 
-	while not receive_event.is_set():
-		sleep(0.5)
+	while rtc.is_open(video_track) and not receive_event.is_set():
+		receive_event.wait(timeout = 0.5)
 
 	destroy_receive_event(video_track)
 
