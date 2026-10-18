@@ -3,10 +3,10 @@ import os
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import are_images, are_videos, copy_file, create_directory, is_directory, is_file, move_directory, move_file, remove_directory, remove_file, resolve_file_paths
 from facefusion.jobs import job_helper, job_manager
-from facefusion.types import ErrorCode, JobOutputSet, JobStep, ProcessStep
+from facefusion.types import ErrorCode, JobId, JobOutputSet, ProcessStep, Step, StepIndex
 
 
-def run_job(job_id : str, process_step : ProcessStep) -> bool:
+def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
 
 	if job_id in queued_job_ids:
@@ -38,7 +38,7 @@ def run_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	return False
 
 
-def retry_job(job_id : str, process_step : ProcessStep) -> bool:
+def retry_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	failed_job_ids = job_manager.find_job_ids('failed')
 
 	if job_id in failed_job_ids:
@@ -60,7 +60,7 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	return False
 
 
-def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> ErrorCode:
+def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> ErrorCode:
 	queued_job_ids = job_manager.find_job_ids('queued')
 	step_args = step.get('args')
 
@@ -81,7 +81,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 	return 4
 
 
-def run_steps(job_id : str, process_step : ProcessStep) -> ErrorCode:
+def run_steps(job_id : JobId, process_step : ProcessStep) -> ErrorCode:
 	steps = job_manager.get_steps(job_id)
 
 	if steps:
@@ -94,7 +94,7 @@ def run_steps(job_id : str, process_step : ProcessStep) -> ErrorCode:
 	return 1
 
 
-def move_step_output(job_id : str, step_index : int, output_path : str) -> bool:
+def move_step_output(job_id : JobId, step_index : StepIndex, output_path : str) -> bool:
 	step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
 
 	if is_directory(output_path):
@@ -102,7 +102,7 @@ def move_step_output(job_id : str, step_index : int, output_path : str) -> bool:
 	return move_file(output_path, step_output_path)
 
 
-def finalize_steps(job_id : str) -> bool:
+def finalize_steps(job_id : JobId) -> bool:
 	output_set = collect_output_set(job_id)
 
 	for output_path, temp_output_paths in output_set.items():
@@ -129,7 +129,7 @@ def finalize_steps(job_id : str) -> bool:
 	return True
 
 
-def clean_steps(job_id: str) -> bool:
+def clean_steps(job_id : JobId) -> bool:
 	output_set = collect_output_set(job_id)
 
 	for temp_output_paths in output_set.values():
@@ -143,7 +143,7 @@ def clean_steps(job_id: str) -> bool:
 	return True
 
 
-def collect_output_set(job_id : str) -> JobOutputSet:
+def collect_output_set(job_id : JobId) -> JobOutputSet:
 	steps = job_manager.get_steps(job_id)
 	job_output_set : JobOutputSet = {}
 

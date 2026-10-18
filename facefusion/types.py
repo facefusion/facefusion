@@ -153,7 +153,6 @@ CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 ErrorCode = Literal[0, 1, 2, 3, 4]
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-ProcessStep : TypeAlias = Callable[[str, int, Args], ErrorCode]
 
 Content : TypeAlias = Dict[str, Any]
 
@@ -517,22 +516,27 @@ ApiSecurityStrategy = Literal['strict', 'moderate']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]
 
-JobOutputSet : TypeAlias = Dict[str, List[str]]
-JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
-JobStepStatus = Literal['drafted', 'queued', 'started', 'completed', 'failed']
-JobStep = TypedDict('JobStep',
+StepIndex : TypeAlias = int
+StepStatus = Literal['drafted', 'queued', 'started', 'completed', 'failed']
+Step = TypedDict('Step',
 {
 	'args' : Args,
-	'status' : JobStepStatus
+	'status' : StepStatus
 })
+
+JobId : TypeAlias = str
+JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
 Job = TypedDict('Job',
 {
 	'version' : str,
 	'date_created' : str,
 	'date_updated' : Optional[str],
-	'steps' : List[JobStep]
+	'steps' : List[Step]
 })
-JobSet : TypeAlias = Dict[str, Job]
+JobSet : TypeAlias = Dict[JobId, Job]
+
+JobOutputSet : TypeAlias = Dict[str, List[str]]
+ProcessStep : TypeAlias = Callable[[JobId, StepIndex, Args], ErrorCode]
 
 StateValue : TypeAlias = Any
 StateType : TypeAlias = Any
@@ -684,9 +688,9 @@ State = TypedDict('State',
 	'api_key' : str,
 	'api_security_strategy' : ApiSecurityStrategy,
 	'api_session_limit' : int,
-	'job_id' : str,
+	'job_id' : JobId,
 	'job_status' : JobStatus,
-	'step_index' : int
+	'step_index' : StepIndex
 })
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

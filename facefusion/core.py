@@ -19,7 +19,7 @@ from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode
+from facefusion.types import Args, ErrorCode, JobId, StepIndex
 from facefusion.workflows.core import detect_workflow_mode
 from facefusion.workflows.modules import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
 
@@ -319,7 +319,7 @@ def process_batch(args : Args) -> ErrorCode:
 	return 1
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> ErrorCode:
+def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
 	step_total = job_manager.count_step_total(job_id)
 	fork_id = session_manager.fork_session()
 	session_manager.observe_cli_session(fork_id)

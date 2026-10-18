@@ -2,9 +2,10 @@ from facefusion import process_manager, session_context, session_manager
 from facefusion.apis import asset_store
 from facefusion.filesystem import is_file
 from facefusion.jobs import job_manager
+from facefusion.types import JobId
 
 
-def create_output_asset(job_id : str) -> None:
+def create_output_asset(job_id : JobId) -> None:
 	job = job_manager.read_job_file(job_id)
 
 	if job and job.get('steps'):
