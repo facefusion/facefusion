@@ -107,7 +107,9 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'cancel':
-		if jobs_helper.cancel_jobs(state_manager.get_item('halt_on_error')):
+		if job_manager.cancel_jobs(state_manager.get_item('halt_on_error')):
+			jobs_helper.stop_fork_session()
+
 			return JSONResponse(
 			{
 				'message': translator.get('ok', 'facefusion.apis')
@@ -181,7 +183,12 @@ async def update_job(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'cancel':
-		if jobs_helper.cancel_job(job_id):
+		is_started = job_manager.has_step_status(job_id, 'started')
+
+		if job_manager.cancel_job(job_id):
+			if is_started:
+				jobs_helper.stop_fork_session()
+
 			return JSONResponse(
 			{
 				'message': translator.get('ok', 'facefusion.apis')

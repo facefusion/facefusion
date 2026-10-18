@@ -14,23 +14,6 @@ def create_output_asset(job_id : str) -> None:
 			asset_store.create_asset('output', output_path)
 
 
-def cancel_job(job_id : str) -> bool:
-	is_started = job_manager.has_step_status(job_id, 'started')
-
-	if job_manager.cancel_job(job_id):
-		if is_started:
-			stop_fork_session()
-		return True
-	return False
-
-
-def cancel_jobs(halt_on_error : bool) -> bool:
-	if job_manager.cancel_jobs(halt_on_error):
-		stop_fork_session()
-		return True
-	return False
-
-
 def stop_fork_session() -> None:
 	owner_id = session_manager.resolve_owner_id()
 	fork_id = session_manager.find_cli_session_id(owner_id)
