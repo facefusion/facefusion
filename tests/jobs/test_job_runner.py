@@ -60,7 +60,7 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 
 def cancel_process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
 	cancel_job(job_id)
-	return process_step(job_id, step_index, step_args)
+	return 4
 
 
 def test_run_job() -> None:
@@ -244,10 +244,6 @@ def test_run_steps() -> None:
 	add_step('job-test-run-steps', args_1)
 	add_step('job-test-run-steps', args_2)
 	add_step('job-test-run-steps', args_3)
-
-	assert run_steps('job-test-run-steps', process_step) == 4
-
-	submit_job('job-test-run-steps')
 
 	assert run_steps('job-test-run-steps', process_step) == 0
 

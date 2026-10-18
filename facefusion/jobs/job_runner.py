@@ -60,21 +60,19 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 
 
 def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> ErrorCode:
-	queued_job_ids = job_manager.find_job_ids('queued')
 	step_args = step.get('args')
 
-	if job_id in queued_job_ids:
-		if job_manager.set_step_status(job_id, step_index, 'started'):
-			error_code = process_step(job_id, step_index, step_args)
-			if job_id not in job_manager.find_job_ids('queued'):
-				return 4
+	if job_manager.set_step_status(job_id, step_index, 'started'):
+		error_code = process_step(job_id, step_index, step_args)
 
-			if error_code == 0 and move_step_output(job_id, step_index, step_args.get('output_path')) and job_manager.set_step_status(job_id, step_index, 'completed'):
-				return 0
+		if error_code == 0 and move_step_output(job_id, step_index, step_args.get('output_path')) and job_manager.set_step_status(job_id, step_index, 'completed'):
+			return 0
 
-		job_manager.set_step_status(job_id, step_index, 'failed')
-		return 1
-	return 4
+		if error_code == 4:
+			return 4
+
+	job_manager.set_step_status(job_id, step_index, 'failed')
+	return 1
 
 
 def run_steps(job_id : JobId, process_step : ProcessStep) -> ErrorCode:
