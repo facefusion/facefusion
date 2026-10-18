@@ -3,22 +3,17 @@ import os
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import are_images, are_videos, copy_file, create_directory, is_directory, is_file, move_directory, move_file, remove_directory, remove_file, resolve_file_paths
 from facefusion.jobs import job_helper, job_manager
-from facefusion.types import ErrorCode, JobId, JobOutputSet, ProcessStep, Step, StepIndex
+from facefusion.types import JobId, JobOutputSet, ProcessStep, Step, StepIndex
 
 
 def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
 
 	if job_id in queued_job_ids:
-		error_code = run_steps(job_id, process_step)
-
-		if error_code == 0 and finalize_steps(job_id):
+		if run_steps(job_id, process_step) and finalize_steps(job_id):
 			clean_steps(job_id)
 			return job_manager.move_job_file(job_id, 'completed')
 		clean_steps(job_id)
-
-		if error_code == 4:
-			return False
 		job_manager.move_job_file(job_id, 'failed')
 	return False
 
@@ -59,41 +54,29 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	return False
 
 
-def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> ErrorCode:
+def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
 
-	if job_manager.set_step_status(job_id, step_index, 'started'):
-		error_code = process_step(job_id, step_index, step_args)
+	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args) == 0:
+		output_path = step_args.get('output_path')
+		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
 
-		if error_code == 0 and move_step_output(job_id, step_index, step_args.get('output_path')) and job_manager.set_step_status(job_id, step_index, 'completed'):
-			return 0
-
-		if error_code == 4:
-			return 4
-
+		if is_directory(output_path):
+			return move_directory(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
+		return move_file(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 	job_manager.set_step_status(job_id, step_index, 'failed')
-	return 1
+	return False
 
 
-def run_steps(job_id : JobId, process_step : ProcessStep) -> ErrorCode:
+def run_steps(job_id : JobId, process_step : ProcessStep) -> bool:
 	steps = job_manager.get_steps(job_id)
 
 	if steps:
 		for index, step in enumerate(steps):
-			error_code = run_step(job_id, index, step, process_step)
-
-			if error_code > 0:
-				return error_code
-		return 0
-	return 1
-
-
-def move_step_output(job_id : JobId, step_index : StepIndex, output_path : str) -> bool:
-	step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
-
-	if is_directory(output_path):
-		return move_directory(output_path, step_output_path)
-	return move_file(output_path, step_output_path)
+			if not run_step(job_id, index, step, process_step):
+				return False
+		return True
+	return False
 
 
 def finalize_steps(job_id : JobId) -> bool:
