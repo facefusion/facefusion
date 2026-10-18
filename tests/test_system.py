@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import state_manager
+from facefusion.common_helper import is_linux
 from facefusion.system import detect_disk_metrics, detect_graphic_devices, detect_memory_metrics, detect_network_metrics, detect_processor_metrics, get_metrics_set
 
 
@@ -30,13 +31,14 @@ def test_detect_graphic_devices() -> None:
 	assert nvidia_graphic_devices[0].get('framework').get('name') == 'CUDA'
 	assert nvidia_graphic_devices[0].get('product').get('vendor') == 'NVIDIA'
 
-	with patch('facefusion.system.amd_smi_module.create_static_library'):
-		with patch('facefusion.system.rocm_core_module.create_static_library'):
-			with patch('facefusion.system.amd_smi_module.find_device_handles', return_value = [ 0 ]):
-				amd_graphic_devices = detect_graphic_devices([ 'migraphx' ])
+	if is_linux():
+		with patch('facefusion.system.amd_smi_module.create_static_library'):
+			with patch('facefusion.system.rocm_core_module.create_static_library'):
+				with patch('facefusion.system.amd_smi_module.find_device_handles', return_value = [ 0 ]):
+					amd_graphic_devices = detect_graphic_devices([ 'migraphx' ])
 
-	assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'
-	assert amd_graphic_devices[0].get('product').get('vendor') == 'AMD'
+		assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'
+		assert amd_graphic_devices[0].get('product').get('vendor') == 'AMD'
 
 
 def test_detect_disk_metrics() -> None:
