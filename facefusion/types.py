@@ -536,7 +536,7 @@ Job = TypedDict('Job',
 JobSet : TypeAlias = Dict[JobId, Job]
 
 JobOutputSet : TypeAlias = Dict[str, List[str]]
-ProcessStep : TypeAlias = Callable[[JobId, StepIndex, Args], bool]
+ProcessStep : TypeAlias = Callable[[JobId, StepIndex, Args], ErrorCode]
 
 StateValue : TypeAlias = Any
 StateType : TypeAlias = Any

@@ -57,7 +57,7 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
 
-	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args):
+	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args) == 0:
 		output_path = step_args.get('output_path')
 		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
 
