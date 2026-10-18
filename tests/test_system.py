@@ -23,28 +23,21 @@ def test_get_metrics_set() -> None:
 def test_detect_graphic_devices() -> None:
 	assert detect_graphic_devices([ 'cpu' ]) == []
 
-	with patch('facefusion.system.nvidia_ml_module.create_static_library'):
-		with patch('facefusion.system.nvidia_ml_module.find_device_handles', return_value = [ 0 ]):
-			nvidia_graphic_devices = detect_graphic_devices([ 'cuda' ])
+	with patch('facefusion.system.detect_nvidia_ml', return_value = [ 'nvidia_ml' ]):
+		with patch('facefusion.system.detect_amd_smi', return_value = [ 'amd_smi' ]):
+			with patch('facefusion.system.detect_amd_adlx', return_value = [ 'amd_adlx' ]):
+				assert detect_graphic_devices([ 'cuda' ]) == [ 'nvidia_ml' ]
+				assert detect_graphic_devices([ 'tensorrt' ]) == [ 'nvidia_ml' ]
 
-	assert nvidia_graphic_devices[0].get('framework').get('name') == 'CUDA'
-	assert nvidia_graphic_devices[0].get('product').get('vendor') == 'NVIDIA'
+				with patch('facefusion.system.is_linux', return_value = True):
+					assert detect_graphic_devices([ 'migraphx' ]) == [ 'amd_smi' ]
 
-	with patch('facefusion.system.amd_smi_module.create_static_library'):
-		with patch('facefusion.system.rocm_core_module.create_static_library'):
-			with patch('facefusion.system.amd_smi_module.find_device_handles', return_value = [ 0 ]):
-				amd_graphic_devices = detect_graphic_devices([ 'migraphx' ])
+				with patch('facefusion.system.is_windows', return_value = True):
+					assert detect_graphic_devices([ 'directml' ]) == [ 'amd_adlx' ]
 
-	assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'
-	assert amd_graphic_devices[0].get('product').get('vendor') == 'AMD'
-
-	with patch('facefusion.system.common_helper.is_windows', return_value = True):
-		with patch('facefusion.system.amd_adlx_module.create_static_library', return_value = None):
-			assert detect_graphic_devices([ 'directml' ]) == []
-
-		with patch('facefusion.system.amd_adlx_module.create_static_library') as create_static_library:
-			create_static_library.return_value.ADLXInitialize.return_value = 1
-			assert detect_graphic_devices([ 'directml' ]) == []
+			with patch('facefusion.system.detect_amd_adlx', return_value = []):
+				with patch('facefusion.system.is_windows', return_value = True):
+					assert detect_graphic_devices([ 'directml' ]) == [ 'nvidia_ml' ]
 
 
 def test_detect_disk_metrics() -> None:

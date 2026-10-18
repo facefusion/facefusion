@@ -1,7 +1,7 @@
 import ctypes
 import ctypes.util
 from functools import lru_cache
-from typing import Optional
+from typing import Callable, List, Optional
 
 
 @lru_cache
@@ -33,24 +33,17 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	return library
 
 
-def define_product_info() -> ctypes.Structure:
-	return type('ADLX_PRODUCT_INFO', (ctypes.Structure,),
+def lookup_method(interface_handle : ctypes.c_void_p, method_index : int, restype : type, argtypes : List[type]) -> Callable[..., int]:
+	method_table = ctypes.cast(interface_handle, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+	return ctypes.WINFUNCTYPE(restype, *argtypes)(method_table[method_index])  # type: ignore[attr-defined]
+
+
+def define_device_memory() -> ctypes.Structure:
+	return type('ADLX_GPU_MEMORY', (ctypes.Structure,),
 	{
 		'_fields_':
 		[
-			('name', ctypes.c_char_p),
-			('vram_total_mb', ctypes.c_uint32)
-		]
-	})()
-
-
-def define_device_metrics() -> ctypes.Structure:
-	return type('ADLX_GPU_METRICS', (ctypes.Structure,),
-	{
-		'_fields_':
-		[
-			('vram_used_mb', ctypes.c_int32),
-			('temperature', ctypes.c_double),
-			('utilization', ctypes.c_double)
+			('memory_total', ctypes.c_uint32),
+			('memory_used', ctypes.c_int32)
 		]
 	})()

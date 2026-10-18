@@ -89,8 +89,8 @@ def define_device_memory() -> ctypes.Structure:
 		'_pack_': 1,
 		'_fields_':
 		[
-			('vram_total', ctypes.c_uint32),
-			('vram_used', ctypes.c_uint32),
+			('memory_total', ctypes.c_uint32),
+			('memory_used', ctypes.c_uint32),
 			('reserved', ctypes.c_uint32 * 2)
 		]
 	})()
