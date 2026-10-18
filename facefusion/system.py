@@ -196,18 +196,17 @@ def detect_amd_smi() -> List[GraphicDevice]:
 
 def detect_amd_adlx() -> List[GraphicDevice]:
 	graphic_devices : List[GraphicDevice] = []
-	system_handle = amd_adlx.init()
+	session_handle = amd_adlx.init()
 
-	if system_handle.value:
+	if session_handle.value:
 		framework_version = amd_adlx.get_framework_version()
-		performance_monitoring_handle = amd_adlx.get_performance_monitoring_handle(system_handle)
 
-		for device_handle in amd_adlx.find_device_handles(system_handle):
+		for device_handle in amd_adlx.find_device_handles(session_handle):
 			driver_version = amd_adlx.get_driver_version(device_handle)
 			device_name = amd_adlx.get_device_name(device_handle)
-			device_memory = amd_adlx.get_device_memory(performance_monitoring_handle, device_handle)
-			device_temperature = amd_adlx.get_device_temperature(performance_monitoring_handle, device_handle)
-			device_utilization = amd_adlx.get_device_utilization(performance_monitoring_handle, device_handle)
+			device_memory = amd_adlx.get_device_memory(session_handle, device_handle)
+			device_temperature = amd_adlx.get_device_temperature(session_handle, device_handle)
+			device_utilization = amd_adlx.get_device_utilization(session_handle, device_handle)
 
 			graphic_devices.append(
 			{
@@ -263,10 +262,7 @@ def detect_amd_adlx() -> List[GraphicDevice]:
 				}
 			})
 
-			amd_adlx.release_interface(device_handle)
-
-		if performance_monitoring_handle.value:
-			amd_adlx.release_interface(performance_monitoring_handle)
+			amd_adlx.release(device_handle)
 
 		amd_adlx.destroy()
 
