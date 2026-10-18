@@ -25,11 +25,9 @@ def test_process_step(mocker : MockerFixture, error_code : ErrorCode) -> None:
 	}
 
 	mocker.patch('facefusion.core.job_manager.count_step_total', return_value = 1)
-	mocker.patch('facefusion.core.session_manager.observe_cli_session')
-	mocker.patch('facefusion.core.store_manager.observe_cli_session')
-	mocker.patch('facefusion.core.apply_args')
 	mocker.patch('facefusion.core.common_pre_check', return_value = True)
 	mocker.patch('facefusion.core.processors_pre_check', return_value = True)
+
 	conditional_process_mock = mocker.patch('facefusion.core.conditional_process', return_value = error_code)
 	fork_session_mock = mocker.spy(session_manager, 'fork_session')
 
