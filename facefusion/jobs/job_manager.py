@@ -9,7 +9,7 @@ from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
 from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
-from facefusion.types import Args, Content, Job, JobSet, JobStatus, JobStep, JobStepStatus
+from facefusion.types import Args, Content, Job, JobId, JobSet, JobStatus, Step, StepIndex, StepStatus
 
 
 def init_jobs(jobs_path : str) -> bool:
@@ -24,7 +24,7 @@ def clear_jobs(jobs_path : str) -> bool:
 	return remove_directory(jobs_path)
 
 
-def create_job(job_id : str) -> bool:
+def create_job(job_id : JobId) -> bool:
 	job : Job =\
 	{
 		'version': '1',
@@ -36,7 +36,7 @@ def create_job(job_id : str) -> bool:
 	return create_job_file(job_id, job)
 
 
-def submit_job(job_id : str) -> bool:
+def submit_job(job_id : JobId) -> bool:
 	drafted_job_ids = find_job_ids('drafted')
 	steps = get_steps(job_id)
 
@@ -59,7 +59,7 @@ def submit_jobs(halt_on_error : bool) -> bool:
 	return False
 
 
-def delete_job(job_id : str) -> bool:
+def delete_job(job_id : JobId) -> bool:
 	return delete_job_file(job_id)
 
 
@@ -86,7 +86,7 @@ def find_jobs(job_status : JobStatus) -> JobSet:
 	return job_set
 
 
-def find_job_ids(job_status : JobStatus) -> List[str]:
+def find_job_ids(job_status : JobStatus) -> List[JobId]:
 	jobs_path = state_manager.get_jobs_path()
 	job_file_pattern = os.path.join(jobs_path, job_status, '*.json')
 	job_file_paths = resolve_file_pattern(job_file_pattern)
@@ -99,17 +99,17 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 	return job_ids
 
 
-def validate_job(job_id : str) -> bool:
+def validate_job(job_id : JobId) -> bool:
 	job = read_job_file(job_id)
 	return bool(job and 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job)
 
 
-def has_step(job_id : str, step_index : int) -> bool:
+def has_step(job_id : JobId, step_index : StepIndex) -> bool:
 	step_total = count_step_total(job_id)
 	return step_index in range(step_total)
 
 
-def add_step(job_id : str, step_args : Args) -> bool:
+def add_step(job_id : JobId, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
@@ -122,7 +122,7 @@ def add_step(job_id : str, step_args : Args) -> bool:
 	return False
 
 
-def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def remix_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> bool:
 	steps = get_steps(job_id)
 	step_args = copy(step_args)
 
@@ -136,7 +136,7 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	return False
 
 
-def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def insert_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 	step_args = copy(step_args)
 
@@ -153,7 +153,7 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	return False
 
 
-def remove_step(job_id : str, step_index : int) -> bool:
+def remove_step(job_id : JobId, step_index : StepIndex) -> bool:
 	job = read_job_file(job_id)
 
 	if step_index and step_index < 0:
@@ -165,7 +165,7 @@ def remove_step(job_id : str, step_index : int) -> bool:
 	return False
 
 
-def get_steps(job_id : str) -> List[JobStep]:
+def get_steps(job_id : JobId) -> List[Step]:
 	job = read_job_file(job_id)
 
 	if job:
@@ -173,7 +173,7 @@ def get_steps(job_id : str) -> List[JobStep]:
 	return []
 
 
-def count_step_total(job_id : str) -> int:
+def count_step_total(job_id : JobId) -> int:
 	steps = get_steps(job_id)
 
 	if steps:
@@ -181,7 +181,7 @@ def count_step_total(job_id : str) -> int:
 	return 0
 
 
-def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
+def set_step_status(job_id : JobId, step_index : StepIndex, step_status : StepStatus) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
@@ -192,7 +192,7 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 	return False
 
 
-def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
+def set_steps_status(job_id : JobId, step_status : StepStatus) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
@@ -202,12 +202,12 @@ def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
 	return False
 
 
-def read_job_file(job_id : str) -> Optional[Job]:
+def read_job_file(job_id : JobId) -> Optional[Job]:
 	job_path = find_job_path(job_id)
 	return cast(Job, read_json(job_path))
 
 
-def create_job_file(job_id : str, job : Job) -> bool:
+def create_job_file(job_id : JobId, job : Job) -> bool:
 	job_path = find_job_path(job_id)
 
 	if not is_file(job_path):
@@ -216,7 +216,7 @@ def create_job_file(job_id : str, job : Job) -> bool:
 	return False
 
 
-def update_job_file(job_id : str, job : Job) -> bool:
+def update_job_file(job_id : JobId, job : Job) -> bool:
 	job_path = find_job_path(job_id)
 
 	if is_file(job_path):
@@ -225,18 +225,18 @@ def update_job_file(job_id : str, job : Job) -> bool:
 	return False
 
 
-def move_job_file(job_id : str, job_status : JobStatus) -> bool:
+def move_job_file(job_id : JobId, job_status : JobStatus) -> bool:
 	job_path = find_job_path(job_id)
 	job_move_path = suggest_job_path(job_id, job_status)
 	return move_file(job_path, job_move_path)
 
 
-def delete_job_file(job_id : str) -> bool:
+def delete_job_file(job_id : JobId) -> bool:
 	job_path = find_job_path(job_id)
 	return remove_file(job_path)
 
 
-def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
+def suggest_job_path(job_id : JobId, job_status : JobStatus) -> Optional[str]:
 	jobs_path = state_manager.get_jobs_path()
 	job_file_name = get_job_file_name(job_id)
 
@@ -245,7 +245,7 @@ def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
 	return None
 
 
-def find_job_path(job_id : str) -> Optional[str]:
+def find_job_path(job_id : JobId) -> Optional[str]:
 	jobs_path = state_manager.get_jobs_path()
 	job_file_name = get_job_file_name(job_id)
 
@@ -259,7 +259,7 @@ def find_job_path(job_id : str) -> Optional[str]:
 	return None
 
 
-def get_job_file_name(job_id : str) -> Optional[str]:
+def get_job_file_name(job_id : JobId) -> Optional[str]:
 	if job_id:
 		job_id = sanitize_job_id(job_id)
 		return job_id + '.json'
