@@ -71,57 +71,57 @@ def get_device_memory(session_handle : ctypes.c_void_p, device_handle : ctypes.c
 	device_memory = amd_adlx_module.define_device_memory()
 	get_total_memory = amd_adlx_module.lookup_method(device_handle, 11, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 	get_total_memory(device_handle, ctypes.byref(device_memory, type(device_memory).memory_total.offset))
-	performance_monitoring_handle = ctypes.c_void_p()
-	get_performance_monitoring_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
+	performance_monitor_handle = ctypes.c_void_p()
+	get_performance_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 
-	if get_performance_monitoring_services(session_handle, ctypes.byref(performance_monitoring_handle)) == 0:
+	if get_performance_services(session_handle, ctypes.byref(performance_monitor_handle)) == 0:
 		device_info_handle = ctypes.c_void_p()
-		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitoring_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
+		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitor_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
 
-		if get_current_gpu_metrics(performance_monitoring_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
+		if get_current_gpu_metrics(performance_monitor_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
 			get_memory_used = amd_adlx_module.lookup_method(device_info_handle, 12, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 			get_memory_used(device_info_handle, ctypes.byref(device_memory, type(device_memory).memory_used.offset))
 			release(device_info_handle)
 
-		release(performance_monitoring_handle)
+		release(performance_monitor_handle)
 
 	return device_memory
 
 
 def get_device_temperature(session_handle : ctypes.c_void_p, device_handle : ctypes.c_void_p) -> ctypes.c_double:
 	device_temperature = ctypes.c_double()
-	performance_monitoring_handle = ctypes.c_void_p()
-	get_performance_monitoring_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
+	performance_monitor_handle = ctypes.c_void_p()
+	get_performance_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 
-	if get_performance_monitoring_services(session_handle, ctypes.byref(performance_monitoring_handle)) == 0:
+	if get_performance_services(session_handle, ctypes.byref(performance_monitor_handle)) == 0:
 		device_info_handle = ctypes.c_void_p()
-		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitoring_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
+		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitor_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
 
-		if get_current_gpu_metrics(performance_monitoring_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
+		if get_current_gpu_metrics(performance_monitor_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
 			get_temperature = amd_adlx_module.lookup_method(device_info_handle, 7, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 			get_temperature(device_info_handle, ctypes.byref(device_temperature))
 			release(device_info_handle)
 
-		release(performance_monitoring_handle)
+		release(performance_monitor_handle)
 
 	return device_temperature
 
 
 def get_device_utilization(session_handle : ctypes.c_void_p, device_handle : ctypes.c_void_p) -> ctypes.c_double:
 	device_utilization = ctypes.c_double()
-	performance_monitoring_handle = ctypes.c_void_p()
-	get_performance_monitoring_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
+	performance_monitor_handle = ctypes.c_void_p()
+	get_performance_services = amd_adlx_module.lookup_method(session_handle, 9, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 
-	if get_performance_monitoring_services(session_handle, ctypes.byref(performance_monitoring_handle)) == 0:
+	if get_performance_services(session_handle, ctypes.byref(performance_monitor_handle)) == 0:
 		device_info_handle = ctypes.c_void_p()
-		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitoring_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
+		get_current_gpu_metrics = amd_adlx_module.lookup_method(performance_monitor_handle, 18, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ])
 
-		if get_current_gpu_metrics(performance_monitoring_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
+		if get_current_gpu_metrics(performance_monitor_handle, device_handle, ctypes.byref(device_info_handle)) == 0:
 			get_utilization = amd_adlx_module.lookup_method(device_info_handle, 4, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 			get_utilization(device_info_handle, ctypes.byref(device_utilization))
 			release(device_info_handle)
 
-		release(performance_monitoring_handle)
+		release(performance_monitor_handle)
 
 	return device_utilization
 
