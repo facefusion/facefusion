@@ -19,7 +19,7 @@ from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode
+from facefusion.types import Args, ErrorCode, JobId, StepIndex
 from facefusion.workflows.core import detect_workflow_mode
 from facefusion.workflows.modules import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
 
@@ -319,7 +319,7 @@ def process_batch(args : Args) -> ErrorCode:
 	return 1
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
 	step_total = job_manager.count_step_total(job_id)
 	fork_id = session_manager.fork_session()
 	session_manager.observe_cli_session(fork_id)
@@ -335,21 +335,24 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 
-	is_done = common_pre_check() and processors_pre_check() and conditional_process() == 0
-	session_manager.join_session()
+	try:
+		if common_pre_check() and processors_pre_check():
+			return conditional_process()
+		return 2
 
-	stores =\
-	[
-		state_manager.STATE_SET,
-		content_store.CONTENT_STORE,
-		process_manager.PROCESS_STORE,
-		video_manager.VIDEO_POOL_STORE
-	]
+	finally:
+		session_manager.join_session()
 
-	for store in stores:
-		store_creator.delete_content(store, fork_id)
+		stores =\
+		[
+			state_manager.STATE_SET,
+			content_store.CONTENT_STORE,
+			process_manager.PROCESS_STORE,
+			video_manager.VIDEO_POOL_STORE
+		]
 
-	return is_done
+		for store in stores:
+			store_creator.delete_content(store, fork_id)
 
 
 def conditional_process() -> ErrorCode:

@@ -47,6 +47,6 @@ def test_validate_actions() -> None:
 
 	for action in program._actions:
 		if action.dest in args:
-			action.default = args[action.dest]
+			action.default = args.get(action.dest)
 
 	assert validate_actions(program) is False

@@ -49,8 +49,6 @@ def test_get_capabilities(test_client : TestClient) -> None:
 	capabilities_response = test_client.get('/capabilities')
 	capabilities_body = capabilities_response.json()
 
-	assert capabilities_response.status_code == 200
-
 	assert 'mp3' in capabilities_body.get('formats').get('audio')
 
 	assert 'jpeg' in capabilities_body.get('formats').get('image')
@@ -59,3 +57,5 @@ def test_get_capabilities(test_client : TestClient) -> None:
 
 	assert capabilities_body.get('arguments').get('paths').get('source_paths').get('default') is None
 	assert capabilities_body.get('arguments').get('paths').get('output_format').get('choices') == [ 'mp4', 'mkv', 'webm' ]
+
+	assert capabilities_response.status_code == 200

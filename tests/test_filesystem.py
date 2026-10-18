@@ -101,6 +101,18 @@ def test_resolve_file_paths() -> None:
 	assert resolve_file_paths('invalid') == []
 
 
+def test_is_directory() -> None:
+	assert is_directory(get_test_examples_directory()) is True
+	assert is_directory(get_test_example_file('source.jpg')) is False
+	assert is_directory('invalid') is False
+
+
+def test_in_directory() -> None:
+	assert in_directory(get_test_example_file('source.jpg')) is True
+	assert in_directory('source.jpg') is False
+	assert in_directory('invalid') is False
+
+
 def test_create_directory() -> None:
 	create_directory_path = os.path.join(get_test_outputs_directory(), 'create_directory')
 
@@ -115,15 +127,3 @@ def test_remove_directory() -> None:
 	assert remove_directory(remove_directory_path) is True
 	assert remove_directory(get_test_example_file('source.jpg')) is False
 	assert remove_directory('invalid') is False
-
-
-def test_is_directory() -> None:
-	assert is_directory(get_test_examples_directory()) is True
-	assert is_directory(get_test_example_file('source.jpg')) is False
-	assert is_directory('invalid') is False
-
-
-def test_in_directory() -> None:
-	assert in_directory(get_test_example_file('source.jpg')) is True
-	assert in_directory('source.jpg') is False
-	assert in_directory('invalid') is False

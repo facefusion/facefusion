@@ -26,16 +26,16 @@ def before_all() -> None:
 	).wait()
 
 
-def test_get_audio_frame() -> None:
-	assert get_audio_frame(get_test_example_file('source.mp3'), 25).shape == (80, 16)
-	assert get_audio_frame(get_test_example_file('source.wav'), 25).shape == (80, 16)
-	assert get_audio_frame('invalid', 25) is None
-
-
 def test_read_static_audio() -> None:
 	assert len(read_static_audio(get_test_example_file('source.mp3'), 25)) == 280
 	assert len(read_static_audio(get_test_example_file('source.wav'), 25)) == 280
 	assert read_static_audio('invalid', 25) is None
+
+
+def test_get_audio_frame() -> None:
+	assert get_audio_frame(get_test_example_file('source.mp3'), 25).shape == (80, 16)
+	assert get_audio_frame(get_test_example_file('source.wav'), 25).shape == (80, 16)
+	assert get_audio_frame('invalid', 25) is None
 
 
 def test_detect_audio_duration() -> None:

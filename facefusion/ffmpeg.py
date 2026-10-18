@@ -142,7 +142,7 @@ def get_available_encoder_set() -> EncoderSet:
 	return available_encoder_set
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def get_static_available_encoder_set() -> EncoderSet:
 	return get_available_encoder_set()
 

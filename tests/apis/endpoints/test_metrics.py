@@ -119,7 +119,7 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 				'total':
 				{
 					'value': 24,
-				  	'unit': 'GB'
+					'unit': 'GB'
 				},
 				'used':
 				{
@@ -174,8 +174,6 @@ def test_get_metrics(test_client : TestClient) -> None:
 	})
 	metrics_body = metrics_response.json()
 
-	assert metrics_response.status_code == 200
-
 	assert metrics_body.get('graphic_devices')[0].get('driver_version') == '555.42'
 	assert metrics_body.get('graphic_devices')[0].get('product').get('name') == 'RTX 4090'
 	assert metrics_body.get('graphic_devices')[0].get('memory').get('total').get('value') == 24
@@ -196,6 +194,8 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('processor').get('cores').get('value') == 16
 	assert metrics_body.get('processor').get('frequency').get('value') == 3500
 	assert metrics_body.get('processor').get('utilization').get('value') == 25
+
+	assert metrics_response.status_code == 200
 
 
 def test_get_metrics_not_found(test_client : TestClient, mocker : MockerFixture) -> None:

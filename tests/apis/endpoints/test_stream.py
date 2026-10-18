@@ -158,8 +158,8 @@ def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> Non
 			'Content-Type': 'application/sdp'
 		})
 
-		assert stream_response.status_code == 201
 		assert 'm=video' in stream_response.text
+		assert stream_response.status_code == 201
 
 
 def test_delete_stream_video(test_client : TestClient) -> None:
@@ -203,8 +203,8 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert delete_response.status_code == 200
 	assert rtc_store.has_peer() is False
+	assert delete_response.status_code == 200
 
 	post_response = test_client.post('/stream', content = 'invalid', headers =
 	{

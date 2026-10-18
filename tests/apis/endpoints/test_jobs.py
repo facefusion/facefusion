@@ -363,8 +363,8 @@ def test_run_jobs(test_client : TestClient) -> None:
 		run_jobs_body = run_jobs_response.json()
 
 		assert run_jobs_body.get('message') == 'ok'
-		assert run_jobs_response.status_code == 202
 		assert run_jobs_mock.called is True
+		assert run_jobs_response.status_code == 202
 
 
 def test_run_job(test_client : TestClient) -> None:
@@ -412,8 +412,8 @@ def test_run_job(test_client : TestClient) -> None:
 		run_job_body = run_job_response.json()
 
 		assert run_job_body.get('message') == 'ok'
-		assert run_job_response.status_code == 202
 		assert run_job_mock.called is True
+		assert run_job_response.status_code == 202
 
 
 def test_retry_jobs(test_client : TestClient) -> None:
@@ -462,8 +462,8 @@ def test_retry_jobs(test_client : TestClient) -> None:
 		retry_jobs_body = retry_jobs_response.json()
 
 		assert retry_jobs_body.get('message') == 'ok'
-		assert retry_jobs_response.status_code == 202
 		assert retry_jobs_mock.called is True
+		assert retry_jobs_response.status_code == 202
 
 	create_job('job-test-retry-jobs-queued')
 	move_job_file('job-test-retry-jobs-queued', 'queued')
@@ -523,8 +523,8 @@ def test_retry_job(test_client : TestClient) -> None:
 		retry_job_body = retry_job_response.json()
 
 		assert retry_job_body.get('message') == 'ok'
-		assert retry_job_response.status_code == 202
 		assert retry_job_mock.called is True
+		assert retry_job_response.status_code == 202
 
 	create_job('job-test-retry-job-queued')
 	move_job_file('job-test-retry-job-queued', 'queued')
