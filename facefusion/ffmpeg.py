@@ -47,9 +47,9 @@ def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer
 			if log_level == 'debug':
 				log_debug(process)
 			process.wait(timeout = 0.5)
+			return process
 		except subprocess.TimeoutExpired:
-			continue
-		return process
+			pass
 
 	if process_manager.is_stopping():
 		process.terminate()

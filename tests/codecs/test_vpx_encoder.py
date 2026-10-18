@@ -56,6 +56,6 @@ def test_encode(video_codec : VxpVideoCodec) -> None:
 def test_destroy(video_codec : VxpVideoCodec) -> None:
 	vpx_encoder = create(video_codec, (320, 240), 1000, 8, 16)
 
-	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
+	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as vpx_codec_destroy:
 		destroy(vpx_encoder)
-		mock.assert_called_once_with(vpx_encoder)
+		vpx_codec_destroy.assert_called_once_with(vpx_encoder)

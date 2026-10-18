@@ -24,17 +24,17 @@ def test_get_metrics_set() -> None:
 def test_detect_graphic_devices() -> None:
 	assert detect_graphic_devices([ 'cpu' ]) == []
 
-	with patch('facefusion.system.nvidia_ml_module.create_static_library'):
-		with patch('facefusion.system.nvidia_ml_module.find_device_handles', return_value = [ 0 ]):
+	with patch('facefusion.libraries.nvidia_ml.create_static_library'):
+		with patch('facefusion.libraries.nvidia_ml.find_device_handles', return_value = [ 0 ]):
 			nvidia_graphic_devices = detect_graphic_devices([ 'cuda' ])
 
 	assert nvidia_graphic_devices[0].get('framework').get('name') == 'CUDA'
 	assert nvidia_graphic_devices[0].get('product').get('vendor') == 'NVIDIA'
 
 	if is_linux():
-		with patch('facefusion.system.amd_smi_module.create_static_library'):
-			with patch('facefusion.system.rocm_core_module.create_static_library'):
-				with patch('facefusion.system.amd_smi_module.find_device_handles', return_value = [ 0 ]):
+		with patch('facefusion.libraries.amd_smi.create_static_library'):
+			with patch('facefusion.libraries.rocm_core.create_static_library'):
+				with patch('facefusion.libraries.amd_smi.find_device_handles', return_value = [ 0 ]):
 					amd_graphic_devices = detect_graphic_devices([ 'migraphx' ])
 
 		assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'

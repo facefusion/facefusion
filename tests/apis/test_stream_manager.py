@@ -120,7 +120,7 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 		set_session_id(session_id)
 		sdp_answer = process_video(sdp_offer)
 
-	assert sdp_answer
+	assert bool(sdp_answer) == True
 	assert 'm=video' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 	assert 'a=sendonly' in sdp_answer

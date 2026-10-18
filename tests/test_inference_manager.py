@@ -33,6 +33,16 @@ def before_each() -> Iterator[None]:
 	session_context.set_session_id(local_id)
 
 
+@pytest.fixture
+def override_module() -> SimpleNamespace:
+	return SimpleNamespace(override_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
+
+
+@pytest.fixture
+def adjust_module() -> SimpleNamespace:
+	return SimpleNamespace(adjust_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
+
+
 def test_init() -> None:
 	local_id = session_context.resolve_local_id()
 	model_names = [ 'nsfw_1', 'nsfw_2', 'nsfw_3' ]
@@ -90,16 +100,6 @@ def test_clear() -> None:
 	clear()
 
 	assert store_creator.get_content(INFERENCE_POOL_STORE, 'session-a') == {}
-
-
-@pytest.fixture
-def override_module() -> SimpleNamespace:
-	return SimpleNamespace(override_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
-
-
-@pytest.fixture
-def adjust_module() -> SimpleNamespace:
-	return SimpleNamespace(adjust_inference_providers = Mock(return_value = [ ('CoreMLExecutionProvider', { 'ModelFormat': 'MLProgram' }) ]))
 
 
 def test_resolve_static_inference_providers(override_module : SimpleNamespace, adjust_module : SimpleNamespace) -> None:

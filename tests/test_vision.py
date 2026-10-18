@@ -42,7 +42,7 @@ def before_all() -> None:
 				'-vframes',
 				'1'
 			],
-			ffmpeg_builder.set_output(get_test_example_file('目标-240p.webp'))
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-目标.webp'))
 		)
 	).wait()
 
@@ -106,7 +106,7 @@ def before_each() -> None:
 
 def test_read_image() -> None:
 	assert read_image(get_test_example_file('target-240p.jpg')).shape == (226, 426, 3)
-	assert read_image(get_test_example_file('目标-240p.webp')).shape == (226, 426, 3)
+	assert read_image(get_test_example_file('target-240p-目标.webp')).shape == (226, 426, 3)
 	assert read_image('invalid') is None
 
 
@@ -114,7 +114,7 @@ def test_write_image() -> None:
 	vision_frame = read_image(get_test_example_file('target-240p.jpg'))
 
 	assert write_image(get_test_output_path('target-240p.jpg'), vision_frame) is True
-	assert write_image(get_test_output_path('目标-240p.webp'), vision_frame) is True
+	assert write_image(get_test_output_path('target-240p-目标.webp'), vision_frame) is True
 
 
 def test_detect_image_resolution() -> None:

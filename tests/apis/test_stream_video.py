@@ -94,7 +94,7 @@ def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None
 					video_queue.shutdown()
 					encode_loop_thread.join(timeout = 5.0)
 
-	assert send_video_mock.called
+	assert send_video_mock.called is True
 	assert destroy_video_encoder_mock.call_count == 1
 
 	if video_codec == 'av1':
