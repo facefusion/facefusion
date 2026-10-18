@@ -26,8 +26,8 @@ def send_video_frames(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future
 	video_buffer = video_pack.get('buffer')
 	video_resolution = video_pack.get('resolution')
 
-	temp_resolution: Resolution = video_resolution
-	temp_bitrate: BitRate = 8000
+	temp_resolution : Resolution = video_pack.get('resolution')
+	temp_bitrate : BitRate = 8000
 	video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 	frame_index = 0
 

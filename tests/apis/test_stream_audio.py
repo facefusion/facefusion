@@ -9,7 +9,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, run_audio_encode_loop
+from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, send_audio_frames
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
@@ -45,7 +45,7 @@ def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -
 	return ready_event
 
 
-def test_run_audio_encode_loop() -> None:
+def test_send_audio_frames() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	peer_connection = rtc.create_peer_connection()
@@ -77,7 +77,7 @@ def test_run_audio_encode_loop() -> None:
 
 	with patch('facefusion.apis.stream_audio.opus_encoder.encode', encoder_mock.encode):
 		with patch('facefusion.apis.stream_audio.rtc.send_audio') as send_audio_mock:
-			audio_loop_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_queue), daemon = True)
+			audio_loop_thread = threading.Thread(target = send_audio_frames, args = (rtc_peer, audio_queue), daemon = True)
 			audio_loop_thread.start()
 			audio_queue.put((0.0, numpy.empty(0)))
 			audio_loop_thread.join(timeout = 5.0)
