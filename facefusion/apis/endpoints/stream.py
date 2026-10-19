@@ -16,8 +16,10 @@ async def websocket_stream(websocket : WebSocket) -> None:
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('stream', websocket)
 
-		await process_image(websocket)
-		websocket_manager.end_connection('stream')
+		try:
+			await process_image(websocket)
+		finally:
+			websocket_manager.end_connection('stream')
 
 		if websocket.client_state == WebSocketState.CONNECTED:
 			await websocket.close()

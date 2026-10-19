@@ -31,11 +31,8 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 				metrics_set = get_metrics_set()
 				await websocket.send_json(metrics_set)
 				await asyncio.sleep(2)
-
-		except Exception:
-			pass
-
-		websocket_manager.end_connection('metrics')
+		finally:
+			websocket_manager.end_connection('metrics')
 
 	else:
 		await websocket.close()

@@ -14,11 +14,8 @@ async def websocket_ping(websocket : WebSocket) -> None:
 		try:
 			while True:
 				await websocket.receive()
-
-		except Exception:
-			pass
-
-		websocket_manager.end_connection('ping')
+		finally:
+			websocket_manager.end_connection('ping')
 
 	else:
 		await websocket.close()
