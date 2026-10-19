@@ -10,11 +10,14 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
 
 	if job_id in queued_job_ids:
-		if run_steps(job_id, process_step) and finalize_steps(job_id):
+		if run_steps(job_id, process_step) and job_id in job_manager.find_job_ids('queued') and finalize_steps(job_id):
 			clean_steps(job_id)
 			return job_manager.move_job_file(job_id, 'completed')
+
 		clean_steps(job_id)
-		job_manager.move_job_file(job_id, 'failed')
+
+		if job_id in job_manager.find_job_ids('queued'):
+			job_manager.move_job_file(job_id, 'failed')
 	return False
 
 
