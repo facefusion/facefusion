@@ -8,7 +8,7 @@ from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
 
 from facefusion import translator
-from facefusion.apis import asset_store
+from facefusion.apis import asset_store, http_manager
 from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files
 from facefusion.apis.asset_validator import validate_asset_resolution, validate_asset_type, validate_frame_index, validate_subject
 from facefusion.apis.media_validator import validate_resolution
@@ -105,7 +105,9 @@ async def upload_assets(request : Request) -> Response:
 		upload_files = cast(List[UploadFile], form.getlist('file'))
 
 		if upload_files and validate_asset_type(upload_files) and await asyncio.to_thread(validate_asset_resolution, upload_files):
+			http_manager.start_request('upload')
 			asset_paths = await save_asset_files(upload_files)
+			http_manager.end_request('upload')
 
 			if asset_paths:
 				asset_ids : List[str] = []

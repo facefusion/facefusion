@@ -66,6 +66,9 @@ def test_is_busy() -> None:
 	with patch('facefusion.apis.websocket_manager.has_connection', return_value = True):
 		assert is_busy() is True
 
+	with patch('facefusion.apis.http_manager.has_request', return_value = True):
+		assert is_busy() is True
+
 	fork_id = fork_session()
 	set_session_id('session-a')
 

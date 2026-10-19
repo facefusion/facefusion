@@ -8,7 +8,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_manager, session_context, session_manager, state_manager, store_creator, store_manager, video_manager
-from facefusion.apis import asset_store, websocket_manager
+from facefusion.apis import asset_store, http_manager, websocket_manager
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
@@ -235,6 +235,20 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 409
 
+	session_context.set_session_id(session_id)
+	test_client.portal.call(http_manager.start_request, 'upload')
+	delete_session_response = test_client.delete('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_session_response.json().get('message') == 'session not destroyed'
+	assert session_manager.find_api_session_id(access_token) == session_id
+	assert delete_session_response.status_code == 409
+
+	http_manager.end_request('upload')
+	session_context.set_session_id(session_context.resolve_local_id())
+
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
@@ -302,6 +316,7 @@ def test_destroy_session_content(test_client : TestClient) -> None:
 		(process_manager, process_manager.PROCESS_STORE),
 		(rtc_manager, rtc_manager.RTC_STORE),
 		(video_manager, video_manager.VIDEO_POOL_STORE),
+		(http_manager, http_manager.HTTP_STORE),
 		(websocket_manager, websocket_manager.WEBSOCKET_STORE)
 	]
 
