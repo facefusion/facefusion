@@ -10,7 +10,7 @@ from unittest.mock import patch
 import cv2
 import pytest
 
-from facefusion import rtc, rtc_store, state_manager, video_manager
+from facefusion import rtc, rtc_manager, state_manager, video_manager
 from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, send_video_frames, update_video_encoder_bitrate, update_video_encoder_resolution
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
@@ -43,7 +43,7 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	rtc_store.delete_peer()
+	rtc_manager.delete_peer()
 
 
 def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -> threading.Event:

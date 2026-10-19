@@ -6,7 +6,7 @@ import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from facefusion import metadata, rtc, rtc_store, session_context, session_manager, state_manager
+from facefusion import metadata, rtc, rtc_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api, pre_check
 from facefusion.download import conditional_download
@@ -42,7 +42,7 @@ def before_each() -> Iterator[None]:
 	session_context.set_session_id(local_id)
 	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
-	rtc_store.delete_peer()
+	rtc_manager.delete_peer()
 
 	yield
 
@@ -185,7 +185,7 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 
 	session_context.set_session_id(session_id)
 
-	assert rtc_store.has_peer() is True
+	assert rtc_manager.has_peer() is True
 
 	post_response = test_client.post('/stream', content = sdp_offer, headers =
 	{
@@ -196,14 +196,14 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	assert post_response.status_code == 409
 	session_context.set_session_id(session_id)
 
-	assert rtc_store.has_peer() is True
+	assert rtc_manager.has_peer() is True
 
 	delete_response = test_client.delete('/stream', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert rtc_store.has_peer() is False
+	assert rtc_manager.has_peer() is False
 	assert delete_response.status_code == 200
 
 	post_response = test_client.post('/stream', content = 'invalid', headers =

@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import rtc, session_context, session_manager, state_manager
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.rtc_store import delete_peer, get_peer, has_peer, init, set_peer
+from facefusion.rtc_manager import delete_peer, get_peer, has_peer, init, set_peer
 from facefusion.types import RtcPeer
 
 
