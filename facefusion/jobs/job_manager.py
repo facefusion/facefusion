@@ -59,6 +59,28 @@ def submit_jobs(halt_on_error : bool) -> bool:
 	return False
 
 
+def cancel_job(job_id : JobId) -> bool:
+	queued_job_ids = find_job_ids('queued')
+
+	if job_id in queued_job_ids:
+		return set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
+	return False
+
+
+def cancel_jobs(halt_on_error : bool) -> bool:
+	queued_job_ids = find_job_ids('queued')
+	has_error = False
+
+	if queued_job_ids:
+		for job_id in queued_job_ids:
+			if not cancel_job(job_id):
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
+	return False
+
+
 def delete_job(job_id : JobId) -> bool:
 	return delete_job_file(job_id)
 
@@ -179,6 +201,10 @@ def count_step_total(job_id : JobId) -> int:
 	if steps:
 		return len(steps)
 	return 0
+
+
+def has_step_status(job_id : JobId, step_status : StepStatus) -> bool:
+	return any(step.get('status') == step_status for step in get_steps(job_id))
 
 
 def set_step_status(job_id : JobId, step_index : StepIndex, step_status : StepStatus) -> bool:

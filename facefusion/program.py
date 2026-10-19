@@ -29,7 +29,8 @@ def create_config_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--config-path',
 				help = translator.get('help.config_path'),
-				default = 'facefusion.ini'
+				default = 'facefusion.ini',
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -81,7 +82,8 @@ def create_temp_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--temp-path',
 				help = translator.get('help.temp_path'),
-				default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir())
+				default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir()),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -100,7 +102,8 @@ def create_jobs_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--jobs-path',
 				help = translator.get('help.jobs_path'),
-				default = config.get_str_value('paths', 'jobs_path', '.jobs')
+				default = config.get_str_value('paths', 'jobs_path', '.jobs'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -120,7 +123,8 @@ def create_source_paths_program() -> ArgumentParser:
 				'-s', '--source-paths',
 				help = translator.get('help.source_paths'),
 				default = config.get_str_list('paths', 'source_paths'),
-				nargs = '+'
+				nargs = '+',
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -139,7 +143,8 @@ def create_target_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'-t', '--target-path',
 				help = translator.get('help.target_path'),
-				default = config.get_str_value('paths', 'target_path')
+				default = config.get_str_value('paths', 'target_path'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -158,7 +163,8 @@ def create_output_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'-o', '--output-path',
 				help = translator.get('help.output_path'),
-				default = config.get_str_value('paths', 'output_path')
+				default = config.get_str_value('paths', 'output_path'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -177,7 +183,8 @@ def create_source_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-s', '--source-pattern',
 				help = translator.get('help.source_pattern'),
-				default = config.get_str_value('patterns', 'source_pattern')
+				default = config.get_str_value('patterns', 'source_pattern'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -196,7 +203,8 @@ def create_target_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-t', '--target-pattern',
 				help = translator.get('help.target_pattern'),
-				default = config.get_str_value('patterns', 'target_pattern')
+				default = config.get_str_value('patterns', 'target_pattern'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -215,7 +223,8 @@ def create_output_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-o', '--output-pattern',
 				help = translator.get('help.output_pattern'),
-				default = config.get_str_value('patterns', 'output_pattern')
+				default = config.get_str_value('patterns', 'output_pattern'),
+				type = str
 			)
 		],
 		scopes = [ 'cli' ],
@@ -808,7 +817,7 @@ def create_output_creation_program() -> ArgumentParser:
 			group_output_creation.add_argument(
 				'--output-video-fps',
 				help = translator.get('help.output_video_fps'),
-				type = float,
+				type = sanitize_float,
 				default = config.get_float_value('output_creation', 'output_video_fps')
 			)
 		],
@@ -820,7 +829,7 @@ def create_output_creation_program() -> ArgumentParser:
 			group_output_creation.add_argument(
 				'--output-audio-fps',
 				help = translator.get('help.output_audio_fps'),
-				type = float,
+				type = sanitize_float,
 				default = config.get_float_value('output_creation', 'output_audio_fps', '25.0')
 			)
 		],
@@ -933,7 +942,8 @@ def create_api_program() -> ArgumentParser:
 	group_api.add_argument(
 		'--api-host',
 		help = translator.get('help.api_host'),
-		default = config.get_str_value('api', 'api_host', '127.0.0.1')
+		default = config.get_str_value('api', 'api_host', '127.0.0.1'),
+		type = str
 	)
 	group_api.add_argument(
 		'--api-port',
@@ -1405,3 +1415,7 @@ def create_program() -> ArgumentParser:
 def apply_config_path(program : ArgumentParser) -> None:
 	known_args, _ = program.parse_known_args()
 	state_manager.init_item('config_path', known_args.config_path)
+
+
+def sanitize_float(value : str) -> float:
+	return float(value)

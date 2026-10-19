@@ -14,7 +14,7 @@ def init() -> None:
 	store_creator.init_content(WEBSOCKET_STORE, owner_id)
 
 
-def has_websocket(channel : WebsocketChannel) -> bool:
+def has_connection(channel : WebsocketChannel) -> bool:
 	owner_id = resolve_owner_id()
 	session_websocket_set : SessionWebsocketSet = store_creator.get_content(WEBSOCKET_STORE, owner_id)
 
@@ -24,7 +24,7 @@ def has_websocket(channel : WebsocketChannel) -> bool:
 	return False
 
 
-def set_websocket(channel : WebsocketChannel, websocket : Websocket) -> None:
+def start_connection(channel : WebsocketChannel, websocket : Websocket) -> None:
 	owner_id = resolve_owner_id()
 
 	if store_creator.has_content(WEBSOCKET_STORE, owner_id):
@@ -35,7 +35,7 @@ def set_websocket(channel : WebsocketChannel, websocket : Websocket) -> None:
 		}
 
 
-def delete_websocket(channel : WebsocketChannel) -> None:
+def end_connection(channel : WebsocketChannel) -> None:
 	owner_id = resolve_owner_id()
 	session_websocket_set : SessionWebsocketSet = store_creator.get_content(WEBSOCKET_STORE, owner_id)
 

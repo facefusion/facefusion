@@ -51,6 +51,6 @@ def test_decode() -> None:
 def test_destroy() -> None:
 	aom_decoder = create(1)
 
-	with patch.object(aom_module.create_static_library(), 'aom_codec_destroy') as mock:
+	with patch.object(aom_module.create_static_library(), 'aom_codec_destroy') as aom_codec_destroy:
 		destroy(aom_decoder)
-		mock.assert_called_once_with(aom_decoder)
+		aom_codec_destroy.assert_called_once_with(aom_decoder)

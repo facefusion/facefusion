@@ -46,6 +46,6 @@ def test_encode() -> None:
 def test_destroy() -> None:
 	opus_encoder = create(48000, 2)
 
-	with patch.object(opus_module.create_static_library(), 'opus_encoder_destroy') as mock:
+	with patch.object(opus_module.create_static_library(), 'opus_encoder_destroy') as opus_encoder_destroy:
 		destroy(opus_encoder)
-		mock.assert_called_once_with(opus_encoder)
+		opus_encoder_destroy.assert_called_once_with(opus_encoder)

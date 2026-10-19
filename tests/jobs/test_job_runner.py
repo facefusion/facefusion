@@ -1,11 +1,12 @@
 import os
+from unittest.mock import patch
 
 import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, init_jobs, move_job_file, submit_job, submit_jobs
 from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
@@ -89,6 +90,12 @@ def test_run_job() -> None:
 		'target_path': get_test_example_file('target-240p.jpg'),
 		'output_path': get_test_output_path('output-4')
 	}
+	args_6 =\
+	{
+		'source_path': 'invalid',
+		'target_path': 'invalid',
+		'output_path': 'invalid'
+	}
 
 	assert run_job('job-invalid', process_step) is False
 
@@ -105,6 +112,33 @@ def test_run_job() -> None:
 	submit_job('job-test-run-job')
 
 	assert run_job('job-test-run-job', process_step) is True
+
+	create_job('job-test-run-job-cancel')
+	add_step('job-test-run-job-cancel', args_1)
+	add_step('job-test-run-job-cancel', args_3)
+	submit_job('job-test-run-job-cancel')
+
+	with patch('facefusion.jobs.job_manager.find_job_ids', side_effect = [ [ 'job-test-run-job-cancel' ], [], [] ]):
+		assert run_job('job-test-run-job-cancel', process_step) is False
+
+	assert find_job_ids('queued') == [ 'job-test-run-job-cancel' ]
+	assert is_test_output_file('output-1.mp4') is False
+
+	create_job('job-test-run-job-invalid')
+	add_step('job-test-run-job-invalid', args_6)
+	submit_job('job-test-run-job-invalid')
+
+	assert run_job('job-test-run-job-invalid', process_step) is False
+	assert find_job_ids('failed') == [ 'job-test-run-job-invalid' ]
+
+	create_job('job-test-run-job-cancel-invalid')
+	add_step('job-test-run-job-cancel-invalid', args_6)
+	submit_job('job-test-run-job-cancel-invalid')
+
+	with patch('facefusion.jobs.job_manager.find_job_ids', side_effect = [ [ 'job-test-run-job-cancel-invalid' ], [] ]):
+		assert run_job('job-test-run-job-cancel-invalid', process_step) is False
+
+	assert find_job_ids('failed') == [ 'job-test-run-job-invalid' ]
 
 
 def test_run_jobs() -> None:

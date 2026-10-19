@@ -9,10 +9,10 @@ from typing import Optional, Tuple
 
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, rtc, rtc_store, state_manager, streamer, thread_helper
+from facefusion import content_store, rtc, rtc_manager, state_manager, streamer, thread_helper
 from facefusion.apis.media_validator import validate_media_resolution
-from facefusion.apis.stream_audio import receive_audio_frames, run_audio_encode_loop
-from facefusion.apis.stream_video import receive_video_frames, run_video_encode_loop
+from facefusion.apis.stream_audio import receive_audio_frames, send_audio_frames
+from facefusion.apis.stream_video import receive_video_frames, send_video_frames
 from facefusion.content_analyser import analyse_frame
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, Time, VideoCodec, VisionFrame
@@ -98,7 +98,7 @@ def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 				)
 
 			content_store.clear()
-			rtc_store.set_peer(rtc_peer)
+			rtc_manager.set_peer(rtc_peer)
 
 			threading.Thread(
 				target = copy_context().run,
@@ -126,7 +126,7 @@ def run_peer_loop(rtc_peer : RtcPeer) -> None:
 	)
 	video_encoder_thread = threading.Thread(
 		target = copy_context().run,
-		args = (run_video_encode_loop, rtc_peer, video_queue),
+		args = (send_video_frames, rtc_peer, video_queue),
 		daemon = True
 	)
 	video_receiver_thread.start()
@@ -140,7 +140,7 @@ def run_peer_loop(rtc_peer : RtcPeer) -> None:
 		)
 		audio_encoder_thread = threading.Thread(
 			target = copy_context().run,
-			args = (run_audio_encode_loop, rtc_peer, audio_queue),
+			args = (send_audio_frames, rtc_peer, audio_queue),
 			daemon = True
 		)
 		audio_receiver_thread.start()
@@ -152,12 +152,12 @@ def run_peer_loop(rtc_peer : RtcPeer) -> None:
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
 
-	rtc_store.delete_peer()
+	rtc_manager.delete_peer()
 
 
 def destroy_stream() -> bool:
-	if rtc_store.has_peer():
-		rtc_store.delete_peer()
-		return not rtc_store.has_peer()
+	if rtc_manager.has_peer():
+		rtc_manager.delete_peer()
+		return not rtc_manager.has_peer()
 
 	return False

@@ -10,7 +10,7 @@ def create(video_codec : VxpVideoCodec, thread_count : int) -> Optional[VpxDecod
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
-		vpx_decoder = ctypes.create_string_buffer(64)
+		vpx_decoder = ctypes.create_string_buffer(128)
 		vpx_algo = 'vpx_codec_vp8_dx_algo'
 
 		if video_codec == 'vp9':
