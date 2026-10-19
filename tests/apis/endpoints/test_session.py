@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_store, session_context, session_manager, state_manager, store_creator, store_manager, video_manager
-from facefusion.apis import asset_store, websocket_store
+from facefusion import content_store, face_store, inference_manager, metadata, process_manager, rtc_manager, session_context, session_manager, state_manager, store_creator, store_manager, video_manager
+from facefusion.apis import asset_store, http_manager, websocket_manager
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
@@ -236,7 +236,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert delete_session_response.status_code == 409
 
 	session_context.set_session_id(session_id)
-	process_manager.start()
+	test_client.portal.call(http_manager.start_request, 'upload')
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
@@ -246,7 +246,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 409
 
-	process_manager.end()
+	http_manager.end_request('upload')
 	session_context.set_session_id(session_context.resolve_local_id())
 
 	delete_session_response = test_client.delete('/session', headers =
@@ -314,9 +314,9 @@ def test_destroy_session_content(test_client : TestClient) -> None:
 		(face_store, face_store.FACE_STORE),
 		(inference_manager, inference_manager.INFERENCE_POOL_STORE),
 		(process_manager, process_manager.PROCESS_STORE),
-		(rtc_store, rtc_store.RTC_STORE),
+		(rtc_manager, rtc_manager.RTC_STORE),
 		(video_manager, video_manager.VIDEO_POOL_STORE),
-		(websocket_store, websocket_store.WEBSOCKET_STORE)
+		(websocket_manager, websocket_manager.WEBSOCKET_STORE)
 	]
 
 	session_manager.set_api_session(session_id,

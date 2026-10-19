@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import numpy
 import pytest
 
-from facefusion import rtc, rtc_store, state_manager
+from facefusion import rtc, rtc_manager, state_manager
 from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, send_audio_frames
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
@@ -35,7 +35,7 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	rtc_store.delete_peer()
+	rtc_manager.delete_peer()
 
 
 def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -> threading.Event:

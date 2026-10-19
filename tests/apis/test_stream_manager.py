@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from facefusion import rtc, rtc_store, state_manager, store_creator
+from facefusion import rtc, rtc_manager, state_manager, store_creator
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video, receive_vision_frames, run_peer_loop
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
@@ -36,7 +36,7 @@ def before_all() -> None:
 def before_each() -> Iterator[None]:
 	local_id = resolve_local_id()
 
-	rtc_store.delete_peer()
+	rtc_manager.delete_peer()
 
 	yield
 
@@ -124,7 +124,7 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	assert 'a=recvonly' in sdp_answer
 	assert 'a=sendonly' in sdp_answer
 
-	rtc_peer = rtc_store.get_peer()
+	rtc_peer = rtc_manager.get_peer()
 	sender_bitrate = rtc_peer.get('sender_bitrate')
 	receiver_bitrate = rtc_peer.get('receiver_bitrate')
 
@@ -158,9 +158,9 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	store_creator.set_content(state_manager.STATE_SET, session_id, state_manager.get_state())
 	set_session_id(session_id)
-	rtc_store.set_peer(rtc_peer)
+	rtc_manager.set_peer(rtc_peer)
 
-	assert rtc_store.has_peer() is True
+	assert rtc_manager.has_peer() is True
 
 	with patch('facefusion.thread_helper.ThreadPoolExecutor') as thread_pool_executor_mock:
 		with patch('facefusion.apis.stream_manager.receive_video_frames'):
@@ -171,7 +171,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = tuple([ session_id ]))
 
-	assert rtc_store.has_peer() is False
+	assert rtc_manager.has_peer() is False
 
 
 def test_destroy_stream() -> None:
@@ -191,9 +191,9 @@ def test_destroy_stream() -> None:
 	}
 
 	set_session_id('test-destroy-stream')
-	rtc_store.set_peer(rtc_peer)
+	rtc_manager.set_peer(rtc_peer)
 
 	assert destroy_stream() is True
-	assert rtc_store.get_peer() is None
+	assert rtc_manager.get_peer() is None
 
 	assert destroy_stream() is False

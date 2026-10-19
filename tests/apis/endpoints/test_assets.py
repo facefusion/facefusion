@@ -8,7 +8,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
-from facefusion.apis import asset_store
+from facefusion.apis import asset_store, http_manager
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
@@ -191,6 +191,23 @@ def test_get_asset(test_client : TestClient) -> None:
 
 	assert get_response.status_code == 200
 
+	session_context.set_session_id(session_manager.find_api_session_id(access_token))
+	test_client.portal.call(http_manager.start_request, 'capture')
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, params =
+	{
+		'subject': 'frame',
+		'action': 'capture',
+		'resolution': '1920x1080',
+		'frame_index': [ '0' ]
+	})
+
+	assert get_response.status_code == 429
+
+	http_manager.end_request('capture')
+
 
 def test_upload_assets(test_client : TestClient) -> None:
 	upload_response = test_client.post('/assets?type=source')
@@ -301,6 +318,15 @@ def test_upload_assets(test_client : TestClient) -> None:
 
 		assert upload_response.status_code == 400
 
+	test_client.portal.call(http_manager.start_request, 'upload')
+	upload_response = test_client.post('/assets?type=source', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert upload_response.status_code == 429
+
+	http_manager.end_request('upload')
 	state_manager.init_item('api_security_strategy', 'strict')
 
 
