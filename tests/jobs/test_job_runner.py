@@ -90,6 +90,12 @@ def test_run_job() -> None:
 		'target_path': get_test_example_file('target-240p.jpg'),
 		'output_path': get_test_output_path('output-4')
 	}
+	args_6 =\
+	{
+		'source_path': 'invalid',
+		'target_path': 'invalid',
+		'output_path': 'invalid'
+	}
 
 	assert run_job('job-invalid', process_step) is False
 
@@ -117,6 +123,22 @@ def test_run_job() -> None:
 
 	assert find_job_ids('queued') == [ 'job-test-run-job-cancel' ]
 	assert is_test_output_file('output-1.mp4') is False
+
+	create_job('job-test-run-job-invalid')
+	add_step('job-test-run-job-invalid', args_6)
+	submit_job('job-test-run-job-invalid')
+
+	assert run_job('job-test-run-job-invalid', process_step) is False
+	assert find_job_ids('failed') == [ 'job-test-run-job-invalid' ]
+
+	create_job('job-test-run-job-cancel-invalid')
+	add_step('job-test-run-job-cancel-invalid', args_6)
+	submit_job('job-test-run-job-cancel-invalid')
+
+	with patch('facefusion.jobs.job_manager.find_job_ids', side_effect = [ [ 'job-test-run-job-cancel-invalid' ], [] ]):
+		assert run_job('job-test-run-job-cancel-invalid', process_step) is False
+
+	assert find_job_ids('failed') == [ 'job-test-run-job-invalid' ]
 
 
 def test_run_jobs() -> None:
