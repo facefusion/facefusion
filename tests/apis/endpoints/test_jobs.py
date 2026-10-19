@@ -1,3 +1,4 @@
+import tempfile
 from typing import Iterator
 from unittest.mock import patch
 
@@ -35,7 +36,7 @@ def before_each() -> Iterator[None]:
 	asset_store.delete_assets()
 	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])
 	state_manager.init_item('target_path', get_test_example_file('target-240p.mp4'))
-	state_manager.init_item('temp_path', get_test_jobs_directory())
+	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
 	clear_jobs(get_test_jobs_directory())

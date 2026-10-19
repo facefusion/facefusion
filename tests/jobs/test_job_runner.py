@@ -92,9 +92,9 @@ def test_run_job() -> None:
 	}
 	args_6 =\
 	{
-		'source_path': 'invalid',
-		'target_path': 'invalid',
-		'output_path': 'invalid'
+		'source_path': get_test_example_file('invalid'),
+		'target_path': get_test_example_file('invalid'),
+		'output_path': get_test_output_path('invalid')
 	}
 
 	assert run_job('job-invalid', process_step) is False
