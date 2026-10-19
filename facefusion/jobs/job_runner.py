@@ -15,7 +15,6 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 			return job_manager.move_job_file(job_id, 'completed')
 
 		clean_steps(job_id)
-
 		if job_id in job_manager.find_job_ids('queued'):
 			job_manager.move_job_file(job_id, 'failed')
 	return False
