@@ -165,7 +165,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	with patch('facefusion.thread_helper.ThreadPoolExecutor') as thread_pool_executor_mock:
 		with patch('facefusion.apis.stream_manager.receive_video_frames'):
-			with patch('facefusion.apis.stream_manager.run_video_encode_loop'):
+			with patch('facefusion.apis.stream_manager.send_video_frames'):
 				thread = threading.Thread(target = copy_context().run, args = (run_peer_loop, rtc_peer), daemon = True)
 				thread.start()
 				thread.join(timeout = 5.0)

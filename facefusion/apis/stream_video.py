@@ -1,6 +1,7 @@
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import suppress
 from functools import partial
-from queue import Queue
+from queue import Queue, ShutDown
 from typing import List, Optional, Tuple
 
 import cv2
@@ -14,13 +15,15 @@ from facefusion.types import AomDecoder, AomEncoder, BitRate, Buffer, BufferPack
 from facefusion.vision import is_vision_frame, obscure_frame, read_static_images
 
 
-def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
+def send_video_frames(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future[BufferPack]]]) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
-	video_time, video_future = video_queue.get()
 	video_pack = BufferPack(buffer = bytes(), resolution = (0, 0))
 
-	if not video_future.exception():
-		video_pack = video_future.result()
+	with suppress(ShutDown):
+		video_time, video_future = video_queue.get()
+
+		if not video_future.exception():
+			video_pack = video_future.result()
 
 	video_buffer = video_pack.get('buffer')
 	video_resolution = video_pack.get('resolution')
@@ -31,7 +34,7 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Fu
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		frame_index = 0
 
-		while video_buffer:
+		while not video_queue.is_shutdown:
 			sender_bitrate = rtc_peer.get('sender_bitrate').value
 
 			if video_resolution[0] - temp_resolution[0] or video_resolution[1] - temp_resolution[1]:
@@ -52,10 +55,11 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Fu
 			rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
 			frame_index += 1
 
-			video_time, video_future = video_queue.get()
+			with suppress(ShutDown):
+				video_time, video_future = video_queue.get()
 
-			if not video_future.exception():
-				video_pack = video_future.result()
+				if not video_future.exception():
+					video_pack = video_future.result()
 
 			video_buffer = video_pack.get('buffer')
 			video_resolution = video_pack.get('resolution')
@@ -70,26 +74,15 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_decoder = create_video_decoder(video_codec)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 
-	frame_counter : List[int] = [ 0 ]
-	idle_total = 0
-
-	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor, frame_counter)
+	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 
-	while rtc.is_open(video_track) and not receive_event.wait(timeout = 1):
-		if frame_counter[0]:
-			frame_counter[0] = 0
-			idle_total = 0
-		else:
-			idle_total += 1
-			if idle_total >= 15:
-				break
+	while rtc.is_open(video_track) and not receive_event.is_set():
+		receive_event.wait(timeout = 0.5)
 
 	destroy_receive_event(video_track)
 
-	empty_future : Future[BufferPack] = Future()
-	empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
-	video_queue.put((0.0, empty_future))
+	video_queue.shutdown()
 	destroy_video_decoder(video_codec, video_decoder)
 
 
@@ -192,8 +185,7 @@ def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEn
 	return False
 
 
-def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, frame_counter : List[int], video_buffer : Buffer, video_timestamp : Timestamp) -> None:
-	frame_counter[0] += 1
+def handle_video_frame(source_vision_frames : List[VisionFrame], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_queue : Queue[Tuple[Time, Future[BufferPack]]], video_executor : ThreadPoolExecutor, video_buffer : Buffer, video_timestamp : Timestamp) -> None:
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if is_vision_frame(vision_frame) and video_queue.qsize() < video_queue.maxsize:

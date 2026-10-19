@@ -11,7 +11,7 @@ import cv2
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager, video_manager
-from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, run_video_encode_loop, update_video_encoder_bitrate, update_video_encoder_resolution
+from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, send_video_frames, update_video_encoder_bitrate, update_video_encoder_resolution
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -54,7 +54,7 @@ def dispatch_frame(buffer : Buffer, track : int, frame_handler : FrameHandler) -
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96), ('vp9', 98) ])
-def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
+def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
@@ -78,25 +78,28 @@ def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> 
 		'receiver_bitrate': ctypes.c_uint(8000)
 	}
 
-	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 30)
+	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 1)
 
 	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
 		with ThreadPoolExecutor(max_workers = 1) as executor:
-			video_queue.put((0.1, executor.submit(process_video_frame, [], video_frame)))
+			video_future = executor.submit(process_video_frame, [], video_frame)
+			video_queue.put((0.5, video_future))
 
 			with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-				encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_queue), daemon = True)
-				encode_loop_thread.start()
-				empty_future : Future[BufferPack] = Future()
-				empty_future.set_result(BufferPack(buffer = bytes(), resolution = (0, 0)))
-				video_queue.put((0.0, empty_future))
-				encode_loop_thread.join(timeout = 5.0)
+				with patch('facefusion.apis.stream_video.destroy_video_encoder', wraps = destroy_video_encoder) as destroy_video_encoder_mock:
+					encode_loop_thread = threading.Thread(target = send_video_frames, args = (rtc_peer, video_queue), daemon = True)
+					encode_loop_thread.start()
+					video_queue.put((1.0, video_future))
+					video_queue.put((1.5, video_future))
+					video_queue.shutdown()
+					encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
+	assert destroy_video_encoder_mock.call_count == 1
 
 	if video_codec == 'av1':
 		if is_linux() or is_windows():
-			assert create_hash(send_video_mock.call_args[0][1]) == 'cc6a35cc'
+			assert create_hash(send_video_mock.call_args_list[0][0][1]) == 'cc6a35cc'
 
 		if is_macos():
 			pytest.skip()
@@ -133,6 +136,8 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 	if is_macos():
 		assert create_hash(video_buffer) == '38d00e2a'
+
+	assert video_queue.is_shutdown is True
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8', 'vp9' ])
@@ -270,7 +275,7 @@ def test_handle_video_frame(video_codec : VideoCodec) -> None:
 	with ThreadPoolExecutor(max_workers = 1) as executor:
 		with patch('facefusion.apis.stream_video.decode_video_frame', return_value = video_frame):
 			with patch('facefusion.apis.stream_video.process_video_frame', return_value = BufferPack(buffer = video_frame.tobytes(), resolution = (426, 226))):
-				handle_video_frame([], video_codec, video_decoder, video_queue, executor, [ 0 ], bytes(), 0)
+				handle_video_frame([], video_codec, video_decoder, video_queue, executor, bytes(), 0)
 				_, video_future = video_queue.get_nowait()
 
 	video_buffer = video_future.result().get('buffer')
