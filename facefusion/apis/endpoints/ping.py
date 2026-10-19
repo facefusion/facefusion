@@ -7,7 +7,7 @@ from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 async def websocket_ping(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_manager.has_websocket('ping'):
+	if not websocket_manager.has_connection('ping'):
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('ping', websocket)
 

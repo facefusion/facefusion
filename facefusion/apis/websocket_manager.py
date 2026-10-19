@@ -14,7 +14,7 @@ def init() -> None:
 	store_creator.init_content(WEBSOCKET_STORE, owner_id)
 
 
-def has_websocket(channel : WebsocketChannel) -> bool:
+def has_connection(channel : WebsocketChannel) -> bool:
 	owner_id = resolve_owner_id()
 	session_websocket_set : SessionWebsocketSet = store_creator.get_content(WEBSOCKET_STORE, owner_id)
 

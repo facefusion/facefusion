@@ -22,7 +22,7 @@ async def get_metrics(request : Request) -> Response:
 async def websocket_metrics(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_manager.has_websocket('metrics'):
+	if not websocket_manager.has_connection('metrics'):
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('metrics', websocket)
 
