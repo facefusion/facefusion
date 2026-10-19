@@ -18,7 +18,7 @@ def init() -> ctypes.c_void_p:
 
 def get_framework_version() -> ctypes.c_char_p:
 	amd_adlx_library = amd_adlx_module.create_static_library()
-	framework_version = ctypes.c_char_p()
+	framework_version = ctypes.c_char_p(bytes())
 
 	if amd_adlx_library:
 		amd_adlx_library.ADLXQueryVersion(ctypes.byref(framework_version))
@@ -47,7 +47,7 @@ def find_device_handles(session_handle : ctypes.c_void_p) -> List[ctypes.c_void_
 
 
 def get_driver_version(device_handle : ctypes.c_void_p) -> ctypes.c_char_p:
-	driver_version = ctypes.c_char_p()
+	driver_version = ctypes.c_char_p(bytes())
 	device_interface_handle = ctypes.c_void_p()
 	query_interface = amd_adlx_module.lookup_method(device_handle, 2, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_void_p ])
 
@@ -60,7 +60,7 @@ def get_driver_version(device_handle : ctypes.c_void_p) -> ctypes.c_char_p:
 
 
 def get_device_name(device_handle : ctypes.c_void_p) -> ctypes.c_char_p:
-	device_name = ctypes.c_char_p()
+	device_name = ctypes.c_char_p(bytes())
 	get_name = amd_adlx_module.lookup_method(device_handle, 7, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 	get_name(device_handle, ctypes.byref(device_name))
 
