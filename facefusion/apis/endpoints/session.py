@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_206_PARTIAL_CONTENT, HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT, HTTP_429_TOO_MANY_REQUESTS
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_manager, session_context, session_manager, state_manager, store_manager, translator, video_manager
-from facefusion.apis import asset_store, websocket_store
+from facefusion.apis import asset_store, websocket_manager
 from facefusion.apis.session_validator import validate_api_key
 from facefusion.filesystem import is_directory, remove_directory
 from facefusion.jobs import job_manager
@@ -32,7 +32,7 @@ async def create_session(request : Request) -> JSONResponse:
 			video_manager.init()
 			process_manager.init()
 			rtc_manager.init()
-			websocket_store.init()
+			websocket_manager.init()
 
 			store_manager.observe_api_session(session_id)
 

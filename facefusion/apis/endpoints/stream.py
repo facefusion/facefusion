@@ -4,7 +4,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, 
 from starlette.websockets import WebSocket, WebSocketState
 
 from facefusion import rtc_manager
-from facefusion.apis import websocket_store
+from facefusion.apis import websocket_manager
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
@@ -12,12 +12,12 @@ from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 async def websocket_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_store.has_websocket('stream'):
+	if not websocket_manager.has_websocket('stream'):
 		await websocket.accept(subprotocol = subprotocol)
-		websocket_store.set_websocket('stream', websocket)
+		websocket_manager.start_connection('stream', websocket)
 
 		await process_image(websocket)
-		websocket_store.delete_websocket('stream')
+		websocket_manager.end_connection('stream')
 
 		if websocket.client_state == WebSocketState.CONNECTED:
 			await websocket.close()

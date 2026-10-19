@@ -1,15 +1,15 @@
 from starlette.websockets import WebSocket
 
-from facefusion.apis import websocket_store
+from facefusion.apis import websocket_manager
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
 
 async def websocket_ping(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_store.has_websocket('ping'):
+	if not websocket_manager.has_websocket('ping'):
 		await websocket.accept(subprotocol = subprotocol)
-		websocket_store.set_websocket('ping', websocket)
+		websocket_manager.start_connection('ping', websocket)
 
 		try:
 			while True:
@@ -18,7 +18,7 @@ async def websocket_ping(websocket : WebSocket) -> None:
 		except Exception:
 			pass
 
-		websocket_store.delete_websocket('ping')
+		websocket_manager.end_connection('ping')
 
 	else:
 		await websocket.close()

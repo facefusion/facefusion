@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND
 from starlette.websockets import WebSocket
 
-from facefusion.apis import websocket_store
+from facefusion.apis import websocket_manager
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 from facefusion.system import get_metrics_set
 
@@ -22,9 +22,9 @@ async def get_metrics(request : Request) -> Response:
 async def websocket_metrics(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_store.has_websocket('metrics'):
+	if not websocket_manager.has_websocket('metrics'):
 		await websocket.accept(subprotocol = subprotocol)
-		websocket_store.set_websocket('metrics', websocket)
+		websocket_manager.start_connection('metrics', websocket)
 
 		try:
 			while True:
@@ -35,7 +35,7 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 		except Exception:
 			pass
 
-		websocket_store.delete_websocket('metrics')
+		websocket_manager.end_connection('metrics')
 
 	else:
 		await websocket.close()
