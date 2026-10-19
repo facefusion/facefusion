@@ -1,4 +1,4 @@
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketState
 
 from facefusion.apis import websocket_manager
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
@@ -11,12 +11,8 @@ async def websocket_ping(websocket : WebSocket) -> None:
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('ping', websocket)
 
-		try:
-			while True:
-				await websocket.receive()
-
-		except Exception:
-			pass
+		while websocket_manager.has_connection('ping') and websocket.client_state == WebSocketState.CONNECTED:
+			await websocket.receive()
 
 		websocket_manager.end_connection('ping')
 

@@ -25,16 +25,15 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 	if not websocket_manager.has_connection('metrics'):
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('metrics', websocket)
+		receive_task = asyncio.create_task(websocket.receive())
 
-		try:
-			while True:
-				metrics_set = get_metrics_set()
-				await websocket.send_json(metrics_set)
-				await asyncio.sleep(2)
+		while websocket_manager.has_connection('metrics') and not receive_task.done():
+			metrics_set = get_metrics_set()
 
-		except Exception:
-			pass
+			await websocket.send_json(metrics_set)
+			await asyncio.wait([ receive_task ], timeout = 2)
 
+		receive_task.cancel()
 		websocket_manager.end_connection('metrics')
 
 	else:
