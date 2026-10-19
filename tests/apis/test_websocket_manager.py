@@ -6,7 +6,7 @@ import pytest
 from starlette.websockets import WebSocketState
 
 from facefusion import store_creator
-from facefusion.apis.websocket_manager import WEBSOCKET_STORE, end_connection, destroy, has_connection, init, start_connection
+from facefusion.apis.websocket_manager import WEBSOCKET_STORE, destroy, end_connection, has_connection, init, start_connection
 from facefusion.session_context import resolve_local_id, set_session_id
 
 
