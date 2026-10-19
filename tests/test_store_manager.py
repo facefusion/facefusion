@@ -63,7 +63,7 @@ def test_is_busy() -> None:
 	with patch('facefusion.rtc_manager.has_peer', return_value = True):
 		assert is_busy() is True
 
-	with patch('facefusion.apis.websocket_manager.has_connection', return_value = True):
+	with patch('facefusion.apis.websocket_manager.has_websocket', return_value = True):
 		assert is_busy() is True
 
 	with patch('facefusion.apis.http_manager.has_request', return_value = True):

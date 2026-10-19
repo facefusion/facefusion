@@ -22,7 +22,7 @@ async def get_metrics(request : Request) -> Response:
 async def websocket_metrics(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_manager.has_connection('metrics'):
+	if not websocket_manager.has_websocket('metrics'):
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('metrics', websocket)
 
@@ -31,8 +31,11 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 				metrics_set = get_metrics_set()
 				await websocket.send_json(metrics_set)
 				await asyncio.sleep(2)
-		finally:
-			websocket_manager.end_connection('metrics')
+
+		except Exception:
+			pass
+
+		websocket_manager.end_connection('metrics')
 
 	else:
 		await websocket.close()

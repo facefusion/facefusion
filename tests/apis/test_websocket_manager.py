@@ -6,7 +6,7 @@ import pytest
 from starlette.websockets import WebSocketState
 
 from facefusion import store_creator
-from facefusion.apis.websocket_manager import WEBSOCKET_STORE, destroy, end_connection, has_connection, init, start_connection
+from facefusion.apis.websocket_manager import WEBSOCKET_STORE, end_connection, destroy, has_websocket, init, start_connection
 from facefusion.session_context import resolve_local_id, set_session_id
 
 
@@ -32,19 +32,19 @@ def test_init() -> None:
 
 
 @pytest.mark.asyncio
-async def test_has_connection() -> None:
+async def test_has_websocket() -> None:
 	websocket_mock = AsyncMock()
 
-	assert has_connection('stream') is False
+	assert has_websocket('stream') is False
 
 	start_connection('stream', websocket_mock)
 
-	assert has_connection('stream') is True
-	assert has_connection('metrics') is False
+	assert has_websocket('stream') is True
+	assert has_websocket('metrics') is False
 
 
 @pytest.mark.asyncio
-async def test_start_connection() -> None:
+async def test_set_websocket() -> None:
 	websocket_mock = AsyncMock()
 
 	start_connection('stream', websocket_mock)
@@ -53,7 +53,7 @@ async def test_start_connection() -> None:
 
 
 @pytest.mark.asyncio
-async def test_end_connection() -> None:
+async def test_delete_websocket() -> None:
 	websocket_mock = AsyncMock()
 
 	start_connection('stream', websocket_mock)

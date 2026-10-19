@@ -12,14 +12,12 @@ from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 async def websocket_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-	if not websocket_manager.has_connection('stream'):
+	if not websocket_manager.has_websocket('stream'):
 		await websocket.accept(subprotocol = subprotocol)
 		websocket_manager.start_connection('stream', websocket)
 
-		try:
-			await process_image(websocket)
-		finally:
-			websocket_manager.end_connection('stream')
+		await process_image(websocket)
+		websocket_manager.end_connection('stream')
 
 		if websocket.client_state == WebSocketState.CONNECTED:
 			await websocket.close()

@@ -24,15 +24,15 @@ async def create_session(request : Request) -> JSONResponse:
 			session_manager.set_api_session(session_id, session)
 			session_manager.observe_api_session(session_id)
 
+			state_manager.init()
 			asset_store.init()
+			http_manager.init()
 			content_store.init()
 			face_store.init()
-			http_manager.init()
 			inference_manager.init()
+			video_manager.init()
 			process_manager.init()
 			rtc_manager.init()
-			state_manager.init()
-			video_manager.init()
 			websocket_manager.init()
 
 			store_manager.observe_api_session(session_id)
