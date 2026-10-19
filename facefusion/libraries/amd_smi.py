@@ -1,7 +1,7 @@
 import ctypes
 import ctypes.util
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
 
 @lru_cache
@@ -39,30 +39,13 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.amdsmi_get_gpu_asic_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	library.amdsmi_get_gpu_asic_info.restype = ctypes.c_uint32
 
+	library.amdsmi_get_gpu_driver_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.amdsmi_get_gpu_driver_info.restype = ctypes.c_uint32
+
 	library.amdsmi_get_temp_metric.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_int64) ]
 	library.amdsmi_get_temp_metric.restype = ctypes.c_uint32
 
 	return library
-
-
-def find_device_handles(amd_smi_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
-	device_handles : List[ctypes.c_void_p] = []
-
-	socket_count = ctypes.c_uint32()
-	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), ctypes.POINTER(ctypes.c_void_p)())
-	socket_handles = (ctypes.c_void_p * socket_count.value)()
-	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), socket_handles)
-
-	for socket_index in range(socket_count.value):
-		device_count = ctypes.c_uint32()
-		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), ctypes.POINTER(ctypes.c_void_p)())
-		processor_handles = (ctypes.c_void_p * device_count.value)()
-		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), processor_handles)
-
-		for device_index in range(device_count.value):
-			device_handles.append(ctypes.c_void_p(processor_handles[device_index]))
-
-	return device_handles
 
 
 def define_product_info() -> ctypes.Structure:
@@ -88,14 +71,26 @@ def define_product_info() -> ctypes.Structure:
 	})()
 
 
+def define_driver_info() -> ctypes.Structure:
+	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('driver_version', ctypes.c_char * 256),
+			('driver_date', ctypes.c_char * 256),
+			('driver_name', ctypes.c_char * 256)
+		]
+	})()
+
+
 def define_device_memory() -> ctypes.Structure:
 	return type('AMDSMI_VRAM_USAGE', (ctypes.Structure,),
 	{
 		'_pack_': 1,
 		'_fields_':
 		[
-			('vram_total', ctypes.c_uint32),
-			('vram_used', ctypes.c_uint32),
+			('memory_total', ctypes.c_uint32),
+			('memory_used', ctypes.c_uint32),
 			('reserved', ctypes.c_uint32 * 2)
 		]
 	})()

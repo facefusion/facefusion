@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import state_manager
-from facefusion.common_helper import is_linux
+from facefusion.common_helper import is_linux, is_windows
 from facefusion.system import detect_disk_metrics, detect_graphic_devices, detect_memory_metrics, detect_network_metrics, detect_processor_metrics, get_metrics_set
 
 
@@ -24,21 +24,21 @@ def test_get_metrics_set() -> None:
 def test_detect_graphic_devices() -> None:
 	assert detect_graphic_devices([ 'cpu' ]) == []
 
-	with patch('facefusion.libraries.nvidia_ml.create_static_library'):
-		with patch('facefusion.libraries.nvidia_ml.find_device_handles', return_value = [ 0 ]):
-			nvidia_graphic_devices = detect_graphic_devices([ 'cuda' ])
-
-	assert nvidia_graphic_devices[0].get('framework').get('name') == 'CUDA'
-	assert nvidia_graphic_devices[0].get('product').get('vendor') == 'NVIDIA'
+	with patch('facefusion.system.detect_nvidia_ml', return_value = [ 'nvidia_ml' ]):
+		assert detect_graphic_devices([ 'cuda' ]) == [ 'nvidia_ml' ]
+		assert detect_graphic_devices([ 'tensorrt' ]) == [ 'nvidia_ml' ]
 
 	if is_linux():
-		with patch('facefusion.libraries.amd_smi.create_static_library'):
-			with patch('facefusion.libraries.rocm_core.create_static_library'):
-				with patch('facefusion.libraries.amd_smi.find_device_handles', return_value = [ 0 ]):
-					amd_graphic_devices = detect_graphic_devices([ 'migraphx' ])
+		with patch('facefusion.system.detect_amd_smi', return_value = [ 'amd_smi' ]):
+			assert detect_graphic_devices([ 'migraphx' ]) == [ 'amd_smi' ]
 
-		assert amd_graphic_devices[0].get('framework').get('name') == 'ROCm'
-		assert amd_graphic_devices[0].get('product').get('vendor') == 'AMD'
+	if is_windows():
+		with patch('facefusion.system.detect_amd_adlx', return_value = [ 'amd_adlx' ]):
+			assert detect_graphic_devices([ 'directml' ]) == [ 'amd_adlx' ]
+
+		with patch('facefusion.system.detect_amd_adlx', return_value = []):
+			with patch('facefusion.system.detect_nvidia_ml', return_value = [ 'nvidia_ml' ]):
+				assert detect_graphic_devices([ 'directml' ]) == [ 'nvidia_ml' ]
 
 
 def test_detect_disk_metrics() -> None:
