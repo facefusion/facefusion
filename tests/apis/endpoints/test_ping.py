@@ -38,7 +38,7 @@ def test_ping(test_client : TestClient) -> None:
 	[
 		'access_token.' + create_session_body.get('access_token')
 	]) as websocket:
-		assert bool(websocket) == True
+		assert bool(websocket) is True
 
 		websocket_store.destroy(session_manager.find_api_session_id(create_session_body.get('access_token')))
 

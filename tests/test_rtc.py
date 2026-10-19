@@ -22,7 +22,7 @@ def test_create_peer_connection() -> None:
 	peer_connection = create_peer_connection()
 	datachannel_library = datachannel_module.create_static_library()
 
-	assert bool(peer_connection) == True
+	assert bool(peer_connection) is True
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
