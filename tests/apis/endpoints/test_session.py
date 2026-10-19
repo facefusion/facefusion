@@ -235,6 +235,20 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 409
 
+	session_context.set_session_id(session_id)
+	process_manager.start()
+	delete_session_response = test_client.delete('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_session_response.json().get('message') == 'session not destroyed'
+	assert session_manager.find_api_session_id(access_token) == session_id
+	assert delete_session_response.status_code == 409
+
+	process_manager.end()
+	session_context.set_session_id(session_context.resolve_local_id())
+
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
