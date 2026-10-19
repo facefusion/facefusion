@@ -5,12 +5,12 @@ from types import ModuleType
 from typing import List
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_manager, session_manager, state_manager, video_manager
-from facefusion.apis import asset_store, websocket_manager
+from facefusion.apis import asset_store, http_manager, websocket_manager
 from facefusion.types import SessionId
 
 
 def get_stores() -> List[ModuleType]:
-	return [ state_manager, asset_store, content_store, face_store, inference_manager, process_manager, rtc_manager, video_manager, websocket_manager ]
+	return [ state_manager, asset_store, content_store, face_store, inference_manager, process_manager, rtc_manager, video_manager, http_manager, websocket_manager ]
 
 
 def observe_api_session(session_id : SessionId) -> None:
@@ -44,7 +44,7 @@ def conditional_cli_destroy(session_id : SessionId) -> None:
 def is_busy() -> bool:
 	owner_id = session_manager.resolve_owner_id()
 
-	return websocket_manager.has_connection('stream') or rtc_manager.has_peer() or session_manager.has_fork_session(owner_id)
+	return http_manager.has_request('upload') or websocket_manager.has_connection('stream') or rtc_manager.has_peer() or session_manager.has_fork_session(owner_id)
 
 
 def destroy(session_id : SessionId) -> None:
