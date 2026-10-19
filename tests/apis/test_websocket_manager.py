@@ -32,7 +32,7 @@ def test_init() -> None:
 
 
 @pytest.mark.asyncio
-async def test_has_websocket() -> None:
+async def test_has_connection() -> None:
 	websocket_mock = AsyncMock()
 
 	assert has_connection('stream') is False
