@@ -52,7 +52,7 @@ def get_driver_version(device_handle : ctypes.c_void_p) -> ctypes.c_char_p:
 	query_interface = amd_adlx_module.lookup_method(device_handle, 2, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_void_p ])
 
 	if query_interface(device_handle, 'IADLXGPU2', ctypes.byref(device_interface_handle)) == 0:
-		get_driver_version = amd_adlx_module.lookup_method(device_interface_handle, 39, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
+		get_driver_version = amd_adlx_module.lookup_method(device_interface_handle, 32, ctypes.c_int, [ ctypes.c_void_p, ctypes.c_void_p ])
 		get_driver_version(device_interface_handle, ctypes.byref(driver_version))
 		release(device_interface_handle)
 
