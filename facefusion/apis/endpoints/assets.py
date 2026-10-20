@@ -57,7 +57,8 @@ async def get_asset(request : Request) -> Response:
 			vision_frames = []
 
 			if validate_frame_index(frame_indexes) and validate_subject(subject) and validate_resolution(resolution):
-				http_manager.start_request('capture')
+				http_task = asyncio.current_task()
+				http_manager.start_request('capture', http_task)
 
 				if subject == 'frame':
 					vision_frames = await asyncio.to_thread(capture_asset_frames, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
@@ -65,7 +66,7 @@ async def get_asset(request : Request) -> Response:
 				if subject == 'face':
 					vision_frames = await asyncio.to_thread(capture_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
-				http_manager.end_request('capture')
+				http_manager.end_request('capture', http_task)
 
 			if is_vision_frames(vision_frames):
 				return create_multipart_response(vision_frames)
@@ -77,8 +78,10 @@ async def get_asset(request : Request) -> Response:
 			asset_path = asset.get('path')
 
 			if os.path.exists(asset_path):
-				http_manager.start_request('download')
-				return FileResponse(asset_path, filename = asset.get('name'), background = BackgroundTask(http_manager.end_request, 'download'))
+				http_task = asyncio.current_task()
+
+				http_manager.start_request('download', http_task)
+				return FileResponse(asset_path, filename = asset.get('name'), background = BackgroundTask(http_manager.end_request, 'download', http_task))
 
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 
@@ -108,7 +111,8 @@ async def upload_assets(request : Request) -> Response:
 	if asset_type in [ 'source', 'target' ]:
 		form = await request.form(max_fields = 0, max_files = 32)
 		upload_files = cast(List[UploadFile], form.getlist('file'))
-		http_manager.start_request('upload')
+		http_task = asyncio.current_task()
+		http_manager.start_request('upload', http_task)
 
 		if upload_files and validate_asset_type(upload_files) and await asyncio.to_thread(validate_asset_resolution, upload_files):
 			asset_paths = await save_asset_files(upload_files)
@@ -126,16 +130,16 @@ async def upload_assets(request : Request) -> Response:
 							asset_ids.append(asset_id)
 
 				if asset_ids:
-					http_manager.end_request('upload')
+					http_manager.end_request('upload', http_task)
 					return JSONResponse(
 					{
 						'asset_ids': asset_ids
 					}, status_code = HTTP_201_CREATED)
 
-			http_manager.end_request('upload')
+			http_manager.end_request('upload', http_task)
 			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-		http_manager.end_request('upload')
+		http_manager.end_request('upload', http_task)
 
 	return Response(status_code = HTTP_400_BAD_REQUEST)
 

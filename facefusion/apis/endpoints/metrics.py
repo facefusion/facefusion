@@ -34,7 +34,7 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 			await asyncio.wait([ receive_task ], timeout = 2)
 
 		receive_task.cancel()
-		websocket_manager.end_connection('metrics')
+		websocket_manager.end_connection('metrics', websocket)
 
 	else:
 		await websocket.close()

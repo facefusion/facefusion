@@ -1,6 +1,5 @@
 import asyncio
 from typing import Iterator
-from unittest.mock import patch
 
 import pytest
 
@@ -34,7 +33,7 @@ def test_init() -> None:
 async def test_has_request() -> None:
 	assert has_request('upload') is False
 
-	start_request('upload')
+	start_request('upload', asyncio.current_task())
 
 	assert has_request('upload') is True
 	assert has_request('invalid') is False
@@ -46,33 +45,42 @@ async def test_has_request() -> None:
 
 @pytest.mark.asyncio
 async def test_start_request() -> None:
-	start_request('upload')
-	session_http = store_creator.get_content(HTTP_STORE, resolve_local_id()).get('upload')
+	start_request('upload', asyncio.current_task())
+	session_http = store_creator.get_content(HTTP_STORE, resolve_local_id()).get('upload')[0]
 
 	assert session_http.get('task') == asyncio.current_task()
 	assert session_http.get('event_loop') == asyncio.get_running_loop()
 
 	set_session_id('session-a')
-	start_request('upload')
+	start_request('upload', asyncio.current_task())
 
 	assert store_creator.has_content(HTTP_STORE, 'session-a') is False
 
 
 @pytest.mark.asyncio
 async def test_end_request() -> None:
-	start_request('upload')
-	end_request('upload')
+	http_task_1 = asyncio.create_task(asyncio.sleep(0))
+	http_task_2 = asyncio.create_task(asyncio.sleep(0))
+	start_request('upload', http_task_1)
+	start_request('upload', http_task_2)
+	end_request('upload', http_task_1)
+
+	assert store_creator.get_content(HTTP_STORE, resolve_local_id()).get('upload')[0].get('task') == http_task_2
+
+	end_request('upload', http_task_2)
 
 	assert store_creator.get_content(HTTP_STORE, resolve_local_id()) == {}
 
-	end_request('upload')
+	end_request('upload', http_task_1)
 
 	assert store_creator.get_content(HTTP_STORE, resolve_local_id()) == {}
 
 	set_session_id('session-a')
-	end_request('upload')
+	end_request('upload', http_task_1)
 
 	assert store_creator.has_content(HTTP_STORE, 'session-a') is False
+
+	await asyncio.wait([ http_task_1, http_task_2 ])
 
 
 @pytest.mark.asyncio
@@ -81,9 +89,7 @@ async def test_destroy() -> None:
 	set_session_id('session-a')
 	init()
 
-	with patch('asyncio.current_task', return_value = http_task):
-		start_request('upload')
-
+	start_request('upload', http_task)
 	destroy('session-a')
 
 	with pytest.raises(asyncio.CancelledError):

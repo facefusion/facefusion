@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 from datetime import timedelta
@@ -236,7 +237,8 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert delete_session_response.status_code == 409
 
 	session_context.set_session_id(session_id)
-	test_client.portal.call(http_manager.start_request, 'upload')
+	http_task = test_client.portal.call(asyncio.current_task)
+	test_client.portal.call(http_manager.start_request, 'upload', http_task)
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
@@ -246,7 +248,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert session_manager.find_api_session_id(access_token) == session_id
 	assert delete_session_response.status_code == 409
 
-	http_manager.end_request('upload')
+	http_manager.end_request('upload', http_task)
 	session_context.set_session_id(session_context.resolve_local_id())
 
 	delete_session_response = test_client.delete('/session', headers =

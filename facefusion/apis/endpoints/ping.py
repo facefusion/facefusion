@@ -14,7 +14,7 @@ async def websocket_ping(websocket : WebSocket) -> None:
 		while websocket_manager.has_connection('ping') and websocket.client_state == WebSocketState.CONNECTED:
 			await websocket.receive()
 
-		websocket_manager.end_connection('ping')
+		websocket_manager.end_connection('ping', websocket)
 
 	else:
 		await websocket.close()

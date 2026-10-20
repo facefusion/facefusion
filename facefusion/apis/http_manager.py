@@ -1,8 +1,9 @@
 import asyncio
+from typing import List
 
 from facefusion import store_creator
 from facefusion.session_manager import resolve_owner_id
-from facefusion.types import HttpChannel, SessionHttpSet, SessionId, Store
+from facefusion.types import HttpChannel, HttpTask, SessionHttp, SessionHttpSet, SessionId, Store
 
 HTTP_STORE : Store = store_creator.create_store({})
 
@@ -22,23 +23,32 @@ def has_request(channel : HttpChannel) -> bool:
 	return False
 
 
-def start_request(channel : HttpChannel) -> None:
+def start_request(channel : HttpChannel, task : HttpTask) -> None:
 	owner_id = resolve_owner_id()
 
 	if store_creator.has_content(HTTP_STORE, owner_id):
-		store_creator.get_content(HTTP_STORE, owner_id)[channel] =\
+		store_creator.get_content(HTTP_STORE, owner_id).setdefault(channel, []).append(
 		{
-			'task': asyncio.current_task(),
+			'task': task,
 			'event_loop': asyncio.get_running_loop()
-		}
+		})
 
 
-def end_request(channel : HttpChannel) -> None:
+def end_request(channel : HttpChannel, task : HttpTask) -> None:
 	owner_id = resolve_owner_id()
 	session_http_set : SessionHttpSet = store_creator.get_content(HTTP_STORE, owner_id)
 
 	if session_http_set and channel in session_http_set:
+		sessions : List[SessionHttp] = []
+
+		for session_http in session_http_set.get(channel):
+			if not session_http.get('task') == task:
+				sessions.append(session_http)
+
 		del session_http_set[channel]
+
+		if sessions:
+			session_http_set[channel] = sessions
 
 
 def destroy(session_id : SessionId) -> None:
@@ -46,8 +56,9 @@ def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(HTTP_STORE, session_id)
 
 	if session_http_set:
-		for session_http in session_http_set.values():
-			task = session_http.get('task')
+		for sessions in session_http_set.values():
+			for session_http in sessions:
+				task = session_http.get('task')
 
-			if task._state == 'PENDING':
-				session_http.get('event_loop').call_soon_threadsafe(task.cancel)
+				if task._state == 'PENDING':
+					session_http.get('event_loop').call_soon_threadsafe(task.cancel)
