@@ -108,11 +108,10 @@ async def upload_assets(request : Request) -> Response:
 	if asset_type in [ 'source', 'target' ]:
 		form = await request.form(max_fields = 0, max_files = 32)
 		upload_files = cast(List[UploadFile], form.getlist('file'))
+		http_manager.start_request('upload')
 
 		if upload_files and validate_asset_type(upload_files) and await asyncio.to_thread(validate_asset_resolution, upload_files):
-			http_manager.start_request('upload')
 			asset_paths = await save_asset_files(upload_files)
-			http_manager.end_request('upload')
 
 			if asset_paths:
 				asset_ids : List[str] = []
@@ -127,12 +126,16 @@ async def upload_assets(request : Request) -> Response:
 							asset_ids.append(asset_id)
 
 				if asset_ids:
+					http_manager.end_request('upload')
 					return JSONResponse(
 					{
 						'asset_ids': asset_ids
 					}, status_code = HTTP_201_CREATED)
 
+			http_manager.end_request('upload')
 			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+		http_manager.end_request('upload')
 
 	return Response(status_code = HTTP_400_BAD_REQUEST)
 
