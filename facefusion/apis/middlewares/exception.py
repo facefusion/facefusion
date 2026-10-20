@@ -23,13 +23,13 @@ def create_exception_guard(app : ASGIApp) -> ASGIApp:
 
 				return await response(scope, receive, send)
 			except ClientDisconnect:
-				return
+				return None
 
 		if scope.get('type') == 'websocket':
 			try:
 				return await app(scope, receive, send)
 			except WebSocketDisconnect:
-				return
+				return None
 
 		return await app(scope, receive, send)
 
