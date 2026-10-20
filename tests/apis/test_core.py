@@ -10,7 +10,7 @@ from facefusion.apis.core import create_api
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
-	state_manager.init_item('api_origin', 'https://facefusion.io')
+	state_manager.init_item('api_origin', 'http://localhost:7000')
 
 
 @pytest.fixture(scope = 'module')
@@ -22,12 +22,12 @@ def test_client() -> Iterator[TestClient]:
 def test_create_api(test_client : TestClient) -> None:
 	session_response = test_client.options('/session', headers =
 	{
-		'Origin': 'https://facefusion.io',
+		'Origin': 'http://localhost:7000',
 		'Access-Control-Request-Method': 'GET',
 		'Access-Control-Request-Headers': 'Authorization'
 	})
 
-	assert session_response.headers.get('access-control-allow-origin') == 'https://facefusion.io'
+	assert session_response.headers.get('access-control-allow-origin') == 'http://localhost:7000'
 	assert session_response.status_code == 200
 
 	session_response = test_client.options('/session', headers =
