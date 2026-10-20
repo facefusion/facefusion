@@ -82,6 +82,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('benchmark_cycle_count', args.get('benchmark_cycle_count'))
 	apply_state_item('api_host', args.get('api_host'))
 	apply_state_item('api_port', args.get('api_port'))
+	apply_state_item('api_origin', args.get('api_origin'))
 	apply_state_item('api_security_strategy', args.get('api_security_strategy'))
 	apply_state_item('api_session_limit', args.get('api_session_limit'))
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))

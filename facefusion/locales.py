@@ -158,6 +158,7 @@ LOCALES : Locales =\
 			'benchmark_cycle_count': 'specify the amount of cycles per benchmark',
 			'api_host': 'specify the API host',
 			'api_port': 'specify the API port',
+			'api_origin': 'specify the API origin',
 			'api_security_strategy': 'specify the API security strategy used for sanitizing uploaded assets',
 			'api_session_limit': 'specify the maximum amount of concurrent sessions',
 			'execution_device_ids': 'specify the devices used for processing',
