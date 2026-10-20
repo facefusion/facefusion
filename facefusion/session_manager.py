@@ -134,8 +134,10 @@ def validate_cli_session(session_id : SessionId) -> bool:
 	cli_session = get_cli_session(session_id)
 
 	if cli_session:
+		local_id = resolve_local_id()
 		owner_id = cli_session.get('owner_id')
-		return owner_id == resolve_local_id() or validate_api_session(owner_id)
+
+		return owner_id == local_id or validate_api_session(owner_id)
 
 	return False
 
