@@ -75,6 +75,8 @@ def create_api() -> Starlette:
 	api.add_middleware(create_exception_guard)
 	api.add_middleware(create_security_guard)
 	api.add_middleware(RequestBodyLimitMiddleware, max_body_size = 512 * 1024 * 1024)
-	api.add_middleware(CORSMiddleware, allow_origins = [ api_origin ], allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ])
+
+	if api_origin:
+		api.add_middleware(CORSMiddleware, allow_origins = [ api_origin ], allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ])
 
 	return api

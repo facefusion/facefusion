@@ -955,7 +955,7 @@ def create_api_program() -> ArgumentParser:
 		'--api-origin',
 		help = translator.get('help.api_origin'),
 		type = str,
-		default = config.get_str_value('api', 'api_origin', '*')
+		default = config.get_str_value('api', 'api_origin')
 	)
 	group_api.add_argument(
 		'--api-security-strategy',
