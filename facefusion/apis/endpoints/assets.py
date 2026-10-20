@@ -2,6 +2,7 @@ import asyncio
 import os
 from typing import List, cast
 
+from starlette.background import BackgroundTask
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
@@ -56,12 +57,15 @@ async def get_asset(request : Request) -> Response:
 			vision_frames = []
 
 			if validate_frame_index(frame_indexes) and validate_subject(subject) and validate_resolution(resolution):
+				http_manager.start_request('capture')
 
 				if subject == 'frame':
 					vision_frames = await asyncio.to_thread(capture_asset_frames, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
 
 				if subject == 'face':
 					vision_frames = await asyncio.to_thread(capture_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes, resolution)
+
+				http_manager.end_request('capture')
 
 			if is_vision_frames(vision_frames):
 				return create_multipart_response(vision_frames)
@@ -73,7 +77,8 @@ async def get_asset(request : Request) -> Response:
 			asset_path = asset.get('path')
 
 			if os.path.exists(asset_path):
-				return FileResponse(asset_path, filename = asset.get('name'))
+				http_manager.start_request('download')
+				return FileResponse(asset_path, filename = asset.get('name'), background = BackgroundTask(http_manager.end_request, 'download'))
 
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 
