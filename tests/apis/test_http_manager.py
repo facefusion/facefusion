@@ -45,8 +45,9 @@ async def test_has_request() -> None:
 
 @pytest.mark.asyncio
 async def test_start_request() -> None:
+	local_id = resolve_local_id()
 	start_request('upload', asyncio.current_task())
-	session_http = store_creator.get_content(HTTP_STORE, resolve_local_id()).get('upload')[0]
+	session_http = store_creator.get_content(HTTP_STORE, local_id).get('upload')[0]
 
 	assert session_http.get('task') == asyncio.current_task()
 	assert session_http.get('event_loop') == asyncio.get_running_loop()
@@ -59,21 +60,22 @@ async def test_start_request() -> None:
 
 @pytest.mark.asyncio
 async def test_end_request() -> None:
+	local_id = resolve_local_id()
 	http_task_1 = asyncio.create_task(asyncio.sleep(0))
 	http_task_2 = asyncio.create_task(asyncio.sleep(0))
 	start_request('upload', http_task_1)
 	start_request('upload', http_task_2)
 	end_request('upload', http_task_1)
 
-	assert store_creator.get_content(HTTP_STORE, resolve_local_id()).get('upload')[0].get('task') == http_task_2
+	assert store_creator.get_content(HTTP_STORE, local_id).get('upload')[0].get('task') == http_task_2
 
 	end_request('upload', http_task_2)
 
-	assert store_creator.get_content(HTTP_STORE, resolve_local_id()) == {}
+	assert store_creator.get_content(HTTP_STORE, local_id) == {}
 
 	end_request('upload', http_task_1)
 
-	assert store_creator.get_content(HTTP_STORE, resolve_local_id()) == {}
+	assert store_creator.get_content(HTTP_STORE, local_id) == {}
 
 	set_session_id('session-a')
 	end_request('upload', http_task_1)

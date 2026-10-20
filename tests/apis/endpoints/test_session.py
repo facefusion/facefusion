@@ -211,6 +211,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 @pytest.mark.asyncio
 async def test_destroy_session(test_client : TestClient) -> None:
+	local_id = session_context.resolve_local_id()
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -250,7 +251,7 @@ async def test_destroy_session(test_client : TestClient) -> None:
 	assert delete_session_response.status_code == 409
 
 	http_manager.end_request('upload', http_task)
-	session_context.set_session_id(session_context.resolve_local_id())
+	session_context.set_session_id(local_id)
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
