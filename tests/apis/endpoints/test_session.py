@@ -209,7 +209,8 @@ def test_refresh_session(test_client : TestClient) -> None:
 	assert test_client.put('/session', content = 'invalid').status_code == 400
 
 
-def test_destroy_session(test_client : TestClient) -> None:
+@pytest.mark.asyncio
+async def test_destroy_session(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -237,8 +238,8 @@ def test_destroy_session(test_client : TestClient) -> None:
 	assert delete_session_response.status_code == 409
 
 	session_context.set_session_id(session_id)
-	http_task = test_client.portal.call(asyncio.current_task)
-	test_client.portal.call(http_manager.start_request, 'upload', http_task)
+	http_task = asyncio.current_task()
+	http_manager.start_request('upload', http_task)
 	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer ' + access_token
