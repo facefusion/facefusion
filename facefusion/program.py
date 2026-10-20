@@ -943,7 +943,7 @@ def create_api_program() -> ArgumentParser:
 		'--api-host',
 		help = translator.get('help.api_host'),
 		type = str,
-		default = config.get_str_value('api', 'api_host', '127.0.0.1')
+		default = config.get_str_value('api', 'api_host', 'localhost')
 	)
 	group_api.add_argument(
 		'--api-port',
