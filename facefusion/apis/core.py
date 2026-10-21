@@ -36,7 +36,7 @@ def pre_check() -> bool:
 
 
 def create_api() -> Starlette:
-	api_origin = state_manager.get_item('api_origin')
+	cors_origins = state_manager.get_item('cors_origins')
 	session_guard = Middleware(create_session_guard)
 	routes =\
 	[
@@ -76,7 +76,7 @@ def create_api() -> Starlette:
 	api.add_middleware(create_security_guard)
 	api.add_middleware(RequestBodyLimitMiddleware, max_body_size = 512 * 1024 * 1024)
 
-	if api_origin:
-		api.add_middleware(CORSMiddleware, allow_origins = [ api_origin ], allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ])
+	if cors_origins:
+		api.add_middleware(CORSMiddleware, allow_origins = cors_origins, allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ], expose_headers = [ 'Location' ])
 
 	return api

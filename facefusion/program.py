@@ -952,12 +952,6 @@ def create_api_program() -> ArgumentParser:
 		default = config.get_int_value('api', 'api_port', '8000')
 	)
 	group_api.add_argument(
-		'--api-origin',
-		help = translator.get('help.api_origin'),
-		type = str,
-		default = config.get_str_value('api', 'api_origin')
-	)
-	group_api.add_argument(
 		'--api-security-strategy',
 		help = translator.get('help.api_security_strategy'),
 		default = config.get_str_value('api', 'api_security_strategy', 'strict'),
@@ -970,6 +964,21 @@ def create_api_program() -> ArgumentParser:
 		default = config.get_int_value('api', 'api_session_limit', '1'),
 		choices = facefusion.choices.api_session_limit_range,
 		metavar = create_int_metavar(facefusion.choices.api_session_limit_range)
+	)
+
+	return program
+
+
+def create_cors_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_cors = program.add_argument_group('cors')
+
+	group_cors.add_argument(
+		'--cors-origins',
+		help = translator.get('help.cors_origins'),
+		type = str,
+		default = config.get_str_list('cors', 'cors_origins'),
+		nargs = '+'
 	)
 
 	return program
@@ -1230,6 +1239,7 @@ def create_program() -> ArgumentParser:
 			create_temp_path_program(),
 			create_jobs_path_program(),
 			create_api_program(),
+			create_cors_program(),
 			collect_step_program(),
 			collect_job_program()
 		],
