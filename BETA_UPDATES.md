@@ -2,7 +2,7 @@ Beta Updates
 ============
 
 
-Changes on the `v4` development branch since the `v4-beta` tag:
+Changes on the `v4` development branch up to `57c01ed6` since the `v4-beta` tag:
 
 - MP4, MOV and M4A uploads with the `moov` atom at the end are rejected with `415`
 - uploads whose content does not match their extension are rejected with `415`
@@ -24,3 +24,10 @@ Changes on the `v4` development branch since the `v4-beta` tag:
 - `/stream` ignores frames with a resolution above `4096` instead of decoding them
 - capturing asset frames and faces returns a `multipart/mixed` stream with one part per frame instead of a single concatenated image, which avoids building one large image
 - the API bounds the number of concurrent requests and the websocket message size and queue, which avoids an overload from too many requests at once
+- Python `3.13` is required, the beta started with `3.10`
+- a queued job can be canceled via `PATCH /jobs/{job_id}?action=cancel` and all queued jobs via `PATCH /jobs?action=cancel`, the job moves back to `drafted` and a running step stops its ffmpeg
+- a session lives `5` minutes instead of `10`
+- `DELETE /session` responds `409` while the session is busy with a stream, a running job, an upload or a capture
+- `DELETE /session` always closes the session, when its files cannot be removed it responds `206` instead of responding `404` and keeping the session open
+- reading video frames from several requests at once no longer starts duplicate ffmpeg processes
+- metrics report AMD graphic devices on Windows with `directml` via ADLX and fall back to NVIDIA, AMD devices via `migraphx` are only detected on Linux
