@@ -166,7 +166,7 @@ SessionWebsocket = TypedDict('SessionWebsocket',
 	'websocket' : Websocket,
 	'event_loop' : EventLoop
 })
-SessionWebsocketSet : TypeAlias = Dict[WebsocketChannel, SessionWebsocket]
+SessionWebsocketSet : TypeAlias = Dict[WebsocketChannel, List[SessionWebsocket]]
 
 HttpTask : TypeAlias = asyncio.Task[Any]
 HttpChannel : TypeAlias = str
@@ -175,7 +175,7 @@ SessionHttp = TypedDict('SessionHttp',
 	'task' : HttpTask,
 	'event_loop' : EventLoop
 })
-SessionHttpSet : TypeAlias = Dict[HttpChannel, SessionHttp]
+SessionHttpSet : TypeAlias = Dict[HttpChannel, List[SessionHttp]]
 
 ApiSession = TypedDict('ApiSession',
 {

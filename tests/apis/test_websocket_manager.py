@@ -45,21 +45,28 @@ async def test_has_connection() -> None:
 
 @pytest.mark.asyncio
 async def test_set_websocket() -> None:
+	local_id = resolve_local_id()
 	websocket_mock = AsyncMock()
 
 	start_connection('stream', websocket_mock)
 
-	assert store_creator.get_content(WEBSOCKET_STORE, resolve_local_id()).get('stream').get('websocket') is websocket_mock
+	assert store_creator.get_content(WEBSOCKET_STORE, local_id).get('stream')[0].get('websocket') is websocket_mock
 
 
 @pytest.mark.asyncio
 async def test_delete_websocket() -> None:
-	websocket_mock = AsyncMock()
+	local_id = resolve_local_id()
+	websocket_mock_1 = AsyncMock()
+	websocket_mock_2 = AsyncMock()
+	start_connection('stream', websocket_mock_1)
+	start_connection('stream', websocket_mock_2)
+	end_connection('stream', websocket_mock_1)
 
-	start_connection('stream', websocket_mock)
-	end_connection('stream')
+	assert store_creator.get_content(WEBSOCKET_STORE, local_id).get('stream')[0].get('websocket') is websocket_mock_2
 
-	assert store_creator.get_content(WEBSOCKET_STORE, resolve_local_id()) == {}
+	end_connection('stream', websocket_mock_2)
+
+	assert store_creator.get_content(WEBSOCKET_STORE, local_id) == {}
 
 
 @pytest.mark.asyncio

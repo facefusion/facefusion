@@ -23,6 +23,7 @@ def before_each() -> Iterator[None]:
 
 
 def test_init() -> None:
+	local_id = resolve_local_id()
 	init_item('video_memory_strategy', 'tolerant')
 	set_session_id('session-a')
 
@@ -33,7 +34,7 @@ def test_init() -> None:
 
 	assert get_state() == { 'video_memory_strategy': 'strict' }
 
-	set_session_id(resolve_local_id())
+	set_session_id(local_id)
 
 	assert get_state() == { 'video_memory_strategy': 'tolerant' }
 

@@ -44,7 +44,7 @@ def conditional_cli_destroy(session_id : SessionId) -> None:
 def is_busy() -> bool:
 	owner_id = session_manager.resolve_owner_id()
 
-	return http_manager.has_request('upload') or http_manager.has_request('capture') or websocket_manager.has_connection('stream') or rtc_manager.has_peer() or session_manager.has_fork_session(owner_id)
+	return http_manager.has_request('capture') or http_manager.has_request('upload') or http_manager.has_request('download') or websocket_manager.has_connection('stream') or rtc_manager.has_peer() or session_manager.has_fork_session(owner_id)
 
 
 def destroy(session_id : SessionId) -> None:
