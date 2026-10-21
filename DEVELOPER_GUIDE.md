@@ -77,7 +77,9 @@ Upload as multipart with one or more parts named `file`. The format is taken fro
 
 `strict` rebuilds every file from decoded data, nothing of the original container or bitstream survives, at the cost of time and a generation loss. `moderate` keeps the original bitstream, which is fast and lossless, but passes the encoded data through unchanged.
 
-MP4, MOV and M4A files are read as a stream and need their `moov` atom at the front, files that carry it at the end are rejected. Clients can fix this before uploading, either by remuxing with `-movflags +faststart` or by reordering the bytes themselves.
+MP4, MOV and M4A files are read as a stream and need their `moov` atom at the front. The `moov` atom holds the index of the file, many recorders and browsers write it at the end, which means the server cannot read the file until the last byte arrived. On the `v4` branch such files are rejected with `415`.
+
+**Frontends have to move the `moov` atom to the front before uploading, either by remuxing with `-movflags +faststart` or by reordering the bytes themselves.**
 
 | Media | Formats                                       |
 |-------|-----------------------------------------------|
@@ -120,7 +122,13 @@ The step body takes the options listed by `GET /capabilities`, the minimum is th
 Streaming
 ---------
 
-Select the `source` and configure the `processors` before streaming, one WebRTC stream per session.
+Select the `source` and configure the `processors` before streaming. Frames flagged by the content analyser are blurred.
+
+**Videos stream via WebRTC, images via WebSocket. Never send a video frame by frame over the WebSocket.**
+
+### Video
+
+A continuous video with optional audio, for example a webcam or a screen capture. One WebRTC stream per session.
 
 `POST /stream` takes a raw SDP offer as `application/sdp` and responds `201` with the answer. There is no trickle ICE and no STUN or TURN, gather all candidates before sending the offer and make sure the client reaches the server directly. Offer separate send and receive transceivers.
 
@@ -129,7 +137,11 @@ Select the `source` and configure the `processors` before streaming, one WebRTC 
 | video | `av1`, `vp9`, `vp8`           | yes      |
 | audio | `opus`                        | no       |
 
-The `/stream` WebSocket takes binary images and returns one binary JPEG per decodable image. Frames flagged by the content analyser are blurred.
+### Image
+
+A single image processed on demand, for example a photo or a preview. One WebSocket per session (`v4` branch).
+
+The `/stream` WebSocket takes binary images and returns one binary JPEG per decodable image.
 
 
 Misc
