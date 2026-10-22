@@ -4,7 +4,7 @@ from facefusion import logger, state_manager
 from facefusion.audio import create_empty_audio_frame
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import VisionFrame
-from facefusion.vision import extract_vision_mask
+from facefusion.vision import create_empty_vision_frame, extract_vision_mask
 
 
 def process_stream_frame(source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> VisionFrame:
@@ -20,6 +20,7 @@ def process_stream_frame(source_vision_frames : List[VisionFrame], target_vision
 			logger.enable()
 			temp_vision_frame, temp_vision_mask = processor_module.process_frame(
 			{
+				'reference_vision_frames': [ create_empty_vision_frame() ],
 				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
@@ -27,6 +28,7 @@ def process_stream_frame(source_vision_frames : List[VisionFrame], target_vision
 				'temp_vision_frame': temp_vision_frame,
 				'temp_vision_mask': temp_vision_mask
 			})
+
 		logger.enable()
 
 	return temp_vision_frame

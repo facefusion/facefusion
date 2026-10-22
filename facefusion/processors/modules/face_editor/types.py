@@ -4,7 +4,7 @@ from facefusion.types import Mask, VisionFrame
 
 FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
-	'reference_vision_frame' : VisionFrame,
+	'reference_vision_frames' : List[VisionFrame],
 	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frames' : List[VisionFrame],
 	'temp_vision_frame' : VisionFrame,

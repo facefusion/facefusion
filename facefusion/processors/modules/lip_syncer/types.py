@@ -6,7 +6,7 @@ from facefusion.types import AudioFrame, Mask, VisionFrame
 
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
-	'reference_vision_frame' : VisionFrame,
+	'reference_vision_frames' : List[VisionFrame],
 	'source_vision_frames' : List[VisionFrame],
 	'source_voice_frame' : AudioFrame,
 	'target_vision_frames' : List[VisionFrame],
