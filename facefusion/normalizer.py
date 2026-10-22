@@ -1,6 +1,6 @@
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
-from facefusion.types import Color, Fps, Space
+from facefusion.types import Color, Fps, Group, Space
 
 
 def normalize_color(channels : Any) -> Optional[Color]:
@@ -27,6 +27,12 @@ def normalize_space(spaces : Any) -> Optional[Space]:
 		if spaces and len(spaces) == 4:
 			return tuple(spaces)
 	return None
+
+
+def normalize_groups(groups : List[Group]) -> List[Group]:
+	if isinstance(groups, list) and groups:
+		return groups
+	return [ (0, 0, 0, 0) ]
 
 
 def normalize_range(total : int, start : Optional[int], end : Optional[int]) -> Tuple[int, int]:

@@ -135,12 +135,12 @@ Args : TypeAlias = Dict[str, Any]
 
 Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-Group : TypeAlias = str
+Category : TypeAlias = str
 
 Capability = TypedDict('Capability',
 {
 	'default' : Any,
-	'groups' : List[Group],
+	'categories' : List[Category],
 	'choices' : NotRequired[List[Choice]]
 })
 CapabilitySet : TypeAlias = Dict[str, Capability]
@@ -150,7 +150,7 @@ CapabilityStore = TypedDict('CapabilityStore',
 	'cli' : CapabilitySet,
 	'sys' : CapabilitySet
 })
-CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
+CapabilityCategory : TypeAlias = Dict[Category, CapabilitySet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 

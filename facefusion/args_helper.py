@@ -2,7 +2,7 @@ from typing import Union
 
 from facefusion.capability_store import get_api_arguments, get_cli_arguments, get_sys_arguments
 from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
-from facefusion.normalizer import normalize_fps, normalize_space
+from facefusion.normalizer import normalize_fps, normalize_groups, normalize_space
 from facefusion.processors.core import get_processors_modules
 from facefusion.processors.types import ProcessorState
 from facefusion.types import ApplyStateItem, Args, State
@@ -32,7 +32,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_selector_age_end', args.get('face_selector_age_end'))
 	apply_state_item('face_selector_gender', args.get('face_selector_gender'))
 	apply_state_item('face_selector_race', args.get('face_selector_race'))
-	apply_state_item('reference_face_groups', args.get('reference_face_groups'))
+	apply_state_item('reference_face_groups', normalize_groups(args.get('reference_face_groups')))
 	apply_state_item('reference_face_distance', args.get('reference_face_distance'))
 	apply_state_item('face_tracker_score', args.get('face_tracker_score'))
 	apply_state_item('face_occluder_model', args.get('face_occluder_model'))

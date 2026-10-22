@@ -1,7 +1,7 @@
 from argparse import Action
 from typing import List
 
-from facefusion.types import Capability, CapabilityGroup, CapabilitySet, CapabilityStore, Group, Scope
+from facefusion.types import Capability, CapabilityCategory, CapabilitySet, CapabilityStore, Category, Scope
 
 CAPABILITY_STORE : CapabilityStore =\
 {
@@ -11,14 +11,14 @@ CAPABILITY_STORE : CapabilityStore =\
 }
 
 
-def get_api_capability_group() -> CapabilityGroup:
-	capability_group : CapabilityGroup = {}
+def get_api_capability_category() -> CapabilityCategory:
+	capability_category : CapabilityCategory = {}
 
 	for name, value in CAPABILITY_STORE.get('api').items():
-		for group in value.get('groups'):
-			capability_group.setdefault(group, {})[name] = value
+		for category in value.get('categories'):
+			capability_category.setdefault(category, {})[name] = value
 
-	return capability_group
+	return capability_category
 
 
 def get_api_capability_set() -> CapabilitySet:
@@ -45,12 +45,12 @@ def get_sys_arguments() -> List[str]:
 	return list(get_sys_capability_set().keys())
 
 
-def register_capability_set(actions : List[Action], scopes : List[Scope], groups : List[Group]) -> None:
+def register_capability_set(actions : List[Action], scopes : List[Scope], categories : List[Category]) -> None:
 	for action in actions:
 		value : Capability =\
 		{
 			'default': action.default,
-			'groups': groups
+			'categories': categories
 		}
 
 		if action.choices:

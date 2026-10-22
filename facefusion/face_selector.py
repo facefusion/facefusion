@@ -37,12 +37,12 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	return []
 
 
-def pair_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame], source_face : Optional[Face]) -> Tuple[List[Face], List[Face]]:
+def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame], source_face : Optional[Face]) -> Tuple[List[Face], List[Face]]:
 	source_faces : List[Face] = []
 	target_faces : List[Face] = []
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		return pair_reference_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
+		return resolve_reference_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
 
 	if source_face:
 		for target_face in select_faces(reference_vision_frames, source_vision_frames, target_vision_frames):
@@ -52,7 +52,7 @@ def pair_faces(reference_vision_frames : List[VisionFrame], source_vision_frames
 	return source_faces, target_faces
 
 
-def pair_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
+def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
 	source_faces : List[Face] = []
 	target_faces : List[Face] = []
 	temp_source_faces = get_static_faces(source_vision_frames)
