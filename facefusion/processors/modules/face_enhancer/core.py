@@ -442,14 +442,14 @@ def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : Visi
 
 
 def process_frame(inputs : FaceEnhancerInputs) -> ProcessorOutputs:
-	reference_vision_frame = inputs.get('reference_vision_frame')
+	reference_vision_frames = inputs.get('reference_vision_frames')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frames = inputs.get('target_vision_frames')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
 	target_vision_frame = get_middle(target_vision_frames)
-	target_faces = select_faces(reference_vision_frame, source_vision_frames, target_vision_frames)
+	target_faces = select_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
 
 	if target_faces:
 		for target_face in target_faces:

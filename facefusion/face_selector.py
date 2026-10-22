@@ -10,7 +10,7 @@ from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
+def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
 
 	if state_manager.get_item('face_tracker_score') > 0:
@@ -27,7 +27,7 @@ def select_faces(reference_vision_frame : VisionFrame, source_vision_frames : Li
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = get_static_faces([ reference_vision_frame ])
+		reference_faces = get_static_faces(reference_vision_frames)
 		reference_faces = sort_and_filter_faces(source_faces, reference_faces)
 		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
 
