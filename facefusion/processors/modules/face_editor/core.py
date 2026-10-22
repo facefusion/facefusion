@@ -252,7 +252,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'face_editor' ]
+			categories = [ 'face_editor' ]
 		)
 
 

@@ -22,7 +22,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'execution' ])
+		categories = [ 'execution' ])
 
 
 def test_validate_argument_key() -> None:

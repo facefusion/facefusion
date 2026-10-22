@@ -126,7 +126,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'expression_restorer' ]
+			categories = [ 'expression_restorer' ]
 		)
 
 

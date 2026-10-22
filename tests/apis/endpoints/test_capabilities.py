@@ -19,7 +19,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'paths' ]
+		categories = [ 'paths' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -30,7 +30,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'paths' ]
+		categories = [ 'paths' ]
 	)
 
 

@@ -152,7 +152,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'lip_syncer' ]
+			categories = [ 'lip_syncer' ]
 		)
 
 

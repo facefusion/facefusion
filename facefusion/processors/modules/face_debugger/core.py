@@ -45,7 +45,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'face_debugger' ]
+			categories = [ 'face_debugger' ]
 		)
 
 

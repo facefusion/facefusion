@@ -320,7 +320,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'face_enhancer' ]
+			categories = [ 'face_enhancer' ]
 		)
 
 

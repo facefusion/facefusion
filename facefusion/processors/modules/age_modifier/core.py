@@ -143,7 +143,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'age_modifier' ]
+			categories = [ 'age_modifier' ]
 		)
 
 

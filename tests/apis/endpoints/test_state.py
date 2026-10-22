@@ -27,7 +27,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'paths' ]
+		categories = [ 'paths' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -36,7 +36,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'paths' ]
+		categories = [ 'paths' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -46,7 +46,7 @@ def before_all() -> None:
 			)
 		],
 		scopes = [ 'api' ],
-		groups = [ 'paths' ]
+		categories = [ 'paths' ]
 	)
 
 	state_manager.init_item('execution_providers', [ 'cpu' ])

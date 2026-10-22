@@ -599,7 +599,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			groups = [ 'frame_enhancer' ]
+			categories = [ 'frame_enhancer' ]
 		)
 
 
