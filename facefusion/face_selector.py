@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -12,11 +12,7 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, Visio
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
 	source_faces = get_static_faces(source_vision_frames)
-
-	if state_manager.get_item('face_tracker_score') > 0:
-		target_faces = track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
-	else:
-		target_faces = get_static_faces([ get_middle(target_vision_frames) ])
+	target_faces = detect_target_faces(target_vision_frames)
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		return sort_and_filter_faces(source_faces, target_faces)
@@ -27,15 +23,72 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = get_static_faces(reference_vision_frames)
-		reference_faces = sort_and_filter_faces(source_faces, reference_faces)
-		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+		reference_faces = []
 
-		if reference_face:
-			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
-			return match_faces
+		for reference_vision_frame, reference_face_group in zip(reference_vision_frames, state_manager.get_item('reference_face_groups')):
+			_, _, _, reference_face_position = reference_face_group
+			reference_face = select_reference_face(reference_vision_frame, source_faces, reference_face_position)
+
+			if reference_face:
+				reference_faces.append(reference_face)
+
+		return find_match_faces(reference_faces, target_faces, state_manager.get_item('reference_face_distance'))
 
 	return []
+
+
+def pair_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame], source_face : Optional[Face]) -> Tuple[List[Face], List[Face]]:
+	source_faces : List[Face] = []
+	target_faces : List[Face] = []
+
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		return pair_reference_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
+
+	if source_face:
+		for target_face in select_faces(reference_vision_frames, source_vision_frames, target_vision_frames):
+			source_faces.append(source_face)
+			target_faces.append(target_face)
+
+	return source_faces, target_faces
+
+
+def pair_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
+	source_faces : List[Face] = []
+	target_faces : List[Face] = []
+	temp_source_faces = get_static_faces(source_vision_frames)
+	temp_target_faces = detect_target_faces(target_vision_frames)
+
+	for reference_vision_frame, reference_face_group in zip(reference_vision_frames, state_manager.get_item('reference_face_groups')):
+		source_frame_index, source_face_position, _, reference_face_position = reference_face_group
+		source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
+		reference_face = select_reference_face(reference_vision_frame, temp_source_faces, reference_face_position)
+
+		if source_face and reference_face:
+			target_face = get_first(find_match_faces([ reference_face ], temp_target_faces, state_manager.get_item('reference_face_distance')))
+
+			if target_face:
+				source_faces.append(source_face)
+				target_faces.append(target_face)
+
+	return source_faces, target_faces
+
+
+def detect_target_faces(target_vision_frames : List[VisionFrame]) -> List[Face]:
+	if state_manager.get_item('face_tracker_score') > 0:
+		return track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
+	return get_static_faces([ get_middle(target_vision_frames) ])
+
+
+def select_source_face(source_vision_frame : VisionFrame, source_face_position : int) -> Optional[Face]:
+	source_faces = get_static_faces([ source_vision_frame ])
+	source_faces = sort_faces_by_order(source_faces, 'large-small')
+	return get_one_face(source_faces, source_face_position)
+
+
+def select_reference_face(reference_vision_frame : VisionFrame, source_faces : List[Face], reference_face_position : int) -> Optional[Face]:
+	reference_faces = get_static_faces([ reference_vision_frame ])
+	reference_faces = sort_and_filter_faces(source_faces, reference_faces)
+	return get_one_face(reference_faces, reference_face_position)
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:

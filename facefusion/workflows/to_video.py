@@ -13,8 +13,8 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import move_temp_file
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Fps, Resolution, VisionFrame
-from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, read_static_video_frame, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution
-from facefusion.workflows.core import conditional_get_target_vision_frames, is_process_stopping, process_temp_vision_frame
+from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution
+from facefusion.workflows.core import conditional_get_reference_vision_frames, conditional_get_target_vision_frames, is_process_stopping, process_temp_vision_frame
 
 
 def analyse_video() -> ErrorCode:
@@ -80,7 +80,7 @@ def process_memory_frames() -> ErrorCode:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_range)
 
-			read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index'))
+			conditional_get_reference_vision_frames()
 
 			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[VisionFrame]] = deque()

@@ -429,13 +429,16 @@ def create_face_selector_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--reference-face-position',
-				help = translator.get('help.reference_face_position'),
+				'--reference-face-group',
+				help = translator.get('help.reference_face_group'),
 				type = int,
-				default = config.get_int_value('face_selector', 'reference_face_position', '0')
+				nargs = 4,
+				action = 'append',
+				dest = 'reference_face_groups',
+				metavar = ('SOURCE_FRAME_INDEX', 'SOURCE_FACE_POSITION', 'TARGET_FRAME_INDEX', 'TARGET_FACE_POSITION')
 			)
 		],
-		scopes = [ 'api', 'cli' ],
+		scopes = [ 'cli' ],
 		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
@@ -447,18 +450,6 @@ def create_face_selector_program() -> ArgumentParser:
 				default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'),
 				choices = facefusion.choices.reference_face_distance_range,
 				metavar = create_float_metavar(facefusion.choices.reference_face_distance_range)
-			)
-		],
-		scopes = [ 'api', 'cli' ],
-		groups = [ 'face_selector' ]
-	)
-	capability_store.register_capability_set(
-		[
-			group_face_selector.add_argument(
-				'--reference-frame-index',
-				help = translator.get('help.reference_frame_index'),
-				type = int,
-				default = config.get_int_value('face_selector', 'reference_frame_index', '0')
 			)
 		],
 		scopes = [ 'api', 'cli' ],

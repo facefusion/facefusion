@@ -87,9 +87,19 @@ def conditional_get_source_voice_frame(frame_index : int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frames() -> List[VisionFrame]:
+	reference_face_groups = state_manager.get_item('reference_face_groups')
+	reference_vision_frames = []
+
+	for _, _, reference_frame_index, _ in reference_face_groups:
+		reference_vision_frames.append(conditional_get_reference_vision_frame(reference_frame_index))
+
+	return reference_vision_frames
+
+
+def conditional_get_reference_vision_frame(reference_frame_index : int) -> VisionFrame:
 	if state_manager.get_item('workflow_mode') in [ 'image-to-video', 'image-to-video:frames' ]:
-		return [ read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_index')) ]
-	return [ read_static_image(state_manager.get_item('target_path')) ]
+		return read_static_video_frame(state_manager.get_item('target_path'), reference_frame_index)
+	return read_static_image(state_manager.get_item('target_path'))
 
 
 def conditional_get_target_vision_frames(frame_index : int) -> List[VisionFrame]:
