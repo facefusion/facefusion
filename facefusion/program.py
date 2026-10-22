@@ -29,8 +29,8 @@ def create_config_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--config-path',
 				help = translator.get('help.config_path'),
-				default = 'facefusion.ini',
-				type = str
+				type = str,
+				default = 'facefusion.ini'
 			)
 		],
 		scopes = [ 'cli' ],
@@ -82,8 +82,8 @@ def create_temp_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--temp-path',
 				help = translator.get('help.temp_path'),
-				default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir()),
-				type = str
+				type = str,
+				default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir())
 			)
 		],
 		scopes = [ 'cli' ],
@@ -102,8 +102,8 @@ def create_jobs_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'--jobs-path',
 				help = translator.get('help.jobs_path'),
-				default = config.get_str_value('paths', 'jobs_path', '.jobs'),
-				type = str
+				type = str,
+				default = config.get_str_value('paths', 'jobs_path', '.jobs')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -122,9 +122,9 @@ def create_source_paths_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'-s', '--source-paths',
 				help = translator.get('help.source_paths'),
+				type = str,
 				default = config.get_str_list('paths', 'source_paths'),
-				nargs = '+',
-				type = str
+				nargs = '+'
 			)
 		],
 		scopes = [ 'cli' ],
@@ -143,8 +143,8 @@ def create_target_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'-t', '--target-path',
 				help = translator.get('help.target_path'),
-				default = config.get_str_value('paths', 'target_path'),
-				type = str
+				type = str,
+				default = config.get_str_value('paths', 'target_path')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -163,8 +163,8 @@ def create_output_path_program() -> ArgumentParser:
 			group_paths.add_argument(
 				'-o', '--output-path',
 				help = translator.get('help.output_path'),
-				default = config.get_str_value('paths', 'output_path'),
-				type = str
+				type = str,
+				default = config.get_str_value('paths', 'output_path')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -183,8 +183,8 @@ def create_source_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-s', '--source-pattern',
 				help = translator.get('help.source_pattern'),
-				default = config.get_str_value('patterns', 'source_pattern'),
-				type = str
+				type = str,
+				default = config.get_str_value('patterns', 'source_pattern')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -203,8 +203,8 @@ def create_target_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-t', '--target-pattern',
 				help = translator.get('help.target_pattern'),
-				default = config.get_str_value('patterns', 'target_pattern'),
-				type = str
+				type = str,
+				default = config.get_str_value('patterns', 'target_pattern')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -223,8 +223,8 @@ def create_output_pattern_program() -> ArgumentParser:
 			group_patterns.add_argument(
 				'-o', '--output-pattern',
 				help = translator.get('help.output_pattern'),
-				default = config.get_str_value('patterns', 'output_pattern'),
-				type = str
+				type = str,
+				default = config.get_str_value('patterns', 'output_pattern')
 			)
 		],
 		scopes = [ 'cli' ],
@@ -942,8 +942,8 @@ def create_api_program() -> ArgumentParser:
 	group_api.add_argument(
 		'--api-host',
 		help = translator.get('help.api_host'),
-		default = config.get_str_value('api', 'api_host', '127.0.0.1'),
-		type = str
+		type = str,
+		default = config.get_str_value('api', 'api_host', 'localhost')
 	)
 	group_api.add_argument(
 		'--api-port',
@@ -964,6 +964,21 @@ def create_api_program() -> ArgumentParser:
 		default = config.get_int_value('api', 'api_session_limit', '1'),
 		choices = facefusion.choices.api_session_limit_range,
 		metavar = create_int_metavar(facefusion.choices.api_session_limit_range)
+	)
+
+	return program
+
+
+def create_cors_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_cors = program.add_argument_group('cors')
+
+	group_cors.add_argument(
+		'--cors-origins',
+		help = translator.get('help.cors_origins'),
+		type = str,
+		default = config.get_str_list('cors', 'cors_origins'),
+		nargs = '+'
 	)
 
 	return program
@@ -1224,6 +1239,7 @@ def create_program() -> ArgumentParser:
 			create_temp_path_program(),
 			create_jobs_path_program(),
 			create_api_program(),
+			create_cors_program(),
 			collect_step_program(),
 			collect_job_program()
 		],

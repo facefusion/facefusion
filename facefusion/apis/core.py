@@ -7,7 +7,7 @@ from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
-from facefusion import content_analyser
+from facefusion import content_analyser, state_manager
 from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_asset, get_assets, upload_assets
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
@@ -36,6 +36,7 @@ def pre_check() -> bool:
 
 
 def create_api() -> Starlette:
+	cors_origins = state_manager.get_item('cors_origins')
 	session_guard = Middleware(create_session_guard)
 	routes =\
 	[
@@ -74,6 +75,8 @@ def create_api() -> Starlette:
 	api.add_middleware(create_exception_guard)
 	api.add_middleware(create_security_guard)
 	api.add_middleware(RequestBodyLimitMiddleware, max_body_size = 512 * 1024 * 1024)
-	api.add_middleware(CORSMiddleware, allow_origins = [ '*' ], allow_methods = [ '*' ], allow_headers = [ '*' ])
+
+	if cors_origins:
+		api.add_middleware(CORSMiddleware, allow_origins = cors_origins, allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ], expose_headers = [ 'Location' ])
 
 	return api

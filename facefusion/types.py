@@ -525,6 +525,8 @@ DownloadSet : TypeAlias = Dict[str, Download]
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
 
+CorsOrigin : TypeAlias = str
+
 InferencePool : TypeAlias = Dict[str, InferenceSession]
 
 StepIndex : TypeAlias = int
@@ -623,6 +625,7 @@ StateKey = Literal\
 	'api_key',
 	'api_security_strategy',
 	'api_session_limit',
+	'cors_origins',
 	'job_id',
 	'job_status',
 	'step_index'
@@ -699,6 +702,7 @@ State = TypedDict('State',
 	'api_key' : str,
 	'api_security_strategy' : ApiSecurityStrategy,
 	'api_session_limit' : int,
+	'cors_origins' : List[CorsOrigin],
 	'job_id' : JobId,
 	'job_status' : JobStatus,
 	'step_index' : StepIndex
