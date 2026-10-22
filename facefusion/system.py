@@ -4,7 +4,7 @@ from typing import List
 
 import psutil
 
-from facefusion import state_manager
+from facefusion import state_manager, thread_helper
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.devices import amd_adlx, amd_smi, nvidia_ml
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
@@ -25,24 +25,28 @@ def get_metrics_set() -> Metrics:
 
 def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
-		graphic_devices = detect_nvidia_ml()
+		with thread_helper.thread_lock():
+			graphic_devices = detect_nvidia_ml()
 
 		if graphic_devices:
 			return graphic_devices
 
 	if is_linux() and 'migraphx' in execution_providers:
-		graphic_devices = detect_amd_smi()
+		with thread_helper.thread_lock():
+			graphic_devices = detect_amd_smi()
 
 		if graphic_devices:
 			return graphic_devices
 
 	if is_windows() and 'directml' in execution_providers:
-		graphic_devices = detect_amd_adlx()
+		with thread_helper.thread_lock():
+			graphic_devices = detect_amd_adlx()
 
 		if graphic_devices:
 			return graphic_devices
 
-		graphic_devices = detect_nvidia_ml()
+		with thread_helper.thread_lock():
+			graphic_devices = detect_nvidia_ml()
 
 		if graphic_devices:
 			return graphic_devices
