@@ -2,7 +2,7 @@ Beta Updates
 ============
 
 
-Changes on the `v4` development branch up to `57c01ed6` since the `v4-beta` tag:
+Changes on the `v4` development branch up to `7d042f69` since the `v4-beta` tag:
 
 - MP4, MOV and M4A uploads with the `moov` atom at the end are rejected with `415`
 - uploads whose content does not match their extension are rejected with `415`
@@ -31,3 +31,9 @@ Changes on the `v4` development branch up to `57c01ed6` since the `v4-beta` tag:
 - `DELETE /session` always closes the session, when its files cannot be removed it responds `206` instead of responding `404` and keeping the session open
 - reading video frames from several requests at once no longer starts duplicate ffmpeg processes
 - metrics report AMD graphic devices on Windows with `directml` via ADLX and fall back to NVIDIA, AMD devices via `migraphx` are only detected on Linux
+- concurrent uploads, captures and downloads of a session are tracked one by one, the session stays busy until the last one finishes and closing it cancels all of them, before the first one to finish marked the session idle
+- `DELETE /session` responds `409` while the session is busy with a download as well
+- CUDA and TensorRT always use the `EXHAUSTIVE` cuDNN convolution search, GeForce GTX 16xx cards no longer fall back to `DEFAULT`
+- detecting graphic devices is serialized, so concurrent metrics no longer break the AMD and NVIDIA device detection
+- `--api-host` defaults to `localhost` instead of `127.0.0.1`
+- CORS is disabled by default, `--cors-origins` or `cors_origins` in the `[cors]` section of `facefusion.ini` allows the listed origins with the methods `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, the headers `Authorization`, `Content-Type` and exposes `Location`, the beta allows any origin, method and header
