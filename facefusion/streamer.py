@@ -2,8 +2,8 @@ from typing import List
 
 from facefusion import logger, state_manager
 from facefusion.audio import create_empty_audio_frame
-from facefusion.processors.core import get_processors_modules
 from facefusion.filesystem import is_image, is_video
+from facefusion.processors.core import get_processors_modules
 from facefusion.types import VisionFrame
 from facefusion.vision import extract_vision_mask, read_static_image, read_static_video_frame
 
