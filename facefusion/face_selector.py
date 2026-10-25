@@ -27,7 +27,7 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 
 		for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
 			_, _, _, reference_face_position = reference_face_map
-			reference_face = select_reference_face(reference_vision_frame, source_faces, reference_face_position)
+			reference_face = select_reference_face(reference_vision_frame, reference_face_position)
 
 			if reference_face:
 				reference_faces.append(reference_face)
@@ -57,35 +57,31 @@ def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_fra
 def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
 	source_faces : List[Face] = []
 	target_faces : List[Face] = []
-	reference_face_map_source_faces : List[Face] = []
-	reference_face_map_reference_faces : List[Face] = []
-	temp_source_faces = get_static_faces(source_vision_frames)
-	temp_target_faces = detect_target_faces(target_vision_frames)
-	reference_face_distance = state_manager.get_item('reference_face_distance')
 
-	for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
-		source_frame_index, source_face_position, _, reference_face_position = reference_face_map
-		source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
-		reference_face = select_reference_face(reference_vision_frame, temp_source_faces, reference_face_position)
-
-		if source_face and reference_face:
-			reference_face_map_source_faces.append(source_face)
-			reference_face_map_reference_faces.append(reference_face)
-
-	for target_face in temp_target_faces:
-		match_source_faces : List[Face] = []
-
-		for reference_face_map_source_face, reference_face_map_reference_face in zip(reference_face_map_source_faces, reference_face_map_reference_faces):
-			if compare_faces(target_face, reference_face_map_reference_face, reference_face_distance):
-				match_source_faces.append(reference_face_map_source_face)
-
-		source_face = get_first(match_source_faces)
+	for target_face in detect_target_faces(target_vision_frames):
+		source_face = match_source_face(reference_vision_frames, source_vision_frames, target_face)
 
 		if source_face:
 			source_faces.append(source_face)
 			target_faces.append(target_face)
 
 	return source_faces, target_faces
+
+
+def match_source_face(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_face : Face) -> Optional[Face]:
+	source_faces : List[Face] = []
+
+	for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
+		source_frame_index, source_face_position, _, reference_face_position = reference_face_map
+		reference_face = select_reference_face(reference_vision_frame, reference_face_position)
+
+		if reference_face and compare_faces(target_face, reference_face, state_manager.get_item('reference_face_distance')):
+			source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
+
+			if source_face:
+				source_faces.append(source_face)
+
+	return get_first(source_faces)
 
 
 def detect_target_faces(target_vision_frames : List[VisionFrame]) -> List[Face]:
@@ -114,9 +110,9 @@ def select_source_face(source_vision_frame : VisionFrame, source_face_position :
 	return get_one_face(source_faces, source_face_position)
 
 
-def select_reference_face(reference_vision_frame : VisionFrame, source_faces : List[Face], reference_face_position : int) -> Optional[Face]:
+def select_reference_face(reference_vision_frame : VisionFrame, reference_face_position : int) -> Optional[Face]:
 	reference_faces = get_static_faces([ reference_vision_frame ])
-	reference_faces = sort_and_filter_faces(source_faces, reference_faces)
+	reference_faces = sort_faces_by_order(reference_faces, 'large-small')
 	return get_one_face(reference_faces, reference_face_position)
 
 
