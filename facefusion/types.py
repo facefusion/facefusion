@@ -105,7 +105,7 @@ Time : TypeAlias = float
 Timestamp : TypeAlias = int
 Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
-Group : TypeAlias = Tuple[int, int, int, int]
+ReferenceMap : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
@@ -135,12 +135,12 @@ Args : TypeAlias = Dict[str, Any]
 
 Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-Category : TypeAlias = str
+Group : TypeAlias = str
 
 Capability = TypedDict('Capability',
 {
 	'default' : Any,
-	'categories' : List[Category],
+	'groups' : List[Group],
 	'choices' : NotRequired[List[Choice]]
 })
 CapabilitySet : TypeAlias = Dict[str, Capability]
@@ -150,7 +150,7 @@ CapabilityStore = TypedDict('CapabilityStore',
 	'cli' : CapabilitySet,
 	'sys' : CapabilitySet
 })
-CapabilityCategory : TypeAlias = Dict[Category, CapabilitySet]
+CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 
@@ -584,7 +584,7 @@ StateKey = Literal\
 	'face_selector_race',
 	'face_selector_age_start',
 	'face_selector_age_end',
-	'reference_face_groups',
+	'reference_face_maps',
 	'reference_face_distance',
 	'face_tracker_score',
 	'face_occluder_model',
@@ -660,7 +660,7 @@ State = TypedDict('State',
 	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
-	'reference_face_groups' : List[Group],
+	'reference_face_maps' : List[ReferenceMap],
 	'reference_face_distance' : float,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,

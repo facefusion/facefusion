@@ -212,7 +212,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			categories = [ 'frame_colorizer' ]
+			groups = [ 'frame_colorizer' ]
 		)
 
 

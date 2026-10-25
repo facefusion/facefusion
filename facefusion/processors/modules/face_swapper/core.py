@@ -567,7 +567,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			categories = [ 'face_swapper' ]
+			groups = [ 'face_swapper' ]
 		)
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
@@ -588,7 +588,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			categories = [ 'face_swapper' ]
+			groups = [ 'face_swapper' ]
 		)
 
 

@@ -20,14 +20,14 @@ def before_all() -> None:
 			program.add_argument('--workflow-strategy', default = 'memory')
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'workflow' ]
+		groups = [ 'workflow' ]
 	)
 	capability_store.register_capability_set(
 		[
 			program.add_argument('--video-memory-strategy', default = 'strict')
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'memory' ]
+		groups = [ 'memory' ]
 	)
 
 

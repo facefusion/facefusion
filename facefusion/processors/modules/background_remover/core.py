@@ -520,7 +520,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			categories = [ 'background_remover' ]
+			groups = [ 'background_remover' ]
 		)
 
 

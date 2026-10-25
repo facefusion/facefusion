@@ -34,7 +34,7 @@ def create_config_path_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	apply_config_path(program)
@@ -55,7 +55,7 @@ def create_workflow_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'workflow' ]
+		groups = [ 'workflow' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -67,7 +67,7 @@ def create_workflow_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'workflow' ]
+		groups = [ 'workflow' ]
 	)
 
 	return program
@@ -87,7 +87,7 @@ def create_temp_path_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	return program
@@ -107,7 +107,7 @@ def create_jobs_path_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	return program
@@ -128,7 +128,7 @@ def create_source_paths_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	return program
@@ -148,7 +148,7 @@ def create_target_path_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	return program
@@ -168,7 +168,7 @@ def create_output_path_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'paths' ]
+		groups = [ 'paths' ]
 	)
 
 	return program
@@ -188,7 +188,7 @@ def create_source_pattern_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'patterns' ]
+		groups = [ 'patterns' ]
 	)
 
 	return program
@@ -208,7 +208,7 @@ def create_target_pattern_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'patterns' ]
+		groups = [ 'patterns' ]
 	)
 
 	return program
@@ -228,7 +228,7 @@ def create_output_pattern_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'patterns' ]
+		groups = [ 'patterns' ]
 	)
 
 	return program
@@ -248,7 +248,7 @@ def create_face_detector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_detector' ]
+		groups = [ 'face_detector' ]
 	)
 
 	known_args, _ = program.parse_known_args()
@@ -264,7 +264,7 @@ def create_face_detector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_detector' ]
+		groups = [ 'face_detector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -277,7 +277,7 @@ def create_face_detector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_detector' ]
+		groups = [ 'face_detector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -292,7 +292,7 @@ def create_face_detector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_detector' ]
+		groups = [ 'face_detector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -306,7 +306,7 @@ def create_face_detector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_detector' ]
+		groups = [ 'face_detector' ]
 	)
 
 	return program
@@ -326,7 +326,7 @@ def create_face_aligner_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_aligner' ]
+		groups = [ 'face_aligner' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -340,7 +340,7 @@ def create_face_aligner_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_aligner' ]
+		groups = [ 'face_aligner' ]
 	)
 
 	return program
@@ -360,7 +360,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -372,7 +372,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -386,7 +386,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -400,7 +400,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -412,7 +412,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -424,22 +424,22 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--reference-face-group',
-				help = translator.get('help.reference_face_group'),
+				'--reference-face-map',
+				help = translator.get('help.reference_face_map'),
 				type = int,
 				nargs = 4,
 				action = 'append',
-				dest = 'reference_face_groups',
+				dest = 'reference_face_maps',
 				metavar = ('SOURCE_FRAME_INDEX', 'SOURCE_FACE_POSITION', 'TARGET_FRAME_INDEX', 'TARGET_FACE_POSITION')
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -453,7 +453,7 @@ def create_face_selector_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_selector' ]
+		groups = [ 'face_selector' ]
 	)
 
 	return program
@@ -475,7 +475,7 @@ def create_face_tracker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_tracker' ]
+		groups = [ 'face_tracker' ]
 	)
 
 	return program
@@ -495,7 +495,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -507,7 +507,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -521,7 +521,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -535,7 +535,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -549,7 +549,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -563,7 +563,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -576,7 +576,7 @@ def create_face_masker_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'face_masker' ]
+		groups = [ 'face_masker' ]
 	)
 
 	return program
@@ -596,7 +596,7 @@ def create_voice_extractor_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'voice_extractor' ]
+		groups = [ 'voice_extractor' ]
 	)
 
 	return program
@@ -616,7 +616,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'frame_extraction' ]
+		groups = [ 'frame_extraction' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -628,7 +628,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'frame_extraction' ]
+		groups = [ 'frame_extraction' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -640,7 +640,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'frame_extraction' ]
+		groups = [ 'frame_extraction' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -652,7 +652,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'frame_extraction' ]
+		groups = [ 'frame_extraction' ]
 	)
 
 	return program
@@ -674,7 +674,7 @@ def create_frame_distribution_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'frame_distribution' ]
+		groups = [ 'frame_distribution' ]
 	)
 
 	return program
@@ -697,7 +697,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -710,7 +710,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -722,7 +722,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -736,7 +736,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -750,7 +750,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -762,7 +762,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -774,7 +774,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -788,7 +788,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -801,7 +801,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -813,7 +813,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -825,7 +825,7 @@ def create_output_creation_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'output_creation' ]
+		groups = [ 'output_creation' ]
 	)
 
 	return program
@@ -847,7 +847,7 @@ def create_processors_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'api', 'cli' ],
-		categories = [ 'processors' ]
+		groups = [ 'processors' ]
 	)
 
 	for processor_module in get_processors_modules(available_processors):
@@ -872,7 +872,7 @@ def create_download_providers_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'download' ]
+		groups = [ 'download' ]
 	)
 
 	return program
@@ -892,7 +892,7 @@ def create_download_scope_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'download' ]
+		groups = [ 'download' ]
 	)
 
 	return program
@@ -992,7 +992,7 @@ def create_execution_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'execution' ]
+		groups = [ 'execution' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -1006,7 +1006,7 @@ def create_execution_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'execution' ]
+		groups = [ 'execution' ]
 	)
 	capability_store.register_capability_set(
 		[
@@ -1020,7 +1020,7 @@ def create_execution_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'execution' ]
+		groups = [ 'execution' ]
 	)
 
 	return program
@@ -1040,7 +1040,7 @@ def create_memory_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli', 'sys' ],
-		categories = [ 'memory' ]
+		groups = [ 'memory' ]
 	)
 
 	return program
@@ -1060,7 +1060,7 @@ def create_log_level_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'misc' ]
+		groups = [ 'misc' ]
 	)
 
 	return program
@@ -1080,7 +1080,7 @@ def create_halt_on_error_program() -> ArgumentParser:
 			)
 		],
 		scopes = [ 'cli' ],
-		categories = [ 'misc' ]
+		groups = [ 'misc' ]
 	)
 
 	return program

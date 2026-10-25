@@ -295,7 +295,7 @@ def register_args(program : ArgumentParser) -> None:
 				)
 			],
 			scopes = [ 'api', 'cli' ],
-			categories = [ 'deep_swapper' ]
+			groups = [ 'deep_swapper' ]
 		)
 
 

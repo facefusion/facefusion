@@ -87,10 +87,10 @@ def conditional_get_source_voice_frame(frame_index : int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frames() -> List[VisionFrame]:
-	reference_face_groups = state_manager.get_item('reference_face_groups')
+	reference_face_maps = state_manager.get_item('reference_face_maps')
 	reference_vision_frames = []
 
-	for _, _, reference_frame_index, _ in reference_face_groups:
+	for _, _, reference_frame_index, _ in reference_face_maps:
 		reference_vision_frames.append(conditional_get_reference_vision_frame(reference_frame_index))
 
 	return reference_vision_frames

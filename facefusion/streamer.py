@@ -40,10 +40,10 @@ def get_reference_vision_frames() -> List[VisionFrame]:
 	reference_vision_frames = []
 	target_path = state_manager.get_item('target_path')
 	face_selector_mode = state_manager.get_item('face_selector_mode')
-	reference_face_groups = state_manager.get_item('reference_face_groups')
+	reference_face_maps = state_manager.get_item('reference_face_maps')
 
 	if face_selector_mode == 'reference':
-		for _, _, reference_frame_index, _ in reference_face_groups:
+		for _, _, reference_frame_index, _ in reference_face_maps:
 			if is_video(target_path):
 				reference_vision_frames.append(read_static_video_frame(target_path, reference_frame_index))
 			if is_image(target_path):

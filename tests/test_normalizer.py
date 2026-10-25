@@ -1,4 +1,4 @@
-from facefusion.normalizer import normalize_color, normalize_fps, normalize_groups, normalize_range, normalize_space
+from facefusion.normalizer import normalize_color, normalize_fps, normalize_maps, normalize_range, normalize_space
 
 
 def test_normalize_color() -> None:
@@ -22,10 +22,10 @@ def test_normalize_space() -> None:
 	assert normalize_space('invalid') is None
 
 
-def test_normalize_groups() -> None:
-	assert normalize_groups([ (1, 0, 75, 3) ]) == [ (1, 0, 75, 3) ]
-	assert normalize_groups([]) == [ (0, 0, 0, 0) ]
-	assert normalize_groups(None) == [ (0, 0, 0, 0) ]
+def test_normalize_maps() -> None:
+	assert normalize_maps([ (1, 0, 75, 3) ]) == [ (1, 0, 75, 3) ]
+	assert normalize_maps([]) == [ (0, 0, 0, 0) ]
+	assert normalize_maps(None) == [ (0, 0, 0, 0) ]
 
 
 def test_normalize_range() -> None:

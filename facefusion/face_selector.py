@@ -25,8 +25,8 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		reference_faces = []
 
-		for reference_vision_frame, reference_face_group in zip(reference_vision_frames, state_manager.get_item('reference_face_groups')):
-			_, _, _, reference_face_position = reference_face_group
+		for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
+			_, _, _, reference_face_position = reference_face_map
 			reference_face = select_reference_face(reference_vision_frame, source_faces, reference_face_position)
 
 			if reference_face:
@@ -58,8 +58,8 @@ def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_
 	temp_source_faces = get_static_faces(source_vision_frames)
 	temp_target_faces = detect_target_faces(target_vision_frames)
 
-	for reference_vision_frame, reference_face_group in zip(reference_vision_frames, state_manager.get_item('reference_face_groups')):
-		source_frame_index, source_face_position, _, reference_face_position = reference_face_group
+	for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
+		source_frame_index, source_face_position, _, reference_face_position = reference_face_map
 		source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
 		reference_face = select_reference_face(reference_vision_frame, temp_source_faces, reference_face_position)
 
