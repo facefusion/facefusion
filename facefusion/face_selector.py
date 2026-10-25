@@ -57,8 +57,11 @@ def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_fra
 def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
 	source_faces : List[Face] = []
 	target_faces : List[Face] = []
+	reference_face_map_source_faces : List[Face] = []
+	reference_face_map_reference_faces : List[Face] = []
 	temp_source_faces = get_static_faces(source_vision_frames)
 	temp_target_faces = detect_target_faces(target_vision_frames)
+	reference_face_distance = state_manager.get_item('reference_face_distance')
 
 	for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
 		source_frame_index, source_face_position, _, reference_face_position = reference_face_map
@@ -66,11 +69,21 @@ def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_
 		reference_face = select_reference_face(reference_vision_frame, temp_source_faces, reference_face_position)
 
 		if source_face and reference_face:
-			target_face = get_first(find_match_faces([ reference_face ], temp_target_faces, state_manager.get_item('reference_face_distance')))
+			reference_face_map_source_faces.append(source_face)
+			reference_face_map_reference_faces.append(reference_face)
 
-			if target_face:
-				source_faces.append(source_face)
-				target_faces.append(target_face)
+	for target_face in temp_target_faces:
+		match_source_faces : List[Face] = []
+
+		for reference_face_map_source_face, reference_face_map_reference_face in zip(reference_face_map_source_faces, reference_face_map_reference_faces):
+			if compare_faces(target_face, reference_face_map_reference_face, reference_face_distance):
+				match_source_faces.append(reference_face_map_source_face)
+
+		source_face = get_first(match_source_faces)
+
+		if source_face:
+			source_faces.append(source_face)
+			target_faces.append(target_face)
 
 	return source_faces, target_faces
 
