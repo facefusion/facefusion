@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from functools import lru_cache
 from types import ModuleType
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -13,10 +13,10 @@ from facefusion import config, content_analyser, face_aligner, face_classifier, 
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
+from facefusion.face_creator import get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import resolve_faces, sort_faces_by_order
+from facefusion.face_selector import resolve_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
@@ -817,20 +817,6 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
-	source_faces = []
-
-	if source_vision_frames:
-		for source_vision_frame in source_vision_frames:
-			temp_faces = get_static_faces([ source_vision_frame ])
-			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-
-			if temp_faces:
-				source_faces.append(get_first(temp_faces))
-
-	return average_face_identity(source_faces)
-
-
 def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frames = inputs.get('reference_vision_frames')
 	source_vision_frames = inputs.get('source_vision_frames')
@@ -840,8 +826,7 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 
 	target_vision_frame = get_middle(target_vision_frames)
 	source_vision_frame = get_first(source_vision_frames)
-	source_face = extract_source_face(source_vision_frames)
-	source_faces, target_faces = resolve_faces(reference_vision_frames, source_vision_frames, target_vision_frames, source_face)
+	source_faces, target_faces = resolve_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
 
 	for source_face, target_face in zip(source_faces, target_faces):
 		target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)

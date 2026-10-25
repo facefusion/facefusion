@@ -5,7 +5,7 @@ import numpy
 import facefusion.choices
 from facefusion import state_manager
 from facefusion.common_helper import get_first, get_middle
-from facefusion.face_creator import get_one_face, get_static_faces
+from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
@@ -37,12 +37,14 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	return []
 
 
-def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame], source_face : Optional[Face]) -> Tuple[List[Face], List[Face]]:
+def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
 	source_faces : List[Face] = []
 	target_faces : List[Face] = []
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		return resolve_reference_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
+
+	source_face = extract_source_face(source_vision_frames)
 
 	if source_face:
 		for target_face in select_faces(reference_vision_frames, source_vision_frames, target_vision_frames):
@@ -77,6 +79,20 @@ def detect_target_faces(target_vision_frames : List[VisionFrame]) -> List[Face]:
 	if state_manager.get_item('face_tracker_score') > 0:
 		return track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
 	return get_static_faces([ get_middle(target_vision_frames) ])
+
+
+def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
+	source_faces = []
+
+	if source_vision_frames:
+		for source_vision_frame in source_vision_frames:
+			temp_faces = get_static_faces([ source_vision_frame ])
+			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+
+			if temp_faces:
+				source_faces.append(get_first(temp_faces))
+
+	return average_face_identity(source_faces)
 
 
 def select_source_face(source_vision_frame : VisionFrame, source_face_position : int) -> Optional[Face]:
