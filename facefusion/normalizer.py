@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Tuple
 
-from facefusion.types import Color, Fps, ReferenceMap, Space
+from facefusion.types import Color, Fps, ReferenceFaceMap, Space
 
 
 def normalize_color(channels : Any) -> Optional[Color]:
@@ -29,7 +29,7 @@ def normalize_space(spaces : Any) -> Optional[Space]:
 	return None
 
 
-def normalize_maps(reference_face_maps : List[ReferenceMap]) -> List[ReferenceMap]:
+def normalize_maps(reference_face_maps : List[ReferenceFaceMap]) -> List[ReferenceFaceMap]:
 	if isinstance(reference_face_maps, list) and reference_face_maps:
 		return reference_face_maps
 	return [ (0, 0, 0, 0) ]

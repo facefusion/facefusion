@@ -106,12 +106,12 @@ def create_faces() -> List[Face]:
 
 
 def test_find_match_faces() -> None:
-	faces = face_a, face_b, face_c, face_d = create_faces()
+	face_a, face_b, face_c, face_d = create_faces()
 
-	assert find_match_faces([ face_a ], faces, 0.3) == [ face_a, face_d ]
-	assert find_match_faces([ face_a ], faces, 0.6) == [ face_a, face_b, face_d ]
-	assert find_match_faces([ face_a, face_b ], [ face_a, face_b, face_c ], 0.1) == [ face_a, face_b ]
-	assert find_match_faces([ face_a ], [], 0.3) == []
+	assert find_match_faces([ face_b ], [ face_a, face_d ], 0.3) == [ face_d ]
+	assert find_match_faces([ face_a ], [ face_d, face_a ], 0.3) == [ face_a ]
+	assert find_match_faces([ face_a ], [ face_a, face_d ], 0.3) == [ face_a ]
+	assert find_match_faces([ face_a ], [ face_b ], 0.3) == []
 
 
 def test_compare_faces() -> None:

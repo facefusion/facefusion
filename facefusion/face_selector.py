@@ -7,7 +7,7 @@ from facefusion import state_manager
 from facefusion.common_helper import get_first, get_middle
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
-from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
+from facefusion.types import Face, FaceSelectorOrder, Gender, Race, ReferenceFaceSet, Score, VisionFrame
 
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> List[Face]:
@@ -23,16 +23,13 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = []
+		match_faces : List[Face] = []
 
-		for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
-			_, _, _, reference_face_position = reference_face_map
-			reference_face = select_reference_face(reference_vision_frame, reference_face_position)
+		if target_faces:
+			for reference_faces in create_reference_face_set(reference_vision_frames).values():
+				match_faces.extend(find_match_faces(reference_faces, target_faces, state_manager.get_item('reference_face_distance')))
 
-			if reference_face:
-				reference_faces.append(reference_face)
-
-		return find_match_faces(reference_faces, target_faces, state_manager.get_item('reference_face_distance'))
+		return match_faces
 
 	return []
 
@@ -42,46 +39,39 @@ def resolve_faces(reference_vision_frames : List[VisionFrame], source_vision_fra
 	target_faces : List[Face] = []
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		return resolve_reference_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
+		temp_target_faces = detect_target_faces(target_vision_frames)
 
-	source_face = extract_source_face(source_vision_frames)
+		if temp_target_faces:
+			for (source_frame_index, source_face_position), reference_faces in create_reference_face_set(reference_vision_frames).items():
+				source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
+				target_face = get_first(find_match_faces(reference_faces, temp_target_faces, state_manager.get_item('reference_face_distance')))
 
-	if source_face:
-		for target_face in select_faces(reference_vision_frames, source_vision_frames, target_vision_frames):
-			source_faces.append(source_face)
-			target_faces.append(target_face)
+				if source_face and target_face:
+					source_faces.append(source_face)
+					target_faces.append(target_face)
 
-	return source_faces, target_faces
-
-
-def resolve_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
-	source_faces : List[Face] = []
-	target_faces : List[Face] = []
-
-	for target_face in detect_target_faces(target_vision_frames):
-		source_face = match_source_face(reference_vision_frames, source_vision_frames, target_face)
+	if state_manager.get_item('face_selector_mode') in [ 'many', 'one' ]:
+		source_face = extract_source_face(source_vision_frames)
 
 		if source_face:
-			source_faces.append(source_face)
-			target_faces.append(target_face)
+			for target_face in select_faces(reference_vision_frames, source_vision_frames, target_vision_frames):
+				source_faces.append(source_face)
+				target_faces.append(target_face)
 
 	return source_faces, target_faces
 
 
-def match_source_face(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_face : Face) -> Optional[Face]:
-	source_faces : List[Face] = []
+def create_reference_face_set(reference_vision_frames : List[VisionFrame]) -> ReferenceFaceSet:
+	reference_face_set : ReferenceFaceSet = {}
 
 	for reference_vision_frame, reference_face_map in zip(reference_vision_frames, state_manager.get_item('reference_face_maps')):
 		source_frame_index, source_face_position, _, reference_face_position = reference_face_map
 		reference_face = select_reference_face(reference_vision_frame, reference_face_position)
 
-		if reference_face and compare_faces(target_face, reference_face, state_manager.get_item('reference_face_distance')):
-			source_face = select_source_face(source_vision_frames[source_frame_index], source_face_position)
+		if reference_face:
+			reference_face_set.setdefault((source_frame_index, source_face_position), []).append(reference_face)
 
-			if source_face:
-				source_faces.append(source_face)
-
-	return get_first(source_faces)
+	return reference_face_set
 
 
 def detect_target_faces(target_vision_frames : List[VisionFrame]) -> List[Face]:
@@ -118,12 +108,15 @@ def select_reference_face(reference_vision_frame : VisionFrame, reference_face_p
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
 	match_faces : List[Face] = []
+	match_face_distance = face_distance
 
-	for reference_face in reference_faces:
-		if reference_face:
-			for index, target_face in enumerate(target_faces):
-				if compare_faces(target_face, reference_face, face_distance):
-					match_faces.append(target_faces[index])
+	for target_face in target_faces:
+		for reference_face in reference_faces:
+			current_face_distance = float(numpy.interp(calculate_face_distance(target_face, reference_face), [ 0, 2 ], [ 0, 1 ]))
+
+			if current_face_distance < match_face_distance:
+				match_faces = [ target_face ]
+				match_face_distance = current_face_distance
 
 	return match_faces
 
