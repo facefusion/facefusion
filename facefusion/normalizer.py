@@ -1,9 +1,9 @@
 from typing import Any, List, Optional, Tuple
 
-from facefusion.types import Fps, Map
+from facefusion.types import Fps, Map, Color, Space
 
 
-def normalize_color(color : Any) -> Optional[Tuple[int, int, int, int]]:
+def normalize_color(color : Any) -> Optional[Color]:
 	if isinstance(color, (list, tuple)):
 		if color and len(color) == 1:
 			return tuple([color[0], color[0], color[0], 255])
@@ -16,7 +16,7 @@ def normalize_color(color : Any) -> Optional[Tuple[int, int, int, int]]:
 	return None
 
 
-def normalize_space(space : Any) -> Optional[Tuple[int, int, int, int]]:
+def normalize_space(space : Any) -> Optional[Space]:
 	if isinstance(space, (list, tuple)):
 		if space and len(space) == 1:
 			return tuple([space[0]] * 4)
