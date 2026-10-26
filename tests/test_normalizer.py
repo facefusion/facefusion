@@ -24,8 +24,9 @@ def test_normalize_space() -> None:
 
 def test_normalize_maps() -> None:
 	assert normalize_maps([ (1, 0, 75, 3) ]) == [ (1, 0, 75, 3) ]
-	assert normalize_maps([]) == [ (0, 0, 0, 0) ]
-	assert normalize_maps(None) == [ (0, 0, 0, 0) ]
+	assert normalize_maps([ [ 0, 0, 100, 0 ], [ 1, 0, 75 ] ]) == [ (0, 0, 100, 0) ]
+	assert normalize_maps([]) is None
+	assert normalize_maps(None) is None
 
 
 def test_normalize_range() -> None:

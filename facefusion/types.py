@@ -105,10 +105,10 @@ Time : TypeAlias = float
 Timestamp : TypeAlias = int
 Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
-ReferenceFaceMap : TypeAlias = Tuple[int, int, int, int]
+Map : TypeAlias = Tuple[int, int, int, int]
+Resolution : TypeAlias = Tuple[int, int]
 ReferenceFaceSet : TypeAlias = Dict[Tuple[int, int], List[Face]]
 Orientation = Literal['landscape', 'portrait']
-Resolution : TypeAlias = Tuple[int, int]
 
 AudioCodec : TypeAlias = Literal['opus']
 VideoCodec : TypeAlias = Literal['av1', 'vp8', 'vp9']
@@ -661,7 +661,7 @@ State = TypedDict('State',
 	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
-	'reference_face_maps' : List[ReferenceFaceMap],
+	'reference_face_maps' : List[Map],
 	'reference_face_distance' : float,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,

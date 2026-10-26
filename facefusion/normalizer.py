@@ -1,38 +1,46 @@
 from typing import Any, List, Optional, Tuple
 
-from facefusion.types import Color, Fps, ReferenceFaceMap, Space
+from facefusion.types import Fps, Map
 
 
-def normalize_color(channels : Any) -> Optional[Color]:
-	if isinstance(channels, (list, tuple)):
-		if channels and len(channels) == 1:
-			return tuple([ channels[0], channels[0], channels[0], 255 ])
-		if channels and len(channels) == 2:
-			return tuple([ channels[0], channels[1], channels[0], 255 ])
-		if channels and len(channels) == 3:
-			return tuple([ channels[0], channels[1], channels[2], 255 ])
-		if channels and len(channels) == 4:
-			return tuple(channels)
+def normalize_color(color : Any) -> Optional[Tuple[int, int, int, int]]:
+	if isinstance(color, (list, tuple)):
+		if color and len(color) == 1:
+			return tuple([color[0], color[0], color[0], 255])
+		if color and len(color) == 2:
+			return tuple([color[0], color[1], color[0], 255])
+		if color and len(color) == 3:
+			return tuple([color[0], color[1], color[2], 255])
+		if color and len(color) == 4:
+			return tuple(color)
 	return None
 
 
-def normalize_space(spaces : Any) -> Optional[Space]:
-	if isinstance(spaces, (list, tuple)):
-		if spaces and len(spaces) == 1:
-			return tuple([spaces[0]] * 4)
-		if spaces and len(spaces) == 2:
-			return tuple([ spaces[0], spaces[1], spaces[0], spaces[1] ])
-		if spaces and len(spaces) == 3:
-			return tuple([ spaces[0], spaces[1], spaces[2], spaces[1] ])
-		if spaces and len(spaces) == 4:
-			return tuple(spaces)
+def normalize_space(space : Any) -> Optional[Tuple[int, int, int, int]]:
+	if isinstance(space, (list, tuple)):
+		if space and len(space) == 1:
+			return tuple([space[0]] * 4)
+		if space and len(space) == 2:
+			return tuple([space[0], space[1], space[0], space[1]])
+		if space and len(space) == 3:
+			return tuple([space[0], space[1], space[2], space[1]])
+		if space and len(space) == 4:
+			return tuple(space)
 	return None
 
 
-def normalize_maps(reference_face_maps : List[ReferenceFaceMap]) -> List[ReferenceFaceMap]:
-	if isinstance(reference_face_maps, list) and reference_face_maps:
-		return reference_face_maps
-	return [ (0, 0, 0, 0) ]
+def normalize_maps(maps : Any) -> Optional[List[Map]]:
+	temp_maps = []
+
+	if isinstance(maps, list):
+		for __map__ in maps:
+			if isinstance(__map__, (list, tuple)) and len(__map__) == 4:
+				temp_maps.append(tuple(__map__))
+
+	if temp_maps:
+		return temp_maps
+
+	return None
 
 
 def normalize_range(total : int, start : Optional[int], end : Optional[int]) -> Tuple[int, int]:
