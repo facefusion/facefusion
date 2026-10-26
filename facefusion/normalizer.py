@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Tuple
 
-from facefusion.types import Fps, Map, Color, Space
+from facefusion.types import Color, Fps, Map, Space
 
 
 def normalize_color(color : Any) -> Optional[Color]:
@@ -32,7 +32,7 @@ def normalize_space(space : Any) -> Optional[Space]:
 def normalize_maps(maps : Any) -> Optional[List[Map]]:
 	temp_maps = []
 
-	if isinstance(maps, list):
+	if isinstance(maps, (list, tuple)):
 		for __map__ in maps:
 			if isinstance(__map__, (list, tuple)) and len(__map__) == 4:
 				temp_maps.append(tuple(__map__))
