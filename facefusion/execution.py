@@ -198,7 +198,7 @@ def create_value_and_unit(text : str) -> Optional[ValueAndUnit]:
 
 		return\
 		{
-			'value': int(value),
+			'value': float(value),
 			'unit': str(unit)
 		}
 	return None

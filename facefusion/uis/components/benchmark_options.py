@@ -27,7 +27,7 @@ def render() -> None:
 		choices = facefusion.choices.benchmark_resolutions,
 		value = state_manager.get_item('benchmark_resolutions')
 	)
-	BENCHMARK_CYCLE_COUNT_SLIDER = gradio.Slider(
+	BENCHMARK_CYCLE_COUNT_SLIDER = gradio.Slider( #type:ignore[assignment]
 		label = translator.get('uis.benchmark_cycle_count_slider'),
 		value = state_manager.get_item('benchmark_cycle_count'),
 		step = calculate_int_step(facefusion.choices.benchmark_cycle_count_range),
@@ -39,7 +39,7 @@ def render() -> None:
 def listen() -> None:
 	BENCHMARK_MODE_DROPDOWN.change(update_benchmark_mode, inputs = BENCHMARK_MODE_DROPDOWN)
 	BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP.change(update_benchmark_resolutions, inputs = BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP)
-	BENCHMARK_CYCLE_COUNT_SLIDER.release(update_benchmark_cycle_count, inputs = BENCHMARK_CYCLE_COUNT_SLIDER)
+	BENCHMARK_CYCLE_COUNT_SLIDER.release(update_benchmark_cycle_count, inputs = BENCHMARK_CYCLE_COUNT_SLIDER) #type:ignore[union-attr]
 
 
 def update_benchmark_mode(benchmark_mode : BenchmarkMode) -> None:

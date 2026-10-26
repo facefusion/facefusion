@@ -56,11 +56,11 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			},
 			'templates':
 			{
-				'target': 'ffhq_512',
+				'target': 'ffhq_512'
 			},
 			'sizes':
 			{
-				'target': (1024, 1024),
+				'target': (1024, 1024)
 			},
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
