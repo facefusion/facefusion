@@ -6,7 +6,6 @@ import facefusion.choices
 from facefusion import capability_store, config, metadata, state_manager, translator
 from facefusion.common_helper import create_float_metavar, create_int_metavar, get_first, get_last
 from facefusion.execution import get_available_execution_providers
-from facefusion.face_selector import decode_face_selector_maps
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
@@ -433,8 +432,7 @@ def create_face_selector_program() -> ArgumentParser:
 				'--face-selector-map',
 				help = translator.get('help.face_selector_map'),
 				type = str,
-				default = decode_face_selector_maps([ config.get_str_list('face_selector', 'face_selector_maps') ]),
-				nargs = '+',
+				default = [ config.get_str_value('face_selector', 'face_selector_maps') ],
 				action = 'append',
 				dest = 'face_selector_maps'
 			)

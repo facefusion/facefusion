@@ -7,6 +7,7 @@ import numpy
 from facefusion import cli_progress, logger, process_manager, state_manager, thread_helper, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
+from facefusion.face_selector import decode_face_selector_maps
 from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, resolve_temp_frame_set
@@ -87,7 +88,7 @@ def conditional_get_source_voice_frame(frame_index : int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frames() -> List[VisionFrame]:
-	face_selector_maps = state_manager.get_item('face_selector_maps')
+	face_selector_maps = decode_face_selector_maps(state_manager.get_item('face_selector_maps'))
 	reference_vision_frames = []
 
 	for face_selector_map in face_selector_maps:

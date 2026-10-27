@@ -1,4 +1,4 @@
-from typing import Any, Iterator, List, Optional, Tuple, cast
+from typing import Iterator, List, Optional, Tuple
 
 import numpy
 
@@ -7,7 +7,7 @@ from facefusion import state_manager
 from facefusion.common_helper import get_first, get_last, get_middle
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
-from facefusion.types import Face, FacePointer, FaceSelectorMap, FaceSelectorOrder, Gender, Race, Score, VisionFrame
+from facefusion.types import Face, FacePointer, FaceSelectorMap, FaceSelectorOrder, Gender, Map, Race, Score, VisionFrame
 
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
@@ -41,7 +41,7 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 		match_faces = []
 		reference_vision_frame_iterator = iter(reference_vision_frames)
 
-		for face_selector_map in state_manager.get_item('face_selector_maps'):
+		for face_selector_map in decode_face_selector_maps(state_manager.get_item('face_selector_maps')):
 			source_face = extract_source_face(source_vision_frames, face_selector_map.get('source_faces'))
 			reference_faces = extract_reference_faces(reference_vision_frame_iterator, face_selector_map.get('reference_faces'))
 
@@ -55,27 +55,25 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	return [], []
 
 
-def decode_face_selector_maps(face_selector_maps : Any) -> List[FaceSelectorMap]:
+def decode_face_selector_maps(face_selector_maps : List[Map]) -> List[FaceSelectorMap]:
 	temp_face_selector_maps : List[FaceSelectorMap] = []
 
-	if isinstance(face_selector_maps, list):
-		for face_selector_map in face_selector_maps:
-			if isinstance(face_selector_map, list):
-				face_selector_map = decode_face_selector_map(face_selector_map)
+	for face_selector_map in face_selector_maps:
+		__face_selector_map__ = decode_face_selector_map(face_selector_map)
 
-			if isinstance(face_selector_map, dict) and face_selector_map.get('source_faces'):
-				temp_face_selector_maps.append(cast(FaceSelectorMap, face_selector_map))
+		if __face_selector_map__.get('source_faces'):
+			temp_face_selector_maps.append(__face_selector_map__)
 
 	return temp_face_selector_maps
 
 
-def decode_face_selector_map(face_selector_values : List[str]) -> FaceSelectorMap:
+def decode_face_selector_map(face_selector_map : Map) -> FaceSelectorMap:
 	source_faces : List[FacePointer] = []
 	reference_faces : List[FacePointer] = []
 	faces = source_faces
 
-	for face_selector_value in face_selector_values:
-		frame_index, _, face_position = str(face_selector_value).partition(':')
+	for face_selector_value in face_selector_map.split():
+		frame_index, _, face_position = face_selector_value.partition(':')
 
 		if face_selector_value == 'to':
 			faces = reference_faces
@@ -95,7 +93,7 @@ def decode_face_selector_map(face_selector_values : List[str]) -> FaceSelectorMa
 
 
 def resolve_source_faces(source_vision_frames : List[VisionFrame]) -> List[FacePointer]:
-	face_selector_maps = state_manager.get_item('face_selector_maps')
+	face_selector_maps = decode_face_selector_maps(state_manager.get_item('face_selector_maps'))
 	source_faces : List[FacePointer] = []
 
 	if face_selector_maps:

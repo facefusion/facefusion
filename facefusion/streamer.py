@@ -2,6 +2,7 @@ from typing import List
 
 from facefusion import logger, state_manager
 from facefusion.audio import create_empty_audio_frame
+from facefusion.face_selector import decode_face_selector_maps
 from facefusion.filesystem import is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import VisionFrame
@@ -40,7 +41,7 @@ def get_reference_vision_frames() -> List[VisionFrame]:
 	reference_vision_frames = []
 	target_path = state_manager.get_item('target_path')
 	face_selector_mode = state_manager.get_item('face_selector_mode')
-	face_selector_maps = state_manager.get_item('face_selector_maps')
+	face_selector_maps = decode_face_selector_maps(state_manager.get_item('face_selector_maps'))
 
 	if face_selector_mode == 'reference':
 		for face_selector_map in face_selector_maps:

@@ -105,6 +105,7 @@ Time : TypeAlias = float
 Timestamp : TypeAlias = int
 Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
+Map : TypeAlias = str
 Resolution : TypeAlias = Tuple[int, int]
 Orientation = Literal['landscape', 'portrait']
 
@@ -669,7 +670,7 @@ State = TypedDict('State',
 	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
-	'face_selector_maps' : List[FaceSelectorMap],
+	'face_selector_maps' : List[Map],
 	'reference_face_distance' : float,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
