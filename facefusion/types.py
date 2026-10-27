@@ -107,7 +107,6 @@ Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
 Map : TypeAlias = Tuple[int, int, int, int]
 Resolution : TypeAlias = Tuple[int, int]
-ReferenceFaceSet : TypeAlias = Dict[Tuple[int, int], List[Face]]
 Orientation = Literal['landscape', 'portrait']
 
 AudioCodec : TypeAlias = Literal['opus']
