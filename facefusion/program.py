@@ -432,7 +432,7 @@ def create_face_selector_program() -> ArgumentParser:
 				'--reference-face-map',
 				help = translator.get('help.reference_face_map'),
 				type = int,
-				default = config.get_int_matrix('face_selector', 'reference_face_maps', '0 0 0 0'),
+				default = [ config.get_int_list('face_selector', 'reference_face_maps', '0 0 0 0') ],
 				nargs = 4,
 				action = 'append',
 				dest = 'reference_face_maps',

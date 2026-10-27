@@ -64,17 +64,3 @@ def get_int_list(section : str, option : str, fallback : Optional[str] = None) -
 		return list(map(int, fallback.split()))
 	return None
 
-
-def get_int_matrix(section : str, option : str, fallback : Optional[str] = None) -> Optional[List[List[int]]]:
-	config_parser = get_static_config_parser()
-	matrix_value = fallback
-	int_matrix = []
-
-	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
-		matrix_value = config_parser.get(section, option)
-
-	if matrix_value:
-		for row_value in matrix_value.split(','):
-			int_matrix.append(list(map(int, row_value.split())))
-		return int_matrix
-	return None
