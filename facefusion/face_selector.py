@@ -11,48 +11,62 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, Visio
 
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
-	source_faces = get_static_faces(source_vision_frames)
-
 	if state_manager.get_item('face_tracker_score') > 0:
 		target_faces = track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
 	else:
 		target_faces = get_static_faces([ get_middle(target_vision_frames) ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
-		source_face = extract_source_face(source_vision_frames)
-		__source_faces__ : List[Face] = []
-		match_faces : List[Face] = []
-
-		for target_face in sort_and_filter_faces(source_faces, target_faces):
-			__source_faces__.append(source_face)
-			match_faces.append(target_face)
-
-		return __source_faces__, match_faces
+		return select_many_faces(source_vision_frames, target_faces)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		source_face = extract_source_face(source_vision_frames)
-		target_face = get_one_face(sort_and_filter_faces(source_faces, target_faces))
-
-		if target_face:
-			return [ source_face ], [ target_face ]
+		return select_one_faces(source_vision_frames, target_faces)
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		__source_faces__ = []
-		match_faces = []
-
-		for (source_frame_index, source_face_position), reference_faces in collect_reference_face_set(reference_vision_frames).items():
-			source_frame_faces = get_static_faces(source_vision_frames[source_frame_index:source_frame_index + 1])
-			source_frame_faces = sort_faces_by_order(source_frame_faces, 'large-small')
-			source_face = get_one_face(source_frame_faces, source_face_position)
-
-			for target_face in target_faces:
-				if find_match_faces(reference_faces, [ target_face ], state_manager.get_item('reference_face_distance')):
-					__source_faces__.append(source_face)
-					match_faces.append(target_face)
-
-		return __source_faces__, match_faces
+		return select_reference_faces(reference_vision_frames, source_vision_frames, target_faces)
 
 	return [], []
+
+
+def select_many_faces(source_vision_frames : List[VisionFrame], target_faces : List[Face]) -> Tuple[List[Face], List[Face]]:
+	__source_faces__ = get_static_faces(source_vision_frames)
+	source_face = extract_source_face(source_vision_frames)
+	source_faces : List[Face] = []
+	match_faces : List[Face] = []
+
+	for target_face in sort_and_filter_faces(__source_faces__, target_faces):
+		source_faces.append(source_face)
+		match_faces.append(target_face)
+
+	return source_faces, match_faces
+
+
+def select_one_faces(source_vision_frames : List[VisionFrame], target_faces : List[Face]) -> Tuple[List[Face], List[Face]]:
+	__source_faces__ = get_static_faces(source_vision_frames)
+	source_face = extract_source_face(source_vision_frames)
+	target_face = get_one_face(sort_and_filter_faces(__source_faces__, target_faces))
+
+	if target_face:
+		return [ source_face ], [ target_face ]
+
+	return [], []
+
+
+def select_reference_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_faces : List[Face]) -> Tuple[List[Face], List[Face]]:
+	source_faces : List[Face] = []
+	match_faces : List[Face] = []
+
+	for (source_frame_index, source_face_position), reference_faces in collect_reference_face_set(reference_vision_frames).items():
+		__source_faces__ = get_static_faces(source_vision_frames[source_frame_index:source_frame_index + 1])
+		__source_faces__ = sort_faces_by_order(__source_faces__, 'large-small')
+		source_face = get_one_face(__source_faces__, source_face_position)
+
+		for target_face in target_faces:
+			if find_match_faces(reference_faces, [ target_face ], state_manager.get_item('reference_face_distance')):
+				source_faces.append(source_face)
+				match_faces.append(target_face)
+
+	return source_faces, match_faces
 
 
 def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
