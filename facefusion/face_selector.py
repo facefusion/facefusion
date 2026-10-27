@@ -1,4 +1,4 @@
-from typing import Iterator, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -39,11 +39,11 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		__source_faces__ = []
 		match_faces = []
-		reference_vision_frame_iterator = iter(reference_vision_frames)
 
 		for face_selector_map in decode_face_selector_maps(state_manager.get_item('face_selector_maps')):
 			source_face = extract_source_face(source_vision_frames, face_selector_map.get('source_faces'))
-			reference_faces = extract_reference_faces(reference_vision_frame_iterator, face_selector_map.get('reference_faces'))
+			reference_faces = extract_reference_faces(reference_vision_frames, face_selector_map.get('reference_faces'))
+			reference_vision_frames = reference_vision_frames[len(face_selector_map.get('reference_faces')):]
 
 			for target_face in target_faces:
 				if find_match_faces(reference_faces, [ target_face ], state_manager.get_item('reference_face_distance')):
@@ -125,10 +125,10 @@ def extract_source_face(source_vision_frames : List[VisionFrame], source_faces :
 	return average_face_identity(faces)
 
 
-def extract_reference_faces(reference_vision_frame_iterator : Iterator[VisionFrame], reference_faces : List[FacePointer]) -> List[Face]:
+def extract_reference_faces(reference_vision_frames : List[VisionFrame], reference_faces : List[FacePointer]) -> List[Face]:
 	faces = []
 
-	for reference_face, reference_vision_frame in zip(reference_faces, reference_vision_frame_iterator):
+	for reference_face, reference_vision_frame in zip(reference_faces, reference_vision_frames):
 		temp_faces = get_static_faces([ reference_vision_frame ])
 		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 		face = get_one_face(temp_faces, reference_face.get('face_position'))
