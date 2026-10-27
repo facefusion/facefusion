@@ -1,3 +1,4 @@
+from facefusion.apis.state_validator import validate_face_selector_maps
 from facefusion.common_helper import cast_bool, cast_float, cast_int
 from facefusion.normalizer import normalize_color, normalize_space
 from facefusion.processors.types import ProcessorState
@@ -21,5 +22,11 @@ def normalize_argument_value(key : StateKey, value : StateValue) -> StateValue:
 
 	if key in [ 'face_detector_margin', 'face_mask_padding' ]:
 		return normalize_space(value)
+
+	if key == 'face_selector_maps' and validate_face_selector_maps(value):
+		return value
+
+	if key == 'face_selector_maps':
+		return None
 
 	return value

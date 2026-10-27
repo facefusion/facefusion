@@ -105,9 +105,7 @@ Time : TypeAlias = float
 Timestamp : TypeAlias = int
 Color : TypeAlias = Tuple[int, int, int, int]
 Space : TypeAlias = Tuple[int, int, int, int]
-Map : TypeAlias = Tuple[int, int, int, int]
 Resolution : TypeAlias = Tuple[int, int]
-ReferenceFaceSet : TypeAlias = Dict[Tuple[int, int], List[Face]]
 Orientation = Literal['landscape', 'portrait']
 
 AudioCodec : TypeAlias = Literal['opus']
@@ -222,6 +220,16 @@ FaceAlignerModel = Literal['many', '2dfan4', 'hrffa', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
+FacePointer = TypedDict('FacePointer',
+{
+	'frame_index' : int,
+	'face_position' : int
+})
+FaceSelectorMap = TypedDict('FaceSelectorMap',
+{
+	'source_faces' : List[FacePointer],
+	'reference_faces' : List[FacePointer]
+})
 FaceOccluderModel = Literal['many', 'xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
 FaceMaskType = Literal['box', 'occlusion', 'area', 'region']
@@ -585,7 +593,7 @@ StateKey = Literal\
 	'face_selector_race',
 	'face_selector_age_start',
 	'face_selector_age_end',
-	'reference_face_maps',
+	'face_selector_maps',
 	'reference_face_distance',
 	'face_tracker_score',
 	'face_occluder_model',
@@ -661,7 +669,7 @@ State = TypedDict('State',
 	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
-	'reference_face_maps' : List[Map],
+	'face_selector_maps' : List[FaceSelectorMap],
 	'reference_face_distance' : float,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,

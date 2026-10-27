@@ -4,7 +4,7 @@ import numpy
 import pytest
 
 from facefusion import state_manager
-from facefusion.face_selector import calculate_face_distance, compare_faces, filter_faces_by_age, filter_faces_by_gender, filter_faces_by_race, find_match_faces, sort_and_filter_faces, sort_faces_by_order
+from facefusion.face_selector import calculate_face_distance, compare_faces, decode_face_selector_map, decode_face_selector_maps, filter_faces_by_age, filter_faces_by_gender, filter_faces_by_race, find_match_faces, resolve_source_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.types import Face
 
 
@@ -103,6 +103,33 @@ def create_faces() -> List[Face]:
 			race = 'white'
 		)
 	]
+
+
+def test_decode_face_selector_maps() -> None:
+	assert decode_face_selector_maps([ [ '0:0', '1:0', 'to', '120:1' ], [ '2:0' ] ]) == [ { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 120, 'face_position': 1 } ] }, { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]
+	assert decode_face_selector_maps([ { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]) == [ { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]
+	assert decode_face_selector_maps([ None, [ 'invalid' ], 'invalid' ]) == []
+	assert decode_face_selector_maps(None) == []
+
+
+def test_decode_face_selector_map() -> None:
+	assert decode_face_selector_map([ '0:0', 'to', '120:1', '480:0' ]) == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 120, 'face_position': 1 }, { 'frame_index': 480, 'face_position': 0 } ] }
+	assert decode_face_selector_map([ '0:0', '1', '1,2', '-1:0', '0:0:0', 'to' ]) == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [] }
+
+
+def test_resolve_source_faces() -> None:
+	vision_frame = numpy.zeros((10, 10, 3), dtype = numpy.uint8)
+
+	state_manager.set_item('face_selector_maps', [])
+
+	assert resolve_source_faces([ vision_frame, vision_frame ]) == [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 } ]
+	assert resolve_source_faces([]) == []
+
+	state_manager.set_item('face_selector_maps', [ { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [] }, { 'source_faces': [ { 'frame_index': 2, 'face_position': 1 } ], 'reference_faces': [] } ])
+
+	assert resolve_source_faces([ vision_frame ]) == [ { 'frame_index': 2, 'face_position': 1 } ]
+
+	state_manager.clear_item('face_selector_maps')
 
 
 def test_find_match_faces() -> None:
