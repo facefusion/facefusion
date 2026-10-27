@@ -55,14 +55,15 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 	return [], []
 
 
-def decode_face_selector_maps(face_selector_maps : List[Map]) -> List[FaceSelectorMap]:
+def decode_face_selector_maps(face_selector_maps : Optional[List[Map]]) -> List[FaceSelectorMap]:
 	temp_face_selector_maps : List[FaceSelectorMap] = []
 
-	for face_selector_map in face_selector_maps:
-		__face_selector_map__ = decode_face_selector_map(face_selector_map)
+	if face_selector_maps:
+		for face_selector_map in face_selector_maps:
+			__face_selector_map__ = decode_face_selector_map(face_selector_map)
 
-		if __face_selector_map__.get('source_faces'):
-			temp_face_selector_maps.append(__face_selector_map__)
+			if __face_selector_map__.get('source_faces'):
+				temp_face_selector_maps.append(__face_selector_map__)
 
 	return temp_face_selector_maps
 

@@ -30,14 +30,16 @@ def normalize_space(space : Any) -> Optional[Space]:
 
 
 def normalize_maps(maps : Any) -> Optional[List[Map]]:
-	if isinstance(maps, list):
-		temp_maps : List[Map] = []
+	temp_maps : List[Map] = []
 
+	if isinstance(maps, list):
 		for __map__ in maps:
 			if isinstance(__map__, str):
 				temp_maps.append(__map__)
 
+	if temp_maps:
 		return temp_maps
+
 	return None
 
 

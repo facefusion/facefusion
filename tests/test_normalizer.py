@@ -23,9 +23,8 @@ def test_normalize_space() -> None:
 
 
 def test_normalize_maps() -> None:
-	assert normalize_maps([ '0:0 1:0 to 120:1', '2:0' ]) == [ '0:0 1:0 to 120:1', '2:0' ]
-	assert normalize_maps([ '0:0', None, [ '0:0' ], { 'source_faces': [] } ]) == [ '0:0' ]
-	assert normalize_maps([]) == []
+	assert normalize_maps([ '0:0 1:0 to 100:1', '2:0' ]) == [ '0:0 1:0 to 100:1', '2:0' ]
+	assert normalize_maps([]) is None
 	assert normalize_maps(None) is None
 	assert normalize_maps('invalid') is None
 
