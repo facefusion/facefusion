@@ -16,7 +16,7 @@ def validate_resolution(resolution : str) -> bool:
 
 
 def validate_media_resolution(media_buffer : Buffer) -> bool:
-	media_entries = ffprobe.probe_pipe_entries(media_buffer, ['width', 'height'])
+	media_entries = ffprobe.probe_pipe_entries(media_buffer, [ 'width', 'height' ])
 	width = media_entries.get('width')
 	height = media_entries.get('height')
 
