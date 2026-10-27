@@ -6,11 +6,11 @@ from facefusion.types import Color, Fps, Map, Space
 def normalize_color(color : Any) -> Optional[Color]:
 	if isinstance(color, (list, tuple)):
 		if color and len(color) == 1:
-			return tuple([color[0], color[0], color[0], 255])
+			return tuple([ color[0], color[0], color[0], 255 ])
 		if color and len(color) == 2:
-			return tuple([color[0], color[1], color[0], 255])
+			return tuple([ color[0], color[1], color[0], 255 ])
 		if color and len(color) == 3:
-			return tuple([color[0], color[1], color[2], 255])
+			return tuple([ color[0], color[1], color[2], 255 ])
 		if color and len(color) == 4:
 			return tuple(color)
 	return None
@@ -21,9 +21,9 @@ def normalize_space(space : Any) -> Optional[Space]:
 		if space and len(space) == 1:
 			return tuple([space[0]] * 4)
 		if space and len(space) == 2:
-			return tuple([space[0], space[1], space[0], space[1]])
+			return tuple([ space[0], space[1], space[0], space[1] ])
 		if space and len(space) == 3:
-			return tuple([space[0], space[1], space[2], space[1]])
+			return tuple([ space[0], space[1], space[2], space[1] ])
 		if space and len(space) == 4:
 			return tuple(space)
 	return None
