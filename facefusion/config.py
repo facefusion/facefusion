@@ -63,4 +63,3 @@ def get_int_list(section : str, option : str, fallback : Optional[str] = None) -
 	if fallback:
 		return list(map(int, fallback.split()))
 	return None
-

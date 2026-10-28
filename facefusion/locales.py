@@ -118,7 +118,7 @@ LOCALES : Locales =\
 			'face_selector_age_end': 'filter the detected faces based on the ending age',
 			'face_selector_gender': 'filter the detected faces based on their gender',
 			'face_selector_race': 'filter the detected faces based on their race',
-			'face_selector_maps': 'map the source faces to the reference faces',
+			'face_selector_map': 'map the source faces to the reference faces',
 			'reference_face_distance': 'specify the similarity between the reference face and target face',
 			'face_tracker_score': 'specify the overlap score used to match the tracked faces',
 			'face_occluder_model': 'choose the model responsible for the occlusion mask',
