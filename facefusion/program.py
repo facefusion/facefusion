@@ -429,12 +429,11 @@ def create_face_selector_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--face-selector-map',
-				help = translator.get('help.face_selector_map'),
+				'--face-selector-maps',
+				help = translator.get('help.face_selector_maps'),
 				type = str,
-				default = [ config.get_str_value('face_selector', 'face_selector_maps') ],
-				action = 'append',
-				dest = 'face_selector_maps'
+				default = [ config.get_str_value('face_selector', 'face_selector_maps', 'to 0:0') ],
+				nargs = '+'
 			)
 		],
 		scopes = [ 'api', 'cli' ],
