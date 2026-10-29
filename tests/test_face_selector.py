@@ -1,10 +1,13 @@
 from typing import List
 
+import cv2
 import numpy
 import pytest
 
-from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, face_store, inference_manager, process_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, face_store, ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager
+from facefusion.common_helper import get_first, get_last
 from facefusion.download import conditional_download
+from facefusion.face_creator import get_static_faces
 from facefusion.face_selector import calculate_face_distance, collect_source_faces, compare_faces, decode_face_selector_map, decode_face_selector_maps, filter_faces_by_age, filter_faces_by_gender, filter_faces_by_race, find_match_faces, find_match_group_index, select_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.types import Face
 from facefusion.vision import read_static_image
@@ -21,8 +24,20 @@ def before_all() -> None:
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-vframes',
+				'1'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
+		)
+	).wait()
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
@@ -138,14 +153,6 @@ def create_faces() -> List[Face]:
 def test_select_faces() -> None:
 	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
 
-	state_manager.set_item('face_selector_mode', 'reference')
-	state_manager.set_item('face_selector_maps', [ '0:0 to 0:0', '0:0 to 0:0' ])
-
-	source_faces, target_faces = select_faces([ source_vision_frame, source_vision_frame ], [ source_vision_frame ], [ source_vision_frame ])
-
-	assert len(source_faces) == 1
-	assert len(target_faces) == 1
-
 	state_manager.set_item('face_selector_mode', 'many')
 	state_manager.set_item('face_selector_maps', [ 'invalid' ])
 
@@ -153,6 +160,30 @@ def test_select_faces() -> None:
 
 	assert len(source_faces) == 1
 	assert len(target_faces) == 1
+
+	state_manager.clear_item('face_selector_mode')
+	state_manager.clear_item('face_selector_maps')
+
+
+@pytest.mark.parametrize('face_selector_maps, source_names',
+[
+	([ '0:0 to 0:0', '1:1 to 1:1' ], [ 'source.jpg', 'target-240p.jpg' ]),
+	([ '1:1 to 0:0', '0:0 to 1:1' ], [ 'target-240p.jpg', 'source.jpg' ])
+])
+def test_select_faces_with_reference(face_selector_maps : List[str], source_names : List[str]) -> None:
+	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
+	target_vision_frame = read_static_image(get_test_example_file('target-240p.jpg'))
+	reference_vision_frame = numpy.hstack([ cv2.resize(source_vision_frame, (226, 226)), target_vision_frame ])
+
+	state_manager.set_item('face_selector_mode', 'reference')
+	state_manager.set_item('face_selector_maps', face_selector_maps)
+
+	source_faces, target_faces = select_faces([ source_vision_frame, reference_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
+
+	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ read_static_image(get_test_example_file(get_first(source_names))) ])), 0.3) is True
+	assert compare_faces(get_last(source_faces), get_first(get_static_faces([ read_static_image(get_test_example_file(get_last(source_names))) ])), 0.3) is True
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
 
 	state_manager.clear_item('face_selector_mode')
 	state_manager.clear_item('face_selector_maps')
