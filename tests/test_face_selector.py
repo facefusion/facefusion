@@ -166,7 +166,7 @@ def test_decode_face_selector_maps() -> None:
 
 
 def test_decode_face_selector_map() -> None:
-	assert decode_face_selector_map('0:0 to 120:1 480:0') == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 120, 'face_position': 1 }, { 'frame_index': 480, 'face_position': 0 } ] }
+	assert decode_face_selector_map('0:0 to 100:1 200:0') == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 }, { 'frame_index': 200, 'face_position': 0 } ] }
 	assert decode_face_selector_map('0:0 1 1,2 -1:0 0:0:0 to') == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [] }
 
 

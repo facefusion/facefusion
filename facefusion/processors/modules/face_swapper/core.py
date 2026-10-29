@@ -725,6 +725,15 @@ def forward_convert_embedding(face_embedding : Embedding) -> Embedding:
 	return face_embedding
 
 
+def find_vision_frame(face : Face, vision_frames : List[VisionFrame]) -> VisionFrame:
+	for vision_frame in vision_frames:
+		for __face__ in get_static_faces([ vision_frame ]):
+			if __face__.landmark_set is face.landmark_set:
+				return vision_frame
+
+	return get_first(vision_frames)
+
+
 def prepare_source_frame(source_face : Face, source_vision_frame : VisionFrame) -> VisionFrame:
 	model_type = get_model_options().get('type')
 
@@ -824,13 +833,17 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
-	target_vision_frame = get_middle(target_vision_frames)
 	source_vision_frame = get_first(source_vision_frames)
+	target_vision_frame = get_middle(target_vision_frames)
 	source_faces, target_faces = select_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
 
 	for source_face, target_face in zip(source_faces, target_faces):
 		if source_face:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
+
+			if get_model_options().get('type') in [ 'blendswap', 'uniface' ]:
+				source_vision_frame = find_vision_frame(source_face, source_vision_frames)
+
 			temp_vision_frame = swap_face(source_face, target_face, source_vision_frame, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask
