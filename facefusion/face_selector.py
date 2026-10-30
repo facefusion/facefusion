@@ -130,10 +130,9 @@ def extract_source_face(source_vision_frames : List[VisionFrame], source_faces :
 			frame_index = source_face.get('frame_index')
 			temp_faces = get_static_faces(source_vision_frames[frame_index:frame_index + 1])
 			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-			face = get_one_face(temp_faces, source_face.get('face_position'))
+			source_face_position = source_face.get('face_position')
 
-			if face:
-				faces.append(face)
+			faces.extend(temp_faces[source_face_position:source_face_position + 1])
 
 		return average_face_identity(faces)
 
@@ -153,10 +152,9 @@ def extract_reference_faces(reference_vision_frames : List[VisionFrame], referen
 	for reference_face, reference_vision_frame in zip(reference_faces, reference_vision_frames):
 		temp_faces = get_static_faces([ reference_vision_frame ])
 		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-		face = get_one_face(temp_faces, reference_face.get('face_position'))
+		reference_face_position = reference_face.get('face_position')
 
-		if face:
-			faces.append(face)
+		faces.extend(temp_faces[reference_face_position:reference_face_position + 1])
 
 	return faces
 

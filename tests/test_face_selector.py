@@ -194,7 +194,21 @@ def test_select_faces() -> None:
 	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
 	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
 
+	state_manager.set_item('face_selector_maps', [ '0:2 to 0:1' ])
 	state_manager.set_item('reference_face_distance', 0.3)
+
+	source_faces, target_faces = select_faces([ reference_vision_frame ], [ reference_vision_frame ], [ reference_vision_frame ])
+
+	assert source_faces == [ None ]
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+
+	state_manager.set_item('face_selector_maps', [ '0:1 to 0:2' ])
+
+	source_faces, target_faces = select_faces([ reference_vision_frame ], [ reference_vision_frame ], [ reference_vision_frame ])
+
+	assert source_faces == []
+	assert target_faces == []
+
 	state_manager.clear_item('face_selector_mode')
 	state_manager.clear_item('face_selector_maps')
 
