@@ -11,16 +11,19 @@ from facefusion.types import Face, FacePointer, FaceSelectorMap, FaceSelectorOrd
 
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
+	face_tracker_score = state_manager.get_item('face_tracker_score')
+	face_selector_mode = state_manager.get_item('face_selector_mode')
+	face_selector_maps = decode_face_selector_maps(state_manager.get_item('face_selector_maps'))
+	reference_face_distance = state_manager.get_item('reference_face_distance')
+
 	source_faces = get_static_faces(source_vision_frames)
 
-	if state_manager.get_item('face_tracker_score') > 0:
-		target_faces = track_faces(target_vision_frames, state_manager.get_item('face_tracker_score'))
+	if face_tracker_score > 0:
+		target_faces = track_faces(target_vision_frames, face_tracker_score)
 	else:
 		target_faces = get_static_faces([ get_middle(target_vision_frames) ])
 
-	face_selector_maps = decode_face_selector_maps(state_manager.get_item('face_selector_maps'))
-
-	if state_manager.get_item('face_selector_mode') == 'many':
+	if face_selector_mode == 'many':
 		source_face = extract_source_face(source_vision_frames, collect_source_faces(face_selector_maps))
 		__source_faces__ : List[Face] = []
 		match_faces : List[Face] = []
@@ -31,15 +34,15 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 
 		return __source_faces__, match_faces
 
-	if state_manager.get_item('face_selector_mode') == 'one':
+	if face_selector_mode == 'one':
 		source_face = extract_source_face(source_vision_frames, collect_source_faces(face_selector_maps))
 		target_face = get_one_face(sort_and_filter_faces(source_faces, target_faces))
 
 		if target_face:
 			return [ source_face ], [ target_face ]
 
-	if state_manager.get_item('face_selector_mode') == 'reference':
-		match_face_set : Dict[int, Face] = {}
+	if face_selector_mode == 'reference':
+		temp_face_set : Dict[int, Face] = {}
 		__source_faces__ = []
 		match_faces = []
 
@@ -49,10 +52,10 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			reference_vision_frames = reference_vision_frames[len(face_selector_map.get('reference_faces')):]
 
 			for target_index, target_face in enumerate(target_faces):
-				if find_match_faces(reference_faces, [ target_face ], state_manager.get_item('reference_face_distance')):
-					match_face_set[target_index] = source_face
+				if find_match_faces(reference_faces, [ target_face ], reference_face_distance):
+					temp_face_set[target_index] = source_face
 
-		for target_index, source_face in match_face_set.items():
+		for target_index, source_face in temp_face_set.items():
 			__source_faces__.append(source_face)
 			match_faces.append(target_faces[target_index])
 
@@ -172,12 +175,15 @@ def calculate_face_distance(face : Face, reference_face : Face) -> float:
 
 
 def sort_and_filter_faces(source_faces : List[Face], target_faces : List[Face]) -> List[Face]:
-	if target_faces:
-		if state_manager.get_item('face_selector_order'):
-			target_faces = sort_faces_by_order(target_faces, state_manager.get_item('face_selector_order'))
+	face_selector_order = state_manager.get_item('face_selector_order')
+	face_selector_gender = state_manager.get_item('face_selector_gender')
+	face_selector_race = state_manager.get_item('face_selector_race')
+	face_selector_age_start = state_manager.get_item('face_selector_age_start')
+	face_selector_age_end = state_manager.get_item('face_selector_age_end')
 
-		face_selector_gender = state_manager.get_item('face_selector_gender')
-		face_selector_race = state_manager.get_item('face_selector_race')
+	if target_faces:
+		if face_selector_order:
+			target_faces = sort_faces_by_order(target_faces, face_selector_order)
 
 		if source_faces and face_selector_gender == 'auto' or face_selector_race == 'auto':
 			source_face = get_first(sort_faces_by_order(source_faces, 'large-small'))
@@ -194,8 +200,8 @@ def sort_and_filter_faces(source_faces : List[Face], target_faces : List[Face]) 
 		if face_selector_race in facefusion.choices.races:
 			target_faces = filter_faces_by_race(target_faces, face_selector_race)
 
-		if state_manager.get_item('face_selector_age_start') or state_manager.get_item('face_selector_age_end'):
-			target_faces = filter_faces_by_age(target_faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
+		if face_selector_age_start or face_selector_age_end:
+			target_faces = filter_faces_by_age(target_faces, face_selector_age_start, face_selector_age_end)
 
 	return target_faces
 
