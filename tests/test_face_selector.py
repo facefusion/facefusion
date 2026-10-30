@@ -1,16 +1,61 @@
 from typing import List
 
+import cv2
 import numpy
 import pytest
 
-from facefusion import state_manager
-from facefusion.face_selector import calculate_face_distance, compare_faces, filter_faces_by_age, filter_faces_by_gender, filter_faces_by_race, find_match_faces, sort_and_filter_faces, sort_faces_by_order
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, face_store, ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager
+from facefusion.common_helper import get_first, get_last
+from facefusion.download import conditional_download
+from facefusion.face_creator import get_static_faces
+from facefusion.face_selector import calculate_face_distance, collect_source_faces, compare_faces, decode_face_selector_map, decode_face_selector_maps, filter_faces_by_age, filter_faces_by_gender, filter_faces_by_race, find_match_faces, select_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.types import Face
+from facefusion.vision import read_static_image
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
+	inference_manager.init()
+
+	face_store.init()
+
+	process_manager.start()
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+	])
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			[
+				'-vframes',
+				'1'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
+		)
+	).wait()
+
+	state_manager.init_item('execution_device_ids', [ 0 ])
+	state_manager.init_item('execution_providers', [ 'cpu' ])
+	state_manager.init_item('download_providers', [ 'github' ])
+	state_manager.init_item('face_detector_angles', [ 0 ])
+	state_manager.init_item('face_detector_model', 'many')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	state_manager.init_item('face_detector_score', 0.5)
+	state_manager.init_item('face_aligner_model', 'many')
+	state_manager.init_item('face_aligner_score', 0.5)
+	state_manager.init_item('face_tracker_score', 0)
+	state_manager.init_item('reference_face_distance', 0.3)
+
+	face_classifier.pre_check()
+	face_detector.pre_check()
+	face_aligner.pre_check()
+	face_recognizer.pre_check()
 
 
 def create_faces() -> List[Face]:
@@ -103,6 +148,86 @@ def create_faces() -> List[Face]:
 			race = 'white'
 		)
 	]
+
+
+def test_select_faces() -> None:
+	source_vision_frame = read_static_image(get_test_example_file('source.jpg'))
+	target_vision_frame = read_static_image(get_test_example_file('target-240p.jpg'))
+	reference_vision_frame = numpy.hstack([ cv2.resize(source_vision_frame, (226, 226)), target_vision_frame ])
+
+	state_manager.set_item('face_selector_mode', 'many')
+	state_manager.set_item('face_selector_maps', [ 'invalid' ])
+
+	source_faces, target_faces = select_faces([], [ source_vision_frame ], [ source_vision_frame ])
+
+	assert len(source_faces) == 1
+	assert len(target_faces) == 1
+
+	state_manager.set_item('face_selector_mode', 'reference')
+	state_manager.set_item('face_selector_maps', [ '0:0 to 0:0', '1:1 to 1:1' ])
+
+	source_faces, target_faces = select_faces([ source_vision_frame, reference_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
+
+	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(source_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+
+	state_manager.set_item('face_selector_maps', [ '1:1 to 0:0', '0:0 to 1:1' ])
+
+	source_faces, target_faces = select_faces([ source_vision_frame, reference_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
+
+	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(source_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+
+	state_manager.set_item('face_selector_maps', [ '0:0 to 0:0', '1:1 to 1:1' ])
+	state_manager.set_item('reference_face_distance', 1.0)
+
+	source_faces, target_faces = select_faces([ source_vision_frame, reference_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
+
+	assert len(source_faces) == 2
+	assert len(target_faces) == 2
+	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(source_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+
+	state_manager.set_item('face_selector_maps', [ '0:2 to 0:1' ])
+	state_manager.set_item('reference_face_distance', 0.3)
+
+	source_faces, target_faces = select_faces([ reference_vision_frame ], [ reference_vision_frame ], [ reference_vision_frame ])
+
+	assert source_faces == [ None ]
+	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+
+	state_manager.set_item('face_selector_maps', [ '0:1 to 0:2' ])
+
+	source_faces, target_faces = select_faces([ reference_vision_frame ], [ reference_vision_frame ], [ reference_vision_frame ])
+
+	assert source_faces == []
+	assert target_faces == []
+
+	state_manager.clear_item('face_selector_mode')
+	state_manager.clear_item('face_selector_maps')
+
+
+def test_decode_face_selector_maps() -> None:
+	assert decode_face_selector_maps([ '0:0 1:0 to 100:1', '2:0' ]) == [ { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 } ] }, { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]
+	assert decode_face_selector_maps([ 'to 100:1', 'invalid' ]) == [ { 'source_faces': [], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 } ] } ]
+	assert decode_face_selector_maps([]) == []
+	assert decode_face_selector_maps(None) == []
+
+
+def test_decode_face_selector_map() -> None:
+	assert decode_face_selector_map('0:0 to 100:1 200:0') == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 }, { 'frame_index': 200, 'face_position': 0 } ] }
+	assert decode_face_selector_map('0:0 1 1,2 -1:0 0:0:0 to') == { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 } ], 'reference_faces': [] }
+
+
+def test_collect_source_faces() -> None:
+	assert collect_source_faces(decode_face_selector_maps([ '0:0 to 100:1', '1:0 2:1 to 300:0' ])) == [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 }, { 'frame_index': 2, 'face_position': 1 } ]
+	assert collect_source_faces(decode_face_selector_maps([ 'to 0:0' ])) == []
 
 
 def test_find_match_faces() -> None:

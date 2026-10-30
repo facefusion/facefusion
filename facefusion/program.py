@@ -429,10 +429,12 @@ def create_face_selector_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--reference-face-position',
-				help = translator.get('help.reference_face_position'),
-				type = int,
-				default = config.get_int_value('face_selector', 'reference_face_position', '0')
+				'--face-selector-map',
+				help = translator.get('help.face_selector_map'),
+				type = str,
+				default = [ config.get_str_value('face_selector', 'face_selector_maps', 'to 0:0') ],
+				nargs = '+',
+				dest = 'face_selector_maps'
 			)
 		],
 		scopes = [ 'api', 'cli' ],
@@ -447,18 +449,6 @@ def create_face_selector_program() -> ArgumentParser:
 				default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'),
 				choices = facefusion.choices.reference_face_distance_range,
 				metavar = create_float_metavar(facefusion.choices.reference_face_distance_range)
-			)
-		],
-		scopes = [ 'api', 'cli' ],
-		groups = [ 'face_selector' ]
-	)
-	capability_store.register_capability_set(
-		[
-			group_face_selector.add_argument(
-				'--reference-frame-index',
-				help = translator.get('help.reference_frame_index'),
-				type = int,
-				default = config.get_int_value('face_selector', 'reference_frame_index', '0')
 			)
 		],
 		scopes = [ 'api', 'cli' ],

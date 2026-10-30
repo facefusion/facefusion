@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from functools import lru_cache
 from types import ModuleType
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -13,10 +13,10 @@ from facefusion import config, content_analyser, face_aligner, face_classifier, 
 from facefusion.common_helper import get_first, get_middle, is_macos
 from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces, scale_face
+from facefusion.face_creator import get_one_face, get_static_faces, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import select_faces, sort_faces_by_order
+from facefusion.face_selector import select_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
@@ -725,6 +725,15 @@ def forward_convert_embedding(face_embedding : Embedding) -> Embedding:
 	return face_embedding
 
 
+def find_vision_frame(face : Face, vision_frames : List[VisionFrame]) -> VisionFrame:
+	for vision_frame in vision_frames:
+		for __face__ in get_static_faces([ vision_frame ]):
+			if __face__.landmark_set is face.landmark_set:
+				return vision_frame
+
+	return get_first(vision_frames)
+
+
 def prepare_source_frame(source_face : Face, source_vision_frame : VisionFrame) -> VisionFrame:
 	model_type = get_model_options().get('type')
 
@@ -817,20 +826,6 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
-	source_faces = []
-
-	if source_vision_frames:
-		for source_vision_frame in source_vision_frames:
-			temp_faces = get_static_faces([ source_vision_frame ])
-			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-
-			if temp_faces:
-				source_faces.append(get_first(temp_faces))
-
-	return average_face_identity(source_faces)
-
-
 def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frames = inputs.get('reference_vision_frames')
 	source_vision_frames = inputs.get('source_vision_frames')
@@ -838,15 +833,17 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 
+	source_vision_frame = get_first(source_vision_frames)
 	target_vision_frame = get_middle(target_vision_frames)
-	source_face = extract_source_face(source_vision_frames)
-	target_faces = select_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
+	source_faces, target_faces = select_faces(reference_vision_frames, source_vision_frames, target_vision_frames)
 
-	if source_face and target_faces:
-		source_vision_frame = get_first(source_vision_frames)
-
-		for target_face in target_faces:
+	for source_face, target_face in zip(source_faces, target_faces):
+		if source_face:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
+
+			if get_model_options().get('type') in [ 'blendswap', 'uniface' ]:
+				source_vision_frame = find_vision_frame(source_face, source_vision_frames)
+
 			temp_vision_frame = swap_face(source_face, target_face, source_vision_frame, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask
