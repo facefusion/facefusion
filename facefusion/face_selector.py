@@ -54,19 +54,17 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 				source_faces.append(source_face)
 				reference_faces.append(reference_face)
 
-			reference_vision_frames = reference_vision_frames[len(face_selector_map.get('reference_faces')):]
+			reference_face_total = len(face_selector_map.get('reference_faces'))
+			reference_vision_frames = reference_vision_frames[reference_face_total:]
 
 		for target_face in target_faces:
 			match_source_faces = []
 			match_face_distance = reference_face_distance
 
 			for source_face, reference_face in zip(source_faces, reference_faces):
-				face_distance = calculate_face_distance(target_face, reference_face)
-				face_distance = float(numpy.interp(face_distance, [ 0, 2 ], [ 0, 1 ]))
-
-				if face_distance < match_face_distance:
+				if compare_faces(target_face, reference_face, match_face_distance):
 					match_source_faces.append(source_face)
-					match_face_distance = face_distance
+					match_face_distance = calculate_face_distance(target_face, reference_face) / 2
 
 			if match_source_faces:
 				__source_faces__.append(get_last(match_source_faces))
