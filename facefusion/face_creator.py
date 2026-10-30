@@ -118,7 +118,7 @@ def get_static_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 	return many_faces
 
 
-def refill_faces(faces : List[Optional[Face]]) -> List[Face]:
+def refill_faces(faces : List[Face]) -> List[Face]:
 	fill_faces = []
 	anchor_index_previous = -1
 

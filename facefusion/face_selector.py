@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy
 
@@ -39,22 +39,22 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			return [ source_face ], [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		group_source_faces : List[Optional[Face]] = []
-		group_reference_faces : List[List[Face]] = []
+		match_face_set : Dict[int, Face] = {}
 		__source_faces__ = []
 		match_faces = []
 
 		for face_selector_map in face_selector_maps:
-			group_source_faces.append(extract_source_face(source_vision_frames, face_selector_map.get('source_faces')))
-			group_reference_faces.append(extract_reference_faces(reference_vision_frames, face_selector_map.get('reference_faces')))
+			source_face = extract_source_face(source_vision_frames, face_selector_map.get('source_faces'))
+			reference_faces = extract_reference_faces(reference_vision_frames, face_selector_map.get('reference_faces'))
 			reference_vision_frames = reference_vision_frames[len(face_selector_map.get('reference_faces')):]
 
-		for target_face in target_faces:
-			group_index = find_match_group_index(group_reference_faces, target_face, state_manager.get_item('reference_face_distance'))
+			for target_index, target_face in enumerate(target_faces):
+				if find_match_faces(reference_faces, [ target_face ], state_manager.get_item('reference_face_distance')):
+					match_face_set[target_index] = source_face
 
-			if isinstance(group_index, int):
-				__source_faces__.append(group_source_faces[group_index])
-				match_faces.append(target_face)
+		for target_index, source_face in match_face_set.items():
+			__source_faces__.append(source_face)
+			match_faces.append(target_faces[target_index])
 
 		return __source_faces__, match_faces
 
@@ -145,22 +145,6 @@ def extract_reference_faces(reference_vision_frames : List[VisionFrame], referen
 			faces.append(face)
 
 	return faces
-
-
-def find_match_group_index(group_reference_faces : List[List[Face]], target_face : Face, face_distance : float) -> Optional[int]:
-	group_index = None
-	match_face_distance = face_distance
-
-	for index, reference_faces in enumerate(group_reference_faces):
-		for reference_face in reference_faces:
-			current_face_distance = calculate_face_distance(target_face, reference_face)
-			current_face_distance = float(numpy.interp(current_face_distance, [ 0, 2 ], [ 0, 1 ]))
-
-			if current_face_distance < match_face_distance:
-				match_face_distance = current_face_distance
-				group_index = index
-
-	return group_index
 
 
 def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
