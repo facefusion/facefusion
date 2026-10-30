@@ -182,22 +182,26 @@ def test_select_faces() -> None:
 	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
 	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
 
-	state_manager.set_item('face_selector_maps', [ '0:0 to 0:0', '1:1 to 0:0' ])
+	state_manager.set_item('face_selector_maps', [ '0:0 to 0:0', '1:1 to 1:1' ])
+	state_manager.set_item('reference_face_distance', 1.0)
 
-	source_faces, target_faces = select_faces([ source_vision_frame, source_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
+	source_faces, target_faces = select_faces([ source_vision_frame, reference_vision_frame ], [ source_vision_frame, reference_vision_frame ], [ reference_vision_frame ])
 
-	assert len(source_faces) == 1
-	assert len(target_faces) == 1
-	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
+	assert len(source_faces) == 2
+	assert len(target_faces) == 2
+	assert compare_faces(get_first(source_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(source_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
 	assert compare_faces(get_first(target_faces), get_first(get_static_faces([ source_vision_frame ])), 0.3) is True
+	assert compare_faces(get_last(target_faces), get_first(get_static_faces([ target_vision_frame ])), 0.3) is True
 
+	state_manager.set_item('reference_face_distance', 0.3)
 	state_manager.clear_item('face_selector_mode')
 	state_manager.clear_item('face_selector_maps')
 
 
 def test_decode_face_selector_maps() -> None:
-	assert decode_face_selector_maps([ '0:0 1:0 to 120:1', '2:0' ]) == [ { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 120, 'face_position': 1 } ] }, { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]
-	assert decode_face_selector_maps([ 'to 120:1', 'invalid' ]) == [ { 'source_faces': [], 'reference_faces': [ { 'frame_index': 120, 'face_position': 1 } ] } ]
+	assert decode_face_selector_maps([ '0:0 1:0 to 100:1', '2:0' ]) == [ { 'source_faces': [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 } ], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 } ] }, { 'source_faces': [ { 'frame_index': 2, 'face_position': 0 } ], 'reference_faces': [] } ]
+	assert decode_face_selector_maps([ 'to 100:1', 'invalid' ]) == [ { 'source_faces': [], 'reference_faces': [ { 'frame_index': 100, 'face_position': 1 } ] } ]
 	assert decode_face_selector_maps([]) == []
 	assert decode_face_selector_maps(None) == []
 
@@ -208,7 +212,7 @@ def test_decode_face_selector_map() -> None:
 
 
 def test_collect_source_faces() -> None:
-	assert collect_source_faces(decode_face_selector_maps([ '0:0 to 120:1', '1:0 2:1 to 300:0' ])) == [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 }, { 'frame_index': 2, 'face_position': 1 } ]
+	assert collect_source_faces(decode_face_selector_maps([ '0:0 to 100:1', '1:0 2:1 to 300:0' ])) == [ { 'frame_index': 0, 'face_position': 0 }, { 'frame_index': 1, 'face_position': 0 }, { 'frame_index': 2, 'face_position': 1 } ]
 	assert collect_source_faces(decode_face_selector_maps([ 'to 0:0' ])) == []
 
 

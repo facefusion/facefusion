@@ -1,10 +1,10 @@
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 
 import facefusion.choices
 from facefusion import state_manager
-from facefusion.common_helper import get_first, get_middle
+from facefusion.common_helper import get_first, get_last, get_middle
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
 from facefusion.types import Face, FacePointer, FaceSelectorMap, FaceSelectorOrder, Gender, Map, Race, Score, VisionFrame
@@ -42,22 +42,35 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			return [ source_face ], [ target_face ]
 
 	if face_selector_mode == 'reference':
-		temp_face_set : Dict[int, Face] = {}
+		source_faces = []
+		reference_faces = []
 		__source_faces__ = []
 		match_faces = []
 
 		for face_selector_map in face_selector_maps:
 			source_face = extract_source_face(source_vision_frames, face_selector_map.get('source_faces'))
-			reference_faces = extract_reference_faces(reference_vision_frames, face_selector_map.get('reference_faces'))
+
+			for reference_face in extract_reference_faces(reference_vision_frames, face_selector_map.get('reference_faces')):
+				source_faces.append(source_face)
+				reference_faces.append(reference_face)
+
 			reference_vision_frames = reference_vision_frames[len(face_selector_map.get('reference_faces')):]
 
-			for target_index, target_face in enumerate(target_faces):
-				if find_match_faces(reference_faces, [ target_face ], reference_face_distance):
-					temp_face_set[target_index] = source_face
+		for target_face in target_faces:
+			match_source_faces = []
+			match_face_distance = reference_face_distance
 
-		for target_index, source_face in temp_face_set.items():
-			__source_faces__.append(source_face)
-			match_faces.append(target_faces[target_index])
+			for source_face, reference_face in zip(source_faces, reference_faces):
+				face_distance = calculate_face_distance(target_face, reference_face)
+				face_distance = float(numpy.interp(face_distance, [ 0, 2 ], [ 0, 1 ]))
+
+				if face_distance < match_face_distance:
+					match_source_faces.append(source_face)
+					match_face_distance = face_distance
+
+			if match_source_faces:
+				__source_faces__.append(get_last(match_source_faces))
+				match_faces.append(target_face)
 
 		return __source_faces__, match_faces
 
