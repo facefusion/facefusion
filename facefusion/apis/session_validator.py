@@ -22,6 +22,7 @@ def validate_access_token(session_id : SessionId) -> bool:
 	if api_session:
 		created_at = api_session.get('created_at')
 		expires_at = api_session.get('expires_at')
+
 		return datetime.now() < created_at + (expires_at - created_at) / 2
 
 	return False
