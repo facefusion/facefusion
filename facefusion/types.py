@@ -449,7 +449,7 @@ InferenceProvider : TypeAlias = Any
 InferenceOptionSet : TypeAlias = Dict[str, Any]
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
-	'value' : int,
+	'value' : float,
 	'unit' : str
 })
 ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
