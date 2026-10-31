@@ -128,16 +128,18 @@ def test_get_session(test_client : TestClient) -> None:
 	{
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
-		'created_at': session.get('created_at'),
-		'expires_at': session.get('expires_at') - timedelta(hours = 1)
+		'created_at': session.get('created_at') - timedelta(minutes = 6),
+		'expires_at': session.get('expires_at') - timedelta(minutes = 6)
 	})
 
 	get_session_response = test_client.get('/session', headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
+	get_session_body = get_session_response.json()
 
-	assert get_session_response.status_code == 426
+	assert get_session_body.get('message') == 'invalid access token'
+	assert get_session_response.status_code == 401
 
 
 def test_refresh_session(test_client : TestClient) -> None:
@@ -183,6 +185,38 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 	assert refresh_session_response.status_code == 401
 
+	session_id = session_manager.find_api_session_id(refresh_session_body.get('access_token'))
+	session : ApiSession = session_manager.get_api_session(session_id)
+	session_manager.set_api_session(session_id,
+	{
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at') - timedelta(minutes = 6),
+		'expires_at': session.get('expires_at') - timedelta(minutes = 6)
+	})
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + refresh_session_body.get('access_token')
+	})
+
+	assert get_session_response.status_code == 401
+
+	refresh_session_response = test_client.put('/session', json =
+	{
+		'refresh_token': refresh_session_body.get('refresh_token')
+	})
+	refresh_session_body = refresh_session_response.json()
+
+	assert refresh_session_response.status_code == 200
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + refresh_session_body.get('access_token')
+	})
+
+	assert get_session_response.status_code == 200
+
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -190,7 +224,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 	create_session_body = create_session_response.json()
 
 	session_id = session_manager.find_api_session_id(create_session_body.get('access_token'))
-	session : ApiSession = session_manager.get_api_session(session_id)
+	session = session_manager.get_api_session(session_id)
 	session_manager.set_api_session(session_id,
 	{
 		'access_token': session.get('access_token'),
@@ -323,6 +357,24 @@ def test_destroy_session_content(test_client : TestClient) -> None:
 		(http_manager, http_manager.HTTP_STORE),
 		(websocket_manager, websocket_manager.WEBSOCKET_STORE)
 	]
+
+	session_manager.set_api_session(session_id,
+	{
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at') - timedelta(minutes = 6),
+		'expires_at': session.get('expires_at') - timedelta(minutes = 6)
+	})
+
+	with patch('facefusion.session_manager.sleep', side_effect = InterruptedError):
+		with pytest.raises(InterruptedError):
+			session_manager.conditional_clear_api_session(session_id)
+
+	with patch('facefusion.store_manager.sleep', side_effect = InterruptedError):
+		with pytest.raises(InterruptedError):
+			store_manager.conditional_api_destroy(session_id)
+
+	assert session_manager.get_api_session(session_id).get('access_token') == access_token
 
 	session_manager.set_api_session(session_id,
 	{
