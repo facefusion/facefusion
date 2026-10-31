@@ -68,7 +68,7 @@ def join_session() -> None:
 
 
 def has_fork_session(owner_id : SessionId) -> bool:
-	return bool(find_cli_session_id(owner_id))
+	return bool(find_fork_session_id(owner_id))
 
 
 def get_api_session(session_id : SessionId) -> Optional[ApiSession]:
@@ -86,9 +86,9 @@ def find_api_session_id(access_token : str) -> Optional[SessionId]:
 	return None
 
 
-def find_cli_session_id(owner_id : SessionId) -> Optional[SessionId]:
+def find_fork_session_id(owner_id : SessionId) -> Optional[SessionId]:
 	for session_id, cli_session in list(CLI_SESSIONS.items()):
-		if cli_session.get('owner_id') == owner_id:
+		if not session_id == owner_id and cli_session.get('owner_id') == owner_id:
 			return session_id
 	return None
 
