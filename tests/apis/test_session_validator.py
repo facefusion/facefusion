@@ -17,6 +17,16 @@ def test_validate_access_token() -> None:
 	{
 		'access_token': api_session.get('access_token'),
 		'refresh_token': api_session.get('refresh_token'),
+		'created_at': api_session.get('created_at') - timedelta(minutes = 4),
+		'expires_at': api_session.get('expires_at') - timedelta(minutes = 4)
+	})
+
+	assert validate_access_token(session_id) is True
+
+	set_api_session(session_id,
+	{
+		'access_token': api_session.get('access_token'),
+		'refresh_token': api_session.get('refresh_token'),
 		'created_at': api_session.get('created_at') - timedelta(minutes = 6),
 		'expires_at': api_session.get('expires_at') - timedelta(minutes = 6)
 	})
