@@ -17,7 +17,7 @@ def create_output_asset(job_id : JobId) -> None:
 
 def stop_fork_session() -> None:
 	owner_id = session_manager.resolve_owner_id()
-	fork_id = session_manager.find_cli_session_id(owner_id)
+	fork_id = session_manager.find_fork_session_id(owner_id)
 
 	if fork_id:
 		session_context.set_session_id(fork_id)

@@ -5,7 +5,7 @@ from typing import Iterator
 import pytest
 
 from facefusion.session_context import get_session_id, resolve_local_id, set_session_id
-from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, create_cli_session, find_api_session_id, find_cli_session_id, fork_session, get_api_session, get_cli_session, has_fork_session, join_session, resolve_owner_id, set_api_session, set_cli_session, validate_api_session, validate_cli_session
+from facefusion.session_manager import clear_api_session, clear_cli_session, create_api_session, create_cli_session, find_api_session_id, find_fork_session_id, fork_session, get_api_session, get_cli_session, has_fork_session, join_session, resolve_owner_id, set_api_session, set_cli_session, validate_api_session, validate_cli_session
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -85,14 +85,20 @@ def test_find_api_session_id() -> None:
 	clear_api_session(session_id)
 
 
-def test_find_cli_session_id() -> None:
-	set_session_id('session-a')
+def test_find_fork_session_id() -> None:
+	local_id = resolve_local_id()
+
+	set_cli_session(local_id, create_cli_session())
+
+	assert find_fork_session_id(local_id) is None
+
 	fork_id = fork_session()
 
-	assert find_cli_session_id('session-a') == fork_id
-	assert find_cli_session_id('invalid') is None
+	assert find_fork_session_id(local_id) == fork_id
+	assert find_fork_session_id('invalid') is None
 
 	clear_cli_session(fork_id)
+	clear_cli_session(local_id)
 
 
 def test_resolve_owner_id() -> None:
