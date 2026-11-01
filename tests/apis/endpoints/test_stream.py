@@ -178,39 +178,40 @@ def test_delete_stream_video(test_client : TestClient) -> None:
 	sdp_offer = rtc.create_sdp_offer(peer_connection)
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
-	test_client.post('/stream', content = sdp_offer, headers =
-	{
-		'Authorization': 'Bearer ' + access_token,
-		'Content-Type': 'application/sdp'
-	})
+	with patch('facefusion.apis.stream_manager.threading.Thread'):
+		test_client.post('/stream', content = sdp_offer, headers =
+		{
+			'Authorization': 'Bearer ' + access_token,
+			'Content-Type': 'application/sdp'
+		})
 
-	session_context.set_session_id(session_id)
+		session_context.set_session_id(session_id)
 
-	assert rtc_manager.has_peer() is True
+		assert rtc_manager.has_peer() is True
 
-	post_response = test_client.post('/stream', content = sdp_offer, headers =
-	{
-		'Authorization': 'Bearer ' + access_token,
-		'Content-Type': 'application/sdp'
-	})
+		post_response = test_client.post('/stream', content = sdp_offer, headers =
+		{
+			'Authorization': 'Bearer ' + access_token,
+			'Content-Type': 'application/sdp'
+		})
 
-	assert post_response.status_code == 409
-	session_context.set_session_id(session_id)
+		assert post_response.status_code == 409
+		session_context.set_session_id(session_id)
 
-	assert rtc_manager.has_peer() is True
+		assert rtc_manager.has_peer() is True
 
-	delete_response = test_client.delete('/stream', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
+		delete_response = test_client.delete('/stream', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
-	assert rtc_manager.has_peer() is False
-	assert delete_response.status_code == 200
+		assert rtc_manager.has_peer() is False
+		assert delete_response.status_code == 200
 
-	post_response = test_client.post('/stream', content = 'invalid', headers =
-	{
-		'Authorization': 'Bearer ' + access_token,
-		'Content-Type': 'application/sdp'
-	})
+		post_response = test_client.post('/stream', content = 'invalid', headers =
+		{
+			'Authorization': 'Bearer ' + access_token,
+			'Content-Type': 'application/sdp'
+		})
 
-	assert post_response.status_code == 404
+		assert post_response.status_code == 404
