@@ -357,6 +357,12 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 	})
 	fork_id = session_manager.fork_session()
 	process_manager.start_process()
+	process_manager.start_task('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 	session_context.set_session_id(session_id)
 
 	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
@@ -364,10 +370,13 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	cancel_jobs_body = cancel_jobs_response.json()
+	session_context.set_session_id(fork_id)
+	process_state = process_manager.get_process_state()
+	session_context.set_session_id(session_id)
 
 	assert cancel_jobs_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-jobs' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert process_state == 'stopping'
 	assert cancel_jobs_response.status_code == 200
 
 	session_manager.clear_cli_session(fork_id)
@@ -412,6 +421,12 @@ def test_cancel_job(test_client : TestClient) -> None:
 	})
 	fork_id = session_manager.fork_session()
 	process_manager.start_process()
+	process_manager.start_task('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 	session_context.set_session_id(session_id)
 
 	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
@@ -419,10 +434,13 @@ def test_cancel_job(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	cancel_job_body = cancel_job_response.json()
+	session_context.set_session_id(fork_id)
+	process_state = process_manager.get_process_state()
+	session_context.set_session_id(session_id)
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'processing'
+	assert process_state == 'processing'
 	assert cancel_job_response.status_code == 200
 
 	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
@@ -436,10 +454,13 @@ def test_cancel_job(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	cancel_job_body = cancel_job_response.json()
+	session_context.set_session_id(fork_id)
+	process_state = process_manager.get_process_state()
+	session_context.set_session_id(session_id)
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert process_state == 'stopping'
 	assert cancel_job_response.status_code == 200
 
 	session_manager.clear_cli_session(fork_id)

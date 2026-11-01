@@ -124,7 +124,7 @@ def format_progress(task : Task) -> str:
 		progress_color = choices.progress_action_set.get('color_neutral')
 
 	progress_bar = progress_color + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
-	progress_meta = task.get('type')
+	progress_meta : str = task.get('type')
 
 	if task.get('description'):
 		progress_meta += ' \u00b7 ' + task.get('description')
