@@ -1,5 +1,5 @@
 import os
-from logging import Formatter, Logger, LogRecord, basicConfig, getLogger
+from logging import Formatter, LogRecord, Logger, basicConfig, getLogger
 
 import facefusion.choices
 from facefusion import cli_progress

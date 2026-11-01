@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import cli_progress, ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import await_process, concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, render_progress, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_audio_entries, probe_video_entries
@@ -20,7 +20,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 def before_all() -> None:
 	state_manager.init()
 
-	process_manager.start()
+	process_manager.start_process()
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
@@ -140,11 +140,17 @@ def test_render_progress() -> None:
 		ffmpeg_builder.cast_stream()
 	)
 	process = ffmpeg.run_ffmpeg(commands)
+	process_manager.start_task('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+	render_progress(process)
 
-	with cli_progress.create(total = 270) as progress:
-		render_progress(process, progress)
+	assert process_manager.get_task().get('progress').get('current') == 270
 
-		assert progress.current == 270
+	process_manager.end_task()
 
 	assert process.wait() == 0
 
@@ -165,11 +171,16 @@ def test_await_process() -> None:
 	assert ffmpeg_mock.call_count > 0
 
 	state_manager.clear_item('log_level')
-	process_manager.stop()
+	process_manager.start_task('merge', 'merging',
+	{
+		'unit': 'frame',
+		'current': 0
+	})
+	process_manager.stop_process()
 
 	assert not await_process(ffmpeg.run_ffmpeg(commands)).wait() == 0
 
-	process_manager.start()
+	process_manager.end_process()
 
 
 def test_get_available_encoder_set() -> None:

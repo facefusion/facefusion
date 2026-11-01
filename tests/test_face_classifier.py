@@ -13,7 +13,7 @@ def before_all() -> None:
 	state_manager.init()
 	inference_manager.init()
 
-	process_manager.start()
+	process_manager.start_process()
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'

@@ -5,7 +5,7 @@ import threading
 from datetime import datetime
 from typing import List
 
-from facefusion import choices
+from facefusion import choices, translator
 from facefusion.types import RenderSet, Task
 
 RENDER_SET : RenderSet =\
@@ -116,7 +116,14 @@ def format_progress(task : Task) -> str:
 	terminal_width = shutil.get_terminal_size().columns
 	progress_width = 40
 	progress_fill = resolve_fill(task, progress_width)
-	progress_bar = choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
+	progress_title = task.get('title')
+	progress_color = choices.progress_action_set.get('color_active')
+
+	if task.get('state') == 'stopping':
+		progress_title = translator.get('stopping')
+		progress_color = choices.progress_action_set.get('color_neutral')
+
+	progress_bar = progress_color + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
 	progress_meta = task.get('type')
 
 	if task.get('description'):
@@ -124,7 +131,7 @@ def format_progress(task : Task) -> str:
 
 	progress_parts =\
 	[
-		task.get('title').ljust(12),
+		progress_title.ljust(12),
 		progress_bar,
 		'  ' + resolve_count(task).ljust(12),
 		resolve_rate_label(task).rjust(12),

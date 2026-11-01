@@ -43,11 +43,11 @@ def test_conditional_download_files() -> None:
 	}
 
 	assert conditional_download_files(hash_set) is True
-	assert process_manager.is_pending() is True
+	assert process_manager.is_process_pending() is True
 	assert conditional_download_files(source_set) is True
-	assert process_manager.is_pending() is True
+	assert process_manager.is_process_pending() is True
 	assert conditional_download_files(invalid_set) is False
-	assert process_manager.is_pending() is True
+	assert process_manager.is_process_pending() is True
 
 
 def test_conditional_validate_files() -> None:

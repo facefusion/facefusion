@@ -356,7 +356,7 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	fork_id = session_manager.fork_session()
-	process_manager.start()
+	process_manager.start_process()
 	session_context.set_session_id(session_id)
 
 	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
@@ -411,7 +411,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 	fork_id = session_manager.fork_session()
-	process_manager.start()
+	process_manager.start_process()
 	session_context.set_session_id(session_id)
 
 	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =

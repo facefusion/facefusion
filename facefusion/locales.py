@@ -18,6 +18,7 @@ LOCALES : Locales =\
 		'streaming': 'streaming',
 		'processing': 'processing',
 		'merging': 'merging',
+		'stopping': 'stopping',
 		'downloading': 'downloading',
 		'uploading': 'uploading',
 		'temp_frames_not_found': 'temporary frames not found',

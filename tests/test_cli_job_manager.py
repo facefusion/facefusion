@@ -14,7 +14,7 @@ def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 
-	process_manager.start()
+	process_manager.start_process()
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
