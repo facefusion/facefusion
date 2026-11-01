@@ -1,4 +1,5 @@
-from logging import Logger, basicConfig, getLogger
+import os
+from logging import Formatter, Logger, LogRecord, basicConfig, getLogger
 
 import facefusion.choices
 from facefusion import cli_progress
@@ -9,6 +10,37 @@ from facefusion.types import LogLevel
 def init(log_level : LogLevel) -> None:
 	basicConfig(format = '%(message)s', stream = cli_progress)
 	get_package_logger().setLevel(facefusion.choices.log_level_set.get(log_level))
+
+
+def forward_server_logs() -> None:
+	package_logger = get_package_logger()
+
+	for server_logger in [ getLogger('uvicorn.error'), getLogger('uvicorn.access') ]:
+		server_logger.handlers = []
+		server_logger.propagate = False
+		server_logger.setLevel(package_logger.level)
+		server_logger.addFilter(capture_server_log)
+
+
+def capture_server_log(log_record : LogRecord) -> bool:
+	log_message = log_record.getMessage()
+
+	if log_record.exc_info:
+		log_message += os.linesep + Formatter().formatException(log_record.exc_info)
+
+	if log_record.levelname == 'DEBUG':
+		debug(log_message, 'facefusion.api')
+
+	if log_record.levelname == 'INFO':
+		info(log_message, 'facefusion.api')
+
+	if log_record.levelname == 'WARNING':
+		warn(log_message, 'facefusion.api')
+
+	if log_record.levelname in [ 'ERROR', 'CRITICAL' ]:
+		error(log_message, 'facefusion.api')
+
+	return False
 
 
 def get_package_logger() -> Logger:

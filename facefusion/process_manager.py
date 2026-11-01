@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from facefusion import store_creator
-from facefusion.session_context import get_session_id
+from facefusion.session_context import get_session_id, set_session_id
 from facefusion.types import ProcessId, ProcessSet, Progress, SessionId, Store, Task, TaskId, TaskState, TaskType
 
 PROCESS_STORE : Store = store_creator.create_store({})
@@ -38,6 +38,18 @@ def stop_process() -> None:
 	if task:
 		task['state'] = 'stopping'
 		task['updated_at'] = datetime.now()
+
+
+def stop_processes() -> None:
+	session_id = get_session_id()
+
+	for __session_id__ in list(PROCESS_STORE.get('content_set').keys()):
+		set_session_id(__session_id__)
+
+		if not is_process_pending():
+			stop_process()
+
+	set_session_id(session_id)
 
 
 def end_process() -> None:
@@ -172,3 +184,13 @@ def collect_tasks() -> List[Task]:
 			tasks.extend(__tasks__)
 
 	return tasks
+
+
+def has_running_tasks() -> bool:
+	running_tasks : List[Task] = []
+
+	for task in collect_tasks():
+		if not task.get('state') == 'pending':
+			running_tasks.append(task)
+
+	return len(running_tasks) > 0

@@ -12,7 +12,7 @@ import facefusion.apis.core
 from facefusion import args_helper, benchmarker, cli_helper, cli_progress, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_files
-from facefusion.exit_helper import hard_exit, signal_exit
+from facefusion.exit_helper import graceful_exit, hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -82,6 +82,7 @@ def route(args : Args) -> None:
 			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
+		logger.forward_server_logs()
 		uvicorn.run(
 			facefusion.apis.core.create_api(),
 			host = state_manager.get_item('api_host'),
@@ -90,7 +91,7 @@ def route(args : Args) -> None:
 			ws_max_size = 8 * 1024 * 1024,
 			ws_max_queue = 8
 		)
-		hard_exit(1)
+		graceful_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
