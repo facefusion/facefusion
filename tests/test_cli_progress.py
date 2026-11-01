@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from _pytest.capture import CaptureFixture
 
 from facefusion.cli_progress import RENDER_SET, format_progress, queue_log, render_progresses, resolve_count, resolve_download, resolve_fill, resolve_frame, resolve_percent, resolve_rate, resolve_rate_label
+from facefusion.types import Task
 
 
 def test_queue_log() -> None:
@@ -53,7 +54,7 @@ def test_render_progresses(capsys : CaptureFixture[str]) -> None:
 
 
 def test_format_progress() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'analyse',
 		'type': 'analyse',
@@ -80,7 +81,7 @@ def test_format_progress() -> None:
 
 
 def test_resolve_fill() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'extract',
 		'type': 'extract',
@@ -108,7 +109,7 @@ def test_resolve_fill() -> None:
 
 
 def test_resolve_count() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'infer',
 		'type': 'infer',
@@ -136,7 +137,7 @@ def test_resolve_count() -> None:
 
 
 def test_resolve_rate_label() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'upload',
 		'type': 'upload',
@@ -164,7 +165,7 @@ def test_resolve_rate_label() -> None:
 
 
 def test_resolve_rate() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'stream',
 		'type': 'stream',
@@ -187,7 +188,7 @@ def test_resolve_rate() -> None:
 
 
 def test_resolve_percent() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'upload',
 		'type': 'upload',
@@ -211,7 +212,7 @@ def test_resolve_percent() -> None:
 
 
 def test_resolve_frame() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'infer',
 		'type': 'infer',
@@ -235,7 +236,7 @@ def test_resolve_frame() -> None:
 
 
 def test_resolve_download() -> None:
-	task =\
+	task : Task =\
 	{
 		'id': 'download',
 		'type': 'download',

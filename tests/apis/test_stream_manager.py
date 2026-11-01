@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from facefusion import rtc, rtc_manager, state_manager, store_creator
+from facefusion import process_manager, rtc, rtc_manager, state_manager, store_creator
 from facefusion.apis.stream_manager import destroy_stream, process_image, process_video, receive_vision_frames, run_peer_loop
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
@@ -159,6 +159,12 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 	store_creator.set_content(state_manager.STATE_SET, session_id, state_manager.get_state())
 	set_session_id(session_id)
 	rtc_manager.set_peer(rtc_peer)
+	process_manager.start_process()
+	process_manager.start_task('stream', 'streaming',
+	{
+		'unit': 'frame',
+		'current': 0
+	})
 
 	assert rtc_manager.has_peer() is True
 
@@ -171,6 +177,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = tuple([ session_id ]))
 
+	assert process_manager.is_process_pending() is True
 	assert rtc_manager.has_peer() is False
 
 

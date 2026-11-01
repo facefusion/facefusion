@@ -232,17 +232,6 @@ Task = TypedDict('Task',
 	'created_at' : datetime,
 	'updated_at' : datetime
 })
-TaskResponse = TypedDict('TaskResponse',
-{
-	'id' : TaskId,
-	'type' : TaskType,
-	'state' : TaskState,
-	'title' : str,
-	'description' : NotRequired[str],
-	'progress' : Progress,
-	'created_at' : str,
-	'updated_at' : str
-})
 ProcessSet : TypeAlias = Dict[ProcessId, List[Task]]
 LogMessage : TypeAlias = str
 RenderSet = TypedDict('RenderSet',

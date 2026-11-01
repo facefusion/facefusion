@@ -10,7 +10,7 @@ from unittest.mock import patch
 import cv2
 import pytest
 
-from facefusion import rtc, rtc_manager, state_manager, video_manager
+from facefusion import process_manager, rtc, rtc_manager, state_manager, video_manager
 from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, send_video_frames, update_video_encoder_bitrate, update_video_encoder_resolution
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
@@ -79,6 +79,12 @@ def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None
 	}
 
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 1)
+	process_manager.start_process()
+	process_manager.start_task('stream', 'streaming',
+	{
+		'unit': 'frame',
+		'current': 0
+	})
 
 	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
 		with ThreadPoolExecutor(max_workers = 1) as executor:
@@ -96,6 +102,8 @@ def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None
 
 	assert send_video_mock.called is True
 	assert destroy_video_encoder_mock.call_count == 1
+
+	process_manager.end_process()
 
 	if video_codec == 'av1':
 		if is_linux() or is_windows():

@@ -4,6 +4,7 @@ import pytest
 
 from facefusion import session_context, store_creator
 from facefusion.process_manager import PROCESS_STORE, clear, collect_tasks, describe_task, destroy, end_process, end_task, get_process_id, get_process_set, get_process_state, get_task, get_tasks, has_running_tasks, init, is_process_checking, is_process_pending, is_process_processing, is_process_stopping, seek_task, start_process, start_task, stop_process, stop_processes, update_task
+from facefusion.types import Progress
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -190,7 +191,7 @@ def test_is_process_stopping() -> None:
 
 def test_start_task() -> None:
 	start_process()
-	progress =\
+	progress : Progress =\
 	{
 		'unit': 'frame',
 		'current': 0,
