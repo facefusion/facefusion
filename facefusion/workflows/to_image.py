@@ -5,7 +5,7 @@ from facefusion.temp_helper import get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, pack_resolution, restrict_image_resolution, scale_resolution
-from facefusion.workflows.core import is_process_stopping, process_temp_frame
+from facefusion.workflows.core import process_temp_frame
 
 
 def analyse_image() -> ErrorCode:
@@ -23,7 +23,6 @@ def prepare_image() -> ErrorCode:
 		logger.debug(translator.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(translator.get('copying_image_failed'), __name__)
-		process_manager.end()
 		return 1
 	return 0
 
@@ -35,7 +34,7 @@ def process_image() -> ErrorCode:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		processor_module.post_process()
 
-	if is_process_stopping():
+	if process_manager.is_process_stopping():
 		return 4
 	return 0
 

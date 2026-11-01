@@ -4,7 +4,7 @@ from typing import Deque, List
 
 import numpy
 
-from facefusion import cli_progress, logger, process_manager, state_manager, thread_helper, translator
+from facefusion import logger, process_manager, state_manager, thread_helper, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.face_selector import decode_face_selector_maps
@@ -30,13 +30,6 @@ def detect_workflow_mode() -> WorkflowMode:
 		return 'audio-to-image:frames'
 
 	return 'image-to-image'
-
-
-def is_process_stopping() -> bool:
-	if process_manager.is_stopping():
-		process_manager.end()
-		logger.info(translator.get('processing_stopped'), __name__)
-	return process_manager.is_pending()
 
 
 def setup() -> ErrorCode:
@@ -167,35 +160,40 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
-		with cli_progress.create(unit = 'frame') as progress:
-			progress.set_title(translator.get('processing'))
-			progress.count(temp_frame_set)
+		process_manager.start_task('infer', translator.get('processing'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': len(temp_frame_set)
+		})
 
-			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
-				futures : Deque[Future[bool]] = deque()
+		with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
+			futures : Deque[Future[bool]] = deque()
 
-				for frame_index, temp_frame_path in temp_frame_set.items():
-					future = executor.submit(process_temp_frame, temp_frame_path, frame_index)
-					futures.append(future)
+			for frame_index, temp_frame_path in temp_frame_set.items():
+				future = executor.submit(process_temp_frame, temp_frame_path, frame_index)
+				futures.append(future)
 
-				while futures:
-					future = futures.popleft()
+			while futures:
+				future = futures.popleft()
 
-					if is_process_stopping():
+				if process_manager.is_process_stopping():
 
-						for pending_future in futures:
-							pending_future.cancel()
+					for pending_future in futures:
+						pending_future.cancel()
 
-						futures.clear()
+					futures.clear()
 
-					else:
-						future.result()
-						progress.update()
+				else:
+					future.result()
+					process_manager.update_task()
+
+		process_manager.end_task()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
-		if is_process_stopping():
+		if process_manager.is_process_stopping():
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)

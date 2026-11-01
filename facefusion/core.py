@@ -3,12 +3,13 @@ import itertools
 import shutil
 import signal
 import sys
-from time import time
+import threading
+from time import sleep, time
 
 import uvicorn
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
+from facefusion import args_helper, benchmarker, cli_helper, cli_progress, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_files
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -37,6 +38,8 @@ def cli() -> None:
 
 			if state_manager.get_item('command'):
 				logger.init(state_manager.get_item('log_level'))
+				cli_progress.start_rendering()
+				threading.Thread(target = render_loop, daemon = True).start()
 
 				session_id = session_context.get_session_id()
 				session_manager.set_cli_session(session_id, session_manager.create_cli_session())
@@ -58,17 +61,23 @@ def cli() -> None:
 
 def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'force-download':
+		process_manager.start_process()
 		error_code = force_download()
+		process_manager.end_process()
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'benchmark':
+		process_manager.start_process()
 		if not common_pre_check() or not processors_pre_check() or not benchmarker.pre_check():
 			hard_exit(2)
+		process_manager.end_process()
 		benchmarker.render()
 
 	if state_manager.get_item('command') == 'api':
+		process_manager.start_process()
 		if not common_pre_check() or not processors_pre_check() or not facefusion.apis.core.pre_check():
 			hard_exit(2)
+		process_manager.end_process()
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 
@@ -108,6 +117,13 @@ def route(args : Args) -> None:
 		hard_exit(error_code)
 
 
+def render_loop() -> None:
+	while threading.main_thread().is_alive():
+		tasks = process_manager.collect_tasks()
+		cli_progress.render_progresses(tasks)
+		sleep(0.5)
+
+
 def pre_check() -> bool:
 	if sys.version_info < (3, 13):
 		logger.error(translator.get('python_not_supported').format(version = '3.13'), __name__)
@@ -123,7 +139,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'c39e7c00' and hash_helper.create_hash(content_store_content) == '77e47f71'
+	return hash_helper.create_hash(content_analyser_content) == '8b0013fa' and hash_helper.create_hash(content_store_content) == '77e47f71'
 
 
 def processors_pre_check() -> bool:
@@ -327,6 +343,7 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 	state_manager.clone_state()
 
 	video_manager.init()
+	process_manager.start_process()
 
 	cli_args = args_helper.extract_cli_args(state_manager.get_state())
 	args = cli_args.copy()
@@ -341,6 +358,10 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 		return 2
 
 	finally:
+		if process_manager.is_process_stopping():
+			logger.info(translator.get('processing_stopped'), __name__)
+
+		process_manager.end_process()
 		session_manager.join_session()
 
 		stores =\

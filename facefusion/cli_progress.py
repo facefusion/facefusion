@@ -1,89 +1,89 @@
 import os
 import shutil
 import sys
-import time
-from contextlib import contextmanager
-from functools import partial
-from types import SimpleNamespace
-from typing import Iterator, Sized
+from datetime import datetime
+from typing import List
 
 from facefusion import choices
-from facefusion.types import ProgressUnit
+from facefusion.types import RenderSet, Task
+
+RENDER_SET : RenderSet =\
+{
+	'is_rendering': False,
+	'slot_total': 0,
+	'rendered_at': datetime.now(),
+	'log_messages': []
+}
 
 
-@contextmanager
-def create(unit : ProgressUnit = 'frame', current : int = 0, total : int = 0) -> Iterator[SimpleNamespace]:
-	progress = SimpleNamespace(
-		unit = unit,
-		current = current,
-		total = total,
-		time_start = time.monotonic(),
-		time_update = 0.0
-	)
-	progress.count = partial(count, progress)
-	progress.set_title = partial(set_title, progress)
-	progress.set_description = partial(set_description, progress)
-	progress.update = partial(update, progress)
-	progress.seek = partial(seek, progress)
+def start_rendering() -> None:
+	RENDER_SET['is_rendering'] = sys.stdout.isatty()
+	RENDER_SET['rendered_at'] = datetime.now()
 
-	yield progress
 
-	progress.current = progress.total
-	render(progress)
+def is_rendering() -> bool:
+	return RENDER_SET.get('is_rendering')
 
+
+def queue_log(message : str) -> None:
+	RENDER_SET.get('log_messages').append(message)
+
+
+def write(text : str) -> None:
+	if is_rendering():
+		queue_log(text.rstrip(os.linesep))
+
+	if not is_rendering():
+		sys.stderr.write(text)
+
+
+def flush() -> None:
+	sys.stderr.flush()
+
+
+def render_progresses(tasks : List[Task]) -> None:
+	rendered_at = datetime.now()
+	log_messages = RENDER_SET.get('log_messages')
+	log_total = len(log_messages)
+	running_tasks : List[Task] = []
+	output_parts : List[str] = []
+
+	if is_rendering():
+		output_parts.append(choices.progress_action_set.get('cursor_up') * RENDER_SET.get('slot_total') + choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_down'))
+
+	for log_message in log_messages[:log_total]:
+		output_parts.append(log_message + os.linesep)
+
+	del log_messages[:log_total]
+
+	for task in tasks:
+		if task.get('state') == 'pending' and task.get('updated_at') > RENDER_SET.get('rendered_at'):
+			output_parts.append(format_progress(task) + os.linesep)
+
+		if not task.get('state') == 'pending':
+			running_tasks.append(task)
+
+	if is_rendering():
+		for task in running_tasks:
+			output_parts.append(format_progress(task) + os.linesep)
+
+		RENDER_SET['slot_total'] = len(running_tasks)
+
+	RENDER_SET['rendered_at'] = rendered_at
+	sys.stdout.write(''.join(output_parts))
 	sys.stdout.flush()
-	sys.stdout.write(os.linesep)
 
 
-def set_title(progress : SimpleNamespace, title : str) -> None:
-	progress.title = title
-
-
-def set_description(progress : SimpleNamespace, description : str) -> None:
-	progress.description = description
-
-
-def count(progress : SimpleNamespace, collection : Sized) -> None:
-	progress.total = len(collection)
-
-
-def update(progress : SimpleNamespace) -> None:
-	seek(progress, progress.current + 1)
-
-
-def seek(progress : SimpleNamespace, current : int) -> None:
-	progress.current = current
-	time_current = time.monotonic()
-
-	if time_current - progress.time_update > 0.5:
-		progress.time_update = time_current
-		render(progress)
-
-
-def render(progress : SimpleNamespace) -> None:
-	title = getattr(progress, 'title', '')
-	description = getattr(progress, 'description', '')
-	status = str(progress.current)
-
-	if progress.unit == 'percent':
-		status = resolve_percent(progress)
-
-	if progress.unit == 'frame':
-		status = resolve_frame(progress)
-
-	if progress.unit == 'download':
-		status = resolve_download(progress)
-
+def format_progress(task : Task) -> str:
+	title = task.get('title')
+	description = task.get('description')
+	status = resolve_status(task)
 	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - 2
 
 	if description:
 		progress_width -= len(description) + 3
 
-	if progress.total > 0:
-		progress_fill = progress.current * progress_width // progress.total
-	else:
-		progress_fill = 0
-
+	progress_fill = resolve_fill(task, progress_width)
 	progress_bar = choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
 	progress_parts = [ title, progress_bar, status ]
 
@@ -91,37 +91,62 @@ def render(progress : SimpleNamespace) -> None:
 		progress_parts.append('|')
 		progress_parts.append(description)
 
-	sys.stdout.write(choices.progress_action_set.get('cursor_start') + ' '.join(progress_parts) + choices.progress_action_set.get('erase_line'))
-	sys.stdout.flush()
+	return ' '.join(progress_parts)
 
 
-def resolve_percent(progress : SimpleNamespace) -> str:
-	if progress.total > 0:
-		percent = progress.current * 100 // progress.total
+def resolve_fill(task : Task, progress_width : int) -> int:
+	progress = task.get('progress')
+
+	if progress.get('total'):
+		return progress.get('current') * progress_width // progress.get('total')
+
+	if 'total' in progress:
+		return 0
+
+	duration = (datetime.now() - task.get('created_at')).total_seconds()
+	return int(duration % 2 / 2 * progress_width)
+
+
+def resolve_status(task : Task) -> str:
+	unit = task.get('progress').get('unit')
+
+	if unit == 'frame':
+		return resolve_frame(task)
+
+	if unit == 'download':
+		return resolve_download(task)
+
+	return resolve_percent(task)
+
+
+def resolve_rate(task : Task) -> float:
+	duration = (task.get('updated_at') - task.get('created_at')).total_seconds()
+
+	if duration > 0:
+		return task.get('progress').get('current') / duration
+
+	return 0.0
+
+
+def resolve_percent(task : Task) -> str:
+	progress = task.get('progress')
+
+	if progress.get('total'):
+		percent = progress.get('current') * 100 // progress.get('total')
 		return str(percent) + ' %'
 
 	return '0 %'
 
 
-def resolve_frame(progress : SimpleNamespace) -> str:
-	time_current = time.monotonic()
-
-	if time_current - progress.time_start > 0:
-		rate = progress.current / (time_current - progress.time_start)
-		return str(round(rate, 1)) + 'frame/s'
-
-	return '0.0frame/s'
+def resolve_frame(task : Task) -> str:
+	rate = resolve_rate(task)
+	return str(round(rate, 1)) + 'frame/s'
 
 
-def resolve_download(progress : SimpleNamespace) -> str:
-	time_current = time.monotonic()
+def resolve_download(task : Task) -> str:
+	rate = resolve_rate(task)
 
-	if time_current - progress.time_start > 0:
-		rate = progress.current / (time_current - progress.time_start)
+	if rate > 1024 * 1024:
+		return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
 
-		if rate > 1024 * 1024:
-			return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
-
-		return str(round(rate / 1024, 1)) + 'kb/s'
-
-	return '0.0kb/s'
+	return str(round(rate / 1024, 1)) + 'kb/s'

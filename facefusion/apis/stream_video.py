@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple
 import cv2
 import numpy
 
-from facefusion import rtc, state_manager, streamer
+from facefusion import process_manager, rtc, state_manager, streamer
 from facefusion.apis.stream_event import create_receive_event, destroy_receive_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.content_analyser import analyse_stream
@@ -53,6 +53,7 @@ def send_video_frames(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future
 
 			receiver_bitrate = rtc_peer.get('receiver_bitrate').value
 			rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)
+			process_manager.update_task()
 			frame_index += 1
 
 			with suppress(ShutDown):
@@ -77,7 +78,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 
-	while rtc.is_open(video_track) and not receive_event.is_set():
+	while rtc.is_open(video_track) and not receive_event.is_set() and not process_manager.is_process_stopping():
 		receive_event.wait(timeout = 0.5)
 
 	destroy_receive_event(video_track)

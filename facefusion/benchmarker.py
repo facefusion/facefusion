@@ -6,7 +6,7 @@ from time import perf_counter
 from typing import Iterator, List
 
 import facefusion.choices
-from facefusion import content_analyser, core, face_store, state_manager
+from facefusion import content_analyser, core, face_store, process_manager, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
@@ -57,7 +57,9 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	state_manager.init_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
 	if state_manager.get_item('benchmark_mode') == 'warm':
+		process_manager.start_process()
 		core.conditional_process()
+		process_manager.end_process()
 
 	for index in range(cycle_count):
 		if state_manager.get_item('benchmark_mode') == 'cold':
@@ -65,9 +67,11 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 			content_analyser.analyse_video.cache_clear()
 			face_store.clear()
 
+		process_manager.start_process()
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()
+		process_manager.end_process()
 		process_times.append(end_time - start_time)
 
 	average_run = round(statistics.mean(process_times), 2)

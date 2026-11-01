@@ -5,7 +5,7 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 import facefusion.choices
-from facefusion import cli_progress, curl_builder, logger, process_manager, state_manager, translator
+from facefusion import curl_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_extension, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Buffer, Command, DownloadProvider, DownloadSet
@@ -24,22 +24,28 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
-			with cli_progress.create(unit = 'download', total = download_size) as progress:
-				progress.set_title(translator.get('downloading'))
-				progress.set_description('file_name = ' + download_file_name)
+			process_manager.start_task('download', translator.get('downloading'),
+			{
+				'unit': 'download',
+				'current': 0,
+				'total': download_size
+			})
+			process_manager.describe_task('file_name = ' + download_file_name)
 
-				commands = curl_builder.chain(
-					curl_builder.download(url, download_file_path),
-					curl_builder.set_timeout(5),
-					curl_builder.set_retry(5)
-				)
-				open_curl(commands)
-				current_size = initial_size
+			commands = curl_builder.chain(
+				curl_builder.download(url, download_file_path),
+				curl_builder.set_timeout(5),
+				curl_builder.set_retry(5)
+			)
+			open_curl(commands)
+			current_size = initial_size
 
-				while current_size < download_size:
-					if is_file(download_file_path):
-						current_size = get_file_size(download_file_path)
-						progress.seek(current_size)
+			while current_size < download_size:
+				if is_file(download_file_path):
+					current_size = get_file_size(download_file_path)
+					process_manager.seek_task(current_size)
+
+			process_manager.end_task()
 
 
 @lru_cache(maxsize = 64)
@@ -74,8 +80,6 @@ def ping_static_url(url : str) -> bool:
 
 
 def conditional_download_files(file_set : DownloadSet) -> bool:
-	process_manager.check()
-
 	for file in file_set.values():
 		file_url = file.get('url')
 		file_path = file.get('path')
@@ -83,10 +87,7 @@ def conditional_download_files(file_set : DownloadSet) -> bool:
 		if not validate_file(file_path) and file_url:
 			conditional_download(os.path.dirname(file_path), [ file_url ])
 
-	is_valid = conditional_validate_files(file_set)
-	process_manager.end()
-
-	return is_valid
+	return conditional_validate_files(file_set)
 
 
 def conditional_validate_files(file_set : DownloadSet) -> bool:

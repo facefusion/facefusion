@@ -24,7 +24,7 @@ def init() -> None:
 
 
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
-	while process_manager.is_checking():
+	while process_manager.is_process_checking():
 		sleep(0.5)
 
 	owner_id = resolve_owner_id()

@@ -152,7 +152,10 @@ CapabilityStore = TypedDict('CapabilityStore',
 })
 CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
-ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
+ProcessId : TypeAlias = str
+TaskId : TypeAlias = str
+TaskType = Literal['download', 'analyse', 'extract', 'spawn', 'infer', 'merge', 'upload', 'stream']
+TaskState = Literal['pending', 'checking', 'processing', 'stopping']
 
 Content : TypeAlias = Dict[str, Any]
 
@@ -209,9 +212,46 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
-ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
+ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'cursor_up', 'erase_line', 'erase_down', 'reset']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
 ProgressUnit = Literal['percent', 'frame', 'download']
+Progress = TypedDict('Progress',
+{
+	'unit' : ProgressUnit,
+	'current' : int,
+	'total' : NotRequired[int]
+})
+Task = TypedDict('Task',
+{
+	'id' : TaskId,
+	'type' : TaskType,
+	'state' : TaskState,
+	'title' : str,
+	'description' : NotRequired[str],
+	'progress' : Progress,
+	'created_at' : datetime,
+	'updated_at' : datetime
+})
+TaskResponse = TypedDict('TaskResponse',
+{
+	'id' : TaskId,
+	'type' : TaskType,
+	'state' : TaskState,
+	'title' : str,
+	'description' : NotRequired[str],
+	'progress' : Progress,
+	'created_at' : str,
+	'updated_at' : str
+})
+ProcessSet : TypeAlias = Dict[ProcessId, List[Task]]
+LogMessage : TypeAlias = str
+RenderSet = TypedDict('RenderSet',
+{
+	'is_rendering' : bool,
+	'slot_total' : int,
+	'rendered_at' : datetime,
+	'log_messages' : List[LogMessage]
+})
 
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any

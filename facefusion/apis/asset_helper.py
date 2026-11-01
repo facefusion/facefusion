@@ -6,7 +6,7 @@ from typing import List, Optional
 from starlette.datastructures import UploadFile
 
 import facefusion.choices
-from facefusion import ffmpeg, process_manager, state_manager
+from facefusion import ffmpeg, process_manager, session_manager, state_manager, store_creator, translator
 from facefusion.face_creator import get_many_faces
 from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.face_selector import sort_faces_by_order
@@ -46,6 +46,9 @@ def detect_media_type_by_format(file_format : str) -> Optional[MediaType]:
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')
+	fork_id = session_manager.fork_session()
+	state_manager.clone_state()
+	process_manager.start_process()
 
 	for upload_file in upload_files:
 		file_format = get_file_format(upload_file.filename)
@@ -58,7 +61,12 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		asset_file_name = uuid.uuid4().hex
 		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
 
-		process_manager.start()
+		process_manager.start_task('upload', translator.get('uploading'),
+		{
+			'unit': 'percent',
+			'current': 0,
+			'total': 100
+		})
 
 		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
@@ -69,8 +77,12 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		process_manager.end()
+		process_manager.end_task()
 
+	process_manager.end_process()
+	session_manager.join_session()
+	store_creator.delete_content(state_manager.STATE_SET, fork_id)
+	store_creator.delete_content(process_manager.PROCESS_STORE, fork_id)
 	return asset_paths
 
 

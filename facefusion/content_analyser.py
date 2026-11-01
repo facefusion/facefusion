@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy
 
 import facefusion.choices
-from facefusion import cli_progress, content_store, inference_manager, translator, video_manager
+from facefusion import content_store, inference_manager, process_manager, translator, video_manager
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -162,21 +162,24 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	if trim_frame_start > 0:
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
-	with cli_progress.create(unit = 'frame') as progress:
-		progress.set_title(translator.get('analysing'))
-		progress.count(frame_range)
+	process_manager.start_task('analyse', translator.get('analysing'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': len(frame_range)
+	})
+	content_store.clear()
 
-		content_store.clear()
+	for _ in frame_range:
+		vision_frame = video_manager.read_video_frame(video_reader)
 
-		for _ in frame_range:
-			vision_frame = video_manager.read_video_frame(video_reader)
+		if content_store.tick() and analyse_frame(vision_frame):
+			content_store.set_hit()
 
-			if content_store.tick() and analyse_frame(vision_frame):
-				content_store.set_hit()
+		process_manager.describe_task('rate = ' + str(content_store.calculate_rate()))
+		process_manager.update_task()
 
-			progress.set_description('rate = ' + str(content_store.calculate_rate()))
-			progress.update()
-
+	process_manager.end_task()
 	return bool(content_store.calculate_rate() > 10.0)
 
 

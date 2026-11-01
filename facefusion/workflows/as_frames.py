@@ -1,6 +1,6 @@
 import os
 
-from facefusion import ffmpeg, logger, state_manager, translator
+from facefusion import ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.audio import restrict_audio_range
 from facefusion.common_helper import get_first
 from facefusion.filesystem import are_images, copy_file, create_directory, filter_audio_paths, resolve_file_paths
@@ -8,7 +8,6 @@ from facefusion.temp_helper import resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, restrict_image_resolution, scale_resolution
-from facefusion.workflows.core import is_process_stopping
 
 
 def create_temp_frames() -> ErrorCode:
@@ -21,7 +20,7 @@ def create_temp_frames() -> ErrorCode:
 	if ffmpeg.spawn_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution, output_audio_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('spawning_frames_succeeded'), __name__)
 	else:
-		if is_process_stopping():
+		if process_manager.is_process_stopping():
 			return 4
 		logger.error(translator.get('spawning_frames_failed'), __name__)
 		return 1

@@ -2,11 +2,10 @@ import os
 import subprocess
 import tempfile
 from functools import lru_cache
-from types import SimpleNamespace
 from typing import BinaryIO, List, Optional, cast
 
 import facefusion.choices
-from facefusion import cli_progress, ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
+from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, ImageEncoder, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata
@@ -27,22 +26,22 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[Buffer]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.DEVNULL, stdout = subprocess.PIPE)
 
 
-def render_progress(process : subprocess.Popen[Buffer], progress : SimpleNamespace) -> None:
+def render_progress(process : subprocess.Popen[Buffer]) -> None:
 	while __line__ := process.stdout.readline().decode().lower():
-		if process_manager.is_stopping():
+		if process_manager.is_process_stopping():
 			process.terminate()
 
 		if 'frame=' in __line__:
 			_, __frame_index__ = __line__.split('frame=')
 			frame_index = int(__frame_index__)
 
-			progress.seek(frame_index)
+			process_manager.seek_task(frame_index)
 
 
 def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer]:
 	log_level = state_manager.get_item('log_level')
 
-	while process_manager.is_processing():
+	while not process_manager.is_process_stopping():
 		try:
 			if log_level == 'debug':
 				log_debug(process)
@@ -51,7 +50,7 @@ def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer
 		except subprocess.TimeoutExpired:
 			pass
 
-	if process_manager.is_stopping():
+	if process_manager.is_process_stopping():
 		process.terminate()
 
 	return process
@@ -167,11 +166,16 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		ffmpeg_builder.cast_stream()
 	)
 
-	with cli_progress.create(total = extract_frame_total) as progress:
-		progress.set_title(translator.get('extracting'))
-		process = run_ffmpeg(commands)
-		render_progress(process, progress)
-		return await_process(process).returncode == 0
+	process_manager.start_task('extract', translator.get('extracting'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': extract_frame_total
+	})
+	process = run_ffmpeg(commands)
+	render_progress(process)
+	process_manager.end_task()
+	return await_process(process).returncode == 0
 
 
 def spawn_frames(target_path : str, output_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
@@ -189,11 +193,16 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		ffmpeg_builder.cast_stream()
 	)
 
-	with cli_progress.create(total = spawn_frame_total) as progress:
-		progress.set_title(translator.get('spawning'))
-		process = run_ffmpeg(commands)
-		render_progress(process, progress)
-		return await_process(process).returncode == 0
+	process_manager.start_task('spawn', translator.get('spawning'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': spawn_frame_total
+	})
+	process = run_ffmpeg(commands)
+	render_progress(process)
+	process_manager.end_task()
+	return await_process(process).returncode == 0
 
 
 def copy_image(target_path : str, output_path : str, temp_image_resolution : Resolution) -> bool:
@@ -319,11 +328,16 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		ffmpeg_builder.cast_stream()
 	)
 
-	with cli_progress.create(total = merge_frame_total) as progress:
-		progress.set_title(translator.get('merging'))
-		process = run_ffmpeg(commands)
-		render_progress(process, progress)
-		return await_process(process).returncode == 0
+	process_manager.start_task('merge', translator.get('merging'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': merge_frame_total
+	})
+	process = run_ffmpeg(commands)
+	render_progress(process)
+	process_manager.end_task()
+	return await_process(process).returncode == 0
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:

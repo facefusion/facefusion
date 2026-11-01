@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, rtc, rtc_manager, state_manager, streamer, thread_helper
+from facefusion import content_store, process_manager, rtc, rtc_manager, state_manager, streamer, thread_helper, translator
 from facefusion.apis.media_validator import validate_media_resolution
 from facefusion.apis.stream_audio import receive_audio_frames, send_audio_frames
 from facefusion.apis.stream_video import receive_video_frames, send_video_frames
@@ -99,6 +99,12 @@ def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 
 			content_store.clear()
 			rtc_manager.set_peer(rtc_peer)
+			process_manager.start_process()
+			process_manager.start_task('stream', translator.get('streaming'),
+			{
+				'unit': 'frame',
+				'current': 0
+			})
 
 			threading.Thread(
 				target = copy_context().run,
@@ -152,11 +158,14 @@ def run_peer_loop(rtc_peer : RtcPeer) -> None:
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
 
+	process_manager.end_task()
+	process_manager.end_process()
 	rtc_manager.delete_peer()
 
 
 def destroy_stream() -> bool:
 	if rtc_manager.has_peer():
+		process_manager.stop_process()
 		rtc_manager.delete_peer()
 		return not rtc_manager.has_peer()
 

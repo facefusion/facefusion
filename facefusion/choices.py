@@ -155,7 +155,9 @@ progress_action_set : ProgressActionSet =\
 	'color_active': '\033[94m',
 	'color_neutral': '\033[90m',
 	'cursor_start': '\033[G',
+	'cursor_up': '\033[F',
 	'erase_line': '\033[K',
+	'erase_down': '\033[J',
 	'reset': '\033[0m'
 }
 

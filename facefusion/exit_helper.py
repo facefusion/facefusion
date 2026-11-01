@@ -5,7 +5,7 @@ from time import sleep
 from types import FrameType
 from typing import NoReturn
 
-from facefusion import process_manager, state_manager
+from facefusion import cli_progress, process_manager, state_manager
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.types import ErrorCode
 
@@ -15,6 +15,7 @@ def fatal_exit(error_code : ErrorCode) -> NoReturn:
 
 
 def hard_exit(error_code : ErrorCode) -> NoReturn:
+	cli_progress.render_progresses(process_manager.collect_tasks())
 	sys.exit(error_code)
 
 
@@ -24,9 +25,9 @@ def signal_exit(signum : int, frame : FrameType) -> NoReturn:
 
 def graceful_exit(error_code : ErrorCode) -> NoReturn:
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
-	process_manager.stop()
+	process_manager.stop_process()
 
-	while process_manager.is_processing():
+	while process_manager.is_process_processing():
 		sleep(0.5)
 
 	if state_manager.get_item('output_path'):

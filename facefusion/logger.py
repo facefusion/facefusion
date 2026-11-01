@@ -1,12 +1,13 @@
 from logging import Logger, basicConfig, getLogger
 
 import facefusion.choices
+from facefusion import cli_progress
 from facefusion.common_helper import get_first, get_last
 from facefusion.types import LogLevel
 
 
 def init(log_level : LogLevel) -> None:
-	basicConfig(format = '%(message)s')
+	basicConfig(format = '%(message)s', stream = cli_progress)
 	get_package_logger().setLevel(facefusion.choices.log_level_set.get(log_level))
 
 

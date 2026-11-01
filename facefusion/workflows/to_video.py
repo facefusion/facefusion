@@ -5,7 +5,7 @@ from typing import Deque, Tuple
 import cv2
 import numpy
 
-from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
+from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
 from facefusion.audio import restrict_audio_range
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
@@ -14,7 +14,7 @@ from facefusion.temp_helper import move_temp_file
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode, Fps, Resolution, VisionFrame
 from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, predict_video_frame_total, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution
-from facefusion.workflows.core import conditional_get_reference_vision_frames, conditional_get_target_vision_frames, is_process_stopping, process_temp_vision_frame
+from facefusion.workflows.core import conditional_get_reference_vision_frames, conditional_get_target_vision_frames, process_temp_vision_frame
 
 
 def analyse_video() -> ErrorCode:
@@ -36,7 +36,7 @@ def create_temp_frames() -> ErrorCode:
 	if ffmpeg.extract_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('extracting_frames_succeeded'), __name__)
 	else:
-		if is_process_stopping():
+		if process_manager.is_process_stopping():
 			return 4
 		logger.error(translator.get('extracting_frames_failed'), __name__)
 		return 1
@@ -76,40 +76,44 @@ def process_memory_frames() -> ErrorCode:
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
-		with cli_progress.create(unit = 'frame') as progress:
-			progress.set_title(translator.get('processing'))
-			progress.count(temp_frame_range)
+		process_manager.start_task('infer', translator.get('processing'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': len(temp_frame_range)
+		})
+		conditional_get_reference_vision_frames()
 
-			conditional_get_reference_vision_frames()
+		with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
+			futures : Deque[Future[VisionFrame]] = deque()
 
-			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
-				futures : Deque[Future[VisionFrame]] = deque()
+			for frame_index in temp_frame_range:
+				future = executor.submit(process_memory_frame, frame_index, temp_video_resolution, output_video_resolution)
+				futures.append(future)
 
-				for frame_index in temp_frame_range:
-					future = executor.submit(process_memory_frame, frame_index, temp_video_resolution, output_video_resolution)
-					futures.append(future)
+			while futures:
+				future = futures.popleft()
 
-				while futures:
-					future = futures.popleft()
+				if process_manager.is_process_stopping():
 
-					if is_process_stopping():
+					for pending_future in futures:
+						pending_future.cancel()
 
-						for pending_future in futures:
-							pending_future.cancel()
+					futures.clear()
 
-						futures.clear()
+				else:
+					video_manager.write_video_frame(video_writer, future.result())
+					process_manager.update_task()
 
-					else:
-						video_manager.write_video_frame(video_writer, future.result())
-						progress.update()
+		process_manager.end_task()
 
 		if not video_manager.close_video_writer(video_writer):
-			process_manager.stop()
+			process_manager.stop_process()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
-		if is_process_stopping():
+		if process_manager.is_process_stopping():
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
@@ -127,7 +131,7 @@ def merge_frames() -> ErrorCode:
 	if ffmpeg.merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, output_fps, output_video_resolution, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
-		if is_process_stopping():
+		if process_manager.is_process_stopping():
 			return 4
 		logger.error(translator.get('merging_video_failed'), __name__)
 		return 1
@@ -148,7 +152,7 @@ def restore_audio() -> ErrorCode:
 				logger.debug(translator.get('replacing_audio_succeeded'), __name__)
 			else:
 				conditional_clear_video_pool()
-				if is_process_stopping():
+				if process_manager.is_process_stopping():
 					return 4
 				logger.warn(translator.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
@@ -158,7 +162,7 @@ def restore_audio() -> ErrorCode:
 				logger.debug(translator.get('restoring_audio_succeeded'), __name__)
 			else:
 				conditional_clear_video_pool()
-				if is_process_stopping():
+				if process_manager.is_process_stopping():
 					return 4
 				logger.warn(translator.get('restoring_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
