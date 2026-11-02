@@ -337,10 +337,15 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 
 	try:
 		if common_pre_check() and processors_pre_check():
+			process_manager.start()
 			return conditional_process()
 		return 2
 
 	finally:
+		if process_manager.is_stopping():
+			logger.info(translator.get('processing_stopped'), __name__)
+
+		process_manager.end()
 		session_manager.join_session()
 
 		stores =\
