@@ -32,13 +32,6 @@ def detect_workflow_mode() -> WorkflowMode:
 	return 'image-to-image'
 
 
-def is_process_stopping() -> bool:
-	if process_manager.is_stopping():
-		process_manager.end()
-		logger.info(translator.get('processing_stopped'), __name__)
-	return process_manager.is_pending()
-
-
 def setup() -> ErrorCode:
 	if create_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path')):
 		logger.debug(translator.get('creating_temp'), __name__)
@@ -181,7 +174,7 @@ def process_frames() -> ErrorCode:
 				while futures:
 					future = futures.popleft()
 
-					if is_process_stopping():
+					if process_manager.is_stopping():
 
 						for pending_future in futures:
 							pending_future.cancel()
@@ -195,7 +188,7 @@ def process_frames() -> ErrorCode:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
 
-		if is_process_stopping():
+		if process_manager.is_stopping():
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
