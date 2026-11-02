@@ -24,7 +24,7 @@ def signal_exit(signum : int, frame : FrameType) -> NoReturn:
 
 def graceful_exit(error_code : ErrorCode) -> NoReturn:
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
-	process_manager.stop()
+	process_manager.stop_process()
 
 	while process_manager.is_processing():
 		sleep(0.5)

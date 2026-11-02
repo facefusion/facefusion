@@ -69,7 +69,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		process_manager.end()
+		process_manager.end_process()
 
 	return asset_paths
 

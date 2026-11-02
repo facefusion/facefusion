@@ -104,7 +104,7 @@ def process_memory_frames() -> ErrorCode:
 						progress.update()
 
 		if not video_manager.close_video_writer(video_writer):
-			process_manager.stop()
+			process_manager.stop_process()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()

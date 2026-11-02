@@ -59,7 +59,7 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	if state_manager.get_item('benchmark_mode') == 'warm':
 		process_manager.start()
 		core.conditional_process()
-		process_manager.end()
+		process_manager.end_process()
 
 	for index in range(cycle_count):
 		if state_manager.get_item('benchmark_mode') == 'cold':
@@ -71,7 +71,7 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()
-		process_manager.end()
+		process_manager.end_process()
 		process_times.append(end_time - start_time)
 
 	average_run = round(statistics.mean(process_times), 2)

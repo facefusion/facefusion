@@ -21,5 +21,5 @@ def stop_fork_session() -> None:
 
 	if fork_id:
 		session_context.set_session_id(fork_id)
-		process_manager.stop()
+		process_manager.stop_process()
 		session_context.set_session_id(owner_id)
