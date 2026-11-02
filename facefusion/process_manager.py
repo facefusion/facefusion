@@ -45,11 +45,11 @@ def start() -> None:
 	set_state('processing')
 
 
-def stop() -> None:
+def stop_process() -> None:
 	set_state('stopping')
 
 
-def end() -> None:
+def end_process() -> None:
 	set_state('pending')
 
 

@@ -165,7 +165,7 @@ def test_await_process() -> None:
 	assert ffmpeg_mock.call_count > 0
 
 	state_manager.clear_item('log_level')
-	process_manager.stop()
+	process_manager.stop_process()
 
 	assert not await_process(ffmpeg.run_ffmpeg(commands)).wait() == 0
 

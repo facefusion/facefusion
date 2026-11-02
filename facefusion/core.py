@@ -345,7 +345,7 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 		if process_manager.is_stopping():
 			logger.info(translator.get('processing_stopped'), __name__)
 
-		process_manager.end()
+		process_manager.end_process()
 		session_manager.join_session()
 
 		stores =\

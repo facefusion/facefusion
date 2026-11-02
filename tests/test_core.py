@@ -31,14 +31,14 @@ def test_process_step(mocker : MockerFixture, error_code : ErrorCode) -> None:
 	conditional_process_mock = mocker.patch('facefusion.core.conditional_process', return_value = error_code)
 	fork_session_mock = mocker.spy(session_manager, 'fork_session')
 	start_mock = mocker.spy(process_manager, 'start')
-	end_mock = mocker.spy(process_manager, 'end')
+	end_process_mock = mocker.spy(process_manager, 'end_process')
 
 	assert core.process_step('job-id', 0, step_args) == error_code
 
 	conditional_process_mock.assert_called_once_with()
 
 	assert start_mock.call_count == 1
-	assert end_mock.call_count == 1
+	assert end_process_mock.call_count == 1
 
 	assert session_manager.has_fork_session(local_id) is False
 
