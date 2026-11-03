@@ -626,7 +626,7 @@ def pre_process(mode : ProcessMode) -> bool:
 		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
 		return False
 
-	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
+	if mode == 'output' and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 

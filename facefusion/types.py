@@ -152,8 +152,6 @@ CapabilityStore = TypedDict('CapabilityStore',
 })
 CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
-ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-
 Content : TypeAlias = Dict[str, Any]
 
 Token : TypeAlias = str
@@ -203,7 +201,6 @@ CommandSet : TypeAlias = Dict[str, List[Command]]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet : TypeAlias = Dict[WarpTemplate, NDArray[Any]]
-ProcessMode = Literal['output', 'preview', 'stream']
 
 ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
@@ -212,6 +209,9 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
 ProgressUnit = Literal['percent', 'frame', 'download']
+
+ProcessMode = Literal['output', 'stream']
+ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any
