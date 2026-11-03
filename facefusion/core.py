@@ -136,8 +136,6 @@ def force_download() -> ErrorCode:
 			if common_module not in common_modules:
 				common_modules.append(common_module)
 
-	process_manager.start()
-
 	for module in common_modules + processor_modules:
 		if hasattr(module, 'create_static_model_set'):
 			for model in module.create_static_model_set(download_scope).values():
@@ -146,10 +144,8 @@ def force_download() -> ErrorCode:
 
 				if model_hash_set and model_source_set:
 					if not conditional_download_files(model_hash_set) or not conditional_download_files(model_source_set):
-						process_manager.end()
 						return 1
 
-	process_manager.end()
 	return 0
 
 
