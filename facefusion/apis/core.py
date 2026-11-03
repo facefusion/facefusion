@@ -99,18 +99,10 @@ def create_server() -> uvicorn.Server:
 	))
 
 
-def stop_server(server : uvicorn.Server, signum : int, frame : Optional[FrameType]) -> None:
-	if server.should_exit:
-		server.force_exit = True
-
-	process_manager.stop_process()
-	server.should_exit = True
-
-
-def run_server() -> ErrorCode:
-	server = create_server()
+def start_server(server : uvicorn.Server) -> ErrorCode:
 	signal.signal(signal.SIGINT, partial(stop_server, server))
 	signal.signal(signal.SIGTERM, partial(stop_server, server))
+
 	server_thread = threading.Thread(
 		target = copy_context().run,
 		args = (server.run,)
@@ -121,3 +113,11 @@ def run_server() -> ErrorCode:
 	if server.should_exit:
 		return 0
 	return 1
+
+
+def stop_server(server : uvicorn.Server, signum : int, frame : Optional[FrameType]) -> None:
+	if server.should_exit:
+		server.force_exit = True
+
+	process_manager.stop_process()
+	server.should_exit = True

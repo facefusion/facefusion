@@ -71,7 +71,8 @@ def route(args : Args) -> None:
 			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
-		error_code = facefusion.apis.core.run_server()
+		server = facefusion.apis.core.create_server()
+		error_code = facefusion.apis.core.start_server(server)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
