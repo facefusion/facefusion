@@ -108,7 +108,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 
 	if action == 'cancel':
 		if job_manager.cancel_jobs(state_manager.get_item('halt_on_error')):
-			if not process_manager.is_pending():
+			if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
 				process_manager.stop()
 
 			return JSONResponse(
@@ -122,7 +122,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'run':
-		if not process_manager.is_pending():
+		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
 			return JSONResponse(
 			{
 				'message': translator.get('job_all_not_started', 'facefusion.apis')
@@ -142,7 +142,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
-		if not process_manager.is_pending():
+		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
 			return JSONResponse(
 			{
 				'message': translator.get('job_all_not_retried', 'facefusion.apis')
@@ -213,7 +213,7 @@ async def update_job(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'run':
-		if not process_manager.is_pending():
+		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
 			return JSONResponse(
 			{
 				'message': translator.get('job_not_started', 'facefusion.apis')
@@ -235,7 +235,7 @@ async def update_job(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
-		if not process_manager.is_pending():
+		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
 			return JSONResponse(
 			{
 				'message': translator.get('job_not_retried', 'facefusion.apis')
