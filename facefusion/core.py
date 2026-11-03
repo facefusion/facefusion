@@ -5,8 +5,6 @@ import signal
 import sys
 from time import time
 
-import uvicorn
-
 import facefusion.apis.core
 from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
 from facefusion.args_helper import apply_args
@@ -73,15 +71,8 @@ def route(args : Args) -> None:
 			hard_exit(1)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
-		uvicorn.run(
-			facefusion.apis.core.create_api(),
-			host = state_manager.get_item('api_host'),
-			port = state_manager.get_item('api_port'),
-			limit_concurrency = state_manager.get_item('api_session_limit') * 8,
-			ws_max_size = 8 * 1024 * 1024,
-			ws_max_queue = 8
-		)
-		hard_exit(1)
+		error_code = facefusion.apis.core.run_server()
+		hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):

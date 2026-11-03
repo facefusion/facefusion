@@ -1,5 +1,6 @@
 from facefusion import store_creator
-from facefusion.session_context import get_session_id
+from facefusion.session_context import get_session_id, resolve_local_id
+from facefusion.session_manager import resolve_owner_id
 from facefusion.types import ProcessState, SessionId, Store
 
 PROCESS_STORE : Store = store_creator.create_store('pending')
@@ -12,6 +13,11 @@ def init() -> None:
 
 def get_state() -> ProcessState:
 	session_id = get_session_id()
+	owner_id = resolve_owner_id()
+	local_id = resolve_local_id()
+
+	if store_creator.get_content(PROCESS_STORE, owner_id) == 'stopping' or store_creator.get_content(PROCESS_STORE, local_id) == 'stopping':
+		return 'stopping'
 
 	return store_creator.get_content(PROCESS_STORE, session_id)
 

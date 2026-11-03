@@ -2,7 +2,7 @@ from typing import Iterator
 
 import pytest
 
-from facefusion import session_context
+from facefusion import session_context, session_manager
 from facefusion.process_manager import clear, end_process, get_state, init, is_pending, is_processing, is_stopping, set_state, start, stop_process
 
 
@@ -10,6 +10,8 @@ from facefusion.process_manager import clear, end_process, get_state, init, is_p
 def before_each() -> Iterator[None]:
 	local_id = session_context.resolve_local_id()
 
+	session_context.set_session_id(local_id)
+	clear()
 	session_context.set_session_id('session-a')
 	clear()
 	session_context.set_session_id('session-b')
@@ -38,6 +40,38 @@ def test_get_state() -> None:
 	session_context.set_session_id('session-a')
 
 	assert get_state() == 'processing'
+
+	fork_id = session_manager.fork_session()
+	clear()
+	set_state('processing')
+
+	assert get_state() == 'processing'
+
+	session_context.set_session_id('session-a')
+	set_state('stopping')
+	session_context.set_session_id(fork_id)
+
+	assert get_state() == 'stopping'
+
+	session_context.set_session_id('session-a')
+	set_state('processing')
+	session_context.set_session_id(fork_id)
+
+	assert get_state() == 'processing'
+
+	local_id = session_context.resolve_local_id()
+	session_context.set_session_id(local_id)
+	set_state('stopping')
+	session_context.set_session_id(fork_id)
+
+	assert get_state() == 'stopping'
+
+	session_context.set_session_id('session-b')
+
+	assert get_state() == 'stopping'
+
+	session_context.set_session_id(fork_id)
+	session_manager.join_session()
 
 
 def test_start() -> None:

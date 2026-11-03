@@ -1,13 +1,18 @@
-from types import ModuleType
-from typing import List
+import signal
+import threading
+from contextvars import copy_context
+from functools import partial
+from types import FrameType, ModuleType
+from typing import List, Optional
 
+import uvicorn
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
-from facefusion import content_analyser, state_manager
+from facefusion import content_analyser, process_manager, state_manager
 from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_asset, get_assets, upload_assets
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
@@ -21,6 +26,7 @@ from facefusion.apis.middlewares.exception import create_exception_guard
 from facefusion.apis.middlewares.security import create_security_guard
 from facefusion.apis.middlewares.session import create_session_guard
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
+from facefusion.types import ErrorCode
 
 
 def get_common_modules() -> List[ModuleType]:
@@ -80,3 +86,38 @@ def create_api() -> Starlette:
 		api.add_middleware(CORSMiddleware, allow_origins = cors_origins, allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ], expose_headers = [ 'Location' ])
 
 	return api
+
+
+def create_server() -> uvicorn.Server:
+	return uvicorn.Server(uvicorn.Config(
+		create_api(),
+		host = state_manager.get_item('api_host'),
+		port = state_manager.get_item('api_port'),
+		limit_concurrency = state_manager.get_item('api_session_limit') * 8,
+		ws_max_size = 8 * 1024 * 1024,
+		ws_max_queue = 8
+	))
+
+
+def stop_server(server : uvicorn.Server, signum : int, frame : Optional[FrameType]) -> None:
+	if server.should_exit:
+		server.force_exit = True
+
+	process_manager.stop_process()
+	server.should_exit = True
+
+
+def run_server() -> ErrorCode:
+	server = create_server()
+	signal.signal(signal.SIGINT, partial(stop_server, server))
+	signal.signal(signal.SIGTERM, partial(stop_server, server))
+	server_thread = threading.Thread(
+		target = copy_context().run,
+		args = (server.run,)
+	)
+	server_thread.start()
+	server_thread.join()
+
+	if server.should_exit:
+		return 0
+	return 1
