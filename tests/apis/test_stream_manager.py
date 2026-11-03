@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from facefusion import rtc, rtc_manager, state_manager, store_creator
-from facefusion.apis.stream_manager import destroy_stream, negotiate_video, process_image, process_video, receive_vision_frames
+from facefusion.apis.stream_manager import destroy_video, negotiate_video, process_image, process_video, receive_vision_frames
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -193,7 +193,7 @@ def test_destroy_stream() -> None:
 	set_session_id('test-destroy-stream')
 	rtc_manager.set_peer(rtc_peer)
 
-	assert destroy_stream() is True
+	assert destroy_video() is True
 	assert rtc_manager.get_peer() is None
 
-	assert destroy_stream() is False
+	assert destroy_video() is False

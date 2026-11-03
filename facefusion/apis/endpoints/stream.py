@@ -5,7 +5,7 @@ from starlette.websockets import WebSocket, WebSocketState
 
 from facefusion import rtc_manager
 from facefusion.apis import websocket_manager
-from facefusion.apis.stream_manager import destroy_stream, negotiate_video, process_image
+from facefusion.apis.stream_manager import destroy_video, negotiate_video, process_image
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
 
 
@@ -44,7 +44,7 @@ async def post_stream(request : Request) -> Response:
 
 
 async def delete_stream(request : Request) -> Response:
-	if destroy_stream():
+	if destroy_video():
 		return Response(status_code = HTTP_200_OK)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)

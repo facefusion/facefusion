@@ -161,7 +161,7 @@ def process_video(rtc_peer : RtcPeer) -> None:
 	process_manager.end()
 
 
-def destroy_stream() -> bool:
+def destroy_video() -> bool:
 	if rtc_manager.has_peer():
 		rtc_manager.delete_peer()
 		return not rtc_manager.has_peer()
