@@ -14,6 +14,26 @@ def before_all() -> None:
 	session_context.set_session_id(local_id)
 
 
+def test_force_download(mocker : MockerFixture) -> None:
+	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	state_manager.init_item('download_scope', 'lite')
+	conditional_download_files_mock = mocker.patch('facefusion.core.conditional_download_files', return_value = True)
+	start_mock = mocker.spy(process_manager, 'start')
+	end_mock = mocker.spy(process_manager, 'end')
+
+	assert core.force_download() == 0
+	assert start_mock.call_count == 1
+	assert end_mock.call_count == 1
+	assert process_manager.is_pending() is True
+
+	conditional_download_files_mock.return_value = False
+
+	assert core.force_download() == 1
+	assert start_mock.call_count == 2
+	assert end_mock.call_count == 2
+	assert process_manager.is_pending() is True
+
+
 @pytest.mark.parametrize('error_code', [ 0, 1, 2, 3, 4 ])
 def test_process_step(mocker : MockerFixture, error_code : ErrorCode) -> None:
 	local_id = session_context.resolve_local_id()
