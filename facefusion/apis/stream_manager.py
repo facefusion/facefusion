@@ -50,7 +50,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def negotiate_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 
 	if rtc.get_payload_type(sdp_offer, 'vp9'):
@@ -103,11 +103,10 @@ def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 
 			content_store.clear()
 			rtc_manager.set_peer(rtc_peer)
-			process_manager.start()
 
 			threading.Thread(
 				target = copy_context().run,
-				args = (run_peer_loop, rtc_peer),
+				args = (process_video, rtc_peer),
 				daemon = True
 			).start()
 
@@ -118,7 +117,7 @@ def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	return None
 
 
-def run_peer_loop(rtc_peer : RtcPeer) -> None:
+def process_video(rtc_peer : RtcPeer) -> None:
 	execution_thread_count = state_manager.get_item('execution_thread_count')
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = execution_thread_count)
 	audio_queue : Queue[Tuple[Time, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)

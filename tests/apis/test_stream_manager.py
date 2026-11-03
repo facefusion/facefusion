@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from facefusion import rtc, rtc_manager, state_manager, store_creator
-from facefusion.apis.stream_manager import destroy_stream, process_image, process_video, receive_vision_frames, run_peer_loop
+from facefusion.apis.stream_manager import destroy_stream, negotiate_video, process_image, process_video, receive_vision_frames
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -102,8 +102,8 @@ async def test_receive_vision_frames() -> None:
 	assert create_hash(vision_frames[0].tobytes()) == '5ed32ca0'
 
 
-@pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
-def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
+@pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-negotiate-video-av1'), ('vp8', 'test-negotiate-video-vp8') ])
+def test_negotiate_video(video_codec : VideoCodec, session_id : str) -> None:
 	peer_connection = rtc.create_peer_connection()
 
 	if video_codec == 'av1':
@@ -118,7 +118,7 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 
 	with patch('facefusion.apis.stream_manager.threading.Thread'):
 		set_session_id(session_id)
-		sdp_answer = process_video(sdp_offer)
+		sdp_answer = negotiate_video(sdp_offer)
 
 	assert 'm=video' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
@@ -138,8 +138,8 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	assert receiver_bitrate.value == 4000
 
 
-@pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-run-peer-loop-av1'), ('vp8', 96, 'test-run-peer-loop-vp8') ])
-def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id : SessionId) -> None:
+@pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-process-video-av1'), ('vp8', 96, 'test-process-video-vp8') ])
+def test_process_video(video_codec : VideoCodec, payload_type : int, session_id : SessionId) -> None:
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
@@ -165,7 +165,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 	with patch('facefusion.thread_helper.ThreadPoolExecutor') as thread_pool_executor_mock:
 		with patch('facefusion.apis.stream_manager.receive_video_frames'):
 			with patch('facefusion.apis.stream_manager.send_video_frames'):
-				thread = threading.Thread(target = copy_context().run, args = (run_peer_loop, rtc_peer), daemon = True)
+				thread = threading.Thread(target = copy_context().run, args = (process_video, rtc_peer), daemon = True)
 				thread.start()
 				thread.join(timeout = 5.0)
 
