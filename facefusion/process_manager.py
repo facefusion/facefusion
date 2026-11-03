@@ -12,14 +12,13 @@ def init() -> None:
 
 
 def get_state() -> ProcessState:
-	session_id = get_session_id()
 	owner_id = resolve_owner_id()
 	local_id = resolve_local_id()
 
-	if store_creator.get_content(PROCESS_STORE, owner_id) == 'stopping' or store_creator.get_content(PROCESS_STORE, local_id) == 'stopping':
+	if store_creator.get_content(PROCESS_STORE, local_id) == 'stopping':
 		return 'stopping'
 
-	return store_creator.get_content(PROCESS_STORE, session_id)
+	return store_creator.get_content(PROCESS_STORE, owner_id)
 
 
 def is_checking() -> bool:
@@ -39,8 +38,8 @@ def is_pending() -> bool:
 
 
 def set_state(process_state : ProcessState) -> None:
-	session_id = get_session_id()
-	store_creator.set_content(PROCESS_STORE, session_id, process_state)
+	owner_id = resolve_owner_id()
+	store_creator.set_content(PROCESS_STORE, owner_id, process_state)
 
 
 def check() -> None:

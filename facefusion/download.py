@@ -74,6 +74,7 @@ def ping_static_url(url : str) -> bool:
 
 
 def conditional_download_files(file_set : DownloadSet) -> bool:
+	process_state = process_manager.get_state()
 	process_manager.check()
 
 	for file in file_set.values():
@@ -84,7 +85,9 @@ def conditional_download_files(file_set : DownloadSet) -> bool:
 			conditional_download(os.path.dirname(file_path), [ file_url ])
 
 	is_valid = conditional_validate_files(file_set)
-	process_manager.end()
+
+	if process_manager.is_checking():
+		process_manager.set_state(process_state)
 
 	return is_valid
 
@@ -118,6 +121,7 @@ def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:
 
 	for download_provider in download_providers:
 		download_url = resolve_download_url_by_provider(download_provider, base_name, file_name)
+
 		if download_url:
 			return download_url
 

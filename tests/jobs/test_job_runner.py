@@ -110,8 +110,15 @@ def test_run_job() -> None:
 	assert run_job('job-test-run-job', process_step) is False
 
 	submit_job('job-test-run-job')
+	process_manager.stop()
 
-	assert run_job('job-test-run-job', process_step) is True
+	with patch('facefusion.process_manager.start', wraps = process_manager.start) as start_mock:
+		with patch('facefusion.process_manager.end', wraps = process_manager.end) as end_mock:
+			assert run_job('job-test-run-job', process_step) is True
+
+	assert start_mock.call_count == 1
+	assert end_mock.call_count == 1
+	assert process_manager.get_state() == 'pending'
 
 	create_job('job-test-run-job-cancel')
 	add_step('job-test-run-job-cancel', args_1)
@@ -319,6 +326,7 @@ def test_finalize_steps() -> None:
 	create_directory(temp_directory_2)
 	copy_file(args_4.get('target_path'), os.path.join(temp_directory_1, '00000001.jpg'))
 	copy_file(args_5.get('target_path'), os.path.join(temp_directory_2, '00000002.jpg'))
+	process_manager.start()
 
 	assert finalize_steps('job-test-finalize-steps') is True
 	assert is_test_output_file('output-1.mp4') is True

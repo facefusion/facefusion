@@ -346,8 +346,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
-	process = run_ffmpeg(commands)
-	process.communicate()
+	process = await_process(run_ffmpeg(commands))
 	remove_file(concat_video_path)
 	return process.returncode == 0
 

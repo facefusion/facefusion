@@ -342,7 +342,6 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 		[
 			state_manager.STATE_SET,
 			content_store.CONTENT_STORE,
-			process_manager.PROCESS_STORE,
 			video_manager.VIDEO_POOL_STORE
 		]
 
