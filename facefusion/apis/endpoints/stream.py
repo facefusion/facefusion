@@ -3,7 +3,7 @@ from starlette.responses import Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 from starlette.websockets import WebSocket, WebSocketState
 
-from facefusion import process_manager, rtc_manager
+from facefusion import rtc_manager
 from facefusion.apis import websocket_manager
 from facefusion.apis.stream_manager import destroy_stream, negotiate_video, process_image
 from facefusion.apis.websocket_helper import get_sec_websocket_protocol
@@ -32,7 +32,6 @@ async def post_stream(request : Request) -> Response:
 	}
 	if not rtc_manager.has_peer():
 		sdp_offer = await request.body()
-		process_manager.start()
 		sdp_answer = negotiate_video(sdp_offer.decode())
 
 		if sdp_answer:

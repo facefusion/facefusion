@@ -123,6 +123,7 @@ def process_video(rtc_peer : RtcPeer) -> None:
 	audio_queue : Queue[Tuple[Time, AudioFrame]] = Queue(maxsize = execution_thread_count * 10)
 	video_executor = thread_helper.create_executor(execution_thread_count)
 
+	process_manager.start()
 	video_receiver_thread = threading.Thread(
 		target = copy_context().run,
 		args = (receive_video_frames, rtc_peer.get('video'), video_queue, video_executor),
@@ -156,8 +157,8 @@ def process_video(rtc_peer : RtcPeer) -> None:
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
 
-	process_manager.end()
 	rtc_manager.delete_peer()
+	process_manager.end()
 
 
 def destroy_stream() -> bool:
