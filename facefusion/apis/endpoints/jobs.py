@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
 import facefusion.core
-from facefusion import args_helper, process_manager, state_manager, translator
+from facefusion import args_helper, session_manager, state_manager, translator
 from facefusion.apis import jobs_helper
 from facefusion.apis.job_validator import validate_status
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
@@ -108,8 +108,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 
 	if action == 'cancel':
 		if job_manager.cancel_jobs(state_manager.get_item('halt_on_error')):
-			if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
-				process_manager.stop()
+			jobs_helper.stop_fork_session()
 
 			return JSONResponse(
 			{
@@ -122,7 +121,9 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'run':
-		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
+		owner_id = session_manager.resolve_owner_id()
+
+		if session_manager.has_fork_session(owner_id):
 			return JSONResponse(
 			{
 				'message': translator.get('job_all_not_started', 'facefusion.apis')
@@ -142,7 +143,9 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
-		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
+		owner_id = session_manager.resolve_owner_id()
+
+		if session_manager.has_fork_session(owner_id):
 			return JSONResponse(
 			{
 				'message': translator.get('job_all_not_retried', 'facefusion.apis')
@@ -200,7 +203,7 @@ async def update_job(request : Request) -> JSONResponse:
 
 		if job_manager.cancel_job(job_id):
 			if is_started:
-				process_manager.stop()
+				jobs_helper.stop_fork_session()
 
 			return JSONResponse(
 			{
@@ -213,7 +216,9 @@ async def update_job(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'run':
-		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
+		owner_id = session_manager.resolve_owner_id()
+
+		if session_manager.has_fork_session(owner_id):
 			return JSONResponse(
 			{
 				'message': translator.get('job_not_started', 'facefusion.apis')
@@ -235,7 +240,9 @@ async def update_job(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'retry':
-		if process_manager.is_checking() or process_manager.is_processing() or process_manager.is_stopping():
+		owner_id = session_manager.resolve_owner_id()
+
+		if session_manager.has_fork_session(owner_id):
 			return JSONResponse(
 			{
 				'message': translator.get('job_not_retried', 'facefusion.apis')

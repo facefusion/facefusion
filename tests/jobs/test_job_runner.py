@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, session_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, init_jobs, move_job_file, submit_job, submit_jobs
@@ -110,15 +110,18 @@ def test_run_job() -> None:
 	assert run_job('job-test-run-job', process_step) is False
 
 	submit_job('job-test-run-job')
-	process_manager.stop()
 
-	with patch('facefusion.process_manager.start', wraps = process_manager.start) as start_mock:
-		with patch('facefusion.process_manager.end', wraps = process_manager.end) as end_mock:
-			assert run_job('job-test-run-job', process_step) is True
+	with patch('facefusion.session_manager.fork_session', wraps = session_manager.fork_session) as fork_session_mock:
+		with patch('facefusion.process_manager.start', wraps = process_manager.start) as start_mock:
+			with patch('facefusion.process_manager.end', wraps = process_manager.end) as end_mock:
+				assert run_job('job-test-run-job', process_step) is True
 
+	session_id = session_context.get_session_id()
+
+	assert fork_session_mock.call_count == 1
 	assert start_mock.call_count == 1
 	assert end_mock.call_count == 1
-	assert process_manager.get_state() == 'pending'
+	assert session_manager.has_fork_session(session_id) is False
 
 	create_job('job-test-run-job-cancel')
 	add_step('job-test-run-job-cancel', args_1)

@@ -42,16 +42,11 @@ def test_get_state() -> None:
 	assert get_state() == 'processing'
 
 	fork_id = session_manager.fork_session()
-	set_state('stopping')
+	clear()
 
-	assert get_state() == 'stopping'
-
-	session_context.set_session_id('session-a')
-
-	assert get_state() == 'stopping'
+	assert get_state() == 'pending'
 
 	set_state('processing')
-	session_context.set_session_id(fork_id)
 
 	assert get_state() == 'processing'
 

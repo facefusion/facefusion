@@ -1,6 +1,6 @@
 import os
 
-from facefusion import process_manager
+from facefusion import process_manager, session_manager, state_manager, store_manager
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import are_images, are_videos, copy_file, create_directory, is_directory, is_file, move_directory, move_file, remove_directory, remove_file, resolve_file_paths
 from facefusion.jobs import job_helper, job_manager
@@ -9,17 +9,24 @@ from facefusion.types import JobId, JobOutputSet, ProcessStep, Step, StepIndex
 
 def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
+	fork_id = session_manager.fork_session()
 
 	if job_id in queued_job_ids:
+		session_manager.observe_cli_session(fork_id)
+		store_manager.observe_cli_session(fork_id)
+		state_manager.clone_state()
+
 		process_manager.start()
 
 		if run_steps(job_id, process_step) and job_id in job_manager.find_job_ids('queued') and finalize_steps(job_id):
 			clean_steps(job_id)
 			process_manager.end()
+			session_manager.join_session()
 			return job_manager.move_job_file(job_id, 'completed')
 
 		clean_steps(job_id)
 		process_manager.end()
+		session_manager.join_session()
 
 		if job_id in job_manager.find_job_ids('queued'):
 			job_manager.move_job_file(job_id, 'failed')

@@ -6,7 +6,7 @@ import sys
 from time import time
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, store_creator, store_manager, translator, video_manager
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, translator, video_manager
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_files
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -313,9 +313,7 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
 	step_total = job_manager.count_step_total(job_id)
-	fork_id = session_manager.fork_session()
-	session_manager.observe_cli_session(fork_id)
-	store_manager.observe_cli_session(fork_id)
+	session_id = session_context.get_session_id()
 	state_manager.clone_state()
 
 	video_manager.init()
@@ -336,17 +334,8 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 		if process_manager.is_stopping():
 			logger.info(translator.get('processing_stopped'), __name__)
 
-		session_manager.join_session()
-
-		stores =\
-		[
-			state_manager.STATE_SET,
-			content_store.CONTENT_STORE,
-			video_manager.VIDEO_POOL_STORE
-		]
-
-		for store in stores:
-			store_creator.delete_content(store, fork_id)
+		content_store.destroy(session_id)
+		video_manager.destroy(session_id)
 
 
 def conditional_process() -> ErrorCode:
