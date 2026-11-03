@@ -84,7 +84,7 @@ def conditional_download_files(file_set : DownloadSet) -> bool:
 			conditional_download(os.path.dirname(file_path), [ file_url ])
 
 	is_valid = conditional_validate_files(file_set)
-	process_manager.end_process()
+	process_manager.end()
 
 	return is_valid
 

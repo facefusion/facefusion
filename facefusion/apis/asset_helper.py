@@ -6,7 +6,7 @@ from typing import List, Optional
 from starlette.datastructures import UploadFile
 
 import facefusion.choices
-from facefusion import ffmpeg, process_manager, state_manager
+from facefusion import ffmpeg, state_manager
 from facefusion.face_creator import get_many_faces
 from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.face_selector import sort_faces_by_order
@@ -58,8 +58,6 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		asset_file_name = uuid.uuid4().hex
 		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
 
-		process_manager.start()
-
 		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
@@ -68,8 +66,6 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
-
-		process_manager.end_process()
 
 	return asset_paths
 

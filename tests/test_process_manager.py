@@ -3,7 +3,7 @@ from typing import Iterator
 import pytest
 
 from facefusion import session_context, session_manager
-from facefusion.process_manager import clear, end_process, get_state, init, is_pending, is_processing, is_stopping, set_state, start, stop_process
+from facefusion.process_manager import clear, end, get_state, init, is_pending, is_processing, is_stopping, set_state, start, stop
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -83,14 +83,14 @@ def test_start() -> None:
 
 def test_stop_process() -> None:
 	set_state('processing')
-	stop_process()
+	stop()
 
 	assert is_stopping()
 
 
 def test_end_process() -> None:
 	set_state('processing')
-	end_process()
+	end()
 
 	assert is_pending()
 
