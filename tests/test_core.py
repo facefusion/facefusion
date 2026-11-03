@@ -12,6 +12,7 @@ def before_all() -> None:
 
 	local_id = session_context.resolve_local_id()
 	session_context.set_session_id(local_id)
+	process_manager.clear()
 
 
 def test_force_download(mocker : MockerFixture) -> None:
