@@ -1,6 +1,15 @@
+from unittest.mock import patch
+
+import pytest
+
 from facefusion import process_manager
 from facefusion.download import conditional_download_files, conditional_validate_files, get_static_download_size, ping_static_url, resolve_download_url_by_provider, validate_file
 from facefusion.types import DownloadSet
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	process_manager.clear()
 
 
 def test_get_static_download_size() -> None:
@@ -48,6 +57,18 @@ def test_conditional_download_files() -> None:
 	assert process_manager.is_pending() is True
 	assert conditional_download_files(invalid_set) is False
 	assert process_manager.is_pending() is True
+
+	process_manager.start()
+
+	assert conditional_download_files(hash_set) is True
+	assert process_manager.get_state() == 'processing'
+
+	with patch('facefusion.process_manager.check', side_effect = process_manager.stop):
+		assert conditional_download_files(hash_set) is True
+
+	assert process_manager.get_state() == 'stopping'
+
+	process_manager.end()
 
 
 def test_conditional_validate_files() -> None:

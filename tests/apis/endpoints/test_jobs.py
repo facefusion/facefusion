@@ -355,9 +355,8 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
-	fork_id = session_manager.fork_session()
-	process_manager.start()
 	session_context.set_session_id(session_id)
+	process_manager.start()
 
 	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
 	{
@@ -367,11 +366,10 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 
 	assert cancel_jobs_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-jobs' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'stopping'
 	assert cancel_jobs_response.status_code == 200
 
-	session_manager.clear_cli_session(fork_id)
-	store_creator.delete_content(process_manager.PROCESS_STORE, fork_id)
+	process_manager.end()
 
 
 def test_cancel_job(test_client : TestClient) -> None:
@@ -410,9 +408,8 @@ def test_cancel_job(test_client : TestClient) -> None:
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
-	fork_id = session_manager.fork_session()
-	process_manager.start()
 	session_context.set_session_id(session_id)
+	process_manager.start()
 
 	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
 	{
@@ -422,7 +419,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'processing'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'processing'
 	assert cancel_job_response.status_code == 200
 
 	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
@@ -439,11 +436,10 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'stopping'
 	assert cancel_job_response.status_code == 200
 
-	session_manager.clear_cli_session(fork_id)
-	store_creator.delete_content(process_manager.PROCESS_STORE, fork_id)
+	process_manager.end()
 
 
 def test_run_jobs(test_client : TestClient) -> None:
@@ -481,6 +477,28 @@ def test_run_jobs(test_client : TestClient) -> None:
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
+
+	process_manager.start()
+
+	run_jobs_response = test_client.patch('/jobs?action=run', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	run_jobs_body = run_jobs_response.json()
+
+	assert run_jobs_body.get('message') == 'jobs not started'
+	assert run_jobs_response.status_code == 409
+
+	process_manager.check()
+
+	run_jobs_response = test_client.patch('/jobs?action=run', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert run_jobs_response.status_code == 409
+
+	process_manager.end()
 
 	with patch('facefusion.jobs.job_runner.run_jobs', return_value = True) as run_jobs_mock:
 		run_jobs_response = test_client.patch('/jobs?action=run', headers =
@@ -531,6 +549,19 @@ def test_run_job(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
+	process_manager.start()
+
+	run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	run_job_body = run_job_response.json()
+
+	assert run_job_body.get('message') == 'job not started'
+	assert run_job_response.status_code == 409
+
+	process_manager.end()
+
 	with patch('facefusion.jobs.job_runner.run_job', return_value = True) as run_job_mock:
 		run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
 		{
@@ -580,6 +611,19 @@ def test_retry_jobs(test_client : TestClient) -> None:
 	})
 	set_steps_status('job-test-retry-jobs', 'failed')
 	move_job_file('job-test-retry-jobs', 'failed')
+
+	process_manager.start()
+
+	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	retry_jobs_body = retry_jobs_response.json()
+
+	assert retry_jobs_body.get('message') == 'jobs not retried'
+	assert retry_jobs_response.status_code == 409
+
+	process_manager.end()
 
 	with patch('facefusion.jobs.job_runner.retry_jobs', return_value = True) as retry_jobs_mock:
 		retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
@@ -641,6 +685,19 @@ def test_retry_job(test_client : TestClient) -> None:
 	})
 	set_steps_status('job-test-retry-job', 'failed')
 	move_job_file('job-test-retry-job', 'failed')
+
+	process_manager.start()
+
+	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	retry_job_body = retry_job_response.json()
+
+	assert retry_job_body.get('message') == 'job not retried'
+	assert retry_job_response.status_code == 409
+
+	process_manager.end()
 
 	with patch('facefusion.jobs.job_runner.retry_job', return_value = True) as retry_job_mock:
 		retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
