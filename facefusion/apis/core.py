@@ -119,5 +119,5 @@ def stop_server(server : uvicorn.Server, signum : int, frame : Optional[FrameTyp
 	if server.should_exit:
 		server.force_exit = True
 
-	process_manager.stop_process()
+	process_manager.stop()
 	server.should_exit = True
