@@ -73,6 +73,7 @@ def route(args : Args) -> None:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 
+		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
 		server = facefusion.apis.core.create_server()
 		signal.signal(signal.SIGINT, partial(facefusion.apis.core.stop_server, server))
 		signal.signal(signal.SIGTERM, partial(facefusion.apis.core.stop_server, server))
@@ -82,8 +83,6 @@ def route(args : Args) -> None:
 		)
 		server_thread.start()
 		server_thread.join()
-
-		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
 
 		if server.should_exit:
 			graceful_exit(0)

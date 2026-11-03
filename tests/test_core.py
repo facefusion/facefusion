@@ -1,7 +1,11 @@
+import signal
+from unittest.mock import Mock
+
 import pytest
 from pytest_mock import MockerFixture
 
 from facefusion import content_store, core, process_manager, session_context, session_manager, state_manager, store_creator, video_manager
+from facefusion.apis.core import stop_server
 from facefusion.types import ErrorCode
 from tests.assert_helper import get_test_example_file, get_test_output_path
 
@@ -12,6 +16,48 @@ def before_all() -> None:
 
 	local_id = session_context.resolve_local_id()
 	session_context.set_session_id(local_id)
+
+
+def test_route(mocker : MockerFixture) -> None:
+	server_mock = Mock()
+	server_mock.should_exit = True
+	state_manager.set_item('command', 'api')
+	state_manager.set_item('jobs_path', get_test_output_path('jobs'))
+
+	mocker.patch('facefusion.core.common_pre_check', return_value = True)
+	mocker.patch('facefusion.core.processors_pre_check', return_value = True)
+	mocker.patch('facefusion.apis.core.pre_check', return_value = True)
+	mocker.patch('facefusion.core.job_manager.init_jobs', return_value = True)
+	mocker.patch('facefusion.apis.core.create_server', return_value = server_mock)
+
+	signal_mock = mocker.patch('facefusion.core.signal.signal')
+	graceful_exit_mock = mocker.patch('facefusion.core.graceful_exit', side_effect = SystemExit)
+	hard_exit_mock = mocker.patch('facefusion.core.hard_exit', side_effect = SystemExit)
+
+	with pytest.raises(SystemExit):
+		core.route({})
+
+	sigint_call, sigterm_call = signal_mock.call_args_list
+
+	assert sigint_call.args[0] == signal.SIGINT
+	assert sigint_call.args[1].func is stop_server
+	assert sigterm_call.args[0] == signal.SIGTERM
+	assert sigterm_call.args[1].func is stop_server
+	assert server_mock.run.call_count == 1
+
+	graceful_exit_mock.assert_called_once_with(0)
+
+	assert hard_exit_mock.call_count == 0
+
+	server_mock.should_exit = False
+
+	with pytest.raises(SystemExit):
+		core.route({})
+
+	hard_exit_mock.assert_called_once_with(1)
+
+	state_manager.clear_item('command')
+	state_manager.clear_item('jobs_path')
 
 
 @pytest.mark.parametrize('error_code', [ 0, 1, 2, 3, 4 ])
