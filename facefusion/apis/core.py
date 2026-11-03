@@ -1,3 +1,7 @@
+import signal
+import threading
+from contextvars import copy_context
+from functools import partial
 from types import FrameType, ModuleType
 from typing import List, Optional
 
@@ -23,6 +27,7 @@ from facefusion.apis.middlewares.exception import create_exception_guard
 from facefusion.apis.middlewares.security import create_security_guard
 from facefusion.apis.middlewares.session import create_session_guard
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
+from facefusion.types import ErrorCode
 
 
 def get_common_modules() -> List[ModuleType]:
@@ -101,3 +106,19 @@ def stop_server(server : uvicorn.Server, signum : int, frame : Optional[FrameTyp
 
 	process_manager.stop_process()
 	server.should_exit = True
+
+
+def run_server() -> ErrorCode:
+	server = create_server()
+	signal.signal(signal.SIGINT, partial(stop_server, server))
+	signal.signal(signal.SIGTERM, partial(stop_server, server))
+	server_thread = threading.Thread(
+		target = copy_context().run,
+		args = (server.run,)
+	)
+	server_thread.start()
+	server_thread.join()
+
+	if server.should_exit:
+		return 0
+	return 1

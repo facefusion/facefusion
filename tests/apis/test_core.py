@@ -1,11 +1,12 @@
 import signal
 from typing import Iterator
+from unittest.mock import Mock, patch
 
 import pytest
 from starlette.testclient import TestClient
 
 from facefusion import process_manager, session_context, state_manager
-from facefusion.apis.core import create_api, create_server, stop_server
+from facefusion.apis.core import create_api, create_server, run_server, stop_server
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -78,3 +79,24 @@ def test_stop_server() -> None:
 	stop_server(server, signal.SIGINT, None)
 
 	assert server.force_exit is True
+
+
+def test_run_server() -> None:
+	server_mock = Mock()
+	server_mock.should_exit = True
+
+	with patch('facefusion.apis.core.create_server', return_value = server_mock):
+		with patch('facefusion.apis.core.signal.signal') as signal_mock:
+			assert run_server() == 0
+
+			sigint_call, sigterm_call = signal_mock.call_args_list
+
+			assert sigint_call.args[0] == signal.SIGINT
+			assert sigint_call.args[1].func is stop_server
+			assert sigterm_call.args[0] == signal.SIGTERM
+			assert sigterm_call.args[1].func is stop_server
+			assert server_mock.run.call_count == 1
+
+			server_mock.should_exit = False
+
+			assert run_server() == 1
