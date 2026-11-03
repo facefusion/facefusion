@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, rtc, rtc_manager, state_manager, streamer, thread_helper
+from facefusion import content_store, process_manager, rtc, rtc_manager, state_manager, streamer, thread_helper
 from facefusion.apis.media_validator import validate_media_resolution
 from facefusion.apis.stream_audio import receive_audio_frames, send_audio_frames
 from facefusion.apis.stream_video import receive_video_frames, send_video_frames
@@ -20,6 +20,8 @@ from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_
 
 
 async def process_image(websocket : WebSocket) -> None:
+	process_manager.start()
+
 	async for capture_vision_frame in receive_vision_frames(websocket):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
@@ -29,6 +31,8 @@ async def process_image(websocket : WebSocket) -> None:
 
 		output_vision_buffer = to_buffer(output_vision_frame)
 		await websocket.send_bytes(output_vision_buffer)
+
+	process_manager.end()
 
 
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
@@ -99,6 +103,7 @@ def process_video(sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 
 			content_store.clear()
 			rtc_manager.set_peer(rtc_peer)
+			process_manager.start()
 
 			threading.Thread(
 				target = copy_context().run,
@@ -152,6 +157,7 @@ def run_peer_loop(rtc_peer : RtcPeer) -> None:
 	video_encoder_thread.join()
 	video_executor.shutdown(wait = True)
 
+	process_manager.end()
 	rtc_manager.delete_peer()
 
 
