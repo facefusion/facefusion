@@ -38,7 +38,7 @@ async def process_image(websocket : WebSocket) -> None:
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
 	websocket_event = await websocket.receive()
 
-	while websocket_event.get('type') == 'websocket.receive':
+	while websocket_event.get('type') == 'websocket.receive' and process_manager.is_processing():
 		vision_buffer = websocket_event.get('bytes')
 
 		if await asyncio.to_thread(validate_media_resolution, vision_buffer):

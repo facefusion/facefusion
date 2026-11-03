@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from facefusion import rtc, rtc_manager, state_manager, store_creator
+from facefusion import process_manager, rtc, rtc_manager, state_manager, store_creator
 from facefusion.apis.stream_manager import destroy_video, negotiate_video, process_image, process_video, receive_vision_frames
 from facefusion.common_helper import is_linux, is_windows
 from facefusion.download import conditional_download
@@ -95,8 +95,12 @@ async def test_receive_vision_frames() -> None:
 	]
 	vision_frames = []
 
+	process_manager.start()
+
 	async for vision_frame in receive_vision_frames(websocket_mock):
 		vision_frames.append(vision_frame)
+
+	process_manager.end()
 
 	assert len(vision_frames) == 2
 	assert create_hash(vision_frames[0].tobytes()) == '5ed32ca0'
