@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 from facefusion import process_manager
@@ -57,18 +55,6 @@ def test_conditional_download_files() -> None:
 	assert process_manager.is_pending() is True
 	assert conditional_download_files(invalid_set) is False
 	assert process_manager.is_pending() is True
-
-	process_manager.start()
-
-	assert conditional_download_files(hash_set) is True
-	assert process_manager.get_state() == 'processing'
-
-	with patch('facefusion.process_manager.check', side_effect = process_manager.stop):
-		assert conditional_download_files(hash_set) is True
-
-	assert process_manager.get_state() == 'stopping'
-
-	process_manager.end()
 
 
 def test_conditional_validate_files() -> None:

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, process_manager, session_context, session_manager, state_manager, store_creator
+from facefusion import metadata, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -357,6 +357,12 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 	})
 	session_context.set_session_id(session_id)
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	cancel_jobs_response = test_client.patch('/jobs?action=cancel', headers =
 	{
@@ -366,7 +372,7 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 
 	assert cancel_jobs_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-jobs' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'stopping'
+	assert process_manager.resolve_stage(session_id).get('state') == 'stopping'
 	assert cancel_jobs_response.status_code == 200
 
 	process_manager.end()
@@ -410,6 +416,12 @@ def test_cancel_job(test_client : TestClient) -> None:
 	})
 	session_context.set_session_id(session_id)
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	cancel_job_response = test_client.patch('/jobs/job-test-cancel-job?action=cancel', headers =
 	{
@@ -419,7 +431,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'processing'
+	assert process_manager.resolve_stage(session_id).get('state') == 'processing'
 	assert cancel_job_response.status_code == 200
 
 	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
@@ -436,7 +448,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, session_id) == 'stopping'
+	assert process_manager.resolve_stage(session_id).get('state') == 'stopping'
 	assert cancel_job_response.status_code == 200
 
 	process_manager.end()
@@ -479,6 +491,12 @@ def test_run_jobs(test_client : TestClient) -> None:
 	})
 
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	run_jobs_response = test_client.patch('/jobs?action=run', headers =
 	{
@@ -487,15 +505,6 @@ def test_run_jobs(test_client : TestClient) -> None:
 	run_jobs_body = run_jobs_response.json()
 
 	assert run_jobs_body.get('message') == 'jobs not started'
-	assert run_jobs_response.status_code == 409
-
-	process_manager.check()
-
-	run_jobs_response = test_client.patch('/jobs?action=run', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
-
 	assert run_jobs_response.status_code == 409
 
 	process_manager.end()
@@ -550,6 +559,12 @@ def test_run_job(test_client : TestClient) -> None:
 	})
 
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
 	{
@@ -613,6 +628,12 @@ def test_retry_jobs(test_client : TestClient) -> None:
 	move_job_file('job-test-retry-jobs', 'failed')
 
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
 	{
@@ -687,6 +708,12 @@ def test_retry_job(test_client : TestClient) -> None:
 	move_job_file('job-test-retry-job', 'failed')
 
 	process_manager.start()
+	process_manager.stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
 	{

@@ -15,6 +15,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 def before_all() -> None:
 	state_manager.init()
 
+	process_manager.clear()
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

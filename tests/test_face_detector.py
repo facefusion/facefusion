@@ -14,6 +14,7 @@ def before_all() -> None:
 	state_manager.init()
 	inference_manager.init()
 
+	process_manager.clear()
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

@@ -115,7 +115,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'c39e7c00' and hash_helper.create_hash(content_store_content) == '77e47f71'
+	return hash_helper.create_hash(content_analyser_content) == 'bf57c073' and hash_helper.create_hash(content_store_content) == '77e47f71'
 
 
 def processors_pre_check() -> bool:
@@ -332,6 +332,11 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 
 	try:
+		process_manager.stage('check', translator.get('checking'),
+		{
+			'unit': 'indeterminate'
+		})
+
 		if common_pre_check() and processors_pre_check():
 			return conditional_process()
 		return 2

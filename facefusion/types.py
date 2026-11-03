@@ -208,10 +208,31 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
 ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
-ProgressUnit = Literal['percent', 'frame', 'download']
+ProgressUnit = Literal['percent', 'frame', 'download', 'indeterminate']
+Progress = TypedDict('Progress',
+{
+	'unit' : ProgressUnit,
+	'current' : NotRequired[int],
+	'total' : NotRequired[int]
+})
 
+StageType = Literal['check', 'download', 'analyse', 'copy', 'extract', 'spawn', 'infer', 'merge', 'finalize', 'serve']
+StageState = Literal['checking', 'processing', 'stopping']
+Stage = TypedDict('Stage',
+{
+	'type' : StageType,
+	'state' : StageState,
+	'title' : str,
+	'description' : NotRequired[str],
+	'progress' : Progress,
+	'created_at' : datetime,
+	'updated_at' : datetime
+})
+
+ProcessId : TypeAlias = str
 ProcessMode = Literal['output', 'stream']
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
+ProcessSet : TypeAlias = Dict[ProcessId, List[Stage]]
 
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any

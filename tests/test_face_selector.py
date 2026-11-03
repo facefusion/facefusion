@@ -21,6 +21,7 @@ def before_all() -> None:
 
 	face_store.init()
 
+	process_manager.clear()
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

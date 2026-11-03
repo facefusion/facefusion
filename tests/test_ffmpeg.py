@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import cli_progress, ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import cli_progress, ffmpeg, ffmpeg_builder, process_manager, session_context, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import await_process, concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, render_progress, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_audio_entries, probe_video_entries
@@ -20,6 +20,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 def before_all() -> None:
 	state_manager.init()
 
+	process_manager.clear()
 	process_manager.start()
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
@@ -133,6 +134,7 @@ def test_run_ffmpeg() -> None:
 
 
 def test_render_progress() -> None:
+	local_id = session_context.resolve_local_id()
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 		ffmpeg_builder.force_output(get_test_output_path('test-render-progress.mp4')),
@@ -140,11 +142,18 @@ def test_render_progress() -> None:
 		ffmpeg_builder.cast_stream()
 	)
 	process = ffmpeg.run_ffmpeg(commands)
+	process_manager.stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	with cli_progress.create(total = 270) as progress:
 		render_progress(process, progress)
 
 		assert progress.current == 270
+		assert process_manager.resolve_stage(local_id).get('progress').get('current') == 270
 
 	assert process.wait() == 0
 
@@ -154,6 +163,13 @@ def test_await_process() -> None:
 		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
 	)
+
+	process_manager.stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
 
 	assert await_process(ffmpeg.run_ffmpeg(commands)).returncode == 0
 
@@ -169,6 +185,7 @@ def test_await_process() -> None:
 
 	assert not await_process(ffmpeg.run_ffmpeg(commands)).wait() == 0
 
+	process_manager.end()
 	process_manager.start()
 
 

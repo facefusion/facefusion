@@ -37,6 +37,7 @@ def render_progress(process : subprocess.Popen[Buffer], progress : SimpleNamespa
 			frame_index = int(__frame_index__)
 
 			progress.seek(frame_index)
+			process_manager.seek(frame_index)
 
 
 def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer]:
@@ -169,6 +170,12 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 
 	with cli_progress.create(total = extract_frame_total) as progress:
 		progress.set_title(translator.get('extracting'))
+		process_manager.stage('extract', translator.get('extracting'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': extract_frame_total
+		})
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
@@ -191,6 +198,12 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 
 	with cli_progress.create(total = spawn_frame_total) as progress:
 		progress.set_title(translator.get('spawning'))
+		process_manager.stage('spawn', translator.get('spawning'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': spawn_frame_total
+		})
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
@@ -204,6 +217,10 @@ def copy_image(target_path : str, output_path : str, temp_image_resolution : Res
 		ffmpeg_builder.set_image_quality(target_path, 100),
 		ffmpeg_builder.force_output(temp_image_path)
 	)
+	process_manager.stage('copy', translator.get('copying'),
+	{
+		'unit': 'indeterminate'
+	})
 	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
@@ -216,6 +233,10 @@ def finalize_image(output_path : str, output_image_resolution : Resolution) -> b
 		ffmpeg_builder.set_image_quality(output_path, output_image_quality),
 		ffmpeg_builder.force_output(output_path)
 	)
+	process_manager.stage('finalize', translator.get('finalizing'),
+	{
+		'unit': 'indeterminate'
+	})
 	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
@@ -262,6 +283,10 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+	process_manager.stage('finalize', translator.get('finalizing'),
+	{
+		'unit': 'indeterminate'
+	})
 	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
@@ -286,6 +311,10 @@ def replace_audio(audio_path : str, output_path : str) -> bool:
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+	process_manager.stage('finalize', translator.get('finalizing'),
+	{
+		'unit': 'indeterminate'
+	})
 	return await_process(run_ffmpeg(commands)).returncode == 0
 
 
@@ -321,6 +350,12 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 
 	with cli_progress.create(total = merge_frame_total) as progress:
 		progress.set_title(translator.get('merging'))
+		process_manager.stage('merge', translator.get('merging'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': merge_frame_total
+		})
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
@@ -346,6 +381,10 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
+	process_manager.stage('finalize', translator.get('finalizing'),
+	{
+		'unit': 'indeterminate'
+	})
 	process = await_process(run_ffmpeg(commands))
 	remove_file(concat_video_path)
 	return process.returncode == 0

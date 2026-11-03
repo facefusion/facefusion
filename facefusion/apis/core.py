@@ -12,7 +12,7 @@ from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
-from facefusion import content_analyser, process_manager, state_manager
+from facefusion import content_analyser, process_manager, state_manager, translator
 from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_asset, get_assets, upload_assets
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
@@ -102,6 +102,11 @@ def create_server() -> uvicorn.Server:
 def start_server(server : uvicorn.Server) -> ErrorCode:
 	signal.signal(signal.SIGINT, partial(stop_server, server))
 	signal.signal(signal.SIGTERM, partial(stop_server, server))
+	process_manager.start()
+	process_manager.stage('serve', translator.get('serving'),
+	{
+		'unit': 'indeterminate'
+	})
 
 	server_thread = threading.Thread(
 		target = copy_context().run,
@@ -109,6 +114,7 @@ def start_server(server : uvicorn.Server) -> ErrorCode:
 	)
 	server_thread.start()
 	server_thread.join()
+	process_manager.end()
 
 	if server.should_exit:
 		return 0

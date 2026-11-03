@@ -17,6 +17,7 @@ def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 
+	process_manager.clear()
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

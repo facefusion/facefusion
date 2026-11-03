@@ -27,6 +27,13 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			with cli_progress.create(unit = 'download', total = download_size) as progress:
 				progress.set_title(translator.get('downloading'))
 				progress.set_description('file_name = ' + download_file_name)
+				process_manager.stage('download', translator.get('downloading'),
+				{
+					'unit': 'download',
+					'current': initial_size,
+					'total': download_size
+				})
+				process_manager.describe('file_name = ' + download_file_name)
 
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
@@ -40,6 +47,12 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					if is_file(download_file_path):
 						current_size = get_file_size(download_file_path)
 						progress.seek(current_size)
+						process_manager.seek(current_size)
+
+				process_manager.stage('check', translator.get('checking'),
+				{
+					'unit': 'indeterminate'
+				})
 
 
 @lru_cache(maxsize = 64)
@@ -74,9 +87,6 @@ def ping_static_url(url : str) -> bool:
 
 
 def conditional_download_files(file_set : DownloadSet) -> bool:
-	process_state = process_manager.get_state()
-	process_manager.check()
-
 	for file in file_set.values():
 		file_url = file.get('url')
 		file_path = file.get('path')
@@ -84,12 +94,7 @@ def conditional_download_files(file_set : DownloadSet) -> bool:
 		if not validate_file(file_path) and file_url:
 			conditional_download(os.path.dirname(file_path), [ file_url ])
 
-	is_valid = conditional_validate_files(file_set)
-
-	if process_manager.is_checking():
-		process_manager.set_state(process_state)
-
-	return is_valid
+	return conditional_validate_files(file_set)
 
 
 def conditional_validate_files(file_set : DownloadSet) -> bool:

@@ -17,6 +17,7 @@ def before_all() -> None:
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
 
+	process_manager.clear()
 	process_manager.start()
 	program = ArgumentParser()
 	capability_store.register_capability_set(

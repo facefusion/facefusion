@@ -90,6 +90,10 @@ def test_start_server() -> None:
 def test_stop_server() -> None:
 	server = create_server()
 	process_manager.start()
+	process_manager.stage('serve', 'serving',
+	{
+		'unit': 'indeterminate'
+	})
 	stop_server(server, signal.SIGINT, None)
 
 	assert process_manager.is_stopping() is True
@@ -99,3 +103,5 @@ def test_stop_server() -> None:
 	stop_server(server, signal.SIGINT, None)
 
 	assert server.force_exit is True
+
+	process_manager.end()

@@ -23,6 +23,7 @@ def before_all() -> None:
 
 	datachannel_module.pre_check()
 
+	process_manager.clear()
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[

@@ -79,7 +79,12 @@ def process_memory_frames() -> ErrorCode:
 		with cli_progress.create(unit = 'frame') as progress:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_range)
-
+			process_manager.stage('infer', translator.get('processing'),
+			{
+				'unit': 'frame',
+				'current': 0,
+				'total': temp_frame_total
+			})
 			conditional_get_reference_vision_frames()
 
 			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
@@ -102,6 +107,7 @@ def process_memory_frames() -> ErrorCode:
 					else:
 						video_manager.write_video_frame(video_writer, future.result())
 						progress.update()
+						process_manager.update()
 
 		if not video_manager.close_video_writer(video_writer):
 			process_manager.stop()

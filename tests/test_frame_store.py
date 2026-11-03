@@ -9,6 +9,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	process_manager.clear()
 	process_manager.start()
 
 	video_manager.init()
