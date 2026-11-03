@@ -174,7 +174,7 @@ def test_process_video(video_codec : VideoCodec, payload_type : int, session_id 
 	assert rtc_manager.has_peer() is False
 
 
-def test_destroy_stream() -> None:
+def test_destroy_video() -> None:
 	peer_connection = rtc.create_peer_connection()
 	rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
 	rtc_peer : RtcPeer =\
