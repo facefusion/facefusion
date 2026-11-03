@@ -9,9 +9,9 @@ from facefusion.types import JobId, JobOutputSet, ProcessStep, Step, StepIndex
 
 def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
-	fork_id = session_manager.fork_session()
 
 	if job_id in queued_job_ids:
+		fork_id = session_manager.fork_session()
 		session_manager.observe_cli_session(fork_id)
 		store_manager.observe_cli_session(fork_id)
 		state_manager.clone_state()
