@@ -15,12 +15,14 @@ from facefusion.apis.stream_audio import receive_audio_frames, send_audio_frames
 from facefusion.apis.stream_video import receive_video_frames, send_video_frames
 from facefusion.content_analyser import analyse_frame
 from facefusion.libraries import datachannel as datachannel_module
+from facefusion.processors.core import processors_pre_check
 from facefusion.types import AudioCodec, AudioFrame, BufferPack, PeerConnection, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, Time, VideoCodec, VisionFrame
 from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_static_images, to_buffer
 
 
 async def process_image(websocket : WebSocket) -> None:
 	process_manager.start()
+	await asyncio.to_thread(processors_pre_check)
 
 	async for capture_vision_frame in receive_vision_frames(websocket):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
@@ -124,6 +126,8 @@ def process_video(rtc_peer : RtcPeer) -> None:
 	video_executor = thread_helper.create_executor(execution_thread_count)
 
 	process_manager.start()
+	processors_pre_check()
+
 	video_receiver_thread = threading.Thread(
 		target = copy_context().run,
 		args = (receive_video_frames, rtc_peer.get('video'), video_queue, video_executor),

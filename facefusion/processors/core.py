@@ -2,7 +2,7 @@ import importlib
 from types import ModuleType
 from typing import Any, List
 
-from facefusion import logger, translator
+from facefusion import logger, state_manager, translator
 from facefusion.exit_helper import hard_exit
 
 
@@ -43,3 +43,11 @@ def get_processors_modules(processors : List[str]) -> List[ModuleType]:
 		processor_module = load_processor_module(processor)
 		processor_modules.append(processor_module)
 	return processor_modules
+
+
+def processors_pre_check() -> bool:
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		if not processor_module.pre_check():
+			return False
+	return True
+

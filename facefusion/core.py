@@ -14,7 +14,7 @@ from facefusion.filesystem import get_file_extension
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.processors.core import get_processors_modules
+from facefusion.processors.core import get_processors_modules, processors_pre_check
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
@@ -116,13 +116,6 @@ def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
 	return hash_helper.create_hash(content_analyser_content) == 'c39e7c00' and hash_helper.create_hash(content_store_content) == '77e47f71'
-
-
-def processors_pre_check() -> bool:
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_check():
-			return False
-	return True
 
 
 def force_download() -> ErrorCode:
