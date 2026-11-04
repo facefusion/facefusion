@@ -484,18 +484,16 @@ def test_run_jobs(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	session_manager.fork_session()
+	with patch('facefusion.apis.http_manager.has_request', return_value = True):
+		run_jobs_response = test_client.patch('/jobs?action=run', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
-	run_jobs_response = test_client.patch('/jobs?action=run', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
 	run_jobs_body = run_jobs_response.json()
 
 	assert run_jobs_body.get('message') == 'jobs not started'
 	assert run_jobs_response.status_code == 409
-
-	session_manager.join_session()
 
 	with patch('facefusion.jobs.job_runner.run_jobs', return_value = True) as run_jobs_mock:
 		run_jobs_response = test_client.patch('/jobs?action=run', headers =
@@ -546,18 +544,16 @@ def test_run_job(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	session_manager.fork_session()
+	with patch('facefusion.apis.http_manager.has_request', return_value = True):
+		run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
-	run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
 	run_job_body = run_job_response.json()
 
 	assert run_job_body.get('message') == 'job not started'
 	assert run_job_response.status_code == 409
-
-	session_manager.join_session()
 
 	with patch('facefusion.jobs.job_runner.run_job', return_value = True) as run_job_mock:
 		run_job_response = test_client.patch('/jobs/job-test-run-job?action=run', headers =
@@ -609,18 +605,16 @@ def test_retry_jobs(test_client : TestClient) -> None:
 	set_steps_status('job-test-retry-jobs', 'failed')
 	move_job_file('job-test-retry-jobs', 'failed')
 
-	session_manager.fork_session()
+	with patch('facefusion.apis.http_manager.has_request', return_value = True):
+		retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
-	retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
 	retry_jobs_body = retry_jobs_response.json()
 
 	assert retry_jobs_body.get('message') == 'jobs not retried'
 	assert retry_jobs_response.status_code == 409
-
-	session_manager.join_session()
 
 	with patch('facefusion.jobs.job_runner.retry_jobs', return_value = True) as retry_jobs_mock:
 		retry_jobs_response = test_client.patch('/jobs?action=retry', headers =
@@ -683,18 +677,16 @@ def test_retry_job(test_client : TestClient) -> None:
 	set_steps_status('job-test-retry-job', 'failed')
 	move_job_file('job-test-retry-job', 'failed')
 
-	session_manager.fork_session()
+	with patch('facefusion.apis.http_manager.has_request', return_value = True):
+		retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		})
 
-	retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
 	retry_job_body = retry_job_response.json()
 
 	assert retry_job_body.get('message') == 'job not retried'
 	assert retry_job_response.status_code == 409
-
-	session_manager.join_session()
 
 	with patch('facefusion.jobs.job_runner.retry_job', return_value = True) as retry_job_mock:
 		retry_job_response = test_client.patch('/jobs/job-test-retry-job?action=retry', headers =

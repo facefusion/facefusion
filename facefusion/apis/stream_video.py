@@ -77,7 +77,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_queue : Queue[Tupl
 	video_frame_handler = partial(handle_video_frame, source_vision_frames, video_codec, video_decoder, video_queue, video_executor)
 	receive_event = create_receive_event(video_track, video_frame_handler)
 
-	while rtc.is_open(video_track) and not receive_event.is_set() and process_manager.is_processing():
+	while not receive_event.is_set() and process_manager.is_processing():
 		receive_event.wait(timeout = 0.5)
 
 	destroy_receive_event(video_track)
