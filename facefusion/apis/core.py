@@ -18,6 +18,7 @@ from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
 from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
+from facefusion.apis.endpoints.process import websocket_process
 from facefusion.apis.endpoints.root import get_root
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
@@ -74,6 +75,7 @@ def create_api() -> Starlette:
 		Route('/jobs/{job_id}/{step_index:int}', delete_step, methods = [ 'DELETE' ], middleware = [ session_guard ]),
 		WebSocketRoute('/metrics', websocket_metrics, middleware = [ session_guard ]),
 		WebSocketRoute('/ping', websocket_ping, middleware = [ session_guard ]),
+		WebSocketRoute('/process', websocket_process, middleware = [ session_guard ]),
 		WebSocketRoute('/stream', websocket_stream, middleware = [ session_guard ])
 	]
 
@@ -108,7 +110,9 @@ def start_server(server : uvicorn.Server) -> ErrorCode:
 		args = (server.run,)
 	)
 	server_thread.start()
-	server_thread.join()
+
+	while server_thread.is_alive():
+		server_thread.join(timeout = 0.5)
 
 	if server.should_exit:
 		return 0

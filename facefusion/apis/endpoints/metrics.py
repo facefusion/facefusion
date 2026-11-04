@@ -11,7 +11,7 @@ from facefusion.system import get_metrics_set
 
 
 async def get_metrics(request : Request) -> Response:
-	metrics_set = get_metrics_set()
+	metrics_set = await asyncio.to_thread(get_metrics_set)
 
 	if metrics_set:
 		return JSONResponse(metrics_set)
@@ -28,10 +28,10 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 		receive_task = asyncio.create_task(websocket.receive())
 
 		while websocket_manager.has_connection('metrics') and not receive_task.done():
-			metrics_set = get_metrics_set()
+			metrics_set = await asyncio.to_thread(get_metrics_set)
 
 			await websocket.send_json(metrics_set)
-			await asyncio.wait([ receive_task ], timeout = 2)
+			await asyncio.wait([ receive_task ], timeout = 0.5)
 
 		receive_task.cancel()
 		websocket_manager.end_connection('metrics', websocket)
