@@ -3,7 +3,7 @@ from typing import Iterator
 
 import pytest
 
-from facefusion import process_manager, rtc, session_context, session_manager, state_manager
+from facefusion import rtc, session_context, session_manager, state_manager
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.rtc_manager import delete_peer, get_peer, has_peer, init, set_peer
 from facefusion.types import RtcPeer
@@ -13,8 +13,6 @@ from facefusion.types import RtcPeer
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
-
-	process_manager.init()
 
 	datachannel_module.pre_check()
 

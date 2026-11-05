@@ -2,7 +2,7 @@ import ctypes
 
 import pytest
 
-from facefusion import process_manager, state_manager
+from facefusion import state_manager
 from facefusion.libraries import aom as aom_module
 
 
@@ -10,8 +10,6 @@ from facefusion.libraries import aom as aom_module
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
-
-	process_manager.init()
 
 	aom_module.pre_check()
 

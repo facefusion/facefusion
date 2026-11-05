@@ -3,7 +3,7 @@ from typing import Iterator
 import pytest
 
 from facefusion import session_context, session_manager, store_creator
-from facefusion.process_manager import PROCESS_STORE, clear, destroy, end, get_stages, get_state, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
+from facefusion.process_manager import PROCESS_STORE, clear, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -30,7 +30,36 @@ def test_init() -> None:
 	assert get_state() == 'pending'
 
 
+def test_get_status() -> None:
+	set_state('processing')
+
+	assert get_status('session-a') == 'processing'
+	assert get_status('session-c') is None
+
+
+def test_get_stages() -> None:
+	start()
+	stage('check', 'checking')
+
+	assert get_stages() ==\
+	[
+		{
+			'type': 'check',
+			'title': 'checking'
+		}
+	]
+
+	destroy('session-a')
+
+	assert get_stages() == []
+
+
 def test_get_state() -> None:
+	session_context.set_session_id('session-c')
+
+	assert get_state() is None
+
+	session_context.set_session_id('session-a')
 	set_state('processing')
 	session_context.set_session_id('session-b')
 	set_state('stopping')

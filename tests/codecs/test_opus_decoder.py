@@ -3,7 +3,7 @@ from unittest.mock import patch
 import numpy
 import pytest
 
-from facefusion import process_manager, state_manager
+from facefusion import state_manager
 from facefusion.codecs.opus_decoder import create, decode, destroy
 from facefusion.codecs.opus_encoder import create as create_encoder, encode
 from facefusion.common_helper import is_linux, is_macos, is_windows
@@ -18,8 +18,6 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
-
-	process_manager.init()
 
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3' ])
 

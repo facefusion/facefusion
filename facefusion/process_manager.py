@@ -17,21 +17,31 @@ def init() -> None:
 	store_creator.init_content(PROCESS_STORE, session_id)
 
 
+def get_status(session_id : SessionId) -> Optional[ProcessState]:
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		return store_creator.get_content(PROCESS_STORE, session_id).get('status')
+
+	return None
+
+
 def get_stages() -> List[Stage]:
 	session_id = get_session_id()
 
-	return store_creator.get_content(PROCESS_STORE, session_id).get('stages')
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		return store_creator.get_content(PROCESS_STORE, session_id).get('stages')
+
+	return []
 
 
-def get_state() -> ProcessState:
+def get_state() -> Optional[ProcessState]:
 	session_id = get_session_id()
 	owner_id = resolve_owner_id()
 	local_id = resolve_local_id()
 
-	if store_creator.get_content(PROCESS_STORE, owner_id).get('status') == 'stopping' or store_creator.get_content(PROCESS_STORE, local_id).get('status') == 'stopping':
+	if get_status(owner_id) == 'stopping' or get_status(local_id) == 'stopping':
 		return 'stopping'
 
-	return store_creator.get_content(PROCESS_STORE, session_id).get('status')
+	return get_status(session_id)
 
 
 def is_checking() -> bool:

@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from onnxruntime import InferenceSession
 
-from facefusion import content_analyser, process_manager, session_context, state_manager, store_creator
+from facefusion import content_analyser, session_context, state_manager, store_creator
 from facefusion.execution import resolve_cache_path
 from facefusion.inference_manager import INFERENCE_POOL_STORE, clear, get_inference_pool, init, resolve_static_inference_providers
 
@@ -16,8 +16,6 @@ def before_all() -> None:
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
-
-	process_manager.init()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -53,7 +51,6 @@ def test_init() -> None:
 	local_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 	session_context.set_session_id('session-a')
 	state_manager.init()
-	process_manager.init()
 	init()
 	session_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
@@ -80,13 +77,11 @@ def test_get_inference_pool(onnxruntime_version : Tuple[int, int, int], is_share
 		with patch('facefusion.inference_manager.get_onnxruntime_version', return_value = onnxruntime_version):
 			session_context.set_session_id('session-a')
 			state_manager.init()
-			process_manager.init()
 			init()
 			session_a_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
 			session_context.set_session_id('session-b')
 			state_manager.init()
-			process_manager.init()
 			init()
 			session_b_inference_pool = get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 
@@ -100,7 +95,6 @@ def test_clear() -> None:
 
 	session_context.set_session_id('session-a')
 	state_manager.init()
-	process_manager.init()
 	init()
 	get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
 	clear()

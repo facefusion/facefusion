@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import numpy
 import pytest
 
-from facefusion import process_manager, rtc, rtc_manager, state_manager
+from facefusion import rtc, rtc_manager, state_manager
 from facefusion.apis.stream_audio import handle_audio_frame, receive_audio_frames, send_audio_frames
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
@@ -23,8 +23,6 @@ def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('processors', [])
-
-	process_manager.init()
 
 	opus_module.pre_check()
 	datachannel_module.pre_check()

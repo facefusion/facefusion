@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion import face_aligner, face_classifier, face_detector, face_masker, face_recognizer, face_store, inference_manager, process_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_masker, face_recognizer, face_store, inference_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_creator import get_one_face, get_static_faces
 from facefusion.face_helper import warp_face_by_face_landmark_5
@@ -15,8 +15,6 @@ def before_all() -> None:
 	inference_manager.init()
 
 	face_store.init()
-
-	process_manager.init()
 
 	conditional_download(get_test_examples_directory(),
 	[
