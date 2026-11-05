@@ -1,7 +1,7 @@
 import numpy
 import pytest
 
-from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, face_store, inference_manager, state_manager, video_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, face_store, inference_manager, process_manager, state_manager, video_manager
 from facefusion.common_helper import get_first, get_last
 from facefusion.download import conditional_download
 from facefusion.face_creator import get_many_faces, get_one_face
@@ -17,6 +17,7 @@ def before_all() -> None:
 
 	face_store.init()
 
+	process_manager.init()
 	video_manager.init()
 
 	conditional_download(get_test_examples_directory(),

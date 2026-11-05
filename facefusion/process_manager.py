@@ -52,9 +52,10 @@ def is_pending() -> bool:
 
 def set_state(process_state : ProcessState) -> None:
 	session_id = get_session_id()
-	process : Process = store_creator.get_content(PROCESS_STORE, session_id)
 
-	process['status'] = process_state
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		process : Process = store_creator.get_content(PROCESS_STORE, session_id)
+		process['status'] = process_state
 
 
 def check() -> None:

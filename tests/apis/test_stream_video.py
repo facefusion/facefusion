@@ -10,7 +10,7 @@ from unittest.mock import patch
 import cv2
 import pytest
 
-from facefusion import rtc, rtc_manager, state_manager, video_manager
+from facefusion import process_manager, rtc, rtc_manager, state_manager, video_manager
 from facefusion.apis.stream_video import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, handle_video_frame, process_video_frame, receive_video_frames, send_video_frames, update_video_encoder_bitrate, update_video_encoder_resolution
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
@@ -29,6 +29,7 @@ def before_all() -> None:
 	state_manager.init_item('execution_thread_count', 8)
 	state_manager.init_item('processors', [])
 
+	process_manager.init()
 	video_manager.init()
 
 	aom_module.pre_check()

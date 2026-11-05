@@ -12,6 +12,7 @@ def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
 	process_manager.init()
+
 	vpx_module.pre_check()
 
 

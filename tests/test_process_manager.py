@@ -2,8 +2,8 @@ from typing import Iterator
 
 import pytest
 
-from facefusion import session_context, session_manager
-from facefusion.process_manager import clear, end, get_stages, get_state, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
+from facefusion import session_context, session_manager, store_creator
+from facefusion.process_manager import PROCESS_STORE, clear, destroy, end, get_stages, get_state, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -96,6 +96,15 @@ def test_end_process() -> None:
 	end()
 
 	assert is_pending()
+
+	session_context.set_session_id('session-c')
+	start()
+	destroy('session-c')
+	end()
+
+	assert store_creator.has_content(PROCESS_STORE, 'session-c') is False
+
+	session_context.set_session_id('session-a')
 
 
 def test_stage() -> None:

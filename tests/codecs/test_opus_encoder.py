@@ -19,6 +19,7 @@ def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
 	process_manager.init()
+
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3' ])
 
 	opus_module.pre_check()

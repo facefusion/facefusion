@@ -6,7 +6,7 @@ import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from facefusion import metadata, rtc, rtc_manager, session_context, session_manager, state_manager
+from facefusion import metadata, process_manager, rtc, rtc_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api, pre_check
 from facefusion.download import conditional_download
@@ -27,6 +27,8 @@ def before_all() -> None:
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
 	state_manager.init_item('processors', [])
+
+	process_manager.init()
 
 	pre_check()
 

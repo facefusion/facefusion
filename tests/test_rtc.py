@@ -2,7 +2,7 @@ import ctypes
 
 import pytest
 
-from facefusion import state_manager
+from facefusion import process_manager, state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.rtc import adapt_receiver_bitrate, add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peer, get_payload_type, handle_sender_bitrate, send_audio, send_video, set_remote_description, wire_sender_bitrate
 from facefusion.types import RtcPeer, VideoCodec
@@ -12,6 +12,8 @@ from facefusion.types import RtcPeer, VideoCodec
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
+	process_manager.init()
 
 	datachannel_module.pre_check()
 	opus_module.pre_check()
