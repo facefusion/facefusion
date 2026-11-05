@@ -368,7 +368,7 @@ def test_cancel_jobs(test_client : TestClient) -> None:
 
 	assert cancel_jobs_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-jobs' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id).get('status') == 'stopping'
 	assert cancel_jobs_response.status_code == 200
 
 	process_manager.end()
@@ -424,7 +424,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'processing'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id).get('status') == 'processing'
 	assert cancel_job_response.status_code == 200
 
 	test_client.patch('/jobs/job-test-cancel-job?action=submit', headers =
@@ -441,7 +441,7 @@ def test_cancel_job(test_client : TestClient) -> None:
 
 	assert cancel_job_body.get('message') == 'ok'
 	assert find_job_ids('drafted') == [ 'job-test-cancel-job' ]
-	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id) == 'stopping'
+	assert store_creator.get_content(process_manager.PROCESS_STORE, fork_id).get('status') == 'stopping'
 	assert cancel_job_response.status_code == 200
 
 	process_manager.end()

@@ -38,7 +38,7 @@ jobs:
   - run: pip install pytest
   - run: pip install pytest-asyncio
   - run: pip install pytest-mock
-  - run: pip install httpx
+  - run: pip install httpx2
   - run: pip install python-multipart
   - run: pytest
  report:
@@ -59,7 +59,7 @@ jobs:
   - run: pip install pytest-cov
   - run: pip install pytest-asyncio
   - run: pip install pytest-mock
-  - run: pip install httpx
+  - run: pip install httpx2
   - run: pip install python-multipart
   - run: pytest tests --cov facefusion
   - run: coveralls --service github

@@ -2,8 +2,8 @@ from typing import Iterator
 
 import pytest
 
-from facefusion import session_context, session_manager
-from facefusion.process_manager import clear, end, get_state, init, is_pending, is_processing, is_stopping, set_state, start, stop
+from facefusion import session_context, session_manager, store_creator
+from facefusion.process_manager import PROCESS_STORE, clear, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -30,7 +30,36 @@ def test_init() -> None:
 	assert get_state() == 'pending'
 
 
+def test_get_status() -> None:
+	set_state('processing')
+
+	assert get_status('session-a') == 'processing'
+	assert get_status('session-c') is None
+
+
+def test_get_stages() -> None:
+	start()
+	stage('check', 'checking')
+
+	assert get_stages() ==\
+	[
+		{
+			'type': 'check',
+			'title': 'checking'
+		}
+	]
+
+	destroy('session-a')
+
+	assert get_stages() == []
+
+
 def test_get_state() -> None:
+	session_context.set_session_id('session-c')
+
+	assert get_state() is None
+
+	session_context.set_session_id('session-a')
 	set_state('processing')
 	session_context.set_session_id('session-b')
 	set_state('stopping')
@@ -96,6 +125,76 @@ def test_end_process() -> None:
 	end()
 
 	assert is_pending()
+
+	session_context.set_session_id('session-c')
+	start()
+	destroy('session-c')
+	end()
+
+	assert store_creator.has_content(PROCESS_STORE, 'session-c') is False
+
+	session_context.set_session_id('session-a')
+
+
+def test_stage() -> None:
+	start()
+	stage('check', 'checking')
+	stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+
+	assert get_stages() ==\
+	[
+		{
+			'type': 'check',
+			'title': 'checking'
+		},
+		{
+			'type': 'extract',
+			'title': 'extracting',
+			'progress':
+			{
+				'unit': 'frame',
+				'current': 0,
+				'total': 270
+			}
+		}
+	]
+
+
+def test_update() -> None:
+	start()
+	stage('check', 'checking')
+	update()
+
+	assert get_stages()[-1].get('progress') is None
+
+	stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+	update()
+	update()
+
+	assert get_stages()[-1].get('progress').get('current') == 2
+
+
+def test_seek() -> None:
+	start()
+	stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+	seek(135)
+
+	assert get_stages()[-1].get('progress').get('current') == 135
 
 
 def test_clear() -> None:

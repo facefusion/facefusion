@@ -1,9 +1,15 @@
+from typing import List, Optional
+
 from facefusion import store_creator
 from facefusion.session_context import get_session_id, resolve_local_id
 from facefusion.session_manager import resolve_owner_id
-from facefusion.types import ProcessState, SessionId, Store
+from facefusion.types import Process, ProcessState, Progress, SessionId, Stage, StageType, Store
 
-PROCESS_STORE : Store = store_creator.create_store('pending')
+PROCESS_STORE : Store = store_creator.create_store(
+{
+	'status': 'pending',
+	'stages': []
+})
 
 
 def init() -> None:
@@ -11,15 +17,31 @@ def init() -> None:
 	store_creator.init_content(PROCESS_STORE, session_id)
 
 
-def get_state() -> ProcessState:
+def get_status(session_id : SessionId) -> Optional[ProcessState]:
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		return store_creator.get_content(PROCESS_STORE, session_id).get('status')
+
+	return None
+
+
+def get_stages() -> List[Stage]:
+	session_id = get_session_id()
+
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		return store_creator.get_content(PROCESS_STORE, session_id).get('stages')
+
+	return []
+
+
+def get_state() -> Optional[ProcessState]:
 	session_id = get_session_id()
 	owner_id = resolve_owner_id()
 	local_id = resolve_local_id()
 
-	if store_creator.get_content(PROCESS_STORE, owner_id) == 'stopping' or store_creator.get_content(PROCESS_STORE, local_id) == 'stopping':
+	if get_status(owner_id) == 'stopping' or get_status(local_id) == 'stopping':
 		return 'stopping'
 
-	return store_creator.get_content(PROCESS_STORE, session_id)
+	return get_status(session_id)
 
 
 def is_checking() -> bool:
@@ -40,7 +62,10 @@ def is_pending() -> bool:
 
 def set_state(process_state : ProcessState) -> None:
 	session_id = get_session_id()
-	store_creator.set_content(PROCESS_STORE, session_id, process_state)
+
+	if store_creator.has_content(PROCESS_STORE, session_id):
+		process : Process = store_creator.get_content(PROCESS_STORE, session_id)
+		process['status'] = process_state
 
 
 def check() -> None:
@@ -48,6 +73,7 @@ def check() -> None:
 
 
 def start() -> None:
+	init()
 	set_state('processing')
 
 
@@ -59,6 +85,33 @@ def end() -> None:
 	set_state('pending')
 
 
+def stage(stage_type : StageType, title : str, progress : Optional[Progress] = None) -> None:
+	next_stage : Stage =\
+	{
+		'type': stage_type,
+		'title': title
+	}
+
+	if progress:
+		next_stage['progress'] = progress.copy()
+
+	get_stages().append(next_stage)
+
+
+def update() -> None:
+	stages = get_stages()
+
+	if stages and 'progress' in stages[-1]:
+		stages[-1]['progress']['current'] += 1
+
+
+def seek(current : int) -> None:
+	stages = get_stages()
+
+	if stages and 'progress' in stages[-1]:
+		stages[-1]['progress']['current'] = current
+
+
 def clear() -> None:
 	session_id = get_session_id()
 	store_creator.init_content(PROCESS_STORE, session_id)
@@ -66,4 +119,3 @@ def clear() -> None:
 
 def destroy(session_id : SessionId) -> None:
 	store_creator.delete_content(PROCESS_STORE, session_id)
-
