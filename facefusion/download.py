@@ -25,13 +25,14 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
+			time_current = time.monotonic()
 			process_manager.stage('download', translator.get('downloading'),
 			{
 				'unit': 'download',
 				'current': initial_size,
 				'total': download_size,
-				'started_at': time.monotonic(),
-				'updated_at': time.monotonic()
+				'started_at': time_current,
+				'updated_at': time_current
 			})
 
 			with cli_progress.create(unit = 'download', total = download_size) as progress:

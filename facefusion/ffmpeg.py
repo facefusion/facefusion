@@ -169,13 +169,14 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		ffmpeg_builder.cast_stream()
 	)
 
+	time_current = time.monotonic()
 	process_manager.stage('extract', translator.get('extracting'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': extract_frame_total,
-		'started_at': time.monotonic(),
-		'updated_at': time.monotonic()
+		'started_at': time_current,
+		'updated_at': time_current
 	})
 
 	with cli_progress.create(total = extract_frame_total) as progress:
@@ -200,13 +201,14 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		ffmpeg_builder.cast_stream()
 	)
 
+	time_current = time.monotonic()
 	process_manager.stage('spawn', translator.get('spawning'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': spawn_frame_total,
-		'started_at': time.monotonic(),
-		'updated_at': time.monotonic()
+		'started_at': time_current,
+		'updated_at': time_current
 	})
 
 	with cli_progress.create(total = spawn_frame_total) as progress:
@@ -339,13 +341,14 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		ffmpeg_builder.cast_stream()
 	)
 
+	time_current = time.monotonic()
 	process_manager.stage('merge', translator.get('merging'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': merge_frame_total,
-		'started_at': time.monotonic(),
-		'updated_at': time.monotonic()
+		'started_at': time_current,
+		'updated_at': time_current
 	})
 
 	with cli_progress.create(total = merge_frame_total) as progress:

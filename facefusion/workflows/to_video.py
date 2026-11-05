@@ -77,12 +77,13 @@ def process_memory_frames() -> ErrorCode:
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
+		time_current = time.monotonic()
 		process_manager.stage('infer', translator.get('processing'),
 		{
 			'unit': 'frame',
 			'current': 0,
-			'started_at': time.monotonic(),
-			'updated_at': time.monotonic()
+			'started_at': time_current,
+			'updated_at': time_current
 		})
 		process_manager.count(temp_frame_range)
 

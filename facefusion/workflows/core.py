@@ -161,12 +161,13 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
+		time_current = time.monotonic()
 		process_manager.stage('infer', translator.get('processing'),
 		{
 			'unit': 'frame',
 			'current': 0,
-			'started_at': time.monotonic(),
-			'updated_at': time.monotonic()
+			'started_at': time_current,
+			'updated_at': time_current
 		})
 		process_manager.count(temp_frame_set)
 

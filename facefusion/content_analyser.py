@@ -163,12 +163,13 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	if trim_frame_start > 0:
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
+	time_current = time.monotonic()
 	process_manager.stage('analyse', translator.get('analysing'),
 	{
 		'unit': 'frame',
 		'current': 0,
-		'started_at': time.monotonic(),
-		'updated_at': time.monotonic()
+		'started_at': time_current,
+		'updated_at': time_current
 	})
 	process_manager.count(frame_range)
 
