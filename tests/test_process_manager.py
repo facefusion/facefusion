@@ -3,7 +3,7 @@ from typing import Iterator
 import pytest
 
 from facefusion import session_context, session_manager
-from facefusion.process_manager import clear, end, get_state, init, is_pending, is_processing, is_stopping, set_state, start, stop
+from facefusion.process_manager import clear, end, get_stages, get_state, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -96,6 +96,67 @@ def test_end_process() -> None:
 	end()
 
 	assert is_pending()
+
+
+def test_stage() -> None:
+	start()
+	stage('check', 'checking')
+	stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+
+	assert get_stages() ==\
+	[
+		{
+			'type': 'check',
+			'title': 'checking'
+		},
+		{
+			'type': 'extract',
+			'title': 'extracting',
+			'progress':
+			{
+				'unit': 'frame',
+				'current': 0,
+				'total': 270
+			}
+		}
+	]
+
+
+def test_update() -> None:
+	start()
+	stage('check', 'checking')
+	update()
+
+	assert get_stages()[-1].get('progress') is None
+
+	stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+	update()
+	update()
+
+	assert get_stages()[-1].get('progress').get('current') == 2
+
+
+def test_seek() -> None:
+	start()
+	stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270
+	})
+	seek(135)
+
+	assert get_stages()[-1].get('progress').get('current') == 135
 
 
 def test_clear() -> None:

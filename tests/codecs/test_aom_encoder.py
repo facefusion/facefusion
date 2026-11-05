@@ -3,7 +3,7 @@ from unittest.mock import patch
 import cv2
 import pytest
 
-from facefusion import state_manager, video_manager
+from facefusion import process_manager, state_manager, video_manager
 from facefusion.codecs.aom_encoder import create, destroy, encode
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -18,6 +18,7 @@ def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
+	process_manager.init()
 	video_manager.init()
 
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4' ])

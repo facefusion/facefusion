@@ -2,7 +2,7 @@ import ctypes
 
 import pytest
 
-from facefusion import state_manager
+from facefusion import process_manager, state_manager
 from facefusion.libraries import opus as opus_module
 
 
@@ -11,6 +11,7 @@ def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 
+	process_manager.init()
 	opus_module.pre_check()
 
 
