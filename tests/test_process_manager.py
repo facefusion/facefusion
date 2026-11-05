@@ -1,9 +1,10 @@
 from typing import Iterator
+from unittest.mock import patch
 
 import pytest
 
 from facefusion import session_context, session_manager, store_creator
-from facefusion.process_manager import PROCESS_STORE, clear, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
+from facefusion.process_manager import PROCESS_STORE, clear, count, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -39,13 +40,28 @@ def test_get_status() -> None:
 
 def test_get_stages() -> None:
 	start()
-	stage('check', 'checking')
+	stage('extract', 'extracting',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270,
+		'started_at': 10.0,
+		'updated_at': 10.0
+	})
 
 	assert get_stages() ==\
 	[
 		{
-			'type': 'check',
-			'title': 'checking'
+			'type': 'extract',
+			'title': 'extracting',
+			'progress':
+			{
+				'unit': 'frame',
+				'current': 0,
+				'total': 270,
+				'started_at': 10.0,
+				'updated_at': 10.0
+			}
 		}
 	]
 
@@ -138,19 +154,36 @@ def test_end_process() -> None:
 
 def test_stage() -> None:
 	start()
-	stage('check', 'checking')
+	stage('download', 'downloading',
+	{
+		'unit': 'download',
+		'current': 1024,
+		'total': 2048,
+		'started_at': 10.0,
+		'updated_at': 10.0
+	})
 	stage('extract', 'extracting',
 	{
 		'unit': 'frame',
 		'current': 0,
-		'total': 270
+		'total': 270,
+		'started_at': 10.0,
+		'updated_at': 10.0
 	})
 
 	assert get_stages() ==\
 	[
 		{
-			'type': 'check',
-			'title': 'checking'
+			'type': 'download',
+			'title': 'downloading',
+			'progress':
+			{
+				'unit': 'download',
+				'current': 1024,
+				'total': 2048,
+				'started_at': 10.0,
+				'updated_at': 10.0
+			}
 		},
 		{
 			'type': 'extract',
@@ -159,29 +192,53 @@ def test_stage() -> None:
 			{
 				'unit': 'frame',
 				'current': 0,
-				'total': 270
+				'total': 270,
+				'started_at': 10.0,
+				'updated_at': 10.0
 			}
 		}
 	]
 
 
-def test_update() -> None:
+def test_count() -> None:
 	start()
-	stage('check', 'checking')
-	update()
+	count([ 0, 1, 2 ])
 
-	assert get_stages()[-1].get('progress') is None
+	assert get_stages() == []
 
 	stage('infer', 'processing',
 	{
 		'unit': 'frame',
 		'current': 0,
-		'total': 270
+		'started_at': 10.0,
+		'updated_at': 10.0
 	})
-	update()
+	count([ 0, 1, 2 ])
+
+	assert get_stages()[-1].get('progress').get('total') == 3
+
+
+def test_update() -> None:
+	start()
 	update()
 
+	assert get_stages() == []
+
+	stage('infer', 'processing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': 270,
+		'started_at': 10.0,
+		'updated_at': 10.0
+	})
+	update()
+
+	with patch('time.monotonic', return_value = 20.0):
+		update()
+
 	assert get_stages()[-1].get('progress').get('current') == 2
+	assert get_stages()[-1].get('progress').get('updated_at') == 20.0
 
 
 def test_seek() -> None:
@@ -190,11 +247,16 @@ def test_seek() -> None:
 	{
 		'unit': 'frame',
 		'current': 0,
-		'total': 270
+		'total': 270,
+		'started_at': 10.0,
+		'updated_at': 10.0
 	})
-	seek(135)
+
+	with patch('time.monotonic', return_value = 20.0):
+		seek(135)
 
 	assert get_stages()[-1].get('progress').get('current') == 135
+	assert get_stages()[-1].get('progress').get('updated_at') == 20.0
 
 
 def test_clear() -> None:

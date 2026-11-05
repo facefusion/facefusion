@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 from functools import lru_cache
 from typing import List, Optional
 from urllib.parse import urlparse
@@ -24,6 +25,15 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
+			process_manager.stage('download', translator.get('downloading'),
+			{
+				'unit': 'download',
+				'current': initial_size,
+				'total': download_size,
+				'started_at': time.monotonic(),
+				'updated_at': time.monotonic()
+			})
+
 			with cli_progress.create(unit = 'download', total = download_size) as progress:
 				progress.set_title(translator.get('downloading'))
 				progress.set_description('file_name = ' + download_file_name)
@@ -40,6 +50,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					if is_file(download_file_path):
 						current_size = get_file_size(download_file_path)
 						progress.seek(current_size)
+						process_manager.seek(current_size)
 
 
 @lru_cache(maxsize = 64)

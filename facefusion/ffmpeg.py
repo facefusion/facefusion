@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+import time
 from functools import lru_cache
 from types import SimpleNamespace
 from typing import BinaryIO, List, Optional, cast
@@ -37,6 +38,7 @@ def render_progress(process : subprocess.Popen[Buffer], progress : SimpleNamespa
 			frame_index = int(__frame_index__)
 
 			progress.seek(frame_index)
+			process_manager.seek(frame_index)
 
 
 def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer]:
@@ -167,6 +169,15 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		ffmpeg_builder.cast_stream()
 	)
 
+	process_manager.stage('extract', translator.get('extracting'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': extract_frame_total,
+		'started_at': time.monotonic(),
+		'updated_at': time.monotonic()
+	})
+
 	with cli_progress.create(total = extract_frame_total) as progress:
 		progress.set_title(translator.get('extracting'))
 		process = run_ffmpeg(commands)
@@ -188,6 +199,15 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		ffmpeg_builder.set_progress(),
 		ffmpeg_builder.cast_stream()
 	)
+
+	process_manager.stage('spawn', translator.get('spawning'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': spawn_frame_total,
+		'started_at': time.monotonic(),
+		'updated_at': time.monotonic()
+	})
 
 	with cli_progress.create(total = spawn_frame_total) as progress:
 		progress.set_title(translator.get('spawning'))
@@ -318,6 +338,15 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		ffmpeg_builder.set_progress(),
 		ffmpeg_builder.cast_stream()
 	)
+
+	process_manager.stage('merge', translator.get('merging'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'total': merge_frame_total,
+		'started_at': time.monotonic(),
+		'updated_at': time.monotonic()
+	})
 
 	with cli_progress.create(total = merge_frame_total) as progress:
 		progress.set_title(translator.get('merging'))
