@@ -17,8 +17,13 @@ async def websocket_process(websocket : WebSocket) -> None:
 
 		while websocket_manager.has_connection('process') and not receive_task.done():
 			process_state = process_manager.get_state()
+			stages = process_manager.get_stages()
 
-			await websocket.send_text(process_state)
+			await websocket.send_json(
+			{
+				'status': process_state,
+				'stages': stages
+			})
 			await asyncio.wait([ receive_task ], timeout = 0.5)
 
 		receive_task.cancel()
