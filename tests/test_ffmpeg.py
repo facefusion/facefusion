@@ -149,10 +149,9 @@ def test_render_progress() -> None:
 		'updated_at': 10.0
 	})
 
-	with cli_progress.create(total = 270) as progress:
+	with cli_progress.create() as progress:
 		render_progress(process, progress)
 
-		assert progress.current == 270
 		assert process_manager.get_stages()[-1].get('progress').get('current') == 270
 
 	assert process.wait() == 0

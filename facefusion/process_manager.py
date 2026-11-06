@@ -104,6 +104,13 @@ def count(collection : Sized) -> None:
 		stages[-1]['progress']['total'] = len(collection)
 
 
+def describe(description : str) -> None:
+	stages = get_stages()
+
+	if stages:
+		stages[-1]['progress']['description'] = description
+
+
 def update() -> None:
 	stages = get_stages()
 

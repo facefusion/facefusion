@@ -173,10 +173,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	})
 	process_manager.count(frame_range)
 
-	with cli_progress.create(unit = 'frame') as progress:
-		progress.set_title(translator.get('analysing'))
-		progress.count(frame_range)
-
+	with cli_progress.create() as progress:
 		content_store.clear()
 
 		for _ in frame_range:
@@ -185,9 +182,9 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			if content_store.tick() and analyse_frame(vision_frame):
 				content_store.set_hit()
 
-			progress.set_description('rate = ' + str(content_store.calculate_rate()))
-			progress.update()
+			process_manager.describe('rate = ' + str(content_store.calculate_rate()))
 			process_manager.update()
+			progress.update()
 
 	return bool(content_store.calculate_rate() > 10.0)
 

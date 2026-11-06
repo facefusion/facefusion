@@ -171,10 +171,7 @@ def process_frames() -> ErrorCode:
 		})
 		process_manager.count(temp_frame_set)
 
-		with cli_progress.create(unit = 'frame') as progress:
-			progress.set_title(translator.get('processing'))
-			progress.count(temp_frame_set)
-
+		with cli_progress.create() as progress:
 			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
 				futures : Deque[Future[bool]] = deque()
 
@@ -194,8 +191,8 @@ def process_frames() -> ErrorCode:
 
 					else:
 						future.result()
-						progress.update()
 						process_manager.update()
+						progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
