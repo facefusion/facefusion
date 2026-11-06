@@ -1,10 +1,11 @@
+import time
 from functools import lru_cache
 from typing import List, Tuple
 
 import numpy
 
 import facefusion.choices
-from facefusion import cli_progress, content_store, inference_manager, translator, video_manager
+from facefusion import cli_progress, content_store, inference_manager, process_manager, translator, video_manager
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -162,6 +163,16 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	if trim_frame_start > 0:
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
+	time_current = time.monotonic()
+	process_manager.stage('analyse', translator.get('analysing'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'started_at': time_current,
+		'updated_at': time_current
+	})
+	process_manager.count(frame_range)
+
 	with cli_progress.create(unit = 'frame') as progress:
 		progress.set_title(translator.get('analysing'))
 		progress.count(frame_range)
@@ -176,6 +187,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 
 			progress.set_description('rate = ' + str(content_store.calculate_rate()))
 			progress.update()
+			process_manager.update()
 
 	return bool(content_store.calculate_rate() > 10.0)
 

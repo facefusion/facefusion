@@ -50,6 +50,7 @@ def send_video_frames(rtc_peer : RtcPeer, video_queue : Queue[Tuple[Time, Future
 			if __video_buffer__:
 				video_timestamp = rtc.convert_time_to_timestamp(video_codec, video_time)
 				rtc.send_video(rtc_peer, __video_buffer__, video_timestamp)
+				process_manager.update()
 
 			receiver_bitrate = rtc_peer.get('receiver_bitrate').value
 			rtc.adapt_receiver_bitrate(rtc_peer, receiver_bitrate)

@@ -213,7 +213,9 @@ Progress = TypedDict('Progress',
 {
 	'unit' : ProgressUnit,
 	'current' : int,
-	'total' : NotRequired[int]
+	'total' : NotRequired[int],
+	'started_at' : float,
+	'updated_at' : float
 })
 
 StageType = Literal['check', 'download', 'analyse', 'copy', 'extract', 'spawn', 'infer', 'merge', 'finalize', 'serve', 'stream']
@@ -221,7 +223,7 @@ Stage = TypedDict('Stage',
 {
 	'type' : StageType,
 	'title' : str,
-	'progress' : NotRequired[Progress]
+	'progress' : Progress
 })
 
 ProcessMode = Literal['output', 'stream']

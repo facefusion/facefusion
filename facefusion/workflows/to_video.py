@@ -1,3 +1,4 @@
+import time
 from collections import deque
 from concurrent.futures import Future
 from typing import Deque, Tuple
@@ -76,6 +77,16 @@ def process_memory_frames() -> ErrorCode:
 	if temp_frame_range:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
+		time_current = time.monotonic()
+		process_manager.stage('infer', translator.get('processing'),
+		{
+			'unit': 'frame',
+			'current': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		})
+		process_manager.count(temp_frame_range)
+
 		with cli_progress.create(unit = 'frame') as progress:
 			progress.set_title(translator.get('processing'))
 			progress.count(temp_frame_range)
@@ -102,6 +113,7 @@ def process_memory_frames() -> ErrorCode:
 					else:
 						video_manager.write_video_frame(video_writer, future.result())
 						progress.update()
+						process_manager.update()
 
 		if not video_manager.close_video_writer(video_writer):
 			process_manager.stop()

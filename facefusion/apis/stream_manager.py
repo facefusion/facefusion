@@ -1,6 +1,7 @@
 import asyncio
 import ctypes
 import threading
+import time
 from collections.abc import AsyncIterator
 from concurrent.futures import Future
 from contextvars import copy_context
@@ -9,7 +10,7 @@ from typing import Optional, Tuple
 
 from starlette.websockets import WebSocket
 
-from facefusion import content_store, process_manager, rtc, rtc_manager, state_manager, streamer, thread_helper
+from facefusion import content_store, process_manager, rtc, rtc_manager, state_manager, streamer, thread_helper, translator
 from facefusion.apis.media_validator import validate_media_resolution
 from facefusion.apis.stream_audio import receive_audio_frames, send_audio_frames
 from facefusion.apis.stream_video import receive_video_frames, send_video_frames
@@ -23,6 +24,14 @@ from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_
 async def process_image(websocket : WebSocket) -> None:
 	process_manager.start()
 	await asyncio.to_thread(processors_pre_check)
+	time_current = time.monotonic()
+	process_manager.stage('stream', translator.get('streaming'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'started_at': time_current,
+		'updated_at': time_current
+	})
 
 	async for capture_vision_frame in receive_vision_frames(websocket):
 		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
@@ -33,6 +42,7 @@ async def process_image(websocket : WebSocket) -> None:
 
 		output_vision_buffer = to_buffer(output_vision_frame)
 		await websocket.send_bytes(output_vision_buffer)
+		process_manager.update()
 
 	process_manager.end()
 
@@ -127,6 +137,14 @@ def process_video(rtc_peer : RtcPeer) -> None:
 
 	process_manager.start()
 	processors_pre_check()
+	time_current = time.monotonic()
+	process_manager.stage('stream', translator.get('streaming'),
+	{
+		'unit': 'frame',
+		'current': 0,
+		'started_at': time_current,
+		'updated_at': time_current
+	})
 
 	video_receiver_thread = threading.Thread(
 		target = copy_context().run,

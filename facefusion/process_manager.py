@@ -1,4 +1,5 @@
-from typing import List, Optional
+import time
+from typing import List, Optional, Sized
 
 from facefusion import store_creator
 from facefusion.session_context import get_session_id, resolve_local_id
@@ -85,31 +86,38 @@ def end() -> None:
 	set_state('pending')
 
 
-def stage(stage_type : StageType, title : str, progress : Optional[Progress] = None) -> None:
+def stage(stage_type : StageType, stage_title : str, progress : Progress) -> None:
 	next_stage : Stage =\
 	{
 		'type': stage_type,
-		'title': title
+		'title': stage_title,
+		'progress': progress
 	}
 
-	if progress:
-		next_stage['progress'] = progress.copy()
-
 	get_stages().append(next_stage)
+
+
+def count(collection : Sized) -> None:
+	stages = get_stages()
+
+	if stages:
+		stages[-1]['progress']['total'] = len(collection)
 
 
 def update() -> None:
 	stages = get_stages()
 
-	if stages and 'progress' in stages[-1]:
+	if stages:
 		stages[-1]['progress']['current'] += 1
+		stages[-1]['progress']['updated_at'] = time.monotonic()
 
 
 def seek(current : int) -> None:
 	stages = get_stages()
 
-	if stages and 'progress' in stages[-1]:
+	if stages:
 		stages[-1]['progress']['current'] = current
+		stages[-1]['progress']['updated_at'] = time.monotonic()
 
 
 def clear() -> None:

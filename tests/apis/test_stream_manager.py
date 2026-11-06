@@ -63,6 +63,9 @@ async def test_process_image() -> None:
 
 	websocket_mock.send_bytes.assert_called_once()
 
+	assert process_manager.get_stages()[-1].get('type') == 'stream'
+	assert process_manager.get_stages()[-1].get('progress').get('current') == 1
+
 	if is_linux() or is_windows():
 		assert create_hash(websocket_mock.send_bytes.call_args[0][0]) == '0142782f'
 
@@ -175,6 +178,7 @@ def test_process_video(video_codec : VideoCodec, payload_type : int, session_id 
 
 	thread_pool_executor_mock.assert_called_once_with(max_workers = 8, initializer = set_session_id, initargs = tuple([ session_id ]))
 
+	assert process_manager.get_stages()[-1].get('type') == 'stream'
 	assert rtc_manager.has_peer() is False
 
 
