@@ -5,73 +5,50 @@ import time
 from contextlib import contextmanager
 from functools import partial
 from types import SimpleNamespace
-from typing import Iterator, Sized
+from typing import Iterator
 
-from facefusion import choices
-from facefusion.types import ProgressUnit
+from facefusion import choices, process_manager
+from facefusion.types import Progress
 
 
 @contextmanager
-def create(unit : ProgressUnit = 'frame', current : int = 0, total : int = 0) -> Iterator[SimpleNamespace]:
+def create() -> Iterator[SimpleNamespace]:
 	progress = SimpleNamespace(
-		unit = unit,
-		current = current,
-		total = total,
-		time_start = time.monotonic(),
 		time_update = 0.0
 	)
-	progress.count = partial(count, progress)
-	progress.set_title = partial(set_title, progress)
-	progress.set_description = partial(set_description, progress)
 	progress.update = partial(update, progress)
-	progress.seek = partial(seek, progress)
 
 	yield progress
 
-	progress.current = progress.total
-	render(progress)
+	stages = process_manager.get_stages()
+
+	if stages:
+		render(stages[-1].get('progress'), stages[-1].get('title'))
 
 	sys.stdout.flush()
 	sys.stdout.write(os.linesep)
 
 
-def set_title(progress : SimpleNamespace, title : str) -> None:
-	progress.title = title
-
-
-def set_description(progress : SimpleNamespace, description : str) -> None:
-	progress.description = description
-
-
-def count(progress : SimpleNamespace, collection : Sized) -> None:
-	progress.total = len(collection)
-
-
 def update(progress : SimpleNamespace) -> None:
-	seek(progress, progress.current + 1)
-
-
-def seek(progress : SimpleNamespace, current : int) -> None:
-	progress.current = current
+	stages = process_manager.get_stages()
 	time_current = time.monotonic()
 
-	if time_current - progress.time_update > 0.5:
+	if stages and time_current - progress.time_update > 0.5:
 		progress.time_update = time_current
-		render(progress)
+		render(stages[-1].get('progress'), stages[-1].get('title'))
 
 
-def render(progress : SimpleNamespace) -> None:
-	title = getattr(progress, 'title', '')
-	description = getattr(progress, 'description', '')
-	status = str(progress.current)
+def render(progress : Progress, title : str) -> None:
+	description = progress.get('description')
+	status = str(progress.get('current'))
 
-	if progress.unit == 'percent':
+	if progress.get('unit') == 'percent':
 		status = resolve_percent(progress)
 
-	if progress.unit == 'frame':
+	if progress.get('unit') == 'frame':
 		status = resolve_frame(progress)
 
-	if progress.unit == 'download':
+	if progress.get('unit') == 'download':
 		status = resolve_download(progress)
 
 	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - 2
@@ -79,8 +56,8 @@ def render(progress : SimpleNamespace) -> None:
 	if description:
 		progress_width -= len(description) + 3
 
-	if progress.total > 0:
-		progress_fill = progress.current * progress_width // progress.total
+	if progress.get('total') > 0:
+		progress_fill = progress.get('current') * progress_width // progress.get('total')
 	else:
 		progress_fill = 0
 
@@ -95,29 +72,29 @@ def render(progress : SimpleNamespace) -> None:
 	sys.stdout.flush()
 
 
-def resolve_percent(progress : SimpleNamespace) -> str:
-	if progress.total > 0:
-		percent = progress.current * 100 // progress.total
+def resolve_percent(progress : Progress) -> str:
+	if progress.get('total') > 0:
+		percent = progress.get('current') * 100 // progress.get('total')
 		return str(percent) + ' %'
 
 	return '0 %'
 
 
-def resolve_frame(progress : SimpleNamespace) -> str:
+def resolve_frame(progress : Progress) -> str:
 	time_current = time.monotonic()
 
-	if time_current - progress.time_start > 0:
-		rate = progress.current / (time_current - progress.time_start)
+	if time_current - progress.get('started_at') > 0:
+		rate = progress.get('current') / (time_current - progress.get('started_at'))
 		return str(round(rate, 1)) + 'frame/s'
 
 	return '0.0frame/s'
 
 
-def resolve_download(progress : SimpleNamespace) -> str:
+def resolve_download(progress : Progress) -> str:
 	time_current = time.monotonic()
 
-	if time_current - progress.time_start > 0:
-		rate = progress.current / (time_current - progress.time_start)
+	if time_current - progress.get('started_at') > 0:
+		rate = progress.get('current') / (time_current - progress.get('started_at'))
 
 		if rate > 1024 * 1024:
 			return str(round(rate / (1024 * 1024), 1)) + 'mb/s'

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import session_context, session_manager, store_creator
-from facefusion.process_manager import PROCESS_STORE, clear, count, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
+from facefusion.process_manager import PROCESS_STORE, clear, count, describe, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -216,6 +216,24 @@ def test_count() -> None:
 	count([ 0, 1, 2 ])
 
 	assert get_stages()[-1].get('progress').get('total') == 3
+
+
+def test_describe() -> None:
+	start()
+	describe('rate = 0.0')
+
+	assert get_stages() == []
+
+	stage('analyse', 'analysing',
+	{
+		'unit': 'frame',
+		'current': 0,
+		'started_at': 10.0,
+		'updated_at': 10.0
+	})
+	describe('rate = 0.0')
+
+	assert get_stages()[-1].get('progress').get('description') == 'rate = 0.0'
 
 
 def test_update() -> None:

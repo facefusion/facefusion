@@ -214,6 +214,7 @@ Progress = TypedDict('Progress',
 	'unit' : ProgressUnit,
 	'current' : int,
 	'total' : NotRequired[int],
+	'description' : NotRequired[str],
 	'started_at' : float,
 	'updated_at' : float
 })

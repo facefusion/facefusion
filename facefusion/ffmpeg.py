@@ -37,8 +37,8 @@ def render_progress(process : subprocess.Popen[Buffer], progress : SimpleNamespa
 			_, __frame_index__ = __line__.split('frame=')
 			frame_index = int(__frame_index__)
 
-			progress.seek(frame_index)
 			process_manager.seek(frame_index)
+			progress.update()
 
 
 def await_process(process : subprocess.Popen[Buffer]) -> subprocess.Popen[Buffer]:
@@ -179,8 +179,7 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		'updated_at': time_current
 	})
 
-	with cli_progress.create(total = extract_frame_total) as progress:
-		progress.set_title(translator.get('extracting'))
+	with cli_progress.create() as progress:
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
@@ -211,8 +210,7 @@ def spawn_frames(target_path : str, output_path : str, temp_video_resolution : R
 		'updated_at': time_current
 	})
 
-	with cli_progress.create(total = spawn_frame_total) as progress:
-		progress.set_title(translator.get('spawning'))
+	with cli_progress.create() as progress:
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
@@ -351,8 +349,7 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		'updated_at': time_current
 	})
 
-	with cli_progress.create(total = merge_frame_total) as progress:
-		progress.set_title(translator.get('merging'))
+	with cli_progress.create() as progress:
 		process = run_ffmpeg(commands)
 		render_progress(process, progress)
 		return await_process(process).returncode == 0
