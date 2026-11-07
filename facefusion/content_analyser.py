@@ -5,7 +5,8 @@ from typing import List, Tuple
 import numpy
 
 import facefusion.choices
-from facefusion import cli_progress, content_store, inference_manager, process_manager, translator, video_manager
+from facefusion import content_store, inference_manager, process_manager, translator, video_manager
+from facefusion.clis import progress as cli_progress
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_files, resolve_download_url
 from facefusion.execution import has_execution_provider

@@ -7,7 +7,7 @@ from typing import Iterator, List
 
 import facefusion.choices
 from facefusion import content_analyser, core, face_store, process_manager, state_manager
-from facefusion.cli_helper import render_table
+from facefusion.clis.table import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
 from facefusion.types import BenchmarkCycleSet

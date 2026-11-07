@@ -34,25 +34,25 @@ def test_get_package_logger() -> None:
 def test_debug(caplog : LogCaptureFixture) -> None:
 	debug('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.DEBUG, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.DEBUG, 'message') ]
 
 
 def test_info(caplog : LogCaptureFixture) -> None:
 	info('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.INFO, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.INFO, 'message') ]
 
 
 def test_warn(caplog : LogCaptureFixture) -> None:
 	warn('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.WARNING, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.WARNING, 'message') ]
 
 
 def test_error(caplog : LogCaptureFixture) -> None:
 	error('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, 'message') ]
 
 
 def test_enable_and_disable(caplog : LogCaptureFixture) -> None:
@@ -66,4 +66,4 @@ def test_enable_and_disable(caplog : LogCaptureFixture) -> None:
 	info('message', 'facefusion.core')
 
 	assert get_package_logger().disabled is False
-	assert caplog.messages == [ '[FACEFUSION.CORE] message' ]
+	assert caplog.messages == [ 'message' ]

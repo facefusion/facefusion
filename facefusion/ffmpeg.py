@@ -7,7 +7,8 @@ from types import SimpleNamespace
 from typing import BinaryIO, List, Optional, cast
 
 import facefusion.choices
-from facefusion import cli_progress, ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
+from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
+from facefusion.clis import progress as cli_progress
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, ImageEncoder, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata

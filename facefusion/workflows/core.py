@@ -5,8 +5,9 @@ from typing import Deque, List
 
 import numpy
 
-from facefusion import cli_progress, logger, process_manager, state_manager, thread_helper, translator
+from facefusion import logger, process_manager, state_manager, thread_helper, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
+from facefusion.clis import progress as cli_progress
 from facefusion.common_helper import get_first
 from facefusion.face_selector import decode_face_selector_maps
 from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video

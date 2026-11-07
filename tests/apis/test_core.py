@@ -1,8 +1,10 @@
+import logging
 import signal
 from typing import Iterator
 from unittest.mock import Mock, patch
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from starlette.testclient import TestClient
 
 from facefusion import process_manager, session_context, state_manager
@@ -67,12 +69,16 @@ def test_create_server() -> None:
 	assert server.should_exit is False
 
 
-def test_start_server() -> None:
+def test_start_server(caplog : LogCaptureFixture) -> None:
+	caplog.set_level(logging.INFO, logger = 'facefusion')
 	server_mock = Mock()
 	server_mock.should_exit = True
+	server_mock.config.host = '127.0.0.1'
+	server_mock.config.port = 7000
 
 	with patch('facefusion.apis.core.signal.signal') as signal_mock:
 		assert start_server(server_mock) == 0
+		assert caplog.messages == [ 'api started on http://127.0.0.1:7000', 'api stopped' ]
 
 		sigint_call, sigterm_call = signal_mock.call_args_list
 

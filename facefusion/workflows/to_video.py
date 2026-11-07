@@ -6,8 +6,9 @@ from typing import Deque, Tuple
 import cv2
 import numpy
 
-from facefusion import cli_progress, content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
+from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, thread_helper, translator, video_manager
 from facefusion.audio import restrict_audio_range
+from facefusion.clis import progress as cli_progress
 from facefusion.common_helper import get_first, get_middle
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules

@@ -12,7 +12,7 @@ from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
-from facefusion import content_analyser, process_manager, state_manager
+from facefusion import content_analyser, logger, process_manager, state_manager, translator
 from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_asset, get_assets, upload_assets
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.jobs import create_job, create_step, delete_job, delete_jobs, delete_step, get_job, get_jobs, update_job, update_jobs
@@ -24,6 +24,7 @@ from facefusion.apis.endpoints.session import create_session, destroy_session, g
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
 from facefusion.apis.middlewares.exception import create_exception_guard
+from facefusion.apis.middlewares.logger import create_logger
 from facefusion.apis.middlewares.security import create_security_guard
 from facefusion.apis.middlewares.session import create_session_guard
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
@@ -83,6 +84,7 @@ def create_api() -> Starlette:
 	api.add_middleware(create_exception_guard)
 	api.add_middleware(create_security_guard)
 	api.add_middleware(RequestBodyLimitMiddleware, max_body_size = 512 * 1024 * 1024)
+	api.add_middleware(create_logger)
 
 	if cors_origins:
 		api.add_middleware(CORSMiddleware, allow_origins = cors_origins, allow_methods = [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ], allow_headers = [ 'Authorization', 'Content-Type' ], expose_headers = [ 'Location' ])
@@ -97,7 +99,10 @@ def create_server() -> uvicorn.Server:
 		port = state_manager.get_item('api_port'),
 		limit_concurrency = state_manager.get_item('api_session_limit') * 8,
 		ws_max_size = 8 * 1024 * 1024,
-		ws_max_queue = 8
+		ws_max_queue = 8,
+		log_config = None,
+		access_log = False,
+		log_level = 'error'
 	))
 
 
@@ -110,9 +115,12 @@ def start_server(server : uvicorn.Server) -> ErrorCode:
 		args = (server.run,)
 	)
 	server_thread.start()
+	logger.info(translator.get('api_started', 'facefusion.apis').format(address = 'http://' + server.config.host + ':' + str(server.config.port)), __name__)
 
 	while server_thread.is_alive():
 		server_thread.join(timeout = 0.5)
+
+	logger.info(translator.get('api_stopped', 'facefusion.apis'), __name__)
 
 	if server.should_exit:
 		return 0

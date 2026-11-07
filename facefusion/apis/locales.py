@@ -5,6 +5,8 @@ LOCALES : Locales =\
 	'en':
 	{
 		'ok': 'ok',
+		'api_started': 'api started on {address}',
+		'api_stopped': 'api stopped',
 		'something_went_wrong': 'something went wrong',
 		'directory_not_removed': 'directory not removed',
 		'invalid_access_token': 'invalid access token',

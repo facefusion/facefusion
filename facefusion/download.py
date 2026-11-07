@@ -6,7 +6,8 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 import facefusion.choices
-from facefusion import cli_progress, curl_builder, logger, process_manager, state_manager, translator
+from facefusion import curl_builder, logger, process_manager, state_manager, translator
+from facefusion.clis import progress as cli_progress
 from facefusion.filesystem import get_file_extension, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Buffer, Command, DownloadProvider, DownloadSet

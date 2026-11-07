@@ -6,8 +6,9 @@ import sys
 from time import time
 
 import facefusion.apis.core
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, translator, video_manager
+from facefusion import args_helper, benchmarker, content_analyser, content_store, face_store, hash_helper, inference_manager, logger, process_manager, session_context, session_manager, state_manager, translator, video_manager
 from facefusion.args_helper import apply_args
+from facefusion.clis import table as cli_table
 from facefusion.download import conditional_download_files
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension
@@ -115,7 +116,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == '3ca238e9' and hash_helper.create_hash(content_store_content) == '77e47f71'
+	return hash_helper.create_hash(content_analyser_content) == '984dd50e' and hash_helper.create_hash(content_store_content) == '77e47f71'
 
 
 def force_download() -> ErrorCode:
@@ -147,7 +148,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		job_headers, job_contents = compose_job_list(state_manager.get_item('job_status'))
 
 		if job_contents:
-			cli_helper.render_table(job_headers, job_contents)
+			cli_table.render_table(job_headers, job_contents)
 			return 0
 		return 1
 

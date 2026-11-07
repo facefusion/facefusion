@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 
 import facefusion.ffmpeg
-from facefusion import cli_progress, ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
+from facefusion.clis import progress as cli_progress
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import await_process, concat_video, extract_frames, fix_audio_encoder, fix_video_encoder, merge_video, read_audio_buffer, render_progress, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_audio_entries, probe_video_entries

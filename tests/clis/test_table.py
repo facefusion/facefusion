@@ -1,6 +1,6 @@
 from _pytest.logging import LogCaptureFixture
 
-from facefusion.cli_helper import render_table
+from facefusion.clis.table import render_table
 
 
 def test_render_table(caplog : LogCaptureFixture) -> None:
