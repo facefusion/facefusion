@@ -18,6 +18,14 @@ def init() -> None:
 	store_creator.init_content(PROCESS_STORE, session_id)
 
 
+def has_process(session_id : SessionId) -> bool:
+	return store_creator.has_content(PROCESS_STORE, session_id)
+
+
+def get_process(session_id : SessionId) -> Process:
+	return store_creator.get_content(PROCESS_STORE, session_id)
+
+
 def get_status(session_id : SessionId) -> Optional[ProcessState]:
 	if store_creator.has_content(PROCESS_STORE, session_id):
 		return store_creator.get_content(PROCESS_STORE, session_id).get('status')

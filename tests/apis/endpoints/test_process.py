@@ -52,8 +52,11 @@ def test_websocket_process(test_client : TestClient) -> None:
 	]) as websocket:
 		assert websocket.receive_json() ==\
 		{
-			'status': 'pending',
-			'stages': []
+			'session':
+			{
+				'status': 'pending',
+				'stages': []
+			}
 		}
 
 		session_context.set_session_id(session_id)
@@ -68,23 +71,80 @@ def test_websocket_process(test_client : TestClient) -> None:
 
 		assert websocket.receive_json() ==\
 		{
-			'status': 'processing',
-			'stages':
-			[
-				{
-					'type': 'stream',
-					'title': 'streaming',
-					'progress':
+			'session':
+			{
+				'status': 'processing',
+				'stages':
+				[
 					{
-						'unit': 'frame',
-						'current': 0,
-						'started_at': 10.0,
-						'updated_at': 10.0
+						'type': 'stream',
+						'title': 'streaming',
+						'progress':
+						{
+							'unit': 'frame',
+							'current': 0,
+							'started_at': 10.0,
+							'updated_at': 10.0
+						}
 					}
-				}
-			]
+				]
+			}
 		}
 
+		session_manager.fork_session()
+		process_manager.start()
+		process_manager.stage('infer', 'processing',
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': 100,
+			'started_at': 20.0,
+			'updated_at': 20.0
+		})
+
+		assert websocket.receive_json() ==\
+		{
+			'session':
+			{
+				'status': 'processing',
+				'stages':
+				[
+					{
+						'type': 'stream',
+						'title': 'streaming',
+						'progress':
+						{
+							'unit': 'frame',
+							'current': 0,
+							'started_at': 10.0,
+							'updated_at': 10.0
+						}
+					}
+				]
+			},
+			'fork':
+			{
+				'status': 'processing',
+				'stages':
+				[
+					{
+						'type': 'infer',
+						'title': 'processing',
+						'progress':
+						{
+							'unit': 'frame',
+							'current': 0,
+							'total': 100,
+							'started_at': 20.0,
+							'updated_at': 20.0
+						}
+					}
+				]
+			}
+		}
+
+		process_manager.end()
+		session_manager.join_session()
 		process_manager.end()
 		websocket_manager.destroy(session_id)
 

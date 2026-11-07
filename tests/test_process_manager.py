@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import session_context, session_manager, store_creator
-from facefusion.process_manager import PROCESS_STORE, clear, count, describe, destroy, end, get_stages, get_state, get_status, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
+from facefusion.process_manager import PROCESS_STORE, clear, count, describe, destroy, end, get_process, get_stages, get_state, get_status, has_process, init, is_pending, is_processing, is_stopping, seek, set_state, stage, start, stop, update
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -29,6 +29,21 @@ def test_init() -> None:
 	init()
 
 	assert get_state() == 'pending'
+
+
+def test_has_process() -> None:
+	assert has_process('session-a') is True
+	assert has_process('session-c') is False
+
+
+def test_get_process() -> None:
+	set_state('processing')
+
+	assert get_process('session-a') ==\
+	{
+		'status': 'processing',
+		'stages': []
+	}
 
 
 def test_get_status() -> None:

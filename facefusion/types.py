@@ -234,6 +234,11 @@ Process = TypedDict('Process',
 	'status' : ProcessState,
 	'stages' : List[Stage]
 })
+ProcessSet = TypedDict('ProcessSet',
+{
+	'session' : Process,
+	'fork' : NotRequired[Process]
+})
 
 TableHeader : TypeAlias = str
 TableContent : TypeAlias = Any
