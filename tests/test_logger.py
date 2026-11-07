@@ -4,7 +4,14 @@ from typing import Iterator
 import pytest
 from _pytest.logging import LogCaptureFixture
 
-from facefusion.logger import debug, disable, enable, error, get_package_logger, info, init, warn
+from facefusion import state_manager
+from facefusion.clis.formatter import create_line_group
+from facefusion.logger import create_extra, debug, disable, enable, error, get_package_logger, info, init, warn
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	state_manager.init()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -53,6 +60,14 @@ def test_error(caplog : LogCaptureFixture) -> None:
 	error('message', 'facefusion.core')
 
 	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, 'message') ]
+
+
+def test_create_extra() -> None:
+	assert create_extra('facefusion.core') ==\
+	{
+		'module_name': 'facefusion.core',
+		'line_group': create_line_group('cli', 0)
+	}
 
 
 def test_enable_and_disable(caplog : LogCaptureFixture) -> None:

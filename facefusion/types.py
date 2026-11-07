@@ -206,17 +206,28 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
-StreamLine = TypedDict('StreamLine',
+
+ColorName = Literal['blue', 'cyan', 'green', 'grey', 'magenta', 'orange', 'red', 'reset', 'white', 'yellow']
+LineGroup = TypedDict('LineGroup',
 {
-	'line_group' : str,
+	'label' : str,
+	'color' : ColorName
+})
+LogExtra = TypedDict('LogExtra',
+{
+	'module_name' : str,
+	'line_group' : LineGroup
+})
+GroupState = TypedDict('GroupState',
+{
+	'label' : str,
 	'line_count' : int
 })
 
 ProgressAction = Literal['cursor_start', 'erase_line']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
-ColorName = Literal['blue', 'cyan', 'green', 'grey', 'magenta', 'orange', 'red', 'reset', 'white', 'yellow']
 ColorPalette : TypeAlias = Dict[ColorName, str]
-ProgressUnit = Literal['percent', 'frame', 'download']
+ProgressUnit = Literal['frame', 'download']
 Progress = TypedDict('Progress',
 {
 	'unit' : ProgressUnit,

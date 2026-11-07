@@ -5,8 +5,9 @@ from unittest.mock import patch
 import pytest
 from _pytest.capture import CaptureFixture
 
-from facefusion import choices, process_manager, state_manager
-from facefusion.clis.progress import create, render
+from facefusion import process_manager, state_manager
+from facefusion.clis.formatter import colorize
+from facefusion.clis.progress import create, render, resolve_rate
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -48,31 +49,49 @@ def test_update(capsys : CaptureFixture[str]) -> None:
 		assert output.count('downloading') == 0
 
 
-def test_render_percent(capsys : CaptureFixture[str]) -> None:
+def test_render(capsys : CaptureFixture[str]) -> None:
 	time_current = time.monotonic()
 
-	with patch('shutil.get_terminal_size', return_value = os.terminal_size((60, 20))):
+	with patch('shutil.get_terminal_size', return_value = os.terminal_size((70, 20))):
 		render(
 		{
-			'unit': 'percent',
+			'unit': 'frame',
 			'current': 1,
 			'total': 10,
 			'started_at': time_current,
 			'updated_at': time_current
-		}, 'downloading', 'download')
+		}, 'extracting', 'extract')
 
-		assert choices.color_palette.get('white') + '=' + choices.color_palette.get('grey') + '=' * 16 + choices.color_palette.get('reset') + ' 10 %' in capsys.readouterr().err
+		assert colorize('=' * 2, 'white') + colorize('=' * 20, 'grey') + ' 0.0frame/s' in capsys.readouterr().err
 
-	render(
+	with patch('shutil.get_terminal_size', return_value = os.terminal_size((200, 20))):
+		render(
+		{
+			'unit': 'frame',
+			'current': 1,
+			'total': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		}, 'extracting', 'extract')
+
+		assert colorize('', 'white') + colorize('=' * 50, 'grey') in capsys.readouterr().err
+
+
+def test_resolve_rate() -> None:
+	assert resolve_rate(
 	{
-		'unit': 'percent',
-		'current': 1,
-		'total': 0,
-		'started_at': time_current,
-		'updated_at': time_current
-	}, 'downloading', 'download')
-
-	assert '0 %' in capsys.readouterr().err
+		'unit': 'frame',
+		'current': 10,
+		'started_at': 10.0,
+		'updated_at': 15.0
+	}) == 2.0
+	assert resolve_rate(
+	{
+		'unit': 'frame',
+		'current': 10,
+		'started_at': 10.0,
+		'updated_at': 10.0
+	}) == 0.0
 
 
 def test_render_frame(capsys : CaptureFixture[str]) -> None:
@@ -103,14 +122,14 @@ def test_render_download(capsys : CaptureFixture[str]) -> None:
 	render(
 	{
 		'unit': 'download',
-		'current': 10 * 1024,
+		'current': 100 * 1024,
 		'total': 20 * 1024 * 1024,
 		'description': 'file_name = example.bin',
 		'started_at': time.monotonic() - 10,
 		'updated_at': time.monotonic()
 	}, 'downloading', 'download')
 
-	assert '1.0kb/s | file_name = example.bin' in capsys.readouterr().err
+	assert '10.0kb/s | file_name = example.bin' in capsys.readouterr().err
 
 	render(
 	{

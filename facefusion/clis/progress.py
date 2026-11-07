@@ -5,8 +5,9 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Iterator
 
-from facefusion import choices, process_manager
+from facefusion import process_manager
 from facefusion.clis import stream as cli_stream
+from facefusion.clis.formatter import colorize, create_line, get_line_offset, resolve_line_group
 from facefusion.types import Progress, StageType
 
 
@@ -19,7 +20,7 @@ def create() -> Iterator[SimpleNamespace]:
 
 	yield progress
 
-	cli_stream.clear_progress()
+	cli_stream.write('')
 
 
 def update(progress : SimpleNamespace) -> None:
@@ -35,64 +36,52 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	description = progress.get('description')
 	status = str(progress.get('current'))
 
-	if progress.get('unit') == 'percent':
-		status = resolve_percent(progress)
-
 	if progress.get('unit') == 'frame':
 		status = resolve_frame(progress)
 
 	if progress.get('unit') == 'download':
 		status = resolve_download(progress)
 
-	progress_width = shutil.get_terminal_size().columns - cli_stream.get_line_offset() - len(title) - len(status) - 2
+	progress_width = shutil.get_terminal_size().columns - get_line_offset() - len(title) - len(status) - 2
 
 	if description:
 		progress_width -= len(description) + 3
 
 	progress_width = min(progress_width, 50)
 
+	progress_fill = 0
+
 	if progress.get('total') > 0:
 		progress_fill = progress.get('current') * progress_width // progress.get('total')
-	else:
-		progress_fill = 0
 
-	progress_bar = choices.color_palette.get('white') + '=' * progress_fill + choices.color_palette.get('grey') + '=' * (progress_width - progress_fill) + choices.color_palette.get('reset')
+	progress_bar = colorize('=' * progress_fill, 'white') + colorize('=' * (progress_width - progress_fill), 'grey')
 	progress_parts = [ title, progress_bar, status ]
 
 	if description:
 		progress_parts.append('|')
 		progress_parts.append(description)
 
-	cli_stream.write_progress(cli_stream.create_line(cli_stream.resolve_line_group(), '▶', stage_type, ' '.join(progress_parts)))
+	line_group = resolve_line_group()
+	cli_stream.write(create_line(line_group.get('label'), line_group.get('color'), '▶', stage_type, ' '.join(progress_parts)))
 
 
-def resolve_percent(progress : Progress) -> str:
-	if progress.get('total') > 0:
-		percent = progress.get('current') * 100 // progress.get('total')
-		return str(percent) + ' %'
+def resolve_rate(progress : Progress) -> float:
+	progress_duration = progress.get('updated_at') - progress.get('started_at')
 
-	return '0 %'
+	if progress_duration > 0:
+		return progress.get('current') / progress_duration
+
+	return 0.0
 
 
 def resolve_frame(progress : Progress) -> str:
-	time_current = time.monotonic()
-
-	if time_current - progress.get('started_at') > 0:
-		rate = progress.get('current') / (time_current - progress.get('started_at'))
-		return str(round(rate, 1)) + 'frame/s'
-
-	return '0.0frame/s'
+	return str(round(resolve_rate(progress), 1)) + 'frame/s'
 
 
 def resolve_download(progress : Progress) -> str:
-	time_current = time.monotonic()
+	rate = resolve_rate(progress)
 
-	if time_current - progress.get('started_at') > 0:
-		rate = progress.get('current') / (time_current - progress.get('started_at'))
+	if rate > 1024 * 1024:
+		return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
 
-		if rate > 1024 * 1024:
-			return str(round(rate / (1024 * 1024), 1)) + 'mb/s'
-
-		return str(round(rate / 1024, 1)) + 'kb/s'
-
-	return '0.0kb/s'
+	return str(round(rate / 1024, 1)) + 'kb/s'

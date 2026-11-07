@@ -170,6 +170,8 @@ color_palette : ColorPalette =\
 	'yellow': '\033[38;5;221m'
 }
 stream_group_colors : List[ColorName] = [ 'cyan', 'magenta', 'green', 'blue', 'orange' ]
+stream_group_size : int = 20
+stream_flush_interval : float = 0.5
 
 job_statuses : List[JobStatus] = list(get_args(JobStatus))
 
