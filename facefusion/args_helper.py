@@ -83,6 +83,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('api_port', args.get('api_port'))
 	apply_state_item('api_security_strategy', args.get('api_security_strategy'))
 	apply_state_item('api_session_limit', args.get('api_session_limit'))
+	apply_state_item('api_upload_limit', args.get('api_upload_limit'))
 	apply_state_item('cors_origins', args.get('cors_origins'))
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('log_level', args.get('log_level'))

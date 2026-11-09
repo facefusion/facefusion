@@ -16,6 +16,7 @@ def before_all() -> None:
 	state_manager.init_item('api_host', '127.0.0.1')
 	state_manager.init_item('api_port', 7000)
 	state_manager.init_item('api_session_limit', 4)
+	state_manager.init_item('api_upload_limit', 512)
 
 	local_id = session_context.resolve_local_id()
 	session_context.set_session_id(local_id)
@@ -56,6 +57,19 @@ def test_create_api(test_client : TestClient) -> None:
 
 	assert root_response.headers.get('access-control-expose-headers') == 'Location'
 	assert root_response.status_code == 200
+
+	state_manager.set_item('api_upload_limit', 1)
+
+	with TestClient(create_api()) as upload_limit_client:
+		session_response = upload_limit_client.post('/session', content = bytes(1024 * 1024))
+
+		assert not session_response.status_code == 413
+
+		session_response = upload_limit_client.post('/session', content = bytes(1024 * 1024 + 1))
+
+		assert session_response.status_code == 413
+
+	state_manager.set_item('api_upload_limit', 512)
 
 
 def test_create_server() -> None:

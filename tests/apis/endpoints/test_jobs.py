@@ -39,6 +39,7 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
+	state_manager.init_item('api_upload_limit', 512)
 	clear_jobs(get_test_jobs_directory())
 	init_jobs(state_manager.get_jobs_path())
 

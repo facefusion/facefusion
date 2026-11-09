@@ -46,6 +46,7 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
+	state_manager.init_item('api_upload_limit', 512)
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_video_preset', 'ultrafast')
 	session_manager.API_SESSIONS.clear()
