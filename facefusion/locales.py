@@ -159,7 +159,7 @@ LOCALES : Locales =\
 			'api_port': 'specify the API port',
 			'api_security_strategy': 'specify the API security strategy used for sanitizing uploaded assets',
 			'api_session_limit': 'specify the maximum amount of concurrent sessions',
-			'api_upload_limit': 'specify the maximum size of an upload in megabytes',
+			'api_upload_limit': 'specify the maximum size of an upload',
 			'cors_origins': 'specify the CORS origins',
 			'execution_device_ids': 'specify the devices used for processing',
 			'execution_providers': 'inference using different providers (choices: {choices}, ...)',
