@@ -20,6 +20,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
+	state_manager.init_item('api_upload_limit', 512)
 
 	datachannel_module.pre_check()
 
@@ -38,7 +39,6 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
-	state_manager.init_item('api_upload_limit', 512)
 	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 
