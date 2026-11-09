@@ -219,7 +219,7 @@ Progress = TypedDict('Progress',
 	'updated_at' : float
 })
 
-StageType = Literal['check', 'download', 'analyse', 'copy', 'extract', 'spawn', 'infer', 'merge', 'finalize', 'serve', 'stream']
+StageType = Literal['check', 'download', 'upload', 'analyse', 'copy', 'extract', 'spawn', 'infer', 'merge', 'finalize', 'serve', 'stream']
 Stage = TypedDict('Stage',
 {
 	'type' : StageType,

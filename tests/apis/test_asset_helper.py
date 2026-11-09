@@ -1,7 +1,13 @@
-import pytest
+import asyncio
+import tempfile
 
-from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata
+import pytest
+from starlette.datastructures import UploadFile
+
+from facefusion import process_manager, state_manager
+from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata, save_asset_files
 from facefusion.download import conditional_download
+from facefusion.filesystem import is_image
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -14,6 +20,12 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
+	state_manager.init()
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('api_security_strategy', 'strict')
+
+	process_manager.init()
+
 
 def test_detect_media_type() -> None:
 	assert detect_media_type_by_path(get_test_example_file('source.jpg')) == 'image'
@@ -25,3 +37,13 @@ def test_extract_image_metadata() -> None:
 	image_metadata = extract_image_metadata(get_test_example_file('source.jpg'))
 
 	assert image_metadata.get('resolution') == (1024, 1024)
+
+
+def test_save_asset_files() -> None:
+	with open(get_test_example_file('source.jpg'), 'rb') as file:
+		asset_paths = asyncio.run(save_asset_files([ UploadFile(file, filename = 'source.jpg') ]))
+
+	assert process_manager.get_stages()[-1].get('type') == 'upload'
+	assert process_manager.get_stages()[-1].get('progress').get('current') == 1
+
+	assert is_image(asset_paths[0]) is True

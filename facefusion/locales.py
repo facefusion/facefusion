@@ -19,6 +19,7 @@ LOCALES : Locales =\
 		'processing': 'processing',
 		'merging': 'merging',
 		'downloading': 'downloading',
+		'uploading': 'uploading',
 		'temp_frames_not_found': 'temporary frames not found',
 		'copying_image': 'copying image with a resolution of {resolution}',
 		'copying_image_succeeded': 'copying image succeeded',
