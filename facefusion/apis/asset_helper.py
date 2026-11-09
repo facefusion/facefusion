@@ -1,12 +1,13 @@
 import asyncio
 import os
+import time
 import uuid
 from typing import List, Optional
 
 from starlette.datastructures import UploadFile
 
 import facefusion.choices
-from facefusion import ffmpeg, state_manager
+from facefusion import ffmpeg, process_manager, state_manager, translator
 from facefusion.face_creator import get_many_faces
 from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.face_selector import sort_faces_by_order
@@ -46,6 +47,16 @@ def detect_media_type_by_format(file_format : str) -> Optional[MediaType]:
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')
+	time_current = time.monotonic()
+
+	process_manager.stage('upload', translator.get('uploading'),
+	{
+		'unit': 'percent',
+		'current': 0,
+		'started_at': time_current,
+		'updated_at': time_current
+	})
+	process_manager.count(upload_files)
 
 	for upload_file in upload_files:
 		file_format = get_file_format(upload_file.filename)
@@ -66,6 +77,8 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
+
+		process_manager.update()
 
 	return asset_paths
 
