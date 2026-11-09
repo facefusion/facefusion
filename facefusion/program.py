@@ -955,6 +955,14 @@ def create_api_program() -> ArgumentParser:
 		choices = facefusion.choices.api_session_limit_range,
 		metavar = create_int_metavar(facefusion.choices.api_session_limit_range)
 	)
+	group_api.add_argument(
+		'--api-upload-limit',
+		help = translator.get('help.api_upload_limit'),
+		type = int,
+		default = config.get_int_value('api', 'api_upload_limit', '512'),
+		choices = facefusion.choices.api_upload_limit_range,
+		metavar = create_int_metavar(facefusion.choices.api_upload_limit_range)
+	)
 
 	return program
 

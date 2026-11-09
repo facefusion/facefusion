@@ -4,7 +4,7 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import capability_store, session_manager
+from facefusion import capability_store, session_manager, state_manager
 from facefusion.apis.core import create_api
 
 
@@ -32,6 +32,9 @@ def before_all() -> None:
 		scopes = [ 'api' ],
 		groups = [ 'paths' ]
 	)
+
+	state_manager.init()
+	state_manager.init_item('api_upload_limit', 512)
 
 
 @pytest.fixture(scope = 'function', autouse = True)

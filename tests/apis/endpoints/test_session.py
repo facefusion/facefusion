@@ -20,6 +20,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
+	state_manager.init_item('api_upload_limit', 512)
 
 	datachannel_module.pre_check()
 
