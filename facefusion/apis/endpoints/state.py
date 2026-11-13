@@ -4,6 +4,8 @@ from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOU
 
 from facefusion import args_helper, state_manager, translator
 from facefusion.apis import asset_store
+from facefusion.apis.api_validator import validate_body
+from facefusion.apis.asset_validator import validate_asset_id, validate_asset_ids
 from facefusion.apis.state_helper import normalize_argument_value
 from facefusion.apis.state_validator import validate_argument_key, validate_argument_value
 
@@ -27,22 +29,23 @@ async def set_state(request : Request) -> Response:
 
 	body = await request.json()
 
-	for key, value in body.items():
-		if not validate_argument_key(key):
-			return JSONResponse(
-			{
-				'message': translator.get('invalid_state_key', 'facefusion.apis')
-			}, status_code = HTTP_400_BAD_REQUEST)
+	if validate_body(body):
+		for key, value in body.items():
+			if not validate_argument_key(key):
+				return JSONResponse(
+				{
+					'message': translator.get('invalid_state_key', 'facefusion.apis')
+				}, status_code = HTTP_400_BAD_REQUEST)
 
-		__value__ = normalize_argument_value(key, value)
+			__value__ = normalize_argument_value(key, value)
 
-		if not validate_argument_value(key, __value__):
-			return JSONResponse(
-			{
-				'message': translator.get('invalid_state_value', 'facefusion.apis')
-			}, status_code = HTTP_400_BAD_REQUEST)
+			if not validate_argument_value(key, __value__):
+				return JSONResponse(
+				{
+					'message': translator.get('invalid_state_value', 'facefusion.apis')
+				}, status_code = HTTP_400_BAD_REQUEST)
 
-		__api_args__[key] = __value__
+			__api_args__[key] = __value__
 
 	if __api_args__:
 
@@ -57,21 +60,23 @@ async def set_state(request : Request) -> Response:
 
 async def select_source(request : Request) -> JSONResponse:
 	body = await request.json()
-	asset_ids = body.get('asset_ids')
 
-	if isinstance(asset_ids, list):
-		source_paths = []
+	if validate_body(body):
+		asset_ids = body.get('asset_ids')
 
-		for asset_id in asset_ids:
-			asset = asset_store.get_asset(asset_id)
+		if validate_asset_ids(asset_ids):
+			source_paths = []
 
-			if asset:
-				source_paths.append(asset.get('path'))
+			for asset_id in asset_ids:
+				asset = asset_store.get_asset(asset_id)
 
-		state_manager.set_item('source_paths', source_paths)
+				if asset:
+					source_paths.append(asset.get('path'))
 
-		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
-		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
+			state_manager.set_item('source_paths', source_paths)
+
+			__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+			return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{
@@ -81,16 +86,18 @@ async def select_source(request : Request) -> JSONResponse:
 
 async def select_target(request : Request) -> JSONResponse:
 	body = await request.json()
-	asset_id = body.get('asset_id')
 
-	if isinstance(asset_id, str):
-		asset = asset_store.get_asset(asset_id)
+	if validate_body(body):
+		asset_id = body.get('asset_id')
 
-		if asset:
-			state_manager.set_item('target_path', asset.get('path'))
+		if validate_asset_id(asset_id):
+			asset = asset_store.get_asset(asset_id)
 
-			__api_args__ = args_helper.extract_api_args(state_manager.get_state())
-			return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
+			if asset:
+				state_manager.set_item('target_path', asset.get('path'))
+
+				__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+				return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{

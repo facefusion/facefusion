@@ -101,6 +101,7 @@ def test_create_session(test_client : TestClient) -> None:
 	del os.environ['FACEFUSION_API_KEY']
 
 	assert test_client.post('/session', content = 'invalid').status_code == 400
+	assert test_client.post('/session', json = 'invalid').status_code == 401
 
 
 def test_get_session(test_client : TestClient) -> None:
@@ -242,6 +243,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 	assert refresh_session_response.status_code == 401
 
 	assert test_client.put('/session', content = 'invalid').status_code == 400
+	assert test_client.put('/session', json = 'invalid').status_code == 401
 
 
 @pytest.mark.asyncio

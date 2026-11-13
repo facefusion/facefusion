@@ -7,6 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_206_PARTIAL_CON
 
 from facefusion import content_store, face_store, inference_manager, process_manager, rtc_manager, session_context, session_manager, state_manager, store_manager, translator, video_manager
 from facefusion.apis import asset_store, http_manager, websocket_manager
+from facefusion.apis.api_validator import validate_body
 from facefusion.apis.session_validator import validate_api_key
 from facefusion.filesystem import is_directory, remove_directory
 from facefusion.jobs import job_manager
@@ -16,7 +17,7 @@ async def create_session(request : Request) -> JSONResponse:
 	body = await request.json()
 	session_limit = state_manager.get_item('api_session_limit')
 
-	if validate_api_key(body.get('api_key')):
+	if validate_body(body) and validate_api_key(body.get('api_key')):
 		if session_manager.count_api_sessions() < session_limit:
 			session_id = secrets.token_urlsafe(16)
 			session = session_manager.create_api_session()
@@ -73,7 +74,7 @@ async def refresh_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
 	for session_id, session in session_manager.API_SESSIONS.items():
-		if session.get('refresh_token') == body.get('refresh_token') and session_manager.validate_api_session(session_id):
+		if validate_body(body) and session.get('refresh_token') == body.get('refresh_token') and session_manager.validate_api_session(session_id):
 			__session__ = session_manager.create_api_session()
 			session_manager.set_api_session(session_id, __session__)
 

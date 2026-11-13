@@ -169,6 +169,13 @@ def test_set_state(test_client : TestClient) -> None:
 
 	assert set_state_response.status_code == 422
 
+	set_state_response = test_client.put('/state', json = 'invalid', headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+
+	assert set_state_response.status_code == 422
+
 
 def test_select_source_assets(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
@@ -198,9 +205,28 @@ def test_select_source_assets(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 401
 
+	select_response = test_client.put('/state?action=select&type=source', json = 'invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	select_body = select_response.json()
+
+	assert select_body.get('message') == 'source asset not found'
+	assert select_response.status_code == 404
+
 	select_response = test_client.put('/state?action=select&type=source', json =
 	{
 		'asset_ids': 'invalid'
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert select_response.status_code == 404
+
+	select_response = test_client.put('/state?action=select&type=source', json =
+	{
+		'asset_ids': [ [ 'invalid' ] ]
 	}, headers =
 	{
 		'Authorization': 'Bearer ' + access_token
@@ -239,6 +265,15 @@ def test_select_target_assets(test_client : TestClient) -> None:
 	})
 
 	assert select_response.status_code == 401
+
+	select_response = test_client.put('/state?action=select&type=target', json = 'invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	select_body = select_response.json()
+
+	assert select_body.get('message') == 'target asset not found'
+	assert select_response.status_code == 404
 
 	select_response = test_client.put('/state?action=select&type=target', json =
 	{

@@ -7,7 +7,7 @@ from facefusion import ffmpeg
 from facefusion.apis.asset_helper import detect_media_type_by_format
 from facefusion.apis.media_validator import validate_media_resolution
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioFormat, ImageFormat, VideoFormat
+from facefusion.types import AssetId, AudioFormat, ImageFormat, VideoFormat
 
 
 def validate_subject(subject : str) -> bool:
@@ -56,3 +56,11 @@ def validate_asset_resolution(upload_files : List[UploadFile]) -> bool:
 				return False
 
 	return True
+
+
+def validate_asset_id(asset_id : AssetId) -> bool:
+	return isinstance(asset_id, str)
+
+
+def validate_asset_ids(asset_ids : List[AssetId]) -> bool:
+	return isinstance(asset_ids, list) and all(validate_asset_id(asset_id) for asset_id in asset_ids)

@@ -11,6 +11,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_202_ACCEPTED, H
 import facefusion.core
 from facefusion import args_helper, state_manager, translator
 from facefusion.apis import http_manager, jobs_helper
+from facefusion.apis.api_validator import validate_body
 from facefusion.apis.job_validator import validate_status
 from facefusion.filesystem import create_directory, get_file_extension, is_directory
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -320,54 +321,56 @@ async def create_step(request : Request) -> JSONResponse:
 	action = request.query_params.get('action')
 
 	step_args = await request.json()
-	step_args = args_helper.filter_api_step_args(step_args)
 
-	if state_manager.get_item('source_paths'):
-		step_args['source_paths'] = state_manager.get_item('source_paths')
+	if validate_body(step_args):
+		step_args = args_helper.filter_api_step_args(step_args)
 
-	if state_manager.get_item('target_path'):
-		temp_path = state_manager.get_temp_path()
+		if state_manager.get_item('source_paths'):
+			step_args['source_paths'] = state_manager.get_item('source_paths')
 
-		step_args['target_path'] = state_manager.get_item('target_path')
+		if state_manager.get_item('target_path'):
+			temp_path = state_manager.get_temp_path()
 
-		if is_directory(temp_path) or create_directory(temp_path):
-			step_args['output_path'] = os.path.join(temp_path, job_id + get_file_extension(state_manager.get_item('target_path')))
+			step_args['target_path'] = state_manager.get_item('target_path')
 
-	if action == 'add':
-		if job_manager.add_step(job_id, step_args):
+			if is_directory(temp_path) or create_directory(temp_path):
+				step_args['output_path'] = os.path.join(temp_path, job_id + get_file_extension(state_manager.get_item('target_path')))
+
+		if action == 'add':
+			if job_manager.add_step(job_id, step_args):
+				return JSONResponse(
+				{
+					'message': translator.get('ok', 'facefusion.apis')
+				}, status_code = HTTP_201_CREATED)
+
 			return JSONResponse(
 			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_201_CREATED)
+				'message': translator.get('job_step_not_added', 'facefusion.apis')
+			}, status_code = HTTP_400_BAD_REQUEST)
 
-		return JSONResponse(
-		{
-			'message': translator.get('job_step_not_added', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
+		if action == 'insert':
+			if job_manager.insert_step(job_id, step_index, step_args):
+				return JSONResponse(
+				{
+					'message': translator.get('ok', 'facefusion.apis')
+				}, status_code = HTTP_201_CREATED)
 
-	if action == 'insert':
-		if job_manager.insert_step(job_id, step_index, step_args):
 			return JSONResponse(
 			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_201_CREATED)
+				'message': translator.get('job_step_not_inserted', 'facefusion.apis')
+			}, status_code = HTTP_400_BAD_REQUEST)
 
-		return JSONResponse(
-		{
-			'message': translator.get('job_step_not_inserted', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
+		if action == 'remix':
+			if job_manager.remix_step(job_id, step_index, step_args):
+				return JSONResponse(
+				{
+					'message': translator.get('ok', 'facefusion.apis')
+				}, status_code = HTTP_201_CREATED)
 
-	if action == 'remix':
-		if job_manager.remix_step(job_id, step_index, step_args):
 			return JSONResponse(
 			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_201_CREATED)
-
-		return JSONResponse(
-		{
-			'message': translator.get('job_step_not_remixed', 'facefusion.apis')
-		}, status_code = HTTP_400_BAD_REQUEST)
+				'message': translator.get('job_step_not_remixed', 'facefusion.apis')
+			}, status_code = HTTP_400_BAD_REQUEST)
 
 	return JSONResponse(
 	{
