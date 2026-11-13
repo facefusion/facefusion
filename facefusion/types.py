@@ -153,6 +153,7 @@ CapabilityStore = TypedDict('CapabilityStore',
 CapabilityGroup : TypeAlias = Dict[Group, CapabilitySet]
 
 Content : TypeAlias = Dict[str, Any]
+Body : TypeAlias = Any
 
 Token : TypeAlias = str
 SessionId : TypeAlias = str

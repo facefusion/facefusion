@@ -864,6 +864,15 @@ def test_create_step(test_client : TestClient) -> None:
 	assert create_step_body.get('message') == 'invalid job action'
 	assert create_step_response.status_code == 400
 
+	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', json = 'invalid', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	create_step_body = create_step_response.json()
+
+	assert create_step_body.get('message') == 'invalid job action'
+	assert create_step_response.status_code == 400
+
 
 def test_delete_step(test_client : TestClient) -> None:
 	delete_step_response = test_client.delete('/jobs/job-test-delete-step/0')
