@@ -217,7 +217,7 @@ def test_submit_jobs(test_client : TestClient) -> None:
 	})
 	submit_jobs_body = submit_jobs_response.json()
 
-	assert submit_jobs_body.get('message') == 'invalid'
+	assert submit_jobs_body.get('message') == 'invalid job action'
 	assert submit_jobs_response.status_code == 400
 
 	create_job('job-test-submit-jobs')
@@ -279,7 +279,7 @@ def test_submit_job(test_client : TestClient) -> None:
 	})
 	submit_job_body = submit_job_response.json()
 
-	assert submit_job_body.get('message') == 'invalid'
+	assert submit_job_body.get('message') == 'invalid job action'
 	assert submit_job_response.status_code == 400
 
 	create_job('job-test-submit-job')
@@ -861,7 +861,7 @@ def test_create_step(test_client : TestClient) -> None:
 	})
 	create_step_body = create_step_response.json()
 
-	assert create_step_body.get('message') == 'invalid'
+	assert create_step_body.get('message') == 'invalid job action'
 	assert create_step_response.status_code == 400
 
 	create_step_response = test_client.post('/jobs/job-test-create-step?action=add', json = 'invalid', headers =
@@ -870,7 +870,7 @@ def test_create_step(test_client : TestClient) -> None:
 	})
 	create_step_body = create_step_response.json()
 
-	assert create_step_body.get('message') == 'invalid'
+	assert create_step_body.get('message') == 'invalid job action'
 	assert create_step_response.status_code == 400
 
 
