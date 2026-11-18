@@ -22,7 +22,8 @@ def create() -> Iterator[SimpleNamespace]:
 
 	yield progress
 
-	cli_stream.write(str())
+	sys.stderr.write(os.linesep)
+	sys.stderr.flush()
 
 
 def update(progress : SimpleNamespace) -> None:
