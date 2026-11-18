@@ -34,7 +34,7 @@ def error(message : str, module_name : str) -> None:
 def create_extra(module_name : str) -> LogExtra:
 	return\
 	{
-		'module_name': module_name,
+		'module_names': module_name.split('.'),
 		'log_group': resolve_log_group()
 	}
 
