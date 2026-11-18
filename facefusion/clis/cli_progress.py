@@ -5,9 +5,9 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Iterator
 
-from facefusion import process_manager
+from facefusion import choices, process_manager
 from facefusion.clis import cli_stream
-from facefusion.clis.cli_formatter import colorize, create_line, get_line_offset, resolve_log_group
+from facefusion.clis.cli_formatter import create_line, resolve_log_group
 from facefusion.types import Progress, StageType
 
 
@@ -45,7 +45,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	if progress.get('unit') == 'download':
 		status = resolve_download(progress)
 
-	progress_width = shutil.get_terminal_size().columns - get_line_offset() - len(title) - len(status) - 2
+	progress_width = shutil.get_terminal_size().columns - 26 - len(title) - len(status) - 2
 
 	if description:
 		progress_width -= len(description) + 3
@@ -57,7 +57,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	else:
 		progress_fill = 0
 
-	progress_bar = colorize('━' * progress_fill, 'white') + colorize('─' * (progress_width - progress_fill), 'grey')
+	progress_bar = choices.log_color_set.get('white') + '━' * progress_fill + choices.log_color_set.get('reset') + choices.log_color_set.get('grey') + '─' * (progress_width - progress_fill) + choices.log_color_set.get('reset')
 	progress_parts = [ title, progress_bar, status ]
 
 	if description:

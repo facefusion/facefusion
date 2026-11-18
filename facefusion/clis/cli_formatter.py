@@ -28,24 +28,16 @@ def format_record(group_labels : List[str], record : LogRecord) -> str:
 
 def color_message(message : str, log_level : int) -> str:
 	if log_level == WARNING:
-		return colorize(message, 'yellow')
+		return choices.log_color_set.get('yellow') + message + choices.log_color_set.get('reset')
 
 	if log_level == ERROR:
-		return colorize(message, 'red')
+		return choices.log_color_set.get('red') + message + choices.log_color_set.get('reset')
 
 	return message
 
 
-def colorize(message : str, log_color : LogColor) -> str:
-	return choices.log_color_set.get(log_color) + message + choices.log_color_set.get('reset')
-
-
 def create_line(line_label : str, line_color : LogColor, line_connector : str, line_type : str, line_text : str) -> str:
-	return colorize(line_label.ljust(8) + line_connector, line_color) + ' ' + colorize(line_type.ljust(14), 'grey') + '  ' + line_text
-
-
-def get_line_offset() -> int:
-	return 8 + 2 + 14 + 2
+	return choices.log_color_set.get(line_color) + line_label.ljust(8) + line_connector + choices.log_color_set.get('reset') + ' ' + choices.log_color_set.get('grey') + line_type.ljust(14) + choices.log_color_set.get('reset') + '  ' + line_text
 
 
 def resolve_log_group() -> LogGroup:

@@ -6,7 +6,6 @@ import pytest
 from _pytest.capture import CaptureFixture
 
 from facefusion import process_manager, state_manager
-from facefusion.clis.cli_formatter import colorize
 from facefusion.clis.cli_progress import create, render
 
 
@@ -58,7 +57,7 @@ def test_render_percent(capsys : CaptureFixture[str]) -> None:
 			'updated_at': time_current
 		}, 'downloading', 'download')
 
-		assert colorize('━━━', 'white') + colorize('─' * 34, 'grey') + ' 10 %' in capsys.readouterr().err
+		assert '\033[38;5;250m━━━\033[0m\033[38;5;244m' + '─' * 34 + '\033[0m 10 %' in capsys.readouterr().err
 
 	render(
 	{

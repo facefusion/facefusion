@@ -16,7 +16,7 @@ def test_create_handler() -> None:
 	assert threading_mock.return_value.start.call_count == 1
 
 
-def test_flush_records(capsys : CaptureFixture[str]) -> None:
+def test_flush(capsys : CaptureFixture[str]) -> None:
 	with patch('threading.Timer'):
 		memory_handler = create_handler()
 

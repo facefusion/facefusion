@@ -4,7 +4,7 @@ from typing import Iterator, List
 import pytest
 
 from facefusion import session_context, session_manager, state_manager
-from facefusion.clis.cli_formatter import color_message, colorize, create_line, create_log_group, format_record, get_line_offset, resolve_log_group
+from facefusion.clis.cli_formatter import color_message, create_line, create_log_group, format_record, resolve_log_group
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -25,7 +25,7 @@ def test_format_record() -> None:
 	table_record = logging.makeLogRecord({ 'msg': '+---+' })
 
 	assert format_record(group_labels, core_record) == create_line('cli.0', 'white', '┬', 'core', 'message')
-	assert format_record(group_labels, warn_record) == create_line('', 'white', '│', 'face_detector', colorize('message', 'yellow'))
+	assert format_record(group_labels, warn_record) == create_line('', 'white', '│', 'face_detector', color_message('message', logging.WARNING))
 	assert format_record(group_labels, table_record) == '+---+'
 	assert group_labels == []
 
@@ -41,16 +41,8 @@ def test_color_message() -> None:
 	assert color_message('message', logging.ERROR) == '\033[38;5;204mmessage\033[0m'
 
 
-def test_colorize() -> None:
-	assert colorize('message', 'white') == '\033[38;5;250mmessage\033[0m'
-
-
 def test_create_line() -> None:
 	assert create_line('api.0', 'white', '┬', 'core', 'message') == '\033[38;5;250mapi.0   ┬\033[0m \033[38;5;244mcore          \033[0m  message'
-
-
-def test_get_line_offset() -> None:
-	assert get_line_offset() == 26
 
 
 def test_resolve_log_group() -> None:

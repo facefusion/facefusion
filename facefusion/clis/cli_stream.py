@@ -14,23 +14,23 @@ def create_handler() -> MemoryHandler:
 	stream_handler = StreamHandler(SimpleNamespace(write = write, flush = sys.stderr.flush))
 	stream_handler.format = partial(format_record, []) #type:ignore[method-assign]
 	memory_handler = MemoryHandler(1024, target = stream_handler)
-	memory_handler.flush = partial(flush_records, memory_handler) #type:ignore[method-assign]
-	start_flush_timer(memory_handler)
+	memory_handler.flush = partial(flush, memory_handler) #type:ignore[method-assign]
+	start_timer(memory_handler)
 	return memory_handler
 
 
-def start_flush_timer(memory_handler : MemoryHandler) -> None:
-	flush_timer = threading.Timer(0.5, partial(run_flush_timer, memory_handler))
+def start_timer(memory_handler : MemoryHandler) -> None:
+	flush_timer = threading.Timer(0.5, partial(end_timer, memory_handler))
 	flush_timer.daemon = True
 	flush_timer.start()
 
 
-def run_flush_timer(memory_handler : MemoryHandler) -> None:
+def end_timer(memory_handler : MemoryHandler) -> None:
 	memory_handler.flush()
-	start_flush_timer(memory_handler)
+	start_timer(memory_handler)
 
 
-def flush_records(memory_handler : MemoryHandler) -> None:
+def flush(memory_handler : MemoryHandler) -> None:
 	with memory_handler.lock:
 		record_set : Dict[str, List[LogRecord]] = {}
 
