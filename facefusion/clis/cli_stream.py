@@ -39,6 +39,6 @@ def flush(memory_handler : MemoryHandler) -> None:
 		memory_handler.buffer = []
 
 
-def write(text : str) -> None:
-	sys.stderr.write(choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + text)
+def write(message : str) -> None:
+	sys.stderr.write(choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + message)
 	sys.stderr.flush()

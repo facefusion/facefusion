@@ -211,8 +211,8 @@ LogColor = Literal['grey', 'red', 'reset', 'white', 'yellow']
 LogCharacterSet : TypeAlias = Dict[LogColor, str]
 LogGroup = TypedDict('LogGroup',
 {
-	'group_label' : str,
-	'group_color' : LogColor
+	'label' : str,
+	'color' : LogColor
 })
 LogLine : TypeAlias = List[str]
 LogExtra = TypedDict('LogExtra',

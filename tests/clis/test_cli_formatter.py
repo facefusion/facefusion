@@ -67,19 +67,19 @@ def test_resolve_log_group() -> None:
 
 	assert resolve_log_group() ==\
 	{
-		'group_label': 'server',
-		'group_color': 'grey'
+		'label': 'server',
+		'color': 'grey'
 	}
 
 
 def test_create_log_group() -> None:
 	assert create_log_group('api', 0) ==\
 	{
-		'group_label': 'api.0',
-		'group_color': 'white'
+		'label': 'api.0',
+		'color': 'white'
 	}
 	assert create_log_group('cli', 6) ==\
 	{
-		'group_label': 'cli.6',
-		'group_color': 'white'
+		'label': 'cli.6',
+		'color': 'white'
 	}

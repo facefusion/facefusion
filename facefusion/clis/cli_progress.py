@@ -1,4 +1,6 @@
+import os
 import shutil
+import sys
 import time
 from contextlib import contextmanager
 from functools import partial
@@ -20,7 +22,7 @@ def create() -> Iterator[SimpleNamespace]:
 
 	yield progress
 
-	cli_stream.write('')
+	cli_stream.write(str())
 
 
 def update(progress : SimpleNamespace) -> None:
@@ -65,7 +67,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 		progress_parts.append(description)
 
 	log_group = resolve_log_group()
-	cli_stream.write(create_line(log_group.get('group_label'), log_group.get('group_color'), '•', stage_type, ' '.join(progress_parts)))
+	cli_stream.write(create_line(log_group.get('label'), log_group.get('color'), '•', stage_type, ' '.join(progress_parts)))
 
 
 def resolve_percent(progress : Progress) -> str:

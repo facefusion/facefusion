@@ -10,7 +10,7 @@ def create_log_line(log_record : LogRecord) -> LogLine:
 	log_group = log_record.__dict__.get('log_group')
 
 	if module_names and log_group:
-		return [ log_group.get('group_label'), get_last(module_names), color_message(log_record.getMessage(), log_record.levelno) ]
+		return [ log_group.get('label'), get_last(module_names), color_message(log_record.getMessage(), log_record.levelno) ]
 
 	return [ log_record.getMessage() ]
 
@@ -52,8 +52,8 @@ def resolve_log_group() -> LogGroup:
 	if session_id == local_id and state_manager.get_item('command') == 'api':
 		return\
 		{
-			'group_label': 'server',
-			'group_color': 'grey'
+			'label': 'server',
+			'color': 'grey'
 		}
 
 	if session_id in session_manager.CLI_SESSIONS:
@@ -65,6 +65,6 @@ def resolve_log_group() -> LogGroup:
 def create_log_group(group_name : str, group_index : int) -> LogGroup:
 	return\
 	{
-		'group_label': group_name + '.' + str(group_index),
-		'group_color': 'white'
+		'label': group_name + '.' + str(group_index),
+		'color': 'white'
 	}
