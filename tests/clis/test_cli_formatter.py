@@ -1,10 +1,10 @@
 import logging
-from typing import Iterator, List
+from typing import Iterator
 
 import pytest
 
 from facefusion import session_context, session_manager, state_manager
-from facefusion.clis.cli_formatter import color_message, create_line, create_log_group, format_record, resolve_log_group
+from facefusion.clis.cli_formatter import color_message, create_line, create_log_group, create_log_line, format_log_line, resolve_log_group
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -18,21 +18,21 @@ def before_each() -> Iterator[None]:
 	state_manager.clear()
 
 
-def test_format_record() -> None:
-	group_labels : List[str] = []
-	core_record = logging.makeLogRecord({ 'msg': 'message', 'levelno': logging.INFO, 'module_name': 'facefusion.core', 'log_group': create_log_group('cli', 0) })
-	warn_record = logging.makeLogRecord({ 'msg': 'message', 'levelno': logging.WARNING, 'module_name': 'facefusion.face_detector', 'log_group': create_log_group('cli', 0) })
+def test_create_log_line() -> None:
+	core_record = logging.makeLogRecord({ 'msg': 'message', 'levelno': logging.INFO, 'module_names': [ 'facefusion', 'core' ], 'log_group': create_log_group('cli', 0) })
+	warn_record = logging.makeLogRecord({ 'msg': 'message', 'levelno': logging.WARNING, 'module_names': [ 'facefusion', 'face_detector' ], 'log_group': create_log_group('cli', 0) })
 	table_record = logging.makeLogRecord({ 'msg': '+---+' })
 
-	assert format_record(group_labels, core_record) == create_line('cli.0', 'white', '┬', 'core', 'message')
-	assert format_record(group_labels, warn_record) == create_line('', 'white', '│', 'face_detector', color_message('message', logging.WARNING))
-	assert format_record(group_labels, table_record) == '+---+'
-	assert group_labels == []
+	assert create_log_line(core_record) == [ 'cli.0', 'core', 'message' ]
+	assert create_log_line(warn_record) == [ 'cli.0', 'face_detector', color_message('message', logging.WARNING) ]
+	assert create_log_line(table_record) == [ '+---+' ]
 
-	for _ in range(20):
-		format_record(group_labels, core_record)
 
-	assert format_record(group_labels, core_record) == create_line('cli.0', 'white', '┬', 'core', 'message')
+def test_format_log_line() -> None:
+	assert format_log_line([], [ 'cli.0', 'core', 'message' ]) == create_line('cli.0', 'white', '┬', 'core', 'message')
+	assert format_log_line([ 'cli.0', 'core', 'message' ], [ 'cli.0', 'core', 'message' ]) == create_line(str(), 'white', '│', 'core', 'message')
+	assert format_log_line([ 'api.0', 'core', 'message' ], [ 'cli.0', 'core', 'message' ]) == create_line('cli.0', 'white', '┬', 'core', 'message')
+	assert format_log_line([ 'cli.0', 'core', 'message' ], [ '+---+' ]) == '+---+'
 
 
 def test_color_message() -> None:

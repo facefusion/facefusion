@@ -38,34 +38,34 @@ def test_debug(caplog : LogCaptureFixture) -> None:
 	debug('message', 'facefusion.core')
 
 	assert caplog.record_tuples == [ ('facefusion', logging.DEBUG, 'message') ]
-	assert caplog.records[0].__dict__.get('module_name') == 'facefusion.core'
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_info(caplog : LogCaptureFixture) -> None:
 	info('message', 'facefusion.core')
 
 	assert caplog.record_tuples == [ ('facefusion', logging.INFO, 'message') ]
-	assert caplog.records[0].__dict__.get('module_name') == 'facefusion.core'
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_warn(caplog : LogCaptureFixture) -> None:
 	warn('message', 'facefusion.core')
 
 	assert caplog.record_tuples == [ ('facefusion', logging.WARNING, 'message') ]
-	assert caplog.records[0].__dict__.get('module_name') == 'facefusion.core'
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_error(caplog : LogCaptureFixture) -> None:
 	error('message', 'facefusion.core')
 
 	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, 'message') ]
-	assert caplog.records[0].__dict__.get('module_name') == 'facefusion.core'
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_create_extra() -> None:
 	assert create_extra('facefusion.core') ==\
 	{
-		'module_name': 'facefusion.core',
+		'module_names': [ 'facefusion', 'core' ],
 		'log_group': create_log_group('cli', 0)
 	}
 

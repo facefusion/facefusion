@@ -1,29 +1,30 @@
 from logging import ERROR, LogRecord, WARNING
-from typing import List
 
 from facefusion import choices, session_context, session_manager, state_manager
-from facefusion.common_helper import get_last
-from facefusion.types import LogColor, LogGroup
+from facefusion.common_helper import get_first, get_last
+from facefusion.types import LogColor, LogGroup, LogLine
 
 
-def format_record(group_labels : List[str], record : LogRecord) -> str:
-	module_name = record.__dict__.get('module_name')
-	log_group = record.__dict__.get('log_group')
+def create_log_line(log_record : LogRecord) -> LogLine:
+	module_names = log_record.__dict__.get('module_names')
+	log_group = log_record.__dict__.get('log_group')
 
-	if module_name and log_group:
-		line_label = str()
-		line_connector = '│'
+	if module_names and log_group:
+		return [ log_group.get('group_label'), get_last(module_names), color_message(log_record.getMessage(), log_record.levelno) ]
 
-		if not log_group.get('group_label') == get_last(group_labels) or len(group_labels) == 20:
-			group_labels.clear()
-			line_label = log_group.get('group_label')
-			line_connector = '┬'
+	return [ log_record.getMessage() ]
 
-		group_labels.append(log_group.get('group_label'))
-		return create_line(line_label, log_group.get('group_color'), line_connector, get_last(module_name.split('.')), color_message(record.getMessage(), record.levelno))
 
-	group_labels.clear()
-	return record.getMessage()
+def format_log_line(previous_line : LogLine, current_line : LogLine) -> str:
+	if len(current_line) == 3:
+		line_label, line_type, line_text = current_line
+
+		if line_label == get_first(previous_line):
+			return create_line(str(), 'white', '│', line_type, line_text)
+
+		return create_line(line_label, 'white', '┬', line_type, line_text)
+
+	return get_first(current_line)
 
 
 def color_message(message : str, log_level : int) -> str:

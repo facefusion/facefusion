@@ -1,19 +1,16 @@
+import os
 import sys
 import threading
 from functools import partial
-from logging import LogRecord, StreamHandler
 from logging.handlers import MemoryHandler
-from types import SimpleNamespace
-from typing import Dict, List
 
 from facefusion import choices
-from facefusion.clis.cli_formatter import format_record
+from facefusion.clis.cli_formatter import create_log_line, format_log_line
+from facefusion.types import LogLine
 
 
 def create_handler() -> MemoryHandler:
-	stream_handler = StreamHandler(SimpleNamespace(write = write, flush = sys.stderr.flush))
-	stream_handler.format = partial(format_record, []) #type:ignore[method-assign]
-	memory_handler = MemoryHandler(1024, target = stream_handler)
+	memory_handler = MemoryHandler(1024)
 	memory_handler.flush = partial(flush, memory_handler) #type:ignore[method-assign]
 	start_timer(memory_handler)
 	return memory_handler
@@ -32,18 +29,14 @@ def end_timer(memory_handler : MemoryHandler) -> None:
 
 def flush(memory_handler : MemoryHandler) -> None:
 	with memory_handler.lock:
-		record_set : Dict[str, List[LogRecord]] = {}
+		previous_line : LogLine = []
 
-		for record in memory_handler.buffer:
-			log_group = record.__dict__.get('log_group') or {}
-			record_set.setdefault(log_group.get('group_label'), []).append(record)
+		for log_record in memory_handler.buffer:
+			current_line = create_log_line(log_record)
+			write(format_log_line(previous_line, current_line) + os.linesep)
+			previous_line = current_line
 
 		memory_handler.buffer = []
-
-		for records in record_set.values():
-			memory_handler.buffer.extend(records)
-
-		MemoryHandler.flush(memory_handler)
 
 
 def write(text : str) -> None:

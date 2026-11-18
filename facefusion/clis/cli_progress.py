@@ -57,7 +57,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	else:
 		progress_fill = 0
 
-	progress_bar = choices.log_character_set.get('white') + '━' * progress_fill + choices.log_character_set.get('reset') + choices.log_character_set.get('grey') + '─' * (progress_width - progress_fill) + choices.log_character_set.get('reset')
+	progress_bar = choices.log_character_set.get('white') + '=' * progress_fill + choices.log_character_set.get('reset') + choices.log_character_set.get('grey') + '=' * (progress_width - progress_fill) + choices.log_character_set.get('reset')
 	progress_parts = [ title, progress_bar, status ]
 
 	if description:
@@ -65,7 +65,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 		progress_parts.append(description)
 
 	log_group = resolve_log_group()
-	cli_stream.write(create_line(log_group.get('group_label'), log_group.get('group_color'), '▶', stage_type, ' '.join(progress_parts)))
+	cli_stream.write(create_line(log_group.get('group_label'), log_group.get('group_color'), '•', stage_type, ' '.join(progress_parts)))
 
 
 def resolve_percent(progress : Progress) -> str:

@@ -1,4 +1,5 @@
 import logging
+import os
 from unittest.mock import patch
 
 from _pytest.capture import CaptureFixture
@@ -20,14 +21,14 @@ def test_flush(capsys : CaptureFixture[str]) -> None:
 	with patch('threading.Timer'):
 		memory_handler = create_handler()
 
-	for message, group_index in [ ('first', 0), ('second', 1), ('third', 0) ]:
-		memory_handler.handle(logging.makeLogRecord({ 'msg': message, 'levelno': logging.INFO, 'module_name': 'facefusion.core', 'log_group': create_log_group('api', group_index) }))
+	for message, group_index in [ ('first', 0), ('second', 0), ('third', 1) ]:
+		memory_handler.handle(logging.makeLogRecord({ 'msg': message, 'levelno': logging.INFO, 'module_names': [ 'facefusion', 'core' ], 'log_group': create_log_group('api', group_index) }))
 
-	assert capsys.readouterr().err == ''
+	assert capsys.readouterr().err == str()
 
 	memory_handler.flush()
 
-	assert capsys.readouterr().err == '\033[G\033[K' + create_line('api.0', 'white', '┬', 'core', 'first') + '\n\033[G\033[K' + create_line('', 'white', '│', 'core', 'third') + '\n\033[G\033[K' + create_line('api.1', 'white', '┬', 'core', 'second') + '\n'
+	assert capsys.readouterr().err == '\033[G\033[K' + create_line('api.0', 'white', '┬', 'core', 'first') + os.linesep + '\033[G\033[K' + create_line(str(), 'white', '│', 'core', 'second') + os.linesep + '\033[G\033[K' + create_line('api.1', 'white', '┬', 'core', 'third') + os.linesep
 
 
 def test_write(capsys : CaptureFixture[str]) -> None:
