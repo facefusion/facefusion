@@ -207,7 +207,20 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
-ProgressAction = Literal['color_active', 'color_neutral', 'cursor_start', 'erase_line', 'reset']
+LogColor = Literal['grey', 'red', 'reset', 'white', 'yellow']
+LogColorSet : TypeAlias = Dict[LogColor, str]
+LogGroup = TypedDict('LogGroup',
+{
+	'group_label' : str,
+	'group_color' : LogColor
+})
+LogExtra = TypedDict('LogExtra',
+{
+	'module_name' : str,
+	'log_group' : LogGroup
+})
+
+ProgressAction = Literal['cursor_start', 'erase_line']
 ProgressActionSet : TypeAlias = Dict[ProgressAction, str]
 ProgressUnit = Literal['percent', 'frame', 'download']
 Progress = TypedDict('Progress',

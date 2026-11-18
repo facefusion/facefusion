@@ -1,14 +1,14 @@
-import os
 import shutil
-import sys
 import time
 from contextlib import contextmanager
 from functools import partial
 from types import SimpleNamespace
 from typing import Iterator
 
-from facefusion import choices, process_manager
-from facefusion.types import Progress
+from facefusion import process_manager
+from facefusion.clis import cli_stream
+from facefusion.clis.cli_formatter import colorize, create_line, get_line_offset, resolve_log_group
+from facefusion.types import Progress, StageType
 
 
 @contextmanager
@@ -20,13 +20,7 @@ def create() -> Iterator[SimpleNamespace]:
 
 	yield progress
 
-	stages = process_manager.get_stages()
-
-	if stages:
-		render(stages[-1].get('progress'), stages[-1].get('title'))
-
-	sys.stdout.flush()
-	sys.stdout.write(os.linesep)
+	cli_stream.write('')
 
 
 def update(progress : SimpleNamespace) -> None:
@@ -35,10 +29,10 @@ def update(progress : SimpleNamespace) -> None:
 
 	if stages and time_current - progress.time_update > 0.5:
 		progress.time_update = time_current
-		render(stages[-1].get('progress'), stages[-1].get('title'))
+		render(stages[-1].get('progress'), stages[-1].get('title'), stages[-1].get('type'))
 
 
-def render(progress : Progress, title : str) -> None:
+def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	description = progress.get('description')
 	status = str(progress.get('current'))
 
@@ -51,25 +45,27 @@ def render(progress : Progress, title : str) -> None:
 	if progress.get('unit') == 'download':
 		status = resolve_download(progress)
 
-	progress_width = shutil.get_terminal_size().columns - len(title) - len(status) - 2
+	progress_width = shutil.get_terminal_size().columns - get_line_offset() - len(title) - len(status) - 2
 
 	if description:
 		progress_width -= len(description) + 3
+
+	progress_width = min(progress_width, 50)
 
 	if progress.get('total') > 0:
 		progress_fill = progress.get('current') * progress_width // progress.get('total')
 	else:
 		progress_fill = 0
 
-	progress_bar = choices.progress_action_set.get('color_active') + '=' * progress_fill + choices.progress_action_set.get('color_neutral') + '=' * (progress_width - progress_fill) + choices.progress_action_set.get('reset')
+	progress_bar = colorize('━' * progress_fill, 'white') + colorize('─' * (progress_width - progress_fill), 'grey')
 	progress_parts = [ title, progress_bar, status ]
 
 	if description:
 		progress_parts.append('|')
 		progress_parts.append(description)
 
-	sys.stdout.write(choices.progress_action_set.get('cursor_start') + ' '.join(progress_parts) + choices.progress_action_set.get('erase_line'))
-	sys.stdout.flush()
+	log_group = resolve_log_group()
+	cli_stream.write(create_line(log_group.get('group_label'), log_group.get('group_color'), '▶', stage_type, ' '.join(progress_parts)))
 
 
 def resolve_percent(progress : Progress) -> str:

@@ -1,10 +1,10 @@
 from _pytest.logging import LogCaptureFixture
 
-from facefusion.cli_helper import render_table
+from facefusion.clis.cli_table import render
 
 
-def test_render_table(caplog : LogCaptureFixture) -> None:
-	render_table([ 'name', 'value' ],
+def test_render(caplog : LogCaptureFixture) -> None:
+	render([ 'name', 'value' ],
 	[
 		[ 'alpha', 1.0 ],
 		[ 'beta', 2.0 ]

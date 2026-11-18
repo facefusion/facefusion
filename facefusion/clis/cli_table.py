@@ -4,7 +4,7 @@ from facefusion.logger import get_package_logger
 from facefusion.types import TableContent, TableHeader
 
 
-def render_table(headers : List[TableHeader], contents : List[List[TableContent]]) -> None:
+def render(headers : List[TableHeader], contents : List[List[TableContent]]) -> None:
 	package_logger = get_package_logger()
 	table_column, table_separator = create_table_parts(headers, contents)
 
