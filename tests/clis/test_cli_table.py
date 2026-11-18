@@ -10,9 +10,9 @@ def test_render(caplog : LogCaptureFixture) -> None:
 		[ 'beta', 2.0 ]
 	])
 
-	assert caplog.messages[0] == '+-------+-------+'
-	assert caplog.messages[1] == '| name  | value |'
-	assert caplog.messages[2] == '+-------+-------+'
-	assert caplog.messages[3] == '| alpha | 1.0   |'
-	assert caplog.messages[4] == '| beta  | 2.0   |'
-	assert caplog.messages[5] == '+-------+-------+'
+	assert caplog.messages[0] == '┌───────┬───────┐'
+	assert caplog.messages[1] == '│ name  │ value │'
+	assert caplog.messages[2] == '├───────┼───────┤'
+	assert caplog.messages[3] == '│ alpha │ 1.0   │'
+	assert caplog.messages[4] == '│ beta  │ 2.0   │'
+	assert caplog.messages[5] == '└───────┴───────┘'

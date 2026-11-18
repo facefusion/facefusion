@@ -57,7 +57,7 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	else:
 		progress_fill = 0
 
-	progress_bar = choices.log_color_set.get('white') + '━' * progress_fill + choices.log_color_set.get('reset') + choices.log_color_set.get('grey') + '─' * (progress_width - progress_fill) + choices.log_color_set.get('reset')
+	progress_bar = choices.log_character_set.get('white') + '━' * progress_fill + choices.log_character_set.get('reset') + choices.log_character_set.get('grey') + '─' * (progress_width - progress_fill) + choices.log_character_set.get('reset')
 	progress_parts = [ title, progress_bar, status ]
 
 	if description:

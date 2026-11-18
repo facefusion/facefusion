@@ -11,7 +11,7 @@ def format_record(group_labels : List[str], record : LogRecord) -> str:
 	log_group = record.__dict__.get('log_group')
 
 	if module_name and log_group:
-		line_label = ''
+		line_label = str()
 		line_connector = '│'
 
 		if not log_group.get('group_label') == get_last(group_labels) or len(group_labels) == 20:
@@ -28,16 +28,16 @@ def format_record(group_labels : List[str], record : LogRecord) -> str:
 
 def color_message(message : str, log_level : int) -> str:
 	if log_level == WARNING:
-		return choices.log_color_set.get('yellow') + message + choices.log_color_set.get('reset')
+		return choices.log_character_set.get('yellow') + message + choices.log_character_set.get('reset')
 
 	if log_level == ERROR:
-		return choices.log_color_set.get('red') + message + choices.log_color_set.get('reset')
+		return choices.log_character_set.get('red') + message + choices.log_character_set.get('reset')
 
 	return message
 
 
 def create_line(line_label : str, line_color : LogColor, line_connector : str, line_type : str, line_text : str) -> str:
-	return choices.log_color_set.get(line_color) + line_label.ljust(8) + line_connector + choices.log_color_set.get('reset') + ' ' + choices.log_color_set.get('grey') + line_type.ljust(14) + choices.log_color_set.get('reset') + '  ' + line_text
+	return choices.log_character_set.get(line_color) + line_label.ljust(8) + line_connector + choices.log_character_set.get('reset') + ' ' + choices.log_character_set.get('grey') + line_type.ljust(14) + choices.log_character_set.get('reset') + '  ' + line_text
 
 
 def resolve_log_group() -> LogGroup:

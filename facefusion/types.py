@@ -208,7 +208,7 @@ LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
 LogColor = Literal['grey', 'red', 'reset', 'white', 'yellow']
-LogColorSet : TypeAlias = Dict[LogColor, str]
+LogCharacterSet : TypeAlias = Dict[LogColor, str]
 LogGroup = TypedDict('LogGroup',
 {
 	'group_label' : str,
