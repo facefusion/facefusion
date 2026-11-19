@@ -36,8 +36,7 @@ def update(progress : SimpleNamespace) -> None:
 
 
 def render(progress : Progress, title : str, stage_type : StageType) -> None:
-	description = progress.get('description')
-	status = str(progress.get('current'))
+	status = str()
 
 	if progress.get('unit') == 'percent':
 		status = resolve_percent(progress)
@@ -50,12 +49,12 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 
 	progress_width = shutil.get_terminal_size().columns - 26 - len(title) - len(status) - 2
 
-	if description:
-		progress_width -= len(description) + 3
+	if progress.get('description'):
+		progress_width -= len(progress.get('description')) + 3
 
 	progress_width = min(progress_width, 50)
 
-	if progress.get('total') > 0:
+	if progress.get('total') and progress.get('total') > 0:
 		progress_fill = progress.get('current') * progress_width // progress.get('total')
 	else:
 		progress_fill = 0
@@ -63,16 +62,16 @@ def render(progress : Progress, title : str, stage_type : StageType) -> None:
 	progress_bar = choices.log_character_set.get('white') + '=' * progress_fill + choices.log_character_set.get('reset') + choices.log_character_set.get('grey') + '=' * (progress_width - progress_fill) + choices.log_character_set.get('reset')
 	progress_parts = [ title, progress_bar, status ]
 
-	if description:
+	if progress.get('description'):
 		progress_parts.append('|')
-		progress_parts.append(description)
+		progress_parts.append(progress.get('description'))
 
 	log_group = resolve_log_group()
 	cli_stream.write(create_line(log_group.get('label'), log_group.get('color'), '•', stage_type, ' '.join(progress_parts)))
 
 
 def resolve_percent(progress : Progress) -> str:
-	if progress.get('total') > 0:
+	if progress.get('total') and progress.get('total') > 0:
 		percent = progress.get('current') * 100 // progress.get('total')
 		return str(percent) + ' %'
 

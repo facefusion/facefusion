@@ -70,6 +70,16 @@ def test_render_percent(capsys : CaptureFixture[str]) -> None:
 
 	assert '0 %' in capsys.readouterr().err
 
+	render(
+	{
+		'unit': 'percent',
+		'current': 1,
+		'started_at': time_current,
+		'updated_at': time_current
+	}, 'downloading', 'download')
+
+	assert '0 %' in capsys.readouterr().err
+
 
 def test_render_frame(capsys : CaptureFixture[str]) -> None:
 	render(
