@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from _pytest.capture import CaptureFixture
 
+from facefusion import choices
 from facefusion.clis.cli_formatter import create_line, create_log_group
 from facefusion.clis.cli_stream import create_handler, write
 
@@ -28,10 +29,10 @@ def test_flush(capsys : CaptureFixture[str]) -> None:
 
 	memory_handler.flush()
 
-	assert capsys.readouterr().err == '\033[G\033[K' + create_line('api.0', 'white', '┬', 'core', 'first') + os.linesep + '\033[G\033[K' + create_line(str(), 'white', '│', 'core', 'second') + os.linesep + '\033[G\033[K' + create_line('api.1', 'white', '┬', 'core', 'third') + os.linesep
+	assert capsys.readouterr().err == choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + create_line('api.0', 'white', '┬', 'core', 'first') + os.linesep + choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + create_line(str(), 'white', '│', 'core', 'second') + os.linesep + choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + create_line('api.1', 'white', '┬', 'core', 'third') + os.linesep
 
 
 def test_write(capsys : CaptureFixture[str]) -> None:
 	write('message')
 
-	assert capsys.readouterr().err == '\033[G\033[Kmessage'
+	assert capsys.readouterr().err == choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line') + 'message'

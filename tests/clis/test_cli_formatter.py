@@ -3,7 +3,7 @@ from typing import Iterator
 
 import pytest
 
-from facefusion import session_context, session_manager, state_manager
+from facefusion import choices, session_context, session_manager, state_manager
 from facefusion.clis.cli_formatter import color_message, create_line, create_log_group, create_log_line, format_log_line, resolve_log_group
 
 
@@ -37,12 +37,12 @@ def test_format_log_line() -> None:
 
 def test_color_message() -> None:
 	assert color_message('message', logging.INFO) == 'message'
-	assert color_message('message', logging.WARNING) == '\033[38;5;221mmessage\033[0m'
-	assert color_message('message', logging.ERROR) == '\033[38;5;204mmessage\033[0m'
+	assert color_message('message', logging.WARNING) == choices.log_character_set.get('yellow') + 'message' + choices.log_character_set.get('reset')
+	assert color_message('message', logging.ERROR) == choices.log_character_set.get('red') + 'message' + choices.log_character_set.get('reset')
 
 
 def test_create_line() -> None:
-	assert create_line('api.0', 'white', '┬', 'core', 'message') == '\033[38;5;250mapi.0   ┬\033[0m \033[38;5;244mcore          \033[0m  message'
+	assert create_line('api.0', 'white', '┬', 'core', 'message') == choices.log_character_set.get('white') + 'api.0   ┬' + choices.log_character_set.get('reset') + ' ' + choices.log_character_set.get('grey') + 'core          ' + choices.log_character_set.get('reset') + '  message'
 
 
 def test_resolve_log_group() -> None:
