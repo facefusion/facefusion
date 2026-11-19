@@ -1,7 +1,8 @@
 import time
-from typing import List, Optional, Sized
+from contextlib import contextmanager
+from typing import Iterator, List, Optional, Sized
 
-from facefusion import store_creator
+from facefusion import stage_context, store_creator
 from facefusion.session_context import get_session_id, resolve_local_id
 from facefusion.session_manager import resolve_owner_id
 from facefusion.types import Process, ProcessState, Progress, SessionId, Stage, StageType, Store
@@ -94,7 +95,8 @@ def end() -> None:
 	set_state('pending')
 
 
-def stage(stage_type : StageType, stage_title : str, progress : Progress) -> None:
+@contextmanager
+def stage(stage_type : StageType, stage_title : str, progress : Progress) -> Iterator[None]:
 	next_stage : Stage =\
 	{
 		'type': stage_type,
@@ -103,36 +105,41 @@ def stage(stage_type : StageType, stage_title : str, progress : Progress) -> Non
 	}
 
 	get_stages().append(next_stage)
+	stage_token = stage_context.set_stage(next_stage)
+
+	yield
+
+	stage_context.reset_stage(stage_token)
 
 
 def count(collection : Sized) -> None:
-	stages = get_stages()
+	current_stage = stage_context.get_stage()
 
-	if stages:
-		stages[-1]['progress']['total'] = len(collection)
+	if current_stage:
+		current_stage['progress']['total'] = len(collection)
 
 
 def describe(description : str) -> None:
-	stages = get_stages()
+	current_stage = stage_context.get_stage()
 
-	if stages:
-		stages[-1]['progress']['description'] = description
+	if current_stage:
+		current_stage['progress']['description'] = description
 
 
 def update() -> None:
-	stages = get_stages()
+	current_stage = stage_context.get_stage()
 
-	if stages:
-		stages[-1]['progress']['current'] += 1
-		stages[-1]['progress']['updated_at'] = time.monotonic()
+	if current_stage:
+		current_stage['progress']['current'] += 1
+		current_stage['progress']['updated_at'] = time.monotonic()
 
 
 def seek(current : int) -> None:
-	stages = get_stages()
+	current_stage = stage_context.get_stage()
 
-	if stages:
-		stages[-1]['progress']['current'] = current
-		stages[-1]['progress']['updated_at'] = time.monotonic()
+	if current_stage:
+		current_stage['progress']['current'] = current
+		current_stage['progress']['updated_at'] = time.monotonic()
 
 
 def clear() -> None:

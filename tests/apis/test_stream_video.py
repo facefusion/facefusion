@@ -1,7 +1,9 @@
 import ctypes
 import struct
 import threading
+import time
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextvars import copy_context
 from functools import partial
 from queue import Queue
 from typing import Tuple
@@ -80,27 +82,28 @@ def test_send_video_frames(video_codec : VideoCodec, payload_type : int) -> None
 
 	video_queue : Queue[Tuple[Time, Future[BufferPack]]] = Queue(maxsize = 1)
 	process_manager.start()
-	process_manager.stage('stream', 'streaming',
+
+	time_current = time.monotonic()
+	with process_manager.stage('stream', 'streaming',
 	{
 		'unit': 'frame',
 		'current': 0,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
+		with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
+			with ThreadPoolExecutor(max_workers = 1) as executor:
+				video_future = executor.submit(process_video_frame, [], video_frame)
+				video_queue.put((0.5, video_future))
 
-	with patch('facefusion.apis.stream_video.analyse_stream', return_value = False):
-		with ThreadPoolExecutor(max_workers = 1) as executor:
-			video_future = executor.submit(process_video_frame, [], video_frame)
-			video_queue.put((0.5, video_future))
-
-			with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
-				with patch('facefusion.apis.stream_video.destroy_video_encoder', wraps = destroy_video_encoder) as destroy_video_encoder_mock:
-					encode_loop_thread = threading.Thread(target = send_video_frames, args = (rtc_peer, video_queue), daemon = True)
-					encode_loop_thread.start()
-					video_queue.put((1.0, video_future))
-					video_queue.put((1.5, video_future))
-					video_queue.shutdown()
-					encode_loop_thread.join(timeout = 5.0)
+				with patch('facefusion.apis.stream_video.rtc.send_video') as send_video_mock:
+					with patch('facefusion.apis.stream_video.destroy_video_encoder', wraps = destroy_video_encoder) as destroy_video_encoder_mock:
+						encode_loop_thread = threading.Thread(target = copy_context().run, args = (send_video_frames, rtc_peer, video_queue), daemon = True)
+						encode_loop_thread.start()
+						video_queue.put((1.0, video_future))
+						video_queue.put((1.5, video_future))
+						video_queue.shutdown()
+						encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called is True
 	assert process_manager.get_stages()[-1].get('progress').get('current') == send_video_mock.call_count

@@ -79,39 +79,39 @@ def process_memory_frames() -> ErrorCode:
 		video_writer = video_manager.get_writer(state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, output_video_resolution, state_manager.get_item('output_video_fps'))
 
 		time_current = time.monotonic()
-		process_manager.stage('infer', translator.get('processing'),
+		with process_manager.stage('infer', translator.get('processing'),
 		{
 			'unit': 'frame',
 			'current': 0,
 			'started_at': time_current,
 			'updated_at': time_current
-		})
-		process_manager.count(temp_frame_range)
+		}):
+			process_manager.count(temp_frame_range)
 
-		with cli_progress.create() as progress:
-			conditional_get_reference_vision_frames()
+			with cli_progress.create() as progress:
+				conditional_get_reference_vision_frames()
 
-			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
-				futures : Deque[Future[VisionFrame]] = deque()
+				with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
+					futures : Deque[Future[VisionFrame]] = deque()
 
-				for frame_index in temp_frame_range:
-					future = executor.submit(process_memory_frame, frame_index, temp_video_resolution, output_video_resolution)
-					futures.append(future)
+					for frame_index in temp_frame_range:
+						future = executor.submit(process_memory_frame, frame_index, temp_video_resolution, output_video_resolution)
+						futures.append(future)
 
-				while futures:
-					future = futures.popleft()
+					while futures:
+						future = futures.popleft()
 
-					if process_manager.is_stopping():
+						if process_manager.is_stopping():
 
-						for pending_future in futures:
-							pending_future.cancel()
+							for pending_future in futures:
+								pending_future.cancel()
 
-						futures.clear()
+							futures.clear()
 
-					else:
-						video_manager.write_video_frame(video_writer, future.result())
-						process_manager.update()
-						progress.update()
+						else:
+							video_manager.write_video_frame(video_writer, future.result())
+							process_manager.update()
+							progress.update()
 
 		if not video_manager.close_video_writer(video_writer):
 			process_manager.stop()

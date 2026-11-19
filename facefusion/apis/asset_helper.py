@@ -47,38 +47,38 @@ def detect_media_type_by_format(file_format : str) -> Optional[MediaType]:
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')
-	time_current = time.monotonic()
 
-	process_manager.stage('upload', translator.get('uploading'),
+	time_current = time.monotonic()
+	with process_manager.stage('upload', translator.get('uploading'),
 	{
 		'unit': 'percent',
 		'current': 0,
 		'started_at': time_current,
 		'updated_at': time_current
-	})
-	process_manager.count(upload_files)
+	}):
+		process_manager.count(upload_files)
 
-	for upload_file in upload_files:
-		file_format = get_file_format(upload_file.filename)
-		file_extension = get_file_extension(upload_file.filename)
-		media_type = detect_media_type_by_format(file_format)
-		temp_path = state_manager.get_temp_path()
+		for upload_file in upload_files:
+			file_format = get_file_format(upload_file.filename)
+			file_extension = get_file_extension(upload_file.filename)
+			media_type = detect_media_type_by_format(file_format)
+			temp_path = state_manager.get_temp_path()
 
-		create_directory(temp_path)
+			create_directory(temp_path)
 
-		asset_file_name = uuid.uuid4().hex
-		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
+			asset_file_name = uuid.uuid4().hex
+			asset_path = os.path.join(temp_path, asset_file_name + file_extension)
 
-		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_file.file, asset_path, api_security_strategy):
-			asset_paths.append(asset_path)
+			if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_file.file, asset_path, api_security_strategy):
+				asset_paths.append(asset_path)
 
-		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, upload_file.file, asset_path):
-			asset_paths.append(asset_path)
+			if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, upload_file.file, asset_path):
+				asset_paths.append(asset_path)
 
-		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
-			asset_paths.append(asset_path)
+			if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_file.file, asset_path, api_security_strategy):
+				asset_paths.append(asset_path)
 
-		process_manager.update()
+			process_manager.update()
 
 	return asset_paths
 

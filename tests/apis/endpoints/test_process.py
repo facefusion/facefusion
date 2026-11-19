@@ -1,3 +1,4 @@
+import time
 from typing import Iterator
 
 import pytest
@@ -62,91 +63,97 @@ def test_websocket_process(test_client : TestClient) -> None:
 
 		session_context.set_session_id(session_id)
 		process_manager.start()
-		process_manager.stage('stream', 'streaming',
+
+		time_current = time.monotonic()
+		with process_manager.stage('stream', 'streaming',
 		{
 			'unit': 'frame',
 			'current': 0,
-			'started_at': 10.0,
-			'updated_at': 10.0
-		})
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			stream_progress = process_manager.get_stages()[0].get('progress')
 
-		assert websocket.receive_json() ==\
-		{
-			'session':
+			assert websocket.receive_json() ==\
 			{
-				'status': 'processing',
-				'stages':
-				[
-					{
-						'type': 'stream',
-						'title': 'streaming',
-						'progress':
+				'session':
+				{
+					'status': 'processing',
+					'stages':
+					[
 						{
-							'unit': 'frame',
-							'current': 0,
-							'started_at': 10.0,
-							'updated_at': 10.0
+							'type': 'stream',
+							'title': 'streaming',
+							'progress':
+							{
+								'unit': 'frame',
+								'current': 0,
+								'started_at': stream_progress.get('started_at'),
+								'updated_at': stream_progress.get('updated_at')
+							}
 						}
-					}
-				]
+					]
+				}
 			}
-		}
 
-		session_manager.fork_session()
-		process_manager.start()
-		process_manager.stage('infer', 'processing',
-		{
-			'unit': 'frame',
-			'current': 0,
-			'total': 100,
-			'started_at': 20.0,
-			'updated_at': 20.0
-		})
+			session_manager.fork_session()
+			process_manager.start()
 
-		assert websocket.receive_json() ==\
-		{
-			'session':
+			time_current = time.monotonic()
+			with process_manager.stage('infer', 'processing',
 			{
-				'status': 'processing',
-				'stages':
-				[
-					{
-						'type': 'stream',
-						'title': 'streaming',
-						'progress':
-						{
-							'unit': 'frame',
-							'current': 0,
-							'started_at': 10.0,
-							'updated_at': 10.0
-						}
-					}
-				]
-			},
-			'fork':
-			{
-				'status': 'processing',
-				'stages':
-				[
-					{
-						'type': 'infer',
-						'title': 'processing',
-						'progress':
-						{
-							'unit': 'frame',
-							'current': 0,
-							'total': 100,
-							'started_at': 20.0,
-							'updated_at': 20.0
-						}
-					}
-				]
-			}
-		}
+				'unit': 'frame',
+				'current': 0,
+				'total': 100,
+				'started_at': time_current,
+				'updated_at': time_current
+			}):
+				infer_progress = process_manager.get_stages()[0].get('progress')
 
-		process_manager.end()
-		session_manager.join_session()
-		process_manager.end()
-		websocket_manager.destroy(session_id)
+				assert websocket.receive_json() ==\
+				{
+					'session':
+					{
+						'status': 'processing',
+						'stages':
+						[
+							{
+								'type': 'stream',
+								'title': 'streaming',
+								'progress':
+								{
+									'unit': 'frame',
+									'current': 0,
+									'started_at': stream_progress.get('started_at'),
+									'updated_at': stream_progress.get('updated_at')
+								}
+							}
+						]
+					},
+					'fork':
+					{
+						'status': 'processing',
+						'stages':
+						[
+							{
+								'type': 'infer',
+								'title': 'processing',
+								'progress':
+								{
+									'unit': 'frame',
+									'current': 0,
+									'total': 100,
+									'started_at': infer_progress.get('started_at'),
+									'updated_at': infer_progress.get('updated_at')
+								}
+							}
+						]
+					}
+				}
 
-		assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }
+				process_manager.end()
+				session_manager.join_session()
+				process_manager.end()
+				websocket_manager.destroy(session_id)
+
+				assert websocket.receive() == { 'type': 'websocket.close', 'code': 1000, 'reason': '' }

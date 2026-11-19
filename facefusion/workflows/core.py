@@ -162,38 +162,39 @@ def process_frames() -> ErrorCode:
 	temp_frame_set = resolve_temp_frame_set(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_set:
+
 		time_current = time.monotonic()
-		process_manager.stage('infer', translator.get('processing'),
+		with process_manager.stage('infer', translator.get('processing'),
 		{
 			'unit': 'frame',
 			'current': 0,
 			'started_at': time_current,
 			'updated_at': time_current
-		})
-		process_manager.count(temp_frame_set)
+		}):
+			process_manager.count(temp_frame_set)
 
-		with cli_progress.create() as progress:
-			with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
-				futures : Deque[Future[bool]] = deque()
+			with cli_progress.create() as progress:
+				with thread_helper.create_executor(state_manager.get_item('execution_thread_count')) as executor:
+					futures : Deque[Future[bool]] = deque()
 
-				for frame_index, temp_frame_path in temp_frame_set.items():
-					future = executor.submit(process_temp_frame, temp_frame_path, frame_index)
-					futures.append(future)
+					for frame_index, temp_frame_path in temp_frame_set.items():
+						future = executor.submit(process_temp_frame, temp_frame_path, frame_index)
+						futures.append(future)
 
-				while futures:
-					future = futures.popleft()
+					while futures:
+						future = futures.popleft()
 
-					if process_manager.is_stopping():
+						if process_manager.is_stopping():
 
-						for pending_future in futures:
-							pending_future.cancel()
+							for pending_future in futures:
+								pending_future.cancel()
 
-						futures.clear()
+							futures.clear()
 
-					else:
-						future.result()
-						process_manager.update()
-						progress.update()
+						else:
+							future.result()
+							process_manager.update()
+							progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()

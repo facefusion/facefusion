@@ -165,27 +165,27 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		video_manager.seek_video_reader(video_reader, trim_frame_start)
 
 	time_current = time.monotonic()
-	process_manager.stage('analyse', translator.get('analysing'),
+	with process_manager.stage('analyse', translator.get('analysing'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'started_at': time_current,
 		'updated_at': time_current
-	})
-	process_manager.count(frame_range)
+	}):
+		process_manager.count(frame_range)
 
-	with cli_progress.create() as progress:
-		content_store.clear()
+		with cli_progress.create() as progress:
+			content_store.clear()
 
-		for _ in frame_range:
-			vision_frame = video_manager.read_video_frame(video_reader)
+			for _ in frame_range:
+				vision_frame = video_manager.read_video_frame(video_reader)
 
-			if content_store.tick() and analyse_frame(vision_frame):
-				content_store.set_hit()
+				if content_store.tick() and analyse_frame(vision_frame):
+					content_store.set_hit()
 
-			process_manager.describe('rate = ' + str(content_store.calculate_rate()))
-			process_manager.update()
-			progress.update()
+				process_manager.describe('rate = ' + str(content_store.calculate_rate()))
+				process_manager.update()
+				progress.update()
 
 	return bool(content_store.calculate_rate() > 10.0)
 
