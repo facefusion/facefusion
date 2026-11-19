@@ -26,8 +26,9 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
+
 			time_current = time.monotonic()
-			process_manager.stage('download', translator.get('downloading'),
+			with process_manager.stage('download', translator.get('downloading'),
 			{
 				'unit': 'download',
 				'current': initial_size,
@@ -35,22 +36,21 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 				'description': 'file_name = ' + download_file_name,
 				'started_at': time_current,
 				'updated_at': time_current
-			})
+			}):
+				with cli_progress.create() as progress:
+					commands = curl_builder.chain(
+						curl_builder.download(url, download_file_path),
+						curl_builder.set_timeout(5),
+						curl_builder.set_retry(5)
+					)
+					open_curl(commands)
+					current_size = initial_size
 
-			with cli_progress.create() as progress:
-				commands = curl_builder.chain(
-					curl_builder.download(url, download_file_path),
-					curl_builder.set_timeout(5),
-					curl_builder.set_retry(5)
-				)
-				open_curl(commands)
-				current_size = initial_size
-
-				while current_size < download_size:
-					if is_file(download_file_path):
-						current_size = get_file_size(download_file_path)
-						process_manager.seek(current_size)
-						progress.update()
+					while current_size < download_size:
+						if is_file(download_file_path):
+							current_size = get_file_size(download_file_path)
+							process_manager.seek(current_size)
+							progress.update()
 
 
 @lru_cache(maxsize = 64)

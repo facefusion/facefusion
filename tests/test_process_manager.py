@@ -1,3 +1,4 @@
+import time
 from typing import Iterator
 from unittest.mock import patch
 
@@ -55,34 +56,36 @@ def test_get_status() -> None:
 
 def test_get_stages() -> None:
 	start()
-	stage('extract', 'extracting',
-	{
-		'unit': 'frame',
-		'current': 0,
-		'total': 270,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
 
-	assert get_stages() ==\
-	[
+	with patch('time.monotonic', return_value = 10.0):
+		time_current = time.monotonic()
+		with stage('extract', 'extracting',
 		{
-			'type': 'extract',
-			'title': 'extracting',
-			'progress':
-			{
-				'unit': 'frame',
-				'current': 0,
-				'total': 270,
-				'started_at': 10.0,
-				'updated_at': 10.0
-			}
-		}
-	]
+			'unit': 'frame',
+			'current': 0,
+			'total': 270,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			assert get_stages() ==\
+			[
+				{
+					'type': 'extract',
+					'title': 'extracting',
+					'progress':
+					{
+						'unit': 'frame',
+						'current': 0,
+						'total': 270,
+						'started_at': 10.0,
+						'updated_at': 10.0
+					}
+				}
+			]
 
-	destroy('session-a')
+			destroy('session-a')
 
-	assert get_stages() == []
+			assert get_stages() == []
 
 
 def test_get_state() -> None:
@@ -169,68 +172,83 @@ def test_end_process() -> None:
 
 def test_stage() -> None:
 	start()
-	stage('download', 'downloading',
-	{
-		'unit': 'download',
-		'current': 1024,
-		'total': 2048,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
-	stage('extract', 'extracting',
-	{
-		'unit': 'frame',
-		'current': 0,
-		'total': 270,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
 
-	assert get_stages() ==\
-	[
+	with patch('time.monotonic', return_value = 10.0):
+		time_current = time.monotonic()
+		with stage('download', 'downloading',
 		{
-			'type': 'download',
-			'title': 'downloading',
-			'progress':
-			{
-				'unit': 'download',
-				'current': 1024,
-				'total': 2048,
-				'started_at': 10.0,
-				'updated_at': 10.0
-			}
-		},
-		{
-			'type': 'extract',
-			'title': 'extracting',
-			'progress':
+			'unit': 'download',
+			'current': 1024,
+			'total': 2048,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			time_current = time.monotonic()
+			with stage('extract', 'extracting',
 			{
 				'unit': 'frame',
 				'current': 0,
 				'total': 270,
-				'started_at': 10.0,
-				'updated_at': 10.0
-			}
-		}
-	]
+				'started_at': time_current,
+				'updated_at': time_current
+			}):
+				assert get_stages() ==\
+				[
+					{
+						'type': 'download',
+						'title': 'downloading',
+						'progress':
+						{
+							'unit': 'download',
+							'current': 1024,
+							'total': 2048,
+							'started_at': 10.0,
+							'updated_at': 10.0
+						}
+					},
+					{
+						'type': 'extract',
+						'title': 'extracting',
+						'progress':
+						{
+							'unit': 'frame',
+							'current': 0,
+							'total': 270,
+							'started_at': 10.0,
+							'updated_at': 10.0
+						}
+					}
+				]
 
 
 def test_count() -> None:
 	start()
-	count([ 0, 1, 2 ])
+	count([ 0, 1 ])
 
 	assert get_stages() == []
 
-	stage('infer', 'processing',
+	time_current = time.monotonic()
+	with stage('infer', 'processing',
 	{
 		'unit': 'frame',
 		'current': 0,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
-	count([ 0, 1, 2 ])
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
+		time_current = time.monotonic()
+		with stage('upload', 'uploading',
+		{
+			'unit': 'percent',
+			'current': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			count([ 0, 1, 2 ])
 
-	assert get_stages()[-1].get('progress').get('total') == 3
+		count([ 0, 1, 2, 3 ])
+
+	assert get_stages()[0].get('progress').get('total') == 4
+	assert get_stages()[1].get('progress').get('total') == 3
 
 
 def test_describe() -> None:
@@ -239,16 +257,28 @@ def test_describe() -> None:
 
 	assert get_stages() == []
 
-	stage('analyse', 'analysing',
+	time_current = time.monotonic()
+	with stage('analyse', 'analysing',
 	{
 		'unit': 'frame',
 		'current': 0,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
-	describe('rate = 0.0')
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
+		time_current = time.monotonic()
+		with stage('upload', 'uploading',
+		{
+			'unit': 'percent',
+			'current': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			describe('file_name = source.jpg')
 
-	assert get_stages()[-1].get('progress').get('description') == 'rate = 0.0'
+		describe('rate = 0.0')
+
+	assert get_stages()[0].get('progress').get('description') == 'rate = 0.0'
+	assert get_stages()[1].get('progress').get('description') == 'file_name = source.jpg'
 
 
 def test_update() -> None:
@@ -257,39 +287,66 @@ def test_update() -> None:
 
 	assert get_stages() == []
 
-	stage('infer', 'processing',
+	time_current = time.monotonic()
+	with stage('infer', 'processing',
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': 270,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
-	update()
-
-	with patch('time.monotonic', return_value = 20.0):
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
 		update()
 
-	assert get_stages()[-1].get('progress').get('current') == 2
-	assert get_stages()[-1].get('progress').get('updated_at') == 20.0
+		time_current = time.monotonic()
+		with stage('upload', 'uploading',
+		{
+			'unit': 'percent',
+			'current': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			update()
+
+		with patch('time.monotonic', return_value = 20.0):
+			update()
+
+	assert get_stages()[0].get('progress').get('current') == 2
+	assert get_stages()[0].get('progress').get('updated_at') == 20.0
+	assert get_stages()[1].get('progress').get('current') == 1
 
 
 def test_seek() -> None:
 	start()
-	stage('extract', 'extracting',
+	seek(135)
+
+	assert get_stages() == []
+
+	time_current = time.monotonic()
+	with stage('extract', 'extracting',
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': 270,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
+		time_current = time.monotonic()
+		with stage('upload', 'uploading',
+		{
+			'unit': 'percent',
+			'current': 0,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			seek(1)
 
-	with patch('time.monotonic', return_value = 20.0):
-		seek(135)
+		with patch('time.monotonic', return_value = 20.0):
+			seek(135)
 
-	assert get_stages()[-1].get('progress').get('current') == 135
-	assert get_stages()[-1].get('progress').get('updated_at') == 20.0
+	assert get_stages()[0].get('progress').get('current') == 135
+	assert get_stages()[0].get('progress').get('updated_at') == 20.0
+	assert get_stages()[1].get('progress').get('current') == 1
 
 
 def test_clear() -> None:

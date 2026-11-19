@@ -116,7 +116,7 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_store_content = inspect.getsource(content_store).encode()
-	return hash_helper.create_hash(content_analyser_content) == 'ebcfba75' and hash_helper.create_hash(content_store_content) == '77e47f71'
+	return hash_helper.create_hash(content_analyser_content) == 'd68caea8' and hash_helper.create_hash(content_store_content) == '77e47f71'
 
 
 def force_download() -> ErrorCode:

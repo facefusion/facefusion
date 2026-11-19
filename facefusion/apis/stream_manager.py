@@ -24,25 +24,25 @@ from facefusion.vision import from_buffer, is_vision_frame, obscure_frame, read_
 async def process_image(websocket : WebSocket) -> None:
 	process_manager.start()
 	await asyncio.to_thread(processors_pre_check)
+
 	time_current = time.monotonic()
-	process_manager.stage('stream', translator.get('streaming'),
+	with process_manager.stage('stream', translator.get('streaming'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'started_at': time_current,
 		'updated_at': time_current
-	})
+	}):
+		async for capture_vision_frame in receive_vision_frames(websocket):
+			source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+			output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
 
-	async for capture_vision_frame in receive_vision_frames(websocket):
-		source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-		output_vision_frame = streamer.process_stream_frame(source_vision_frames, capture_vision_frame)
+			if analyse_frame(capture_vision_frame):
+				output_vision_frame = obscure_frame(capture_vision_frame)
 
-		if analyse_frame(capture_vision_frame):
-			output_vision_frame = obscure_frame(capture_vision_frame)
-
-		output_vision_buffer = to_buffer(output_vision_frame)
-		await websocket.send_bytes(output_vision_buffer)
-		process_manager.update()
+			output_vision_buffer = to_buffer(output_vision_frame)
+			await websocket.send_bytes(output_vision_buffer)
+			process_manager.update()
 
 	process_manager.end()
 
@@ -137,47 +137,47 @@ def process_video(rtc_peer : RtcPeer) -> None:
 
 	process_manager.start()
 	processors_pre_check()
+
 	time_current = time.monotonic()
-	process_manager.stage('stream', translator.get('streaming'),
+	with process_manager.stage('stream', translator.get('streaming'),
 	{
 		'unit': 'frame',
 		'current': 0,
 		'started_at': time_current,
 		'updated_at': time_current
-	})
-
-	video_receiver_thread = threading.Thread(
-		target = copy_context().run,
-		args = (receive_video_frames, rtc_peer.get('video'), video_queue, video_executor),
-		daemon = True
-	)
-	video_encoder_thread = threading.Thread(
-		target = copy_context().run,
-		args = (send_video_frames, rtc_peer, video_queue),
-		daemon = True
-	)
-	video_receiver_thread.start()
-	video_encoder_thread.start()
-
-	if rtc_peer.get('audio'):
-		audio_receiver_thread = threading.Thread(
+	}):
+		video_receiver_thread = threading.Thread(
 			target = copy_context().run,
-			args = (receive_audio_frames, rtc_peer.get('audio'), audio_queue),
+			args = (receive_video_frames, rtc_peer.get('video'), video_queue, video_executor),
 			daemon = True
 		)
-		audio_encoder_thread = threading.Thread(
+		video_encoder_thread = threading.Thread(
 			target = copy_context().run,
-			args = (send_audio_frames, rtc_peer, audio_queue),
+			args = (send_video_frames, rtc_peer, video_queue),
 			daemon = True
 		)
-		audio_receiver_thread.start()
-		audio_encoder_thread.start()
-		audio_receiver_thread.join()
-		audio_encoder_thread.join()
+		video_receiver_thread.start()
+		video_encoder_thread.start()
 
-	video_receiver_thread.join()
-	video_encoder_thread.join()
-	video_executor.shutdown(wait = True)
+		if rtc_peer.get('audio'):
+			audio_receiver_thread = threading.Thread(
+				target = copy_context().run,
+				args = (receive_audio_frames, rtc_peer.get('audio'), audio_queue),
+				daemon = True
+			)
+			audio_encoder_thread = threading.Thread(
+				target = copy_context().run,
+				args = (send_audio_frames, rtc_peer, audio_queue),
+				daemon = True
+			)
+			audio_receiver_thread.start()
+			audio_encoder_thread.start()
+			audio_receiver_thread.join()
+			audio_encoder_thread.join()
+
+		video_receiver_thread.join()
+		video_encoder_thread.join()
+		video_executor.shutdown(wait = True)
 
 	rtc_manager.delete_peer()
 	process_manager.end()

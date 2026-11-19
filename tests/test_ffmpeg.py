@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from unittest.mock import patch
 
 import pytest
@@ -141,21 +142,22 @@ def test_render_progress() -> None:
 		ffmpeg_builder.cast_stream()
 	)
 	process = ffmpeg.run_ffmpeg(commands)
-	process_manager.stage('extract', 'extracting',
+
+	time_current = time.monotonic()
+	with process_manager.stage('extract', 'extracting',
 	{
 		'unit': 'frame',
 		'current': 0,
 		'total': 270,
-		'started_at': 10.0,
-		'updated_at': 10.0
-	})
+		'started_at': time_current,
+		'updated_at': time_current
+	}):
+		with cli_progress.create() as progress:
+			render_progress(process, progress)
 
-	with cli_progress.create() as progress:
-		render_progress(process, progress)
+			assert process_manager.get_stages()[-1].get('progress').get('current') == 270
 
-		assert process_manager.get_stages()[-1].get('progress').get('current') == 270
-
-	assert process.wait() == 0
+		assert process.wait() == 0
 
 
 def test_await_process() -> None:

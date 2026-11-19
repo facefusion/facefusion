@@ -24,31 +24,32 @@ def test_create(capsys : CaptureFixture[str]) -> None:
 
 def test_update(capsys : CaptureFixture[str]) -> None:
 	time_current = time.monotonic()
-	process_manager.stage('download', 'downloading',
+	with process_manager.stage('download', 'downloading',
 	{
 		'unit': 'download',
 		'current': 0,
 		'total': 100,
 		'started_at': time_current,
 		'updated_at': time_current
-	})
-	process_manager.stage('extract', 'extracting',
-	{
-		'unit': 'frame',
-		'current': 0,
-		'total': 100,
-		'started_at': time_current,
-		'updated_at': time_current
-	})
+	}):
 
-	with create() as progress:
-		capsys.readouterr()
-		progress.update()
-		progress.update()
-		output = capsys.readouterr().err
+		time_current = time.monotonic()
+		with process_manager.stage('extract', 'extracting',
+		{
+			'unit': 'frame',
+			'current': 0,
+			'total': 100,
+			'started_at': time_current,
+			'updated_at': time_current
+		}):
+			with create() as progress:
+				capsys.readouterr()
+				progress.update()
+				progress.update()
+				output = capsys.readouterr().err
 
-		assert output.count('extracting') == 1
-		assert output.count('downloading') == 0
+				assert output.count('extracting') == 1
+				assert output.count('downloading') == 0
 
 
 def test_render_percent(capsys : CaptureFixture[str]) -> None:
