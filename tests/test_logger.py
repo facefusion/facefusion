@@ -4,11 +4,14 @@ from typing import Iterator
 import pytest
 from _pytest.logging import LogCaptureFixture
 
-from facefusion.logger import debug, disable, enable, error, get_package_logger, info, init, warn
+from facefusion import state_manager
+from facefusion.clis.cli_formatter import create_log_group
+from facefusion.logger import create_extra, debug, disable, enable, error, get_package_logger, info, init, warn
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> Iterator[None]:
+	state_manager.init()
 	init('debug')
 
 	yield
@@ -34,25 +37,37 @@ def test_get_package_logger() -> None:
 def test_debug(caplog : LogCaptureFixture) -> None:
 	debug('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.DEBUG, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.DEBUG, 'message') ]
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_info(caplog : LogCaptureFixture) -> None:
 	info('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.INFO, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.INFO, 'message') ]
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_warn(caplog : LogCaptureFixture) -> None:
 	warn('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.WARNING, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.WARNING, 'message') ]
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
 
 
 def test_error(caplog : LogCaptureFixture) -> None:
 	error('message', 'facefusion.core')
 
-	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, '[FACEFUSION.CORE] message') ]
+	assert caplog.record_tuples == [ ('facefusion', logging.ERROR, 'message') ]
+	assert caplog.records[0].__dict__.get('module_names') == [ 'facefusion', 'core' ]
+
+
+def test_create_extra() -> None:
+	assert create_extra('facefusion.core') ==\
+	{
+		'module_names': [ 'facefusion', 'core' ],
+		'log_group': create_log_group('cli', 0)
+	}
 
 
 def test_enable_and_disable(caplog : LogCaptureFixture) -> None:
@@ -66,4 +81,4 @@ def test_enable_and_disable(caplog : LogCaptureFixture) -> None:
 	info('message', 'facefusion.core')
 
 	assert get_package_logger().disabled is False
-	assert caplog.messages == [ '[FACEFUSION.CORE] message' ]
+	assert caplog.messages == [ 'message' ]

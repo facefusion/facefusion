@@ -7,7 +7,7 @@ from typing import Iterator, List
 
 import facefusion.choices
 from facefusion import content_analyser, core, face_store, process_manager, state_manager
-from facefusion.cli_helper import render_table
+from facefusion.clis import cli_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
 from facefusion.types import BenchmarkCycleSet
@@ -111,4 +111,4 @@ def render() -> None:
 		benchmarks = benchmark
 
 	contents = [ list(benchmark_set.values()) for benchmark_set in benchmarks ]
-	render_table(headers, contents)
+	cli_table.render(headers, contents)
