@@ -19,8 +19,12 @@ def has_connection(channel : WebsocketChannel) -> bool:
 	owner_id = resolve_owner_id()
 	session_websocket_set : SessionWebsocketSet = store_creator.get_content(WEBSOCKET_STORE, owner_id)
 
-	if session_websocket_set:
-		return channel in session_websocket_set
+	if session_websocket_set and channel in session_websocket_set:
+		for session_websocket in session_websocket_set.get(channel):
+			websocket = session_websocket.get('websocket')
+
+			if websocket.client_state == WebSocketState.CONNECTED and websocket.application_state == WebSocketState.CONNECTED:
+				return True
 
 	return False
 
@@ -62,5 +66,5 @@ def destroy(session_id : SessionId) -> None:
 			for session_websocket in sessions:
 				websocket = session_websocket.get('websocket')
 
-				if websocket.application_state == WebSocketState.CONNECTED:
+				if websocket.client_state == WebSocketState.CONNECTED and websocket.application_state == WebSocketState.CONNECTED:
 					asyncio.run_coroutine_threadsafe(websocket.close(), session_websocket.get('event_loop')).result()

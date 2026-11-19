@@ -23,6 +23,7 @@ from facefusion.apis.endpoints.root import get_root
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
+from facefusion.apis.middlewares.delivery import create_delivery_guard
 from facefusion.apis.middlewares.exception import create_exception_guard
 from facefusion.apis.middlewares.security import create_security_guard
 from facefusion.apis.middlewares.session import create_session_guard
@@ -81,6 +82,7 @@ def create_api() -> Starlette:
 	]
 
 	api = Starlette(routes = routes)
+	api.add_middleware(create_delivery_guard)
 	api.add_middleware(create_exception_guard)
 	api.add_middleware(create_security_guard)
 

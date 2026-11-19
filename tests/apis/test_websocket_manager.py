@@ -33,14 +33,17 @@ def test_init() -> None:
 
 @pytest.mark.asyncio
 async def test_has_connection() -> None:
-	websocket_mock = AsyncMock()
+	websocket_mock_1 = AsyncMock(client_state = WebSocketState.CONNECTED, application_state = WebSocketState.CONNECTED)
+	websocket_mock_2 = AsyncMock(client_state = WebSocketState.DISCONNECTED, application_state = WebSocketState.CONNECTED)
 
 	assert has_connection('stream') is False
 
-	start_connection('stream', websocket_mock)
+	start_connection('stream', websocket_mock_1)
+	start_connection('metrics', websocket_mock_2)
 
 	assert has_connection('stream') is True
 	assert has_connection('metrics') is False
+	assert has_connection('process') is False
 
 
 @pytest.mark.asyncio
@@ -71,18 +74,21 @@ async def test_delete_websocket() -> None:
 
 @pytest.mark.asyncio
 async def test_destroy() -> None:
-	websocket_mock_1 = AsyncMock(application_state = WebSocketState.CONNECTED)
-	websocket_mock_2 = AsyncMock(application_state = WebSocketState.DISCONNECTED)
+	websocket_mock_1 = AsyncMock(client_state = WebSocketState.CONNECTED, application_state = WebSocketState.CONNECTED)
+	websocket_mock_2 = AsyncMock(client_state = WebSocketState.CONNECTED, application_state = WebSocketState.DISCONNECTED)
+	websocket_mock_3 = AsyncMock(client_state = WebSocketState.DISCONNECTED, application_state = WebSocketState.CONNECTED)
 
 	set_session_id('session-a')
 	init()
 
 	start_connection('metrics', websocket_mock_2)
 	start_connection('stream', websocket_mock_1)
+	start_connection('process', websocket_mock_3)
 
 	await asyncio.to_thread(destroy, 'session-a')
 
 	assert websocket_mock_1.close.await_count == 1
 	assert websocket_mock_2.close.await_count == 0
+	assert websocket_mock_3.close.await_count == 0
 
 	assert store_creator.has_content(WEBSOCKET_STORE, 'session-a') is False

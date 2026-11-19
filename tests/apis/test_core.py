@@ -69,6 +69,13 @@ def test_create_api(test_client : TestClient) -> None:
 
 		assert session_response.status_code == 413
 
+	state_manager.set_item('api_upload_limit', 0)
+
+	with TestClient(create_api()) as upload_limit_client:
+		session_response = upload_limit_client.post('/session', content = bytes(1024 * 1024 + 1))
+
+		assert not session_response.status_code == 413
+
 	state_manager.set_item('api_upload_limit', 512)
 
 
