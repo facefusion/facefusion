@@ -1,6 +1,4 @@
-import os
 import shutil
-import sys
 import time
 from contextlib import contextmanager
 from functools import partial
@@ -22,8 +20,7 @@ def create() -> Iterator[SimpleNamespace]:
 
 	yield progress
 
-	sys.stderr.write(os.linesep)
-	sys.stderr.flush()
+	cli_stream.write(str())
 
 
 def update(progress : SimpleNamespace) -> None:

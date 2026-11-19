@@ -15,6 +15,13 @@ def before_each() -> None:
 	process_manager.clear()
 
 
+def test_create(capsys : CaptureFixture[str]) -> None:
+	with create():
+		capsys.readouterr()
+
+	assert capsys.readouterr().err == choices.progress_action_set.get('cursor_start') + choices.progress_action_set.get('erase_line')
+
+
 def test_update(capsys : CaptureFixture[str]) -> None:
 	time_current = time.monotonic()
 	process_manager.stage('download', 'downloading',
