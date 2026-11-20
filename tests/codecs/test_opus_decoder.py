@@ -45,6 +45,9 @@ def test_decode() -> None:
 	if is_macos():
 		assert create_hash(decode(opus_decoder, encode_buffer, 2)) == '92f7997d'
 
+	assert decode(opus_decoder, bytes(), 2) == bytes()
+	assert decode(opus_decoder, bytes([ 2, 200, 1 ]), 2) == bytes()
+
 
 def test_destroy() -> None:
 	opus_decoder = create(48000, 2)

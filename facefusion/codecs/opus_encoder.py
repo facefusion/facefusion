@@ -21,12 +21,14 @@ def encode(opus_encoder : OpusEncoder, input_buffer : Buffer, channel_total : in
 	if opus_library:
 		sample_size = ctypes.sizeof(ctypes.c_float)
 		sample_total = len(input_buffer) // (sample_size * channel_total)
-		sample_buffer = (ctypes.c_float * (sample_total * channel_total)).from_buffer_copy(input_buffer)
-		temp_buffer = ctypes.create_string_buffer(2048)
-		output_total = opus_library.opus_encode_float(opus_encoder, sample_buffer, sample_total, temp_buffer, 2048)
 
-		if output_total:
-			output_buffer = temp_buffer.raw[:output_total]
+		if sample_total > 0:
+			sample_buffer = (ctypes.c_float * (sample_total * channel_total)).from_buffer_copy(input_buffer)
+			temp_buffer = ctypes.create_string_buffer(2048)
+			output_total = opus_library.opus_encode_float(opus_encoder, sample_buffer, sample_total, temp_buffer, 2048)
+
+			if output_total > 0:
+				output_buffer = temp_buffer.raw[:output_total]
 
 	return output_buffer
 

@@ -22,11 +22,13 @@ def decode(opus_decoder : OpusDecoder, input_buffer : Buffer, channel_total : in
 		input_total = len(input_buffer)
 		sample_size = ctypes.sizeof(ctypes.c_float)
 		sample_total = opus_library.opus_decoder_get_nb_samples(opus_decoder, input_buffer, input_total)
-		sample_buffer = (ctypes.c_float * (sample_total * channel_total))()
-		output_total = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, sample_buffer, sample_total, 0)
 
-		if output_total:
-			output_buffer = ctypes.string_at(ctypes.addressof(sample_buffer), output_total * channel_total * sample_size)
+		if sample_total > 0:
+			sample_buffer = (ctypes.c_float * (sample_total * channel_total))()
+			output_total = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, sample_buffer, sample_total, 0)
+
+			if output_total > 0:
+				output_buffer = ctypes.string_at(ctypes.addressof(sample_buffer), output_total * channel_total * sample_size)
 
 	return output_buffer
 
