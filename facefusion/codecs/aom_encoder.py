@@ -22,7 +22,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 			struct.pack_into('I', config_buffer, 136, bitrate)
 			struct.pack_into('I', config_buffer, 192, 30)
 
-			if aom_library.aom_codec_enc_init_ver(aom_encoder, ctypes.byref(aom_codec), config_buffer, 0, 25) == 0:
+			if aom_library.aom_codec_enc_init_ver(aom_encoder, ctypes.byref(aom_codec), config_buffer, 0, 29) == 0:
 				aom_library.aom_codec_control(aom_encoder, 13, ctypes.c_int(cpu_count))
 				aom_library.aom_codec_control(aom_encoder, 75, ctypes.c_int(1))
 				aom_library.aom_codec_control(aom_encoder, 106, ctypes.c_int(0))
