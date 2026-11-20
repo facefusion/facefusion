@@ -42,7 +42,6 @@ jobs:
   - run: pip install python-multipart
   - run: pytest -o python_files='test_*.py'
  integrate:
-  needs: test
   strategy:
    matrix:
     os: [ macos-latest, ubuntu-latest, windows-latest ]
