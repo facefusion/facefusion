@@ -40,7 +40,8 @@ jobs:
   - run: pip install pytest-mock
   - run: pip install httpx2
   - run: pip install python-multipart
-  - run: pytest
+  - run: pytest -o python_files='test_*.py'
+  - run: pytest -o python_files='integrate_*.py'
  report:
   needs: test
   runs-on: ubuntu-latest
