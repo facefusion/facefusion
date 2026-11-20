@@ -290,7 +290,17 @@ def define_rtc_packetizer_init() -> ctypes.Structure:
 			('timestamp', ctypes.c_uint32),
 			('maxFragmentSize', ctypes.c_uint16),
 			('nalSeparator', ctypes.c_int),
-			('obuPacketization', ctypes.c_int)
+			('obuPacketization', ctypes.c_int),
+			('playoutDelayId', ctypes.c_uint8),
+			('playoutDelayMin', ctypes.c_uint16),
+			('playoutDelayMax', ctypes.c_uint16),
+			('colorSpaceId', ctypes.c_uint8),
+			('colorChromaSitingHorz', ctypes.c_uint8),
+			('colorChromaSitingVert', ctypes.c_uint8),
+			('colorRange', ctypes.c_uint8),
+			('colorPrimaries', ctypes.c_uint8),
+			('colorTransfer', ctypes.c_uint8),
+			('colorMatrix', ctypes.c_uint8)
 		]
 	})()
 
