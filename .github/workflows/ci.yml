@@ -63,7 +63,7 @@ jobs:
   - run: pip install python-multipart
   - run: pytest -o python_files='integrate_*.py'
  report:
-  needs: test
+  needs: [ test, integrate ]
   runs-on: ubuntu-latest
   steps:
   - name: Checkout
