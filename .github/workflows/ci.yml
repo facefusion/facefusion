@@ -40,9 +40,30 @@ jobs:
   - run: pip install pytest-mock
   - run: pip install httpx2
   - run: pip install python-multipart
-  - run: pytest
+  - run: pytest -o python_files='test_*.py'
+ integrate:
+  strategy:
+   matrix:
+    os: [ macos-latest, ubuntu-latest, windows-latest ]
+  runs-on: ${{ matrix.os }}
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Set up FFmpeg
+    uses: AnimMouse/setup-ffmpeg@v1
+  - name: Set up Python 3.13
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.13'
+  - run: python install.py default --skip-conda
+  - run: pip install pytest
+  - run: pip install pytest-asyncio
+  - run: pip install pytest-mock
+  - run: pip install httpx2
+  - run: pip install python-multipart
+  - run: pytest -o python_files='integrate_*.py'
  report:
-  needs: test
+  needs: [ test, integrate ]
   runs-on: ubuntu-latest
   steps:
   - name: Checkout
