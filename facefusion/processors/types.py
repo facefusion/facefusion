@@ -3,7 +3,7 @@ from typing import Any, Callable, Tuple, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.filesystem import get_file_name, resolve_file_paths
+from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
 from facefusion.types import Mask, VisionFrame
 
 LivePortraitPitch : TypeAlias = float
@@ -21,7 +21,7 @@ ProcessorStateKey : TypeAlias = Any
 
 ProcessorState = TypedDict('ProcessorState', {})
 
-for file_path in resolve_file_paths('facefusion/processors/modules'):
+for file_path in resolve_file_paths(resolve_relative_path('processors/modules')):
 	ProcessorState.__annotations__.update(importlib.import_module('facefusion.processors.modules.' + get_file_name(file_path) + '.types').State.__annotations__)
 
 ApplyStateItem : TypeAlias = Callable[[ProcessorStateKey, ProcessorStateValue], None]

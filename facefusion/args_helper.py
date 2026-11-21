@@ -1,9 +1,9 @@
 from typing import Union
 
 from facefusion.capability_store import get_api_arguments, get_cli_arguments, get_sys_arguments
-from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
+from facefusion.filesystem import is_video
 from facefusion.normalizer import normalize_fps, normalize_maps, normalize_space
-from facefusion.processors.core import get_processors_modules
+from facefusion.processors.core import get_processors_modules, resolve_available_processors
 from facefusion.processors.types import ProcessorState
 from facefusion.types import ApplyStateItem, Args, State
 from facefusion.vision import detect_video_fps
@@ -65,8 +65,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 	apply_state_item('workflow_mode', args.get('workflow_mode'))
 	apply_state_item('workflow_strategy', args.get('workflow_strategy'))
-	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
+
+	available_processors = resolve_available_processors()
 
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)

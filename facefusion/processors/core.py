@@ -4,6 +4,7 @@ from typing import Any, List
 
 from facefusion import logger, state_manager, translator
 from facefusion.exit_helper import hard_exit
+from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
 
 
 PROCESSORS_METHODS =\
@@ -20,19 +21,32 @@ PROCESSORS_METHODS =\
 ]
 
 
+def resolve_available_processors() -> List[str]:
+	processors = []
+
+	for file_path in resolve_file_paths(resolve_relative_path('processors/modules')):
+		processors.append(get_file_name(file_path))
+
+	return processors
+
+
 def load_processor_module(processor : str) -> Any:
 	try:
 		processor_module = importlib.import_module('facefusion.processors.modules.' + processor + '.core')
+
 		for method_name in PROCESSORS_METHODS:
 			if not hasattr(processor_module, method_name):
 				raise NotImplementedError
+
 	except ModuleNotFoundError as exception:
 		logger.error(translator.get('processor_not_loaded').format(processor = processor), __name__)
 		logger.debug(exception.msg, __name__)
 		hard_exit(1)
+
 	except NotImplementedError:
 		logger.error(translator.get('processor_not_implemented').format(processor = processor), __name__)
 		hard_exit(1)
+
 	return processor_module
 
 
@@ -42,6 +56,7 @@ def get_processors_modules(processors : List[str]) -> List[ModuleType]:
 	for processor in processors:
 		processor_module = load_processor_module(processor)
 		processor_modules.append(processor_module)
+
 	return processor_modules
 
 
@@ -49,5 +64,6 @@ def processors_pre_check() -> bool:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		if not processor_module.pre_check():
 			return False
+
 	return True
 

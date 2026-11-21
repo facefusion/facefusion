@@ -12,10 +12,10 @@ from facefusion.clis import cli_table
 from facefusion.download import conditional_download_files
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension
-from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import get_file_name, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.processors.core import get_processors_modules, processors_pre_check
+from facefusion.processors.core import get_processors_modules, processors_pre_check, resolve_available_processors
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
@@ -121,7 +121,7 @@ def common_pre_check() -> bool:
 
 def force_download() -> ErrorCode:
 	download_scope = state_manager.get_item('download_scope')
-	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
+	available_processors = resolve_available_processors()
 	processor_modules = get_processors_modules(available_processors)
 	common_modules = []
 
