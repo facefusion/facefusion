@@ -3,7 +3,7 @@ import time
 from collections import deque
 from concurrent.futures import Future
 from types import ModuleType
-from typing import Deque, List
+from typing import Deque, List, Optional
 
 import numpy
 
@@ -38,14 +38,14 @@ def get_workflow_modules() -> List[ModuleType]:
 	return workflow_modules
 
 
-def detect_workflow_mode() -> WorkflowMode:
+def detect_workflow_mode() -> Optional[WorkflowMode]:
 	for workflow_module in get_workflow_modules():
 		detect_mode = workflow_module.detect()
 
 		if detect_mode:
 			return detect_mode
 
-	return 'image-to-image'
+	return None
 
 
 def setup() -> ErrorCode:

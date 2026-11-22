@@ -338,8 +338,9 @@ def conditional_process() -> ErrorCode:
 		state_manager.set_item('workflow_mode', detect_workflow_mode())
 
 	workflow_mode = state_manager.get_item('workflow_mode')
+	detect_mode = detect_workflow_mode()
 
-	if workflow_mode == detect_workflow_mode():
+	if detect_mode and workflow_mode == detect_mode:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			if not processor_module.pre_process('output'):
 				return 2

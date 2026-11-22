@@ -43,3 +43,7 @@ def test_detect_workflow_mode() -> None:
 	state_manager.init_item('target_path', get_test_example_file('source.jpg'))
 
 	assert detect_workflow_mode() == 'image-to-image'
+
+	state_manager.init_item('target_path', get_test_example_file('invalid'))
+
+	assert detect_workflow_mode() is None
