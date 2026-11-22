@@ -340,16 +340,14 @@ def conditional_process() -> ErrorCode:
 	workflow_mode = state_manager.get_item('workflow_mode')
 
 	if workflow_mode == detect_workflow_mode():
-		error_code : ErrorCode = 0
-
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			if not processor_module.pre_process('output'):
 				return 2
 
 		for workflow_module in get_workflow_modules():
 			if workflow_module.detect() == workflow_mode:
-				error_code = workflow_module.process(start_time)
+				return workflow_module.process(start_time)
 
-		return error_code
+		return 0
 
 	return 2
