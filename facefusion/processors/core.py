@@ -25,7 +25,8 @@ def resolve_available_processors() -> List[str]:
 	processors = []
 
 	for file_path in resolve_file_paths(resolve_relative_path('processors/modules')):
-		processors.append(get_file_name(file_path))
+		file_name = get_file_name(file_path)
+		processors.append(file_name)
 
 	return processors
 

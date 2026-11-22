@@ -1,8 +1,21 @@
 from functools import partial
+from typing import Optional
 
-from facefusion.types import ErrorCode
+from facefusion import state_manager
+from facefusion.filesystem import has_audio, has_image
+from facefusion.types import ErrorCode, WorkflowMode
 from facefusion.workflows.core import clear, setup
 from facefusion.workflows.to_image import analyse_image, finalize_image, prepare_image, process_image
+
+
+def detect() -> Optional[WorkflowMode]:
+	target_path = state_manager.get_item('target_path')
+	source_paths = state_manager.get_item('source_paths')
+
+	if has_image([ target_path ]) and has_audio(source_paths) is False:
+		return 'image-to-image'
+
+	return None
 
 
 def process(start_time : float) -> ErrorCode:

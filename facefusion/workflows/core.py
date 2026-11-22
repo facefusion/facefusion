@@ -1,6 +1,8 @@
+import importlib
 import time
 from collections import deque
 from concurrent.futures import Future
+from types import ModuleType
 from typing import Deque, List
 
 import numpy
@@ -10,28 +12,42 @@ from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voic
 from facefusion.clis import cli_progress
 from facefusion.common_helper import get_first
 from facefusion.face_selector import decode_face_selector_maps
-from facefusion.filesystem import filter_audio_paths, get_file_extension, has_audio, has_image, has_video
+from facefusion.filesystem import filter_audio_paths, get_file_name, resolve_file_paths, resolve_relative_path
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, resolve_temp_frame_set
 from facefusion.types import AudioFrame, ErrorCode, VisionFrame, WorkflowMode
 from facefusion.vision import conditional_merge_vision_mask, detect_video_fps, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_video_fps, restrict_video_range, select_video_frames, write_image
 
 
+def resolve_available_workflows() -> List[str]:
+	workflows = []
+
+	for file_path in resolve_file_paths(resolve_relative_path('workflows/modules')):
+		file_name = get_file_name(file_path)
+		workflows.append(file_name)
+
+	return workflows
+
+
+def get_workflow_modules() -> List[ModuleType]:
+	workflow_modules = []
+
+	for workflow in resolve_available_workflows():
+		workflow_modules.append(importlib.import_module('facefusion.workflows.modules.' + workflow))
+
+	return workflow_modules
+
+
 def detect_workflow_mode() -> WorkflowMode:
-	target_path = state_manager.get_item('target_path')
-	output_path = state_manager.get_item('output_path')
+	workflow_mode : WorkflowMode = 'image-to-image'
 
-	if has_video([ target_path ]):
-		if get_file_extension(output_path):
-			return 'image-to-video'
-		return 'image-to-video:frames'
+	for workflow_module in get_workflow_modules():
+		detect_mode = workflow_module.detect()
 
-	if has_audio(state_manager.get_item('source_paths')) and has_image([ target_path ]):
-		if get_file_extension(output_path):
-			return 'audio-to-image:video'
-		return 'audio-to-image:frames'
+		if detect_mode:
+			workflow_mode = detect_mode
 
-	return 'image-to-image'
+	return workflow_mode
 
 
 def setup() -> ErrorCode:
@@ -201,6 +217,7 @@ def process_frames() -> ErrorCode:
 
 		if process_manager.is_stopping():
 			return 4
+
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
 		return 1

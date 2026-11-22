@@ -19,8 +19,7 @@ from facefusion.processors.core import get_processors_modules, processors_pre_ch
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
-from facefusion.workflows.core import detect_workflow_mode
-from facefusion.workflows.modules import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
+from facefusion.workflows.core import detect_workflow_mode, get_workflow_modules
 
 
 def cli() -> None:
@@ -341,21 +340,16 @@ def conditional_process() -> ErrorCode:
 	workflow_mode = state_manager.get_item('workflow_mode')
 
 	if workflow_mode == detect_workflow_mode():
+		error_code : ErrorCode = 0
+
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			if not processor_module.pre_process('output'):
 				return 2
 
-		if workflow_mode == 'audio-to-image:video':
-			return audio_to_image.process(start_time)
-		if workflow_mode == 'audio-to-image:frames':
-			return audio_to_image_as_frames.process(start_time)
-		if workflow_mode == 'image-to-image':
-			return image_to_image.process(start_time)
-		if workflow_mode == 'image-to-video':
-			return image_to_video.process(start_time)
-		if workflow_mode == 'image-to-video:frames':
-			return image_to_video_as_frames.process(start_time)
+		for workflow_module in get_workflow_modules():
+			if workflow_module.detect() == workflow_mode:
+				error_code = workflow_module.process(start_time)
 
-		return 0
+		return error_code
 
 	return 2
