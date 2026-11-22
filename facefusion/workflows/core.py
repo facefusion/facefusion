@@ -39,15 +39,13 @@ def get_workflow_modules() -> List[ModuleType]:
 
 
 def detect_workflow_mode() -> WorkflowMode:
-	workflow_mode : WorkflowMode = 'image-to-image'
-
 	for workflow_module in get_workflow_modules():
 		detect_mode = workflow_module.detect()
 
 		if detect_mode:
-			workflow_mode = detect_mode
+			return detect_mode
 
-	return workflow_mode
+	return 'image-to-image'
 
 
 def setup() -> ErrorCode:
