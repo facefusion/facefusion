@@ -192,6 +192,24 @@ def test_get_asset(test_client : TestClient) -> None:
 
 	assert get_response.status_code == 200
 
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token,
+		'Range': 'invalid'
+	}, params =
+	{
+		'action': 'download'
+	})
+
+	assert get_response.status_code == 400
+
+	delete_session_response = test_client.delete('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_session_response.status_code == 200
+
 
 def test_upload_assets(test_client : TestClient) -> None:
 	upload_response = test_client.post('/assets?type=source')

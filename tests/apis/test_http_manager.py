@@ -38,6 +38,12 @@ async def test_has_request() -> None:
 	assert has_request('upload') is True
 	assert has_request('invalid') is False
 
+	http_task = asyncio.create_task(asyncio.sleep(0))
+	start_request('download', http_task)
+	await http_task
+
+	assert has_request('download') is False
+
 	set_session_id('session-a')
 
 	assert has_request('upload') is False

@@ -18,7 +18,9 @@ def has_request(channel : HttpChannel) -> bool:
 	session_http_set : SessionHttpSet = store_creator.get_content(HTTP_STORE, owner_id)
 
 	if session_http_set:
-		return channel in session_http_set
+		for session_http in session_http_set.get(channel):
+			if not session_http.get('task').done():
+				return True
 
 	return False
 
