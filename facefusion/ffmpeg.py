@@ -9,7 +9,7 @@ from typing import BinaryIO, List, Optional, cast
 import facefusion.choices
 from facefusion import ffmpeg_builder, ffprobe, logger, process_manager, state_manager, translator, vision
 from facefusion.clis import cli_progress
-from facefusion.filesystem import get_file_format, remove_file
+from facefusion.filesystem import get_file_format, is_video, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import ApiSecurityStrategy, AudioEncoder, Buffer, Command, EncoderSet, Fps, ImageEncoder, Resolution, SampleRate, VideoEncoder, VideoFormat, VideoReaderMetadata
 
@@ -74,6 +74,18 @@ def create_video_reader(video_path : str, frame_index : int, video_metadata : Vi
 	return open_ffmpeg(commands)
 
 
+def preserve_display_aspect_ratio(video_path : str) -> List[Command]:
+	if is_video(video_path):
+		entries = ffprobe.probe_video_entries(video_path, [ 'display_aspect_ratio' ], 'rotation')
+		width, _, height = entries.get('display_aspect_ratio', '').partition(':')
+		if width.isdigit() and height.isdigit() and int(width) and int(height):
+			# The decoded frames are auto-rotated and do not carry the display matrix.
+			if int(entries.get('rotation', 0)) % 180 == 90:
+				width, height = height, width
+			return [ '-vf', 'setdar=dar=' + width + '/' + height + ':max=65535' ]
+	return []
+
+
 def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_resolution : Resolution, output_video_resolution : Resolution, output_video_fps : Fps) -> subprocess.Popen[Buffer]:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
@@ -96,7 +108,8 @@ def create_video_writer(target_path : str, temp_video_fps : Fps, temp_video_reso
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.concat(
 			ffmpeg_builder.set_video_fps(output_video_fps),
-			ffmpeg_builder.convert_color_space('bt709')
+			ffmpeg_builder.convert_color_space('bt709'),
+			preserve_display_aspect_ratio(state_manager.get_item('target_path'))
 		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.force_output(temp_video_path)
@@ -330,7 +343,8 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 		ffmpeg_builder.concat(
 			ffmpeg_builder.set_video_fps(output_video_fps),
 			ffmpeg_builder.keep_video_alpha(output_video_encoder),
-			ffmpeg_builder.convert_color_space('bt709')
+			ffmpeg_builder.convert_color_space('bt709'),
+			preserve_display_aspect_ratio(target_path)
 		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.force_output(temp_video_path),

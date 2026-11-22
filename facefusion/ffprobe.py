@@ -43,10 +43,10 @@ def probe_audio_entries(audio_path : str, entries : List[str]) -> Dict[str, str]
 	return parse_entries(output)
 
 
-def probe_video_entries(video_path : str, entries : List[str]) -> Dict[str, str]:
+def probe_video_entries(video_path : str, entries : List[str], side_data : str = '') -> Dict[str, str]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_stream('v:0'),
-		ffprobe_builder.show_stream_entries(entries),
+		ffprobe_builder.show_stream_entries(entries, side_data),
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(video_path)
 	)
