@@ -292,6 +292,18 @@ def test_upload_assets(test_client : TestClient) -> None:
 
 		assert upload_response.status_code == 400
 
+		with open(source_path, 'rb') as source_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg')),
+				('file', ('invalid', 'invalid'.encode()))
+			])
+
+		assert upload_response.status_code == 400
+
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
