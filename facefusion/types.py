@@ -681,7 +681,8 @@ StateKey = Literal\
 	'cors_origins',
 	'job_id',
 	'job_status',
-	'step_index'
+	'step_index',
+	'step_frame_total'
 ]
 State = TypedDict('State',
 {
@@ -758,7 +759,8 @@ State = TypedDict('State',
 	'cors_origins' : List[CorsOrigin],
 	'job_id' : JobId,
 	'job_status' : JobStatus,
-	'step_index' : StepIndex
+	'step_index' : StepIndex,
+	'step_frame_total' : int
 })
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

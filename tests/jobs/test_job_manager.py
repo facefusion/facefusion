@@ -4,16 +4,23 @@ from time import sleep
 import pytest
 
 from facefusion import state_manager
+from facefusion.download import conditional_download
 from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, optimize_job, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from facefusion.session_context import resolve_local_id, set_session_id
-from tests.assert_helper import get_test_jobs_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
+
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+	])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -58,6 +65,73 @@ def test_create_job() -> None:
 	submit_job('job-test-create-job')
 
 	assert create_job('job-test-create-job') is False
+
+
+def test_optimize_job() -> None:
+	args_1 =\
+	{
+		'source_paths': [ get_test_example_file('source.jpg') ],
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4'),
+		'trim_frame_start': 10
+	}
+	args_2 =\
+	{
+		'source_paths': [ get_test_example_file('source.jpg'), get_test_example_file('source.mp3') ],
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4')
+	}
+	args_3 =\
+	{
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4'),
+		'output_video_fps': 30
+	}
+	args_4 =\
+	{
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.jpg')
+	}
+
+	assert optimize_job('job-test-optimize-job', 100) is False
+
+	create_job('job-test-optimize-job')
+
+	assert optimize_job('job-test-optimize-job', 100) is False
+
+	add_step('job-test-optimize-job', args_1)
+
+	assert optimize_job('job-test-optimize-job', 0) is False
+	assert optimize_job('job-test-optimize-job', 100) is True
+	assert [ step.get('args').get('trim_frame_start') for step in get_steps('job-test-optimize-job') ] == [ 10, 110, 210 ]
+	assert [ step.get('args').get('trim_frame_end') for step in get_steps('job-test-optimize-job') ] == [ 110, 210, 270 ]
+	assert [ step.get('status') for step in get_steps('job-test-optimize-job') ] == [ 'drafted', 'drafted', 'drafted' ]
+	assert optimize_job('job-test-optimize-job', 100) is False
+
+	create_job('job-test-optimize-job-audio')
+	add_step('job-test-optimize-job-audio', args_2)
+
+	assert optimize_job('job-test-optimize-job-audio', 100) is False
+	assert count_step_total('job-test-optimize-job-audio') == 1
+
+	create_job('job-test-optimize-job-fps')
+	add_step('job-test-optimize-job-fps', args_3)
+
+	assert optimize_job('job-test-optimize-job-fps', 100) is False
+	assert count_step_total('job-test-optimize-job-fps') == 1
+
+	create_job('job-test-optimize-job-image')
+	add_step('job-test-optimize-job-image', args_4)
+
+	assert optimize_job('job-test-optimize-job-image', 100) is False
+	assert count_step_total('job-test-optimize-job-image') == 1
+
+	create_job('job-test-optimize-job-queued')
+	add_step('job-test-optimize-job-queued', args_1)
+	submit_job('job-test-optimize-job-queued')
+
+	assert optimize_job('job-test-optimize-job-queued', 100) is False
+	assert count_step_total('job-test-optimize-job-queued') == 1
 
 
 def test_submit_job() -> None:

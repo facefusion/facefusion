@@ -1128,6 +1128,19 @@ def create_step_index_program() -> ArgumentParser:
 	return program
 
 
+def create_step_frame_total_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+
+	program.add_argument(
+		'--step-frame-total',
+		help = translator.get('help.step_frame_total'),
+		type = int,
+		default = 1000
+	)
+
+	return program
+
+
 def collect_step_program() -> ArgumentParser:
 	return ArgumentParser(
 		parents =
@@ -1259,6 +1272,18 @@ def create_program() -> ArgumentParser:
 		parents =
 		[
 			create_job_id_program(),
+			create_jobs_path_program(),
+			create_log_level_program()
+		],
+		formatter_class = create_help_formatter_large
+	)
+	sub_program.add_parser(
+		'job-optimize',
+		help = translator.get('help.job_optimize'),
+		parents =
+		[
+			create_job_id_program(),
+			create_step_frame_total_program(),
 			create_jobs_path_program(),
 			create_log_level_program()
 		],

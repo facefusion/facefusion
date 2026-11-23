@@ -92,6 +92,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('job_id', args.get('job_id'))
 	apply_state_item('job_status', args.get('job_status'))
 	apply_state_item('step_index', args.get('step_index'))
+	apply_state_item('step_frame_total', args.get('step_frame_total'))
 
 
 def extract_api_args(state : Union[State, ProcessorState]) -> Args:
