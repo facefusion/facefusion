@@ -363,13 +363,19 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		concat_video_file.flush()
 		concat_video_file.close()
 
+	output_audio_encoder = state_manager.get_item('output_audio_encoder')
+	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_path = os.path.abspath(output_path)
 	output_video_format = cast(VideoFormat, get_file_format(output_path))
+
+	output_audio_encoder = fix_audio_encoder(output_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.unsafe_concat(),
 		ffmpeg_builder.set_input(concat_video_file.name),
 		ffmpeg_builder.copy_video_encoder(),
-		ffmpeg_builder.copy_audio_encoder(),
+		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
+		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
+		ffmpeg_builder.sync_audio(),
 		ffmpeg_builder.set_faststart(output_video_format),
 		ffmpeg_builder.force_output(output_path)
 	)
