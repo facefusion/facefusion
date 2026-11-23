@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, session_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file, create_directory, get_file_extension
+from facefusion.filesystem import copy_file, create_directory, get_file_extension, remove_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, init_jobs, move_job_file, submit_job, submit_jobs
 from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
@@ -197,6 +197,18 @@ def test_retry_job() -> None:
 		'target_path': get_test_example_file('target-240p.mp4'),
 		'output_path': get_test_output_path('output-1.mp4')
 	}
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_output_path('target-240p.mp4'),
+		'output_path': get_test_output_path('output-2.mp4')
+	}
+	args_3 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_output_path('target-240p.jpg'),
+		'output_path': get_test_output_path('output-3.jpg')
+	}
 
 	assert retry_job('job-invalid', process_step) is False
 
@@ -209,6 +221,22 @@ def test_retry_job() -> None:
 	move_job_file('job-test-retry-job', 'failed')
 
 	assert retry_job('job-test-retry-job', process_step) is True
+
+	copy_file(get_test_example_file('target-240p.mp4'), get_test_output_path('target-240p.mp4'))
+	create_job('job-test-retry-job-resume')
+	add_step('job-test-retry-job-resume', args_2)
+	add_step('job-test-retry-job-resume', args_3)
+	submit_job('job-test-retry-job-resume')
+
+	assert run_job('job-test-retry-job-resume', process_step) is False
+	assert find_job_ids('failed') == [ 'job-test-retry-job-resume' ]
+
+	remove_file(get_test_output_path('target-240p.mp4'))
+	copy_file(get_test_example_file('target-240p.jpg'), get_test_output_path('target-240p.jpg'))
+
+	assert retry_job('job-test-retry-job-resume', process_step) is True
+	assert is_test_output_file('output-2.mp4') is True
+	assert is_test_output_file('output-3.jpg') is True
 
 
 def test_retry_jobs() -> None:

@@ -24,7 +24,6 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 			session_manager.join_session()
 			return job_manager.move_job_file(job_id, 'completed')
 
-		clean_steps(job_id)
 		process_manager.end()
 		session_manager.join_session()
 
@@ -71,14 +70,18 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 
 def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
+	output_path = step_args.get('output_path')
+	step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
+
+	if is_file(step_output_path) or is_directory(step_output_path):
+		return job_manager.set_step_status(job_id, step_index, 'completed')
 
 	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args) == 0:
-		output_path = step_args.get('output_path')
-		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
-
 		if is_directory(output_path):
 			return move_directory(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
+
 		return move_file(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
+
 	job_manager.set_step_status(job_id, step_index, 'failed')
 	return False
 
