@@ -112,7 +112,7 @@ def test_set_audio_quality() -> None:
 
 
 def test_sync_audio() -> None:
-	assert sync_audio() == [ '-filter:a', 'aresample=async=1' ]
+	assert sync_audio() == [ '-filter:a', 'aresample=async=1:min_hard_comp=0' ]
 
 
 def test_set_faststart() -> None:

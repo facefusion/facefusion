@@ -214,7 +214,7 @@ def set_audio_volume(audio_volume : int) -> List[Command]:
 
 
 def sync_audio() -> List[Command]:
-	return [ '-filter:a', 'aresample=async=1' ]
+	return [ '-filter:a', 'aresample=async=1:min_hard_comp=0' ]
 
 
 def deep_copy_image() -> List[Command]:
