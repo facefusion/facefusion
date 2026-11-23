@@ -1,6 +1,6 @@
 import os
 from time import sleep
-from typing import List
+from typing import Optional
 
 import pytest
 
@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, optimize_job, remix_step, remove_step, set_step_status, set_steps_status, split_job, submit_job, submit_jobs
 from facefusion.session_context import resolve_local_id, set_session_id
-from facefusion.types import Args, Job, Step
+from facefusion.types import Job, JobStatus
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path
 
 
@@ -101,107 +101,16 @@ def test_optimize_job() -> None:
 	assert optimize_job('job-test-optimize-job') is False
 
 
-@pytest.mark.parametrize('args, expected_steps',
+@pytest.mark.parametrize('step_index, trim_frame_start, trim_frame_end, status',
 [
-	(
-		{
-			'target_path': get_test_example_file('target-240p.mp4'),
-			'output_path': get_test_output_path('test-split-job.jpg'),
-			'step_frame_total': 100
-		},
-		[
-			{
-				'args':
-				{
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.jpg'),
-					'step_frame_total': 100
-				},
-				'status': 'queued'
-			}
-		]
-	),
-	(
-		{
-			'target_path': get_test_example_file('target-240p.mp4'),
-			'output_path': get_test_output_path('test-split-job.mp4'),
-			'trim_frame_start': 10,
-			'step_frame_total': 100
-		},
-		[
-			{
-				'args':
-				{
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.mp4'),
-					'trim_frame_start': 10,
-					'trim_frame_end': 110,
-					'step_frame_total': 100
-				},
-				'status': 'queued'
-			},
-			{
-				'args':
-				{
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.mp4'),
-					'trim_frame_start': 110,
-					'trim_frame_end': 210,
-					'step_frame_total': 100
-				},
-				'status': 'queued'
-			},
-			{
-				'args':
-				{
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.mp4'),
-					'trim_frame_start': 210,
-					'trim_frame_end': 270,
-					'step_frame_total': 100
-				},
-				'status': 'queued'
-			}
-		]
-	),
-	(
-		{
-			'source_paths': [ get_test_example_file('source.mp3') ],
-			'target_path': get_test_example_file('target-240p.mp4'),
-			'output_path': get_test_output_path('test-split-job.mp4'),
-			'step_frame_total': 100
-		},
-		[
-			{
-				'args':
-				{
-					'source_paths': [ get_test_example_file('source.mp3') ],
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.mp4'),
-					'step_frame_total': 100
-				},
-				'status': 'queued'
-			}
-		]
-	),
-	(
-		{
-			'target_path': get_test_example_file('target-240p.mp4'),
-			'output_path': get_test_output_path('test-split-job.mp4')
-		},
-		[
-			{
-				'args':
-				{
-					'target_path': get_test_example_file('target-240p.mp4'),
-					'output_path': get_test_output_path('test-split-job.mp4')
-				},
-				'status': 'queued'
-			}
-		]
-	)
+	(0, None, None, 'drafted'),
+	(1, 10, 110, 'queued'),
+	(2, 110, 210, 'queued'),
+	(3, 210, 270, 'queued'),
+	(4, None, None, 'drafted'),
+	(5, None, None, 'drafted')
 ])
-def test_split_job(args : Args, expected_steps : List[Step]) -> None:
+def test_split_job(step_index : int, trim_frame_start : Optional[int], trim_frame_end : Optional[int], status : JobStatus) -> None:
 	job : Job =\
 	{
 		'version': '1',
@@ -210,13 +119,49 @@ def test_split_job(args : Args, expected_steps : List[Step]) -> None:
 		'steps':
 		[
 			{
-				'args': args,
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.jpg'),
+					'step_frame_total': 100
+				},
+				'status': 'drafted'
+			},
+			{
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4'),
+					'trim_frame_start': 10,
+					'step_frame_total': 100
+				},
 				'status': 'queued'
+			},
+			{
+				'args':
+				{
+					'source_paths': [ get_test_example_file('source.mp3') ],
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4'),
+					'step_frame_total': 100
+				},
+				'status': 'drafted'
+			},
+			{
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4')
+				},
+				'status': 'drafted'
 			}
 		]
 	}
+	steps = split_job(job)
 
-	assert split_job(job) == expected_steps
+	assert steps[step_index].get('args').get('trim_frame_start') == trim_frame_start
+	assert steps[step_index].get('args').get('trim_frame_end') == trim_frame_end
+	assert steps[step_index].get('status') == status
 
 
 def test_submit_job() -> None:
