@@ -4,8 +4,7 @@ from time import sleep
 import pytest
 
 from facefusion import state_manager
-from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from facefusion.session_context import resolve_local_id, set_session_id
 from tests.assert_helper import get_test_jobs_directory
 
@@ -281,55 +280,6 @@ def test_add_step() -> None:
 	assert steps[2].get('args') == args_3
 	assert steps[3].get('args') == args_4
 	assert count_step_total('job-test-add-step') == 4
-
-
-def test_remix_step() -> None:
-	args_1 =\
-	{
-		'source_path': 'source-1.jpg',
-		'target_path': 'target-1.jpg',
-		'output_path': 'output-1.jpg'
-	}
-	args_2 =\
-	{
-		'source_path': 'source-2.jpg',
-		'target_path': 'target-2.jpg',
-		'output_path': 'output-2.jpg'
-	}
-	args_3 =\
-	{
-		'source_path': 'source-3.jpg',
-		'target_path': 'target-3.mp4',
-		'output_path': 'output-sequence-3'
-	}
-
-	assert remix_step('job-invalid', 0, args_1) is False
-
-	create_job('job-test-remix-step')
-	add_step('job-test-remix-step', args_1)
-	add_step('job-test-remix-step', args_2)
-	add_step('job-test-remix-step', args_3)
-
-	assert remix_step('job-test-remix-step', 99, args_1) is False
-	assert remix_step('job-test-remix-step', 0, args_2) is True
-	assert remix_step('job-test-remix-step', -1, args_2) is True
-	assert remix_step('job-test-remix-step', 2, args_3) is True
-
-	steps = get_steps('job-test-remix-step')
-
-	assert steps[0].get('args') == args_1
-	assert steps[1].get('args') == args_2
-	assert steps[2].get('args') == args_3
-	assert steps[3].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[3].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 0, args_1.get('output_path'))
-	assert steps[3].get('args').get('output_path') == args_2.get('output_path')
-	assert steps[4].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[4].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 3, args_2.get('output_path'))
-	assert steps[4].get('args').get('output_path') == args_2.get('output_path')
-	assert steps[5].get('args').get('source_path') == args_3.get('source_path')
-	assert steps[5].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 2, args_3.get('output_path'))
-	assert steps[5].get('args').get('output_path') == args_3.get('output_path')
-	assert count_step_total('job-test-remix-step') == 6
 
 
 def test_insert_step() -> None:

@@ -360,18 +360,6 @@ async def create_step(request : Request) -> JSONResponse:
 				'message': translator.get('job_step_not_inserted', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
 
-		if action == 'remix':
-			if job_manager.remix_step(job_id, step_index, step_args):
-				return JSONResponse(
-				{
-					'message': translator.get('ok', 'facefusion.apis')
-				}, status_code = HTTP_201_CREATED)
-
-			return JSONResponse(
-			{
-				'message': translator.get('job_step_not_remixed', 'facefusion.apis')
-			}, status_code = HTTP_400_BAD_REQUEST)
-
 	return JSONResponse(
 	{
 		'message': translator.get('invalid_job_action', 'facefusion.apis')

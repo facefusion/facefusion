@@ -1325,22 +1325,6 @@ def create_program() -> ArgumentParser:
 		formatter_class = create_help_formatter_large
 	)
 	sub_program.add_parser(
-		'job-remix-step',
-		help = translator.get('help.job_remix_step'),
-		parents =
-		[
-			create_job_id_program(),
-			create_step_index_program(),
-			create_config_path_program(),
-			create_jobs_path_program(),
-			create_source_paths_program(),
-			create_output_path_program(),
-			collect_step_program(),
-			create_log_level_program()
-		],
-		formatter_class = create_help_formatter_large
-	)
-	sub_program.add_parser(
 		'job-insert-step',
 		help = translator.get('help.job_insert_step'),
 		parents =

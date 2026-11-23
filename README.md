@@ -39,7 +39,6 @@ commands:
     job-delete                                    delete a drafted, queued, failed or completed job
     job-delete-all                                delete all drafted, queued, failed and completed jobs
     job-add-step                                  add a step to a drafted job
-    job-remix-step                                remix a previous step from a drafted job
     job-insert-step                               insert a step to a drafted job
     job-remove-step                               remove a step from a drafted job
     job-run                                       run a queued job
