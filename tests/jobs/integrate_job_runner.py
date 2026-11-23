@@ -5,6 +5,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
+from facefusion.filesystem import copy_file, remove_file
 from facefusion.jobs.job_manager import clear_jobs, init_jobs, move_job_file, set_steps_status
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, prepare_test_output_directory
 
@@ -124,6 +125,37 @@ def test_job_retry() -> None:
 	assert subprocess.run(commands).returncode == 0
 	assert subprocess.run(commands).returncode == 1
 	assert is_test_output_file('test-job-retry.jpg') is True
+
+
+def test_job_retry_reuses_completed_step() -> None:
+	first_target_path = get_test_output_path('test-job-retry-reuses-completed-step-input.jpg')
+	second_target_path = get_test_output_path('test-job-retry-reuses-completed-step-input-2.jpg')
+	assert copy_file(get_test_example_file('target-240p.jpg'), first_target_path) is True
+	assert copy_file(get_test_example_file('target-240p.jpg'), second_target_path) is True
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry-reuses-completed-step', '--jobs-path', get_test_jobs_directory() ]
+	assert subprocess.run(commands).returncode == 0
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-reuses-completed-step', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', first_target_path, '-o', get_test_output_path('test-job-retry-reuses-completed-step-1.jpg') ]
+	assert subprocess.run(commands).returncode == 0
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-reuses-completed-step', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', second_target_path, '-o', get_test_output_path('test-job-retry-reuses-completed-step-2.jpg') ]
+	assert subprocess.run(commands).returncode == 0
+
+	assert remove_file(second_target_path) is True
+	commands = [ sys.executable, 'facefusion.py', 'job-submit', 'test-job-retry-reuses-completed-step', '--jobs-path', get_test_jobs_directory() ]
+	assert subprocess.run(commands).returncode == 0
+
+	commands = [ sys.executable, 'facefusion.py', 'job-run', 'test-job-retry-reuses-completed-step', '--jobs-path', get_test_jobs_directory() ]
+	assert subprocess.run(commands).returncode == 1
+
+	assert remove_file(first_target_path) is True
+	assert copy_file(get_test_example_file('target-240p.jpg'), second_target_path) is True
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry-reuses-completed-step', '--jobs-path', get_test_jobs_directory() ]
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_output_file('test-job-retry-reuses-completed-step-1.jpg') is True
+	assert is_test_output_file('test-job-retry-reuses-completed-step-2.jpg') is True
 
 
 def test_job_retry_all() -> None:

@@ -269,8 +269,8 @@ def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
 	step_args = args_helper.filter_cli_step_args(args)
 
-	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
-		return 0
+	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id):
+		return run_temporary_job(job_id)
 	return 1
 
 
@@ -293,8 +293,6 @@ def process_batch(args : Args) -> ErrorCode:
 
 				if not job_manager.add_step(job_id, step_args):
 					return 1
-			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
-				return 0
 
 		if not source_paths and target_paths:
 			for index, target_path in enumerate(target_paths):
@@ -307,9 +305,20 @@ def process_batch(args : Args) -> ErrorCode:
 
 				if not job_manager.add_step(job_id, step_args):
 					return 1
-			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
-				return 0
+
+		if target_paths and job_manager.submit_job(job_id):
+			return run_temporary_job(job_id)
 	return 1
+
+
+def run_temporary_job(job_id : JobId) -> ErrorCode:
+	succeeded = False
+	try:
+		succeeded = job_runner.run_job(job_id, process_step)
+		return 0 if succeeded else 1
+	finally:
+		if not succeeded:
+			job_runner.clean_steps(job_id)
 
 
 def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
