@@ -1,13 +1,13 @@
 import os
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, session_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, init_jobs, move_job_file, submit_job, submit_jobs
-from facefusion.jobs.job_runner import clean_steps, collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
+from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, submit_job, submit_jobs
+from facefusion.jobs.job_runner import collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_step, run_steps
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
@@ -210,6 +210,28 @@ def test_retry_job() -> None:
 
 	assert retry_job('job-test-retry-job', process_step) is True
 
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_output_path('test-retry-job.mp4'),
+		'output_path': get_test_output_path('output-1.mp4')
+	}
+	process_step_mock = Mock(side_effect = process_step)
+
+	create_job('job-test-retry-job-resume')
+	add_step('job-test-retry-job-resume', args_1)
+	add_step('job-test-retry-job-resume', args_2)
+	submit_job('job-test-retry-job-resume')
+
+	assert run_job('job-test-retry-job-resume', process_step) is False
+	assert is_test_output_file('output-1-job-test-retry-job-resume-0.mp4') is True
+
+	copy_file(args_1.get('target_path'), args_2.get('target_path'))
+
+	assert retry_job('job-test-retry-job-resume', process_step_mock) is True
+	assert process_step_mock.call_count == 1
+	assert process_step_mock.call_args.args[1] == 1
+
 
 def test_retry_jobs() -> None:
 	args_1 =\
@@ -247,6 +269,29 @@ def test_retry_jobs() -> None:
 	move_job_file('job-test-retry-jobs-2', 'failed')
 
 	assert retry_jobs(process_step, halt_on_error) is True
+
+
+def test_run_step() -> None:
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_output_path('test-run-step.jpg')
+	}
+	process_step_mock = Mock(side_effect = process_step)
+
+	create_job('job-test-run-step')
+	add_step('job-test-run-step', args_1)
+	submit_job('job-test-run-step')
+
+	assert run_step('job-test-run-step', 0, get_steps('job-test-run-step')[0], process_step_mock) is True
+	assert run_step('job-test-run-step', 0, get_steps('job-test-run-step')[0], process_step_mock) is True
+	assert process_step_mock.call_count == 1
+
+	os.remove(get_test_output_path('test-run-step-job-test-run-step-0.jpg'))
+
+	assert run_step('job-test-run-step', 0, get_steps('job-test-run-step')[0], process_step_mock) is True
+	assert process_step_mock.call_count == 2
 
 
 def test_run_steps() -> None:
@@ -337,36 +382,8 @@ def test_finalize_steps() -> None:
 	assert is_test_output_file('output-1.mp4') is True
 	assert is_test_output_file('output-2.mp4') is True
 	assert is_test_output_file('output-3.jpg') is True
+	assert is_test_output_file('output-3-job-test-finalize-steps-3.jpg') is True
 	assert is_test_output_sequence(get_test_output_path('output-4')) is True
-
-
-def test_clean_steps() -> None:
-	args_1 =\
-	{
-		'source_path': get_test_example_file('source.jpg'),
-		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_path('output-1.mp4')
-	}
-	args_2 =\
-	{
-		'source_path': get_test_example_file('source.jpg'),
-		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_path('output-2.jpg')
-	}
-
-	create_job('job-test-clean-steps')
-	add_step('job-test-clean-steps', args_1)
-	add_step('job-test-clean-steps', args_2)
-
-	copy_file(args_1.get('target_path'), get_test_output_path('output-1-job-test-clean-steps-0.mp4'))
-	copy_file(args_2.get('target_path'), get_test_output_path('output-2-job-test-clean-steps-1.jpg'))
-
-	assert is_test_output_file('output-1-job-test-clean-steps-0.mp4') is True
-	assert is_test_output_file('output-2-job-test-clean-steps-1.jpg') is True
-
-	assert clean_steps('job-test-clean-steps') is True
-	assert is_test_output_file('output-1-job-test-clean-steps-0.mp4') is False
-	assert is_test_output_file('output-2-job-test-clean-steps-1.jpg') is False
 
 
 def test_collect_output_set() -> None:

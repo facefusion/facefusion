@@ -99,7 +99,7 @@ def cancel_job(job_id : JobId) -> bool:
 	queued_job_ids = find_job_ids('queued')
 
 	if job_id in queued_job_ids:
-		return set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
+		return clean_steps(job_id) and set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
 	return False
 
 
@@ -118,7 +118,7 @@ def cancel_jobs(halt_on_error : bool) -> bool:
 
 
 def delete_job(job_id : JobId) -> bool:
-	return delete_job_file(job_id)
+	return clean_steps(job_id) and delete_job_file(job_id)
 
 
 def delete_jobs(halt_on_error : bool) -> bool:
@@ -201,7 +201,7 @@ def insert_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> boo
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job and has_step(job_id, step_index):
+	if job and has_step(job_id, step_index) and invalidate_step_outputs(job_id, job.get('steps'), step_index):
 		job.get('steps').insert(step_index,
 		{
 			'args': step_args,
@@ -217,7 +217,7 @@ def remove_step(job_id : JobId, step_index : StepIndex) -> bool:
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job and has_step(job_id, step_index):
+	if job and has_step(job_id, step_index) and invalidate_step_outputs(job_id, job.get('steps'), step_index):
 		job.get('steps').pop(step_index)
 		return update_job_file(job_id, job)
 	return False
@@ -262,6 +262,40 @@ def set_steps_status(job_id : JobId, step_status : StepStatus) -> bool:
 			step['status'] = step_status
 		return update_job_file(job_id, job)
 	return False
+
+
+def requeue_unfinished_steps(job_id : JobId) -> bool:
+	job = read_job_file(job_id)
+
+	if job:
+		for step in job.get('steps'):
+			if step.get('status') in [ 'drafted', 'started', 'failed' ]:
+				step['status'] = 'queued'
+		return update_job_file(job_id, job)
+	return False
+
+
+def invalidate_step_outputs(job_id : JobId, steps : List[Step], step_index : StepIndex) -> bool:
+	for index, step in enumerate(steps[step_index:], step_index):
+		if step.get('status') == 'completed':
+			if not clean_step_output(job_id, index, step):
+				return False
+			step['status'] = 'drafted'
+	return True
+
+
+def clean_step_output(job_id : JobId, step_index : StepIndex, step : Step) -> bool:
+	step_output_path = get_step_output_path(job_id, step_index, step.get('args').get('output_path'))
+
+	if is_file(step_output_path):
+		return remove_file(step_output_path)
+	if is_directory(step_output_path):
+		return remove_directory(step_output_path)
+	return True
+
+
+def clean_steps(job_id : JobId) -> bool:
+	return all(clean_step_output(job_id, step_index, step) for step_index, step in enumerate(get_steps(job_id)))
 
 
 def read_job_file(job_id : JobId) -> Optional[Job]:
