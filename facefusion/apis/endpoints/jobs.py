@@ -189,7 +189,7 @@ async def update_job(request : Request) -> JSONResponse:
 	action = request.query_params.get('action')
 
 	if action == 'optimize':
-		if job_manager.optimize_job(job_id, state_manager.get_item('step_frame_total')):
+		if job_manager.optimize_job(job_id):
 			return JSONResponse(
 			{
 				'message': translator.get('ok', 'facefusion.apis')

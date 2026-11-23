@@ -6,8 +6,9 @@ import pytest
 from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, optimize_job, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, cancel_job, cancel_jobs, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, optimize_job, remix_step, remove_step, set_step_status, set_steps_status, split_job, submit_job, submit_jobs
 from facefusion.session_context import resolve_local_id, set_session_id
+from facefusion.types import Job
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path
 
 
@@ -72,38 +73,84 @@ def test_optimize_job() -> None:
 	{
 		'target_path': get_test_example_file('target-240p.mp4'),
 		'output_path': get_test_output_path('test-optimize-job.mp4'),
-		'trim_frame_start': 10
+		'step_frame_total': 0
 	}
 	args_2 =\
 	{
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_path('test-optimize-job.jpg')
-	}
-	args_3 =\
-	{
-		'source_paths': [ get_test_example_file('source.mp3') ],
-		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_path('test-optimize-job.mp4')
+		'output_path': get_test_output_path('test-optimize-job.mp4'),
+		'trim_frame_start': 10,
+		'step_frame_total': 100
 	}
 
-	assert optimize_job('job-invalid', 1000) is False
+	assert optimize_job('job-invalid') is False
 
 	create_job('job-test-optimize-job')
-	add_step('job-test-optimize-job', args_2)
 	add_step('job-test-optimize-job', args_1)
-	add_step('job-test-optimize-job', args_3)
 
-	assert optimize_job('job-test-optimize-job', 0) is False
-	assert optimize_job('job-test-optimize-job', 1000) is False
+	assert optimize_job('job-test-optimize-job') is False
 
-	submit_job('job-test-optimize-job')
+	add_step('job-test-optimize-job', args_2)
 
-	assert optimize_job('job-test-optimize-job', 100) is True
-	assert [ step.get('args').get('output_path') for step in get_steps('job-test-optimize-job') ] == [ args_2.get('output_path'), args_1.get('output_path'), args_1.get('output_path'), args_1.get('output_path'), args_3.get('output_path') ]
-	assert [ step.get('args').get('trim_frame_start') for step in get_steps('job-test-optimize-job') ] == [ None, 10, 110, 210, None ]
-	assert [ step.get('args').get('trim_frame_end') for step in get_steps('job-test-optimize-job') ] == [ None, 110, 210, 270, None ]
-	assert [ step.get('status') for step in get_steps('job-test-optimize-job') ] == [ 'queued', 'queued', 'queued', 'queued', 'queued' ]
-	assert optimize_job('job-test-optimize-job', 100) is False
+	assert optimize_job('job-test-optimize-job') is True
+	assert count_step_total('job-test-optimize-job') == 4
+	assert [ step.get('args').get('trim_frame_start') for step in get_steps('job-test-optimize-job') ] == [ None, 10, 110, 210 ]
+	assert optimize_job('job-test-optimize-job') is False
+
+
+def test_split_job() -> None:
+	job : Job =\
+	{
+		'version': '1',
+		'date_created': '2026-11-23T00:00:00',
+		'date_updated': None,
+		'steps':
+		[
+			{
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.jpg'),
+					'step_frame_total': 100
+				},
+				'status': 'drafted'
+			},
+			{
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4'),
+					'trim_frame_start': 10,
+					'step_frame_total': 100
+				},
+				'status': 'queued'
+			},
+			{
+				'args':
+				{
+					'source_paths': [ get_test_example_file('source.mp3') ],
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4'),
+					'step_frame_total': 100
+				},
+				'status': 'drafted'
+			},
+			{
+				'args':
+				{
+					'target_path': get_test_example_file('target-240p.mp4'),
+					'output_path': get_test_output_path('test-split-job.mp4')
+				},
+				'status': 'drafted'
+			}
+		]
+	}
+
+	steps = split_job(job)
+
+	assert [ step.get('args').get('trim_frame_start') for step in steps ] == [ None, 10, 110, 210, None, None ]
+	assert [ step.get('args').get('trim_frame_end') for step in steps ] == [ None, 110, 210, 270, None, None ]
+	assert [ step.get('status') for step in steps ] == [ 'drafted', 'queued', 'queued', 'queued', 'drafted', 'drafted' ]
 
 
 def test_submit_job() -> None:

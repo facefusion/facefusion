@@ -665,6 +665,7 @@ StateKey = Literal\
 	'output_video_fps',
 	'workflow_mode',
 	'workflow_strategy',
+	'step_frame_total',
 	'processors',
 	'execution_device_ids',
 	'execution_providers',
@@ -681,8 +682,7 @@ StateKey = Literal\
 	'cors_origins',
 	'job_id',
 	'job_status',
-	'step_index',
-	'step_frame_total'
+	'step_index'
 ]
 State = TypedDict('State',
 {
@@ -743,6 +743,7 @@ State = TypedDict('State',
 	'output_audio_fps' : float,
 	'workflow_mode' : WorkflowMode,
 	'workflow_strategy' : WorkflowStrategy,
+	'step_frame_total' : int,
 	'processors' : List[str],
 	'execution_device_ids' : List[int],
 	'execution_providers' : List[ExecutionProvider],
@@ -759,8 +760,7 @@ State = TypedDict('State',
 	'cors_origins' : List[CorsOrigin],
 	'job_id' : JobId,
 	'job_status' : JobStatus,
-	'step_index' : StepIndex,
-	'step_frame_total' : int
+	'step_index' : StepIndex
 })
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

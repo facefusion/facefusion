@@ -37,33 +37,33 @@ def create_job(job_id : JobId) -> bool:
 	return create_job_file(job_id, job)
 
 
-def optimize_job(job_id : JobId, step_frame_total : int) -> bool:
+def optimize_job(job_id : JobId) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
-		steps = split_job(job, step_frame_total)
+		steps = split_job(job)
+		steps_total = len(steps)
 
-		if len(steps) > count_step_total(job_id):
+		if steps_total > count_step_total(job_id):
 			job['steps'] = steps
 			return update_job_file(job_id, job)
 	return False
 
 
-def split_job(job : Job, step_frame_total : int) -> List[Step]:
+def split_job(job : Job) -> List[Step]:
 	steps : List[Step] = []
 
 	for step in job.get('steps'):
 		trim_frame_start, trim_frame_end = restrict_video_range(step.get('args').get('target_path'), step.get('args').get('trim_frame_start'), step.get('args').get('trim_frame_end'))
-		has_step_frames = step_frame_total > 0
 		has_source_audio = has_audio(step.get('args').get('source_paths'))
-		is_video_output = get_file_format(step.get('args').get('output_path')) in facefusion.choices.video_formats
-		is_split_step = has_step_frames and is_video_output and not has_source_audio
+		has_video_output = get_file_format(step.get('args').get('output_path')) in facefusion.choices.video_formats
+		is_split_step = step.get('args').get('step_frame_total', 0) > 0 and has_video_output and not has_source_audio
 
 		if is_split_step:
-			for step_frame_start in range(trim_frame_start, trim_frame_end, step_frame_total):
+			for step_frame_start in range(trim_frame_start, trim_frame_end, step.get('args').get('step_frame_total')):
 				steps.append(
 				{
-					'args': dict(step.get('args'), trim_frame_start = step_frame_start, trim_frame_end = min(step_frame_start + step_frame_total, trim_frame_end)),
+					'args': dict(step.get('args'), trim_frame_start = step_frame_start, trim_frame_end = min(step_frame_start + step.get('args').get('step_frame_total'), trim_frame_end)),
 					'status': step.get('status')
 				})
 
