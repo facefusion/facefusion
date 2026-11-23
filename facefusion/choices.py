@@ -165,6 +165,7 @@ progress_action_set : ProgressActionSet =\
 }
 
 job_statuses : List[JobStatus] = list(get_args(JobStatus))
+step_frame_total_range : Sequence[int] = create_int_range(0, 10000, 1000)
 
 api_session_limit_range : Sequence[int] = create_int_range(1, 32, 1)
 api_upload_limit_range : Sequence[int] = create_int_range(0, 1024, 32)

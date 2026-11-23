@@ -68,6 +68,20 @@ def create_workflow_program() -> ArgumentParser:
 		scopes = [ 'api', 'cli' ],
 		groups = [ 'workflow' ]
 	)
+	capability_store.register_capability_set(
+		[
+			group_workflow.add_argument(
+				'--step-frame-total',
+				help = translator.get('help.step_frame_total'),
+				type = int,
+				default = config.get_int_value('workflow', 'step_frame_total', '1000'),
+				choices = facefusion.choices.step_frame_total_range,
+				metavar = create_int_metavar(facefusion.choices.step_frame_total_range)
+			)
+		],
+		scopes = [ 'api', 'cli' ],
+		groups = [ 'workflow' ]
+	)
 
 	return program
 
@@ -1256,6 +1270,17 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser(
 		'job-create',
 		help = translator.get('help.job_create'),
+		parents =
+		[
+			create_job_id_program(),
+			create_jobs_path_program(),
+			create_log_level_program()
+		],
+		formatter_class = create_help_formatter_large
+	)
+	sub_program.add_parser(
+		'job-optimize',
+		help = translator.get('help.job_optimize'),
 		parents =
 		[
 			create_job_id_program(),

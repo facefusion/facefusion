@@ -9,9 +9,9 @@ from facefusion import metadata, process_manager, session_context, session_manag
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_step_status, set_steps_status
+from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, find_job_ids, init_jobs, move_job_file, set_step_status, set_steps_status
 from facefusion.program import create_program
-from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory
+from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -195,6 +195,56 @@ def test_create_job(test_client : TestClient) -> None:
 
 		assert create_job_body.get('message') == 'job not created'
 		assert create_job_response.status_code == 400
+
+
+def test_optimize_job(test_client : TestClient) -> None:
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize')
+
+	assert optimize_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session_context.set_session_id(session_id)
+
+	create_job('job-test-optimize-job')
+	add_step('job-test-optimize-job',
+	{
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4'),
+		'step_frame_total': 0
+	})
+
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	optimize_job_body = optimize_job_response.json()
+
+	assert optimize_job_body.get('message') == 'job not optimized'
+	assert count_step_total('job-test-optimize-job') == 1
+	assert optimize_job_response.status_code == 400
+
+	add_step('job-test-optimize-job',
+	{
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4'),
+		'step_frame_total': 100
+	})
+
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	optimize_job_body = optimize_job_response.json()
+
+	assert optimize_job_body.get('message') == 'ok'
+	assert count_step_total('job-test-optimize-job') == 4
+	assert optimize_job_response.status_code == 200
 
 
 def test_submit_jobs(test_client : TestClient) -> None:

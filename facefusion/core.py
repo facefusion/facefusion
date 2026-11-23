@@ -76,7 +76,7 @@ def route(args : Args) -> None:
 		error_code = facefusion.apis.core.start_server(server)
 		hard_exit(error_code)
 
-	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
+	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-optimize', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = route_job_manager(args)
@@ -157,6 +157,13 @@ def route_job_manager(args : Args) -> ErrorCode:
 			logger.info(translator.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(translator.get('job_not_created').format(job_id = state_manager.get_item('job_id')), __name__)
+		return 1
+
+	if state_manager.get_item('command') == 'job-optimize':
+		if job_manager.optimize_job(state_manager.get_item('job_id')):
+			logger.info(translator.get('job_optimized').format(job_id = state_manager.get_item('job_id')), __name__)
+			return 0
+		logger.error(translator.get('job_not_optimized').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-submit':

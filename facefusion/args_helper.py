@@ -65,6 +65,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 	apply_state_item('workflow_mode', args.get('workflow_mode'))
 	apply_state_item('workflow_strategy', args.get('workflow_strategy'))
+	apply_state_item('step_frame_total', args.get('step_frame_total'))
 	apply_state_item('processors', args.get('processors'))
 
 	available_processors = resolve_available_processors()

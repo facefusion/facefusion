@@ -336,6 +336,7 @@ def test_concat_video() -> None:
 	]
 
 	assert concat_video(output_path, temp_output_paths) is True
+	assert probe_audio_entries(output_path, [ 'nb_frames' ]).get('nb_frames') == '229'
 
 
 def test_sanitize_audio_with_strict() -> None:

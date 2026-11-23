@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import abort_empty_stream, capture_video, chain, concat, convert_color_space, enforce_pixel_format, keep_video_alpha, restrict_color_transfer, run, seek_to, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_output_format, set_stream_mode, set_stream_quality, set_thread_count, set_video_encoder, set_video_fps, set_video_quality, set_video_tag
+from facefusion.ffmpeg_builder import abort_empty_stream, capture_video, chain, concat, convert_color_space, enforce_pixel_format, keep_video_alpha, restrict_color_transfer, run, seek_to, select_frame_range, set_audio_quality, set_audio_sample_size, set_faststart, set_output_format, set_stream_mode, set_stream_quality, set_thread_count, set_video_encoder, set_video_fps, set_video_quality, set_video_tag, sync_audio
 
 
 def test_run() -> None:
@@ -109,6 +109,10 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('flac', 0) == []
 	assert set_audio_quality('flac', 50) == []
 	assert set_audio_quality('flac', 100) == []
+
+
+def test_sync_audio() -> None:
+	assert sync_audio() == [ '-filter:a', 'aresample=async=1' ]
 
 
 def test_set_faststart() -> None:
