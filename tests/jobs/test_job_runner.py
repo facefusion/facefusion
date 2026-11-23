@@ -6,7 +6,7 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, session_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file, create_directory, get_file_extension, is_directory
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, set_step_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, optimize_job, set_step_status, submit_job, submit_jobs
 from facefusion.jobs.job_runner import cancel_job, clean_step_output, clean_steps, collect_output_set, delete_job, finalize_steps, insert_step, invalidate_step_outputs, remove_step, retry_job, retry_jobs, run_job, run_jobs, run_step, run_steps
 from facefusion.json import write_json
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
@@ -60,6 +60,12 @@ def process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> Er
 	if copy_file(target_path, output_path):
 		return 0
 	return 1
+
+
+def cancel_and_process_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> ErrorCode:
+	if step_index == 0:
+		assert cancel_job(job_id) is True
+	return process_step(job_id, step_index, step_args)
 
 
 def test_run_job() -> None:
@@ -126,16 +132,21 @@ def test_run_job() -> None:
 	assert end_mock.call_count == 1
 	assert session_manager.has_fork_session(session_id) is False
 
-	create_job('job-test-run-job-cancel')
-	add_step('job-test-run-job-cancel', args_1)
-	add_step('job-test-run-job-cancel', args_3)
-	submit_job('job-test-run-job-cancel')
+	cancelled_job_id = 'job-test-run-job-cancel'
+	process_step_mock = Mock(side_effect = cancel_and_process_step)
 
-	with patch('facefusion.jobs.job_manager.find_job_ids', side_effect = [ [ 'job-test-run-job-cancel' ], [], [] ]):
-		assert run_job('job-test-run-job-cancel', process_step) is False
+	create_job(cancelled_job_id)
+	add_step(cancelled_job_id, args_1)
+	add_step(cancelled_job_id, args_3)
+	submit_job(cancelled_job_id)
 
-	assert find_job_ids('queued') == [ 'job-test-run-job-cancel' ]
+	assert run_job(cancelled_job_id, process_step_mock) is False
+	assert find_job_ids('drafted') == [ cancelled_job_id ]
+	assert [ step.get('status') for step in get_steps(cancelled_job_id) ] == [ 'drafted', 'drafted' ]
+	assert process_step_mock.call_count == 1
 	assert is_test_output_file('output-1.mp4') is False
+	assert is_test_output_file('output-1-job-test-run-job-cancel-0.mp4') is False
+	assert is_test_output_file('output-3-job-test-run-job-cancel-1.jpg') is False
 
 	create_job('job-test-run-job-invalid')
 	add_step('job-test-run-job-invalid', args_6)
@@ -232,6 +243,41 @@ def test_retry_job() -> None:
 	assert retry_job('job-test-retry-job-resume', process_step_mock) is True
 	assert process_step_mock.call_count == 1
 	assert process_step_mock.call_args.args[1] == 1
+
+	job_id = 'job-test-retry-job-optimize'
+	args_3 = \
+	{
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_output_path('test-retry-job-optimize.jpg')
+	}
+	args_4 = dict(args_1, step_frame_total = 150, output_path = get_test_output_path('test-retry-job-optimize.mp4'))
+	args_5 = dict(args_1, output_path = args_4.get('output_path'))
+	args_6 = \
+	{
+		'target_path': get_test_output_path('test-retry-job-optimize-target.jpg'),
+		'output_path': get_test_output_path('test-retry-job-optimize-last.jpg')
+	}
+	process_step_mock.reset_mock()
+
+	create_job(job_id)
+	add_step(job_id, args_3)
+	add_step(job_id, args_4)
+	add_step(job_id, args_5)
+	add_step(job_id, args_6)
+	submit_job(job_id)
+
+	assert run_job(job_id, process_step) is False
+	assert job_id in find_job_ids('failed')
+	assert [ step.get('status') for step in get_steps(job_id) ] == [ 'completed', 'completed', 'completed', 'failed' ]
+	assert is_test_output_file('test-retry-job-optimize-job-test-retry-job-optimize-0.jpg') is True
+	assert is_test_output_file('test-retry-job-optimize-job-test-retry-job-optimize-1.mp4') is True
+	assert is_test_output_file('test-retry-job-optimize-job-test-retry-job-optimize-2.mp4') is True
+	assert optimize_job(job_id) is True
+
+	copy_file(args_3.get('target_path'), args_6.get('target_path'))
+
+	assert retry_job(job_id, process_step_mock) is True
+	assert [ call.args[1] for call in process_step_mock.call_args_list ] == [ 1, 2, 3, 4 ]
 
 
 def test_retry_jobs() -> None:

@@ -42,9 +42,17 @@ def optimize_job(job_id : JobId) -> bool:
 
 	if job:
 		steps = split_job(job)
-		steps_total = len(steps)
+		original_steps = job.get('steps')
 
-		if steps_total > count_step_total(job_id):
+		if len(steps) > len(original_steps):
+			first_changed_index = 0
+			while first_changed_index < len(original_steps) and steps[first_changed_index] == original_steps[first_changed_index]:
+				first_changed_index += 1
+
+			for step in steps[first_changed_index:]:
+				if step.get('status') == 'completed':
+					step['status'] = 'queued'
+
 			job['steps'] = steps
 			return update_job_file(job_id, job)
 	return False

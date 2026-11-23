@@ -29,6 +29,9 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 
 		if job_id in job_manager.find_job_ids('queued'):
 			job_manager.move_job_file(job_id, 'failed')
+		elif is_file(job_manager.suggest_job_path(job_id, 'drafted')):
+			clean_steps(job_id)
+			job_manager.set_steps_status(job_id, 'drafted')
 	return False
 
 
@@ -78,18 +81,19 @@ def run_step(job_id : JobId, step_index : StepIndex, step : Step, process_step :
 
 	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args) == 0:
 		if is_directory(output_path):
-			return move_directory(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
+			return clean_step_output(job_id, step_index, step) and move_directory(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 		return move_file(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 	job_manager.set_step_status(job_id, step_index, 'failed')
 	return False
 
 
 def run_steps(job_id : JobId, process_step : ProcessStep) -> bool:
+	job_path = job_manager.find_job_path(job_id)
 	steps = job_manager.get_steps(job_id)
 
 	if steps:
 		for index, step in enumerate(steps):
-			if not run_step(job_id, index, step, process_step):
+			if not is_file(job_path) or not run_step(job_id, index, step, process_step):
 				return False
 		return True
 	return False
