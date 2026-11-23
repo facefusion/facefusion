@@ -70,68 +70,40 @@ def test_create_job() -> None:
 def test_optimize_job() -> None:
 	args_1 =\
 	{
-		'source_paths': [ get_test_example_file('source.jpg') ],
 		'target_path': get_test_example_file('target-240p.mp4'),
 		'output_path': get_test_output_path('test-optimize-job.mp4'),
 		'trim_frame_start': 10
 	}
 	args_2 =\
 	{
-		'source_paths': [ get_test_example_file('source.jpg'), get_test_example_file('source.mp3') ],
-		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_path('test-optimize-job.mp4')
-	}
-	args_3 =\
-	{
-		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_path('test-optimize-job.mp4'),
-		'output_video_fps': 30
-	}
-	args_4 =\
-	{
 		'target_path': get_test_example_file('target-240p.mp4'),
 		'output_path': get_test_output_path('test-optimize-job.jpg')
 	}
+	args_3 =\
+	{
+		'source_paths': [ get_test_example_file('source.mp3') ],
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_path('test-optimize-job.mp4')
+	}
 
-	assert optimize_job('job-test-optimize-job', 100) is False
+	assert optimize_job('job-invalid', 1000) is False
 
 	create_job('job-test-optimize-job')
-
-	assert optimize_job('job-test-optimize-job', 100) is False
-
+	add_step('job-test-optimize-job', args_2)
 	add_step('job-test-optimize-job', args_1)
+	add_step('job-test-optimize-job', args_3)
 
 	assert optimize_job('job-test-optimize-job', 0) is False
+	assert optimize_job('job-test-optimize-job', 1000) is False
+
+	submit_job('job-test-optimize-job')
+
 	assert optimize_job('job-test-optimize-job', 100) is True
-	assert [ step.get('args').get('trim_frame_start') for step in get_steps('job-test-optimize-job') ] == [ 10, 110, 210 ]
-	assert [ step.get('args').get('trim_frame_end') for step in get_steps('job-test-optimize-job') ] == [ 110, 210, 270 ]
-	assert [ step.get('status') for step in get_steps('job-test-optimize-job') ] == [ 'drafted', 'drafted', 'drafted' ]
+	assert [ step.get('args').get('output_path') for step in get_steps('job-test-optimize-job') ] == [ args_2.get('output_path'), args_1.get('output_path'), args_1.get('output_path'), args_1.get('output_path'), args_3.get('output_path') ]
+	assert [ step.get('args').get('trim_frame_start') for step in get_steps('job-test-optimize-job') ] == [ None, 10, 110, 210, None ]
+	assert [ step.get('args').get('trim_frame_end') for step in get_steps('job-test-optimize-job') ] == [ None, 110, 210, 270, None ]
+	assert [ step.get('status') for step in get_steps('job-test-optimize-job') ] == [ 'queued', 'queued', 'queued', 'queued', 'queued' ]
 	assert optimize_job('job-test-optimize-job', 100) is False
-
-	create_job('job-test-optimize-job-audio')
-	add_step('job-test-optimize-job-audio', args_2)
-
-	assert optimize_job('job-test-optimize-job-audio', 100) is False
-	assert count_step_total('job-test-optimize-job-audio') == 1
-
-	create_job('job-test-optimize-job-fps')
-	add_step('job-test-optimize-job-fps', args_3)
-
-	assert optimize_job('job-test-optimize-job-fps', 100) is False
-	assert count_step_total('job-test-optimize-job-fps') == 1
-
-	create_job('job-test-optimize-job-image')
-	add_step('job-test-optimize-job-image', args_4)
-
-	assert optimize_job('job-test-optimize-job-image', 100) is False
-	assert count_step_total('job-test-optimize-job-image') == 1
-
-	create_job('job-test-optimize-job-queued')
-	add_step('job-test-optimize-job-queued', args_1)
-	submit_job('job-test-optimize-job-queued')
-
-	assert optimize_job('job-test-optimize-job-queued', 100) is False
-	assert count_step_total('job-test-optimize-job-queued') == 1
 
 
 def test_submit_job() -> None:

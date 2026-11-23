@@ -1130,12 +1130,21 @@ def create_step_index_program() -> ArgumentParser:
 
 def create_step_frame_total_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
 
-	program.add_argument(
-		'--step-frame-total',
-		help = translator.get('help.step_frame_total'),
-		type = int,
-		default = 1000
+	capability_store.register_capability_set(
+		[
+			group_misc.add_argument(
+				'--step-frame-total',
+				help = translator.get('help.step_frame_total'),
+				type = int,
+				default = config.get_int_value('misc', 'step_frame_total', '1000'),
+				choices = facefusion.choices.step_frame_total_range,
+				metavar = create_int_metavar(facefusion.choices.step_frame_total_range)
+			)
+		],
+		scopes = [ 'api', 'cli' ],
+		groups = [ 'misc' ]
 	)
 
 	return program
@@ -1250,6 +1259,7 @@ def create_program() -> ArgumentParser:
 			create_jobs_path_program(),
 			create_api_program(),
 			create_cors_program(),
+			create_step_frame_total_program(),
 			collect_step_program(),
 			collect_job_program()
 		],

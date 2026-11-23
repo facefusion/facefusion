@@ -168,6 +168,7 @@ job_statuses : List[JobStatus] = list(get_args(JobStatus))
 
 api_session_limit_range : Sequence[int] = create_int_range(1, 32, 1)
 api_upload_limit_range : Sequence[int] = create_int_range(0, 1024, 32)
+step_frame_total_range : Sequence[int] = create_int_range(0, 10000, 1000)
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
 face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)

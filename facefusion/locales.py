@@ -178,7 +178,7 @@ LOCALES : Locales =\
 			'job_id': 'specify the job id',
 			'job_status': 'specify the job status',
 			'step_index': 'specify the step index',
-			'step_frame_total': 'specify the frame total per step',
+			'step_frame_total': 'specify the frame total per step when optimizing a job (0 = disabled)',
 			'job_list': 'list jobs by status',
 			'job_create': 'create a drafted job',
 			'job_optimize': 'split the video step of a drafted job into multiple steps',

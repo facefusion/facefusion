@@ -197,6 +197,53 @@ def test_create_job(test_client : TestClient) -> None:
 		assert create_job_response.status_code == 400
 
 
+def test_optimize_job(test_client : TestClient) -> None:
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize')
+
+	assert optimize_job_response.status_code == 401
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+	access_token = create_session_body.get('access_token')
+	session_id = session_manager.find_api_session_id(access_token)
+	session_context.set_session_id(session_id)
+
+	create_job('job-test-optimize-job')
+	test_client.post('/jobs/job-test-optimize-job?action=add', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, json =
+	{
+		'processors': [ 'face_swapper' ]
+	})
+	state_manager.init_item('step_frame_total', 0)
+
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	optimize_job_body = optimize_job_response.json()
+
+	assert optimize_job_body.get('message') == 'job not optimized'
+	assert count_step_total('job-test-optimize-job') == 1
+	assert optimize_job_response.status_code == 400
+
+	state_manager.init_item('step_frame_total', 100)
+
+	optimize_job_response = test_client.patch('/jobs/job-test-optimize-job?action=optimize', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+	optimize_job_body = optimize_job_response.json()
+
+	assert optimize_job_body.get('message') == 'ok'
+	assert count_step_total('job-test-optimize-job') == 3
+	assert optimize_job_response.status_code == 200
+
+
 def test_submit_jobs(test_client : TestClient) -> None:
 	submit_jobs_response = test_client.patch('/jobs?action=submit')
 

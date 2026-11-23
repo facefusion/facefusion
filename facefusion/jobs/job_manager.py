@@ -4,13 +4,13 @@ from typing import List, Optional, cast
 
 import facefusion.choices
 from facefusion import state_manager
-from facefusion.filesystem import create_directory, get_file_format, get_file_name, has_audio, is_directory, is_file, is_video, move_file, remove_directory, remove_file, resolve_file_pattern
+from facefusion.filesystem import create_directory, get_file_format, get_file_name, has_audio, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
 from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
 from facefusion.types import Args, Content, Job, JobId, JobSet, JobStatus, Step, StepIndex, StepStatus
-from facefusion.vision import detect_video_fps, restrict_video_range
+from facefusion.vision import restrict_video_range
 
 
 def init_jobs(jobs_path : str) -> bool:
@@ -38,29 +38,38 @@ def create_job(job_id : JobId) -> bool:
 
 
 def optimize_job(job_id : JobId, step_frame_total : int) -> bool:
-	drafted_job_ids = find_job_ids('drafted')
+	job = read_job_file(job_id)
 
-	if step_frame_total > 0 and job_id in drafted_job_ids and count_step_total(job_id) == 1:
-		job = read_job_file(job_id)
-		step_args = job.get('steps')[0].get('args')
-		target_path = step_args.get('target_path')
+	if job:
+		steps = split_job(job, step_frame_total)
 
-		if get_file_format(step_args.get('output_path')) in facefusion.choices.video_formats and is_video(target_path) and not has_audio(step_args.get('source_paths')) and step_args.get('output_video_fps') in [ None, detect_video_fps(target_path) ]:
-			trim_frame_start, trim_frame_end = restrict_video_range(target_path, step_args.get('trim_frame_start'), step_args.get('trim_frame_end'))
-			steps : List[Step] = []
+		if len(steps) > count_step_total(job_id):
+			job['steps'] = steps
+			return update_job_file(job_id, job)
+	return False
 
+
+def split_job(job : Job, step_frame_total : int) -> List[Step]:
+	steps : List[Step] = []
+
+	for step in job.get('steps'):
+		trim_frame_start, trim_frame_end = restrict_video_range(step.get('args').get('target_path'), step.get('args').get('trim_frame_start'), step.get('args').get('trim_frame_end'))
+		has_step_frames = step_frame_total > 0
+		has_source_audio = has_audio(step.get('args').get('source_paths'))
+		is_video_output = get_file_format(step.get('args').get('output_path')) in facefusion.choices.video_formats
+		is_split_step = has_step_frames and is_video_output and not has_source_audio
+
+		if is_split_step:
 			for step_frame_start in range(trim_frame_start, trim_frame_end, step_frame_total):
-				step_frame_end = min(step_frame_start + step_frame_total, trim_frame_end)
 				steps.append(
 				{
-					'args': dict(step_args, trim_frame_start = step_frame_start, trim_frame_end = step_frame_end),
-					'status': 'drafted'
+					'args': dict(step.get('args'), trim_frame_start = step_frame_start, trim_frame_end = min(step_frame_start + step_frame_total, trim_frame_end)),
+					'status': step.get('status')
 				})
 
-			if steps:
-				job['steps'] = steps
-				return update_job_file(job_id, job)
-	return False
+		if not is_split_step:
+			steps.append(step)
+	return steps
 
 
 def submit_job(job_id : JobId) -> bool:
