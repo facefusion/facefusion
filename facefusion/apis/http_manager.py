@@ -17,7 +17,7 @@ def has_request(channel : HttpChannel) -> bool:
 	owner_id = resolve_owner_id()
 	session_http_set : SessionHttpSet = store_creator.get_content(HTTP_STORE, owner_id)
 
-	if session_http_set:
+	if session_http_set and channel in session_http_set:
 		for session_http in session_http_set.get(channel):
 			if not session_http.get('task').done():
 				return True
