@@ -143,6 +143,6 @@ def collect_output_set(job_id : JobId) -> JobOutputSet:
 		output_path = step.get('args').get('output_path')
 
 		if output_path:
-			step_output_path = job_manager.get_step_output_path(job_id, index, output_path)
+			step_output_path = job_helper.get_step_output_path(job_id, index, output_path)
 			job_output_set.setdefault(output_path, []).append(step_output_path)
 	return job_output_set

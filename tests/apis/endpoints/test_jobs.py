@@ -841,17 +841,6 @@ def test_create_step(test_client : TestClient) -> None:
 	assert count_step_total('job-test-create-step') == 2
 	assert create_step_response.status_code == 201
 
-	create_step_response = test_client.post('/jobs/job-test-create-step/0?action=remix', headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	}, json =
-	{
-		'processors': [ 'face_swapper' ]
-	})
-
-	assert count_step_total('job-test-create-step') == 3
-	assert create_step_response.status_code == 201
-
 	create_step_response = test_client.post('/jobs/job-test-create-step?action=invalid', headers =
 	{
 		'Authorization': 'Bearer ' + access_token

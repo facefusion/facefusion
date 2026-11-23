@@ -5,7 +5,6 @@ from typing import List, Optional, cast
 import facefusion.choices
 from facefusion import state_manager
 from facefusion.filesystem import create_directory, get_file_name, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
-from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
 from facefusion.sanitizer import sanitize_job_id
 from facefusion.time_helper import get_current_date_time
@@ -141,20 +140,6 @@ def add_step(job_id : JobId, step_args : Args) -> bool:
 			'status': 'drafted'
 		})
 		return update_job_file(job_id, job)
-	return False
-
-
-def remix_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> bool:
-	steps = get_steps(job_id)
-	step_args = copy(step_args)
-
-	if step_index and step_index < 0:
-		step_index = count_step_total(job_id) - 1
-
-	if has_step(job_id, step_index):
-		output_path = steps[step_index].get('args').get('output_path')
-		step_args['target_path'] = get_step_output_path(job_id, step_index, output_path)
-		return add_step(job_id, step_args)
 	return False
 
 

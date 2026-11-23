@@ -76,7 +76,7 @@ def route(args : Args) -> None:
 		error_code = facefusion.apis.core.start_server(server)
 		hard_exit(error_code)
 
-	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
+	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = route_job_manager(args)
@@ -194,15 +194,6 @@ def route_job_manager(args : Args) -> ErrorCode:
 			logger.info(translator.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(translator.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__)
-		return 1
-
-	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = args_helper.filter_cli_step_args(args)
-
-		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
-			logger.info(translator.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
-			return 0
-		logger.error(translator.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-insert-step':
