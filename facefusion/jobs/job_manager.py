@@ -1,6 +1,6 @@
 import os
 from copy import copy
-from typing import List, Optional, cast
+from typing import Callable, List, Optional, cast
 
 import facefusion.choices
 from facefusion import state_manager
@@ -99,17 +99,17 @@ def cancel_job(job_id : JobId) -> bool:
 	queued_job_ids = find_job_ids('queued')
 
 	if job_id in queued_job_ids:
-		return clean_steps(job_id) and set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
+		return set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
 	return False
 
 
-def cancel_jobs(halt_on_error : bool) -> bool:
+def cancel_jobs(halt_on_error : bool, process_job : Callable[[JobId], bool] = cancel_job) -> bool:
 	queued_job_ids = find_job_ids('queued')
 	has_error = False
 
 	if queued_job_ids:
 		for job_id in queued_job_ids:
-			if not cancel_job(job_id):
+			if not process_job(job_id):
 				has_error = True
 				if halt_on_error:
 					return False
@@ -118,16 +118,16 @@ def cancel_jobs(halt_on_error : bool) -> bool:
 
 
 def delete_job(job_id : JobId) -> bool:
-	return clean_steps(job_id) and delete_job_file(job_id)
+	return delete_job_file(job_id)
 
 
-def delete_jobs(halt_on_error : bool) -> bool:
+def delete_jobs(halt_on_error : bool, process_job : Callable[[JobId], bool] = delete_job) -> bool:
 	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
 	has_error = False
 
 	if job_ids:
 		for job_id in job_ids:
-			if not delete_job(job_id):
+			if not process_job(job_id):
 				has_error = True
 				if halt_on_error:
 					return False
@@ -201,7 +201,7 @@ def insert_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> boo
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job and has_step(job_id, step_index) and invalidate_step_outputs(job_id, job.get('steps'), step_index):
+	if job and has_step(job_id, step_index):
 		job.get('steps').insert(step_index,
 		{
 			'args': step_args,
@@ -217,7 +217,7 @@ def remove_step(job_id : JobId, step_index : StepIndex) -> bool:
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job and has_step(job_id, step_index) and invalidate_step_outputs(job_id, job.get('steps'), step_index):
+	if job and has_step(job_id, step_index):
 		job.get('steps').pop(step_index)
 		return update_job_file(job_id, job)
 	return False
@@ -273,29 +273,6 @@ def requeue_unfinished_steps(job_id : JobId) -> bool:
 				step['status'] = 'queued'
 		return update_job_file(job_id, job)
 	return False
-
-
-def invalidate_step_outputs(job_id : JobId, steps : List[Step], step_index : StepIndex) -> bool:
-	for index, step in enumerate(steps[step_index:], step_index):
-		if step.get('status') == 'completed':
-			if not clean_step_output(job_id, index, step):
-				return False
-			step['status'] = 'drafted'
-	return True
-
-
-def clean_step_output(job_id : JobId, step_index : StepIndex, step : Step) -> bool:
-	step_output_path = get_step_output_path(job_id, step_index, step.get('args').get('output_path'))
-
-	if is_file(step_output_path):
-		return remove_file(step_output_path)
-	if is_directory(step_output_path):
-		return remove_directory(step_output_path)
-	return True
-
-
-def clean_steps(job_id : JobId) -> bool:
-	return all(clean_step_output(job_id, step_index, step) for step_index, step in enumerate(get_steps(job_id)))
 
 
 def read_job_file(job_id : JobId) -> Optional[Job]:

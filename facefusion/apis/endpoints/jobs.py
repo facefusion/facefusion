@@ -109,7 +109,7 @@ async def update_jobs(request : Request) -> JSONResponse:
 		}, status_code = HTTP_400_BAD_REQUEST)
 
 	if action == 'cancel':
-		if job_manager.cancel_jobs(state_manager.get_item('halt_on_error')):
+		if job_manager.cancel_jobs(state_manager.get_item('halt_on_error'), job_runner.cancel_job):
 			jobs_helper.stop_fork_session()
 
 			return JSONResponse(
@@ -221,7 +221,7 @@ async def update_job(request : Request) -> JSONResponse:
 	if action == 'cancel':
 		is_started = job_manager.has_step_status(job_id, 'started')
 
-		if job_manager.cancel_job(job_id):
+		if job_runner.cancel_job(job_id):
 			if is_started:
 				jobs_helper.stop_fork_session()
 
@@ -300,7 +300,7 @@ async def update_job(request : Request) -> JSONResponse:
 
 
 async def delete_jobs(request : Request) -> JSONResponse:
-	if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
+	if job_manager.delete_jobs(state_manager.get_item('halt_on_error'), job_runner.delete_job):
 		return JSONResponse(
 		{
 			'message': translator.get('ok', 'facefusion.apis')
@@ -315,7 +315,7 @@ async def delete_jobs(request : Request) -> JSONResponse:
 async def delete_job(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
 
-	if job_manager.delete_job(job_id):
+	if job_runner.delete_job(job_id):
 		return JSONResponse(
 		{
 			'message': translator.get('ok', 'facefusion.apis')
@@ -361,7 +361,7 @@ async def create_step(request : Request) -> JSONResponse:
 			}, status_code = HTTP_400_BAD_REQUEST)
 
 		if action == 'insert':
-			if job_manager.insert_step(job_id, step_index, step_args):
+			if job_runner.insert_step(job_id, step_index, step_args):
 				return JSONResponse(
 				{
 					'message': translator.get('ok', 'facefusion.apis')
@@ -394,7 +394,7 @@ async def delete_step(request : Request) -> JSONResponse:
 	job_id = request.path_params.get('job_id')
 	step_index = request.path_params.get('step_index')
 
-	if job_manager.remove_step(job_id, step_index):
+	if job_runner.remove_step(job_id, step_index):
 		return JSONResponse(
 		{
 			'message': translator.get('ok', 'facefusion.apis')

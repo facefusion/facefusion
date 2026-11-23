@@ -181,14 +181,14 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete':
-		if job_manager.delete_job(state_manager.get_item('job_id')):
+		if job_runner.delete_job(state_manager.get_item('job_id')):
 			logger.info(translator.get('job_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(translator.get('job_not_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete-all':
-		if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
+		if job_manager.delete_jobs(state_manager.get_item('halt_on_error'), job_runner.delete_job):
 			logger.info(translator.get('job_all_deleted'), __name__)
 			return 0
 		logger.error(translator.get('job_all_not_deleted'), __name__)
@@ -215,14 +215,14 @@ def route_job_manager(args : Args) -> ErrorCode:
 	if state_manager.get_item('command') == 'job-insert-step':
 		step_args = args_helper.filter_cli_step_args(args)
 
-		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
+		if job_runner.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 			return 0
 		logger.error(translator.get('job_step_not_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-remove-step':
-		if job_manager.remove_step(state_manager.get_item('job_id'), state_manager.get_item('step_index')):
+		if job_runner.remove_step(state_manager.get_item('job_id'), state_manager.get_item('step_index')):
 			logger.info(translator.get('job_step_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 			return 0
 		logger.error(translator.get('job_step_not_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)

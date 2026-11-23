@@ -5,9 +5,10 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, session_context, session_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file, create_directory, get_file_extension
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, submit_job, submit_jobs
-from facefusion.jobs.job_runner import collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_step, run_steps
+from facefusion.filesystem import copy_file, create_directory, get_file_extension, is_directory
+from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, find_job_ids, get_steps, init_jobs, move_job_file, set_step_status, submit_job, submit_jobs
+from facefusion.jobs.job_runner import cancel_job, clean_step_output, clean_steps, collect_output_set, delete_job, finalize_steps, insert_step, invalidate_step_outputs, remove_step, retry_job, retry_jobs, run_job, run_jobs, run_step, run_steps
+from facefusion.json import write_json
 from facefusion.types import Args, ErrorCode, JobId, StepIndex
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, is_test_output_sequence, prepare_test_output_directory
 
@@ -384,6 +385,133 @@ def test_finalize_steps() -> None:
 	assert is_test_output_file('output-3.jpg') is True
 	assert is_test_output_file('output-3-job-test-finalize-steps-3.jpg') is True
 	assert is_test_output_sequence(get_test_output_path('output-4')) is True
+
+
+def test_cancel_job() -> None:
+	create_job('job-test-cancel-job-output')
+	add_step('job-test-cancel-job-output', { 'output_path': get_test_output_path('test-cancel-job') })
+	submit_job('job-test-cancel-job-output')
+	create_directory(get_test_output_path('test-cancel-job-job-test-cancel-job-output-0'))
+
+	assert cancel_job('job-test-cancel-job-output') is True
+	assert is_directory(get_test_output_path('test-cancel-job-job-test-cancel-job-output-0')) is False
+
+
+def test_delete_job() -> None:
+	create_job('job-test-delete-job-output')
+	add_step('job-test-delete-job-output', { 'output_path': get_test_output_path('test-delete-job') })
+	create_directory(get_test_output_path('test-delete-job-job-test-delete-job-output-0'))
+
+	assert delete_job('job-test-delete-job-output') is True
+	assert is_directory(get_test_output_path('test-delete-job-job-test-delete-job-output-0')) is False
+
+
+def test_insert_step() -> None:
+	args = { 'output_path': get_test_output_path('test-insert-step') }
+	job_id = 'job-test-insert-step'
+
+	create_job(job_id)
+	add_step(job_id, args)
+	add_step(job_id, args)
+	set_step_status(job_id, 0, 'completed')
+	set_step_status(job_id, 1, 'completed')
+	create_directory(get_test_output_path('test-insert-step-job-test-insert-step-0'))
+	create_directory(get_test_output_path('test-insert-step-job-test-insert-step-1'))
+
+	assert insert_step(job_id, 2, args) is False
+	assert is_directory(get_test_output_path('test-insert-step-job-test-insert-step-1')) is True
+	assert insert_step(job_id, 1, args) is True
+	assert [ step.get('status') for step in get_steps(job_id) ] == [ 'completed', 'drafted', 'drafted' ]
+	assert is_directory(get_test_output_path('test-insert-step-job-test-insert-step-0')) is True
+	assert is_directory(get_test_output_path('test-insert-step-job-test-insert-step-1')) is False
+
+
+def test_remove_step() -> None:
+	args = { 'output_path': get_test_output_path('test-remove-step') }
+	job_id = 'job-test-remove-step'
+
+	create_job(job_id)
+	add_step(job_id, args)
+	add_step(job_id, args)
+	set_step_status(job_id, 0, 'completed')
+	set_step_status(job_id, 1, 'completed')
+	create_directory(get_test_output_path('test-remove-step-job-test-remove-step-0'))
+	create_directory(get_test_output_path('test-remove-step-job-test-remove-step-1'))
+
+	assert remove_step(job_id, 2) is False
+	assert is_directory(get_test_output_path('test-remove-step-job-test-remove-step-0')) is True
+	assert remove_step(job_id, 0) is True
+	assert [ step.get('status') for step in get_steps(job_id) ] == [ 'drafted' ]
+	assert is_directory(get_test_output_path('test-remove-step-job-test-remove-step-0')) is False
+	assert is_directory(get_test_output_path('test-remove-step-job-test-remove-step-1')) is False
+
+
+def test_invalidate_step_outputs() -> None:
+	args_1 =\
+	{
+		'output_path': get_test_output_path('test-invalidate-step-outputs')
+	}
+
+	create_job('job-test-invalidate-step-outputs')
+	add_step('job-test-invalidate-step-outputs', args_1)
+	add_step('job-test-invalidate-step-outputs', args_1)
+	set_step_status('job-test-invalidate-step-outputs', 0, 'completed')
+	set_step_status('job-test-invalidate-step-outputs', 1, 'completed')
+	create_directory(get_test_output_path('test-invalidate-step-outputs-job-test-invalidate-step-outputs-0'))
+	create_directory(get_test_output_path('test-invalidate-step-outputs-job-test-invalidate-step-outputs-1'))
+
+	assert invalidate_step_outputs('job-test-invalidate-step-outputs', 2) is False
+	assert is_directory(get_test_output_path('test-invalidate-step-outputs-job-test-invalidate-step-outputs-1')) is True
+	assert invalidate_step_outputs('job-test-invalidate-step-outputs', -1) is True
+	assert [ step.get('status') for step in get_steps('job-test-invalidate-step-outputs') ] == [ 'completed', 'drafted' ]
+	assert is_directory(get_test_output_path('test-invalidate-step-outputs-job-test-invalidate-step-outputs-0')) is True
+	assert is_directory(get_test_output_path('test-invalidate-step-outputs-job-test-invalidate-step-outputs-1')) is False
+
+
+def test_clean_step_output() -> None:
+	args_1 =\
+	{
+		'output_path': get_test_output_path('test-clean-step-output.json')
+	}
+	args_2 =\
+	{
+		'output_path': get_test_output_path('test-clean-step-output')
+	}
+
+	create_job('job-test-clean-step-output')
+	add_step('job-test-clean-step-output', args_1)
+	add_step('job-test-clean-step-output', args_2)
+	write_json(get_test_output_path('test-clean-step-output-job-test-clean-step-output-0.json'), {})
+	create_directory(get_test_output_path('test-clean-step-output-job-test-clean-step-output-1'))
+
+	steps = get_steps('job-test-clean-step-output')
+
+	assert clean_step_output('job-test-clean-step-output', 0, steps[0]) is True
+	assert clean_step_output('job-test-clean-step-output', 1, steps[1]) is True
+	assert clean_step_output('job-test-clean-step-output', 1, steps[1]) is True
+	assert is_test_output_file('test-clean-step-output-job-test-clean-step-output-0.json') is False
+	assert is_directory(get_test_output_path('test-clean-step-output-job-test-clean-step-output-1')) is False
+
+
+def test_clean_steps() -> None:
+	args_1 =\
+	{
+		'output_path': get_test_output_path('test-clean-steps.json')
+	}
+	args_2 =\
+	{
+		'output_path': get_test_output_path('test-clean-steps')
+	}
+
+	create_job('job-test-clean-steps')
+	add_step('job-test-clean-steps', args_1)
+	add_step('job-test-clean-steps', args_2)
+	write_json(get_test_output_path('test-clean-steps-job-test-clean-steps-0.json'), {})
+	create_directory(get_test_output_path('test-clean-steps-job-test-clean-steps-1'))
+
+	assert clean_steps('job-test-clean-steps') is True
+	assert is_test_output_file('test-clean-steps-job-test-clean-steps-0.json') is False
+	assert is_directory(get_test_output_path('test-clean-steps-job-test-clean-steps-1')) is False
 
 
 def test_collect_output_set() -> None:
