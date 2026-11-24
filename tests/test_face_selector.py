@@ -254,9 +254,9 @@ def test_calculate_face_distance() -> None:
 	face_a, face_b, face_c, face_d = create_faces()
 
 	assert calculate_face_distance(face_a, face_a) == 0.0
-	assert calculate_face_distance(face_a, face_b) == 1.0
-	assert calculate_face_distance(face_a, face_c) == 2.0
-	assert calculate_face_distance(face_d, face_a) == 0.4
+	assert calculate_face_distance(face_a, face_b) == 0.5
+	assert calculate_face_distance(face_a, face_c) == 1.0
+	assert calculate_face_distance(face_d, face_a) == 0.2
 
 
 def test_sort_and_filter_faces() -> None:

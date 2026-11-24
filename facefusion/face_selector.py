@@ -64,7 +64,7 @@ def select_faces(reference_vision_frames : List[VisionFrame], source_vision_fram
 			for source_face, reference_face in zip(source_faces, reference_faces):
 				if compare_faces(target_face, reference_face, match_face_distance):
 					match_source_faces.append(source_face)
-					match_face_distance = calculate_face_distance(target_face, reference_face) / 2
+					match_face_distance = calculate_face_distance(target_face, reference_face)
 
 			if match_source_faces:
 				__source_faces__.append(get_last(match_source_faces))
@@ -172,14 +172,13 @@ def find_match_faces(reference_faces : List[Face], target_faces : List[Face], fa
 
 
 def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
-	current_face_distance = calculate_face_distance(face, reference_face)
-	current_face_distance = float(numpy.interp(current_face_distance, [ 0, 2 ], [ 0, 1 ]))
-	return current_face_distance < face_distance
+	return calculate_face_distance(face, reference_face) < face_distance
 
 
 def calculate_face_distance(face : Face, reference_face : Face) -> float:
 	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
-		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
+		face_distance = 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
+		return float(numpy.interp(face_distance, [ 0, 2 ], [ 0, 1 ]))
 	return 0
 
 
