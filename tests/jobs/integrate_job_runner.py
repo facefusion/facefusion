@@ -5,7 +5,9 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
+from facefusion.filesystem import copy_file, move_file
 from facefusion.jobs.job_manager import clear_jobs, init_jobs, move_job_file, set_steps_status
+from facefusion.vision import count_video_frame_total
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, prepare_test_output_directory
 
 
@@ -124,6 +126,34 @@ def test_job_retry() -> None:
 	assert subprocess.run(commands).returncode == 0
 	assert subprocess.run(commands).returncode == 1
 	assert is_test_output_file('test-job-retry.jpg') is True
+
+	copy_file(get_test_example_file('target-240p.mp4'), get_test_output_path('target-240p-step-1.mp4'))
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry-resume', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-resume', '--workflow-mode', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_output_path('target-240p-step-1.mp4'), '-o', get_test_output_path('test-job-retry-resume.mp4'), '--trim-frame-start', '0', '--trim-frame-end', '10' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-resume', '--workflow-mode', 'image-to-video:frames', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_output_path('target-240p-step-1.mp4'), '-o', get_test_output_path('test-job-retry-resume'), '--trim-frame-start', '0', '--trim-frame-end', '10' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-resume', '--workflow-mode', 'image-to-video', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_output_path('target-240p-step-3.mp4'), '-o', get_test_output_path('test-job-retry-resume.mp4'), '--trim-frame-start', '10', '--trim-frame-end', '20' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-submit', 'test-job-retry-resume', '--jobs-path', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-run', 'test-job-retry-resume', '--jobs-path', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	move_file(get_test_output_path('target-240p-step-1.mp4'), get_test_output_path('target-240p-step-3.mp4'))
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry-resume', '--jobs-path', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert count_video_frame_total(get_test_output_path('test-job-retry-resume.mp4')) == 20
 
 
 def test_job_retry_all() -> None:
