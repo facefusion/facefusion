@@ -62,6 +62,20 @@ def before_all() -> None:
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+			ffmpeg_builder.set_audio_sample_rate(16000),
+			[
+				'-af',
+				'apad',
+				'-shortest'
+			],
+			ffmpeg_builder.set_output(get_test_example_file('target-240p-16khz-apad.mp4'))
+		)
+	).wait()
+
+	ffmpeg.run_ffmpeg(
+		ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
+			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 			ffmpeg_builder.set_audio_sample_rate(48000),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-48khz.mp4'))
 		)
@@ -331,12 +345,13 @@ def test_concat_video() -> None:
 	output_path = get_test_output_path('test-concat-video.mp4')
 	temp_output_paths =\
 	[
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-16khz.mp4')
+		get_test_example_file('target-240p-16khz-apad.mp4'),
+		get_test_example_file('target-240p-16khz-apad.mp4'),
+		get_test_example_file('target-240p-16khz-apad.mp4')
 	]
 
 	assert concat_video(output_path, temp_output_paths) is True
-	assert probe_audio_entries(output_path, [ 'nb_frames' ]).get('nb_frames') == '230'
+	assert probe_audio_entries(output_path, [ 'nb_frames' ]).get('nb_frames') == '507'
 
 
 def test_sanitize_audio_with_strict() -> None:
