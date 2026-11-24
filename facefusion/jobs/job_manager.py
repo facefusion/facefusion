@@ -16,6 +16,7 @@ def init_jobs(jobs_path : str) -> bool:
 
 	for job_status_path in job_status_paths:
 		create_directory(job_status_path)
+
 	return all(is_directory(status_path) for status_path in job_status_paths)
 
 
@@ -41,6 +42,7 @@ def submit_job(job_id : JobId) -> bool:
 
 	if job_id in drafted_job_ids and steps:
 		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued')
+
 	return False
 
 
@@ -52,9 +54,12 @@ def submit_jobs(halt_on_error : bool) -> bool:
 		for job_id in drafted_job_ids:
 			if not submit_job(job_id):
 				has_error = True
+
 				if halt_on_error:
 					return False
+
 		return not has_error
+
 	return False
 
 
@@ -63,6 +68,7 @@ def cancel_job(job_id : JobId) -> bool:
 
 	if job_id in queued_job_ids:
 		return set_steps_status(job_id, 'drafted') and move_job_file(job_id, 'drafted')
+
 	return False
 
 
@@ -74,9 +80,12 @@ def cancel_jobs(halt_on_error : bool) -> bool:
 		for job_id in queued_job_ids:
 			if not cancel_job(job_id):
 				has_error = True
+
 				if halt_on_error:
 					return False
+
 		return not has_error
+
 	return False
 
 
@@ -92,9 +101,12 @@ def delete_jobs(halt_on_error : bool) -> bool:
 		for job_id in job_ids:
 			if not delete_job(job_id):
 				has_error = True
+
 				if halt_on_error:
 					return False
+
 		return not has_error
+
 	return False
 
 
@@ -104,6 +116,7 @@ def find_jobs(job_status : JobStatus) -> JobSet:
 
 	for job_id in job_ids:
 		job_set[job_id] = read_job_file(job_id)
+
 	return job_set
 
 
@@ -117,6 +130,7 @@ def find_job_ids(job_status : JobStatus) -> List[JobId]:
 	for job_file_path in job_file_paths:
 		job_id = get_file_name(job_file_path)
 		job_ids.append(job_id)
+
 	return job_ids
 
 
@@ -140,6 +154,7 @@ def add_step(job_id : JobId, step_args : Args) -> bool:
 			'status': 'drafted'
 		})
 		return update_job_file(job_id, job)
+
 	return False
 
 
@@ -157,6 +172,7 @@ def insert_step(job_id : JobId, step_index : StepIndex, step_args : Args) -> boo
 			'status': 'drafted'
 		})
 		return update_job_file(job_id, job)
+
 	return False
 
 
@@ -169,6 +185,7 @@ def remove_step(job_id : JobId, step_index : StepIndex) -> bool:
 	if job and has_step(job_id, step_index):
 		job.get('steps').pop(step_index)
 		return update_job_file(job_id, job)
+
 	return False
 
 
@@ -177,6 +194,7 @@ def get_steps(job_id : JobId) -> List[Step]:
 
 	if job:
 		return job.get('steps')
+
 	return []
 
 
@@ -185,6 +203,7 @@ def count_step_total(job_id : JobId) -> int:
 
 	if steps:
 		return len(steps)
+
 	return 0
 
 
@@ -197,9 +216,11 @@ def set_step_status(job_id : JobId, step_index : StepIndex, step_status : StepSt
 
 	if job:
 		steps = job.get('steps')
+
 		if has_step(job_id, step_index):
 			steps[step_index]['status'] = step_status
 			return update_job_file(job_id, job)
+
 	return False
 
 
@@ -209,7 +230,9 @@ def set_steps_status(job_id : JobId, step_status : StepStatus) -> bool:
 	if job:
 		for step in job.get('steps'):
 			step['status'] = step_status
+
 		return update_job_file(job_id, job)
+
 	return False
 
 
@@ -224,6 +247,7 @@ def create_job_file(job_id : JobId, job : Job) -> bool:
 	if not is_file(job_path):
 		job_create_path = suggest_job_path(job_id, 'drafted')
 		return write_json(job_create_path, cast(Content, job))
+
 	return False
 
 
@@ -233,6 +257,7 @@ def update_job_file(job_id : JobId, job : Job) -> bool:
 	if is_file(job_path):
 		job['date_updated'] = get_current_date_time().isoformat()
 		return write_json(job_path, cast(Content, job))
+
 	return False
 
 
@@ -253,6 +278,7 @@ def suggest_job_path(job_id : JobId, job_status : JobStatus) -> Optional[str]:
 
 	if job_file_name:
 		return os.path.join(jobs_path, job_status, job_file_name)
+
 	return None
 
 
@@ -267,6 +293,7 @@ def find_job_path(job_id : JobId) -> Optional[str]:
 
 			for job_file_path in job_file_paths:
 				return job_file_path
+
 	return None
 
 
@@ -274,4 +301,5 @@ def get_job_file_name(job_id : JobId) -> Optional[str]:
 	if job_id:
 		job_id = sanitize_job_id(job_id)
 		return job_id + '.json'
+
 	return None

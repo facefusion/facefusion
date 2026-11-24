@@ -25,10 +25,12 @@ def compose_job_list(job_status : JobStatus) -> Tuple[List[TableHeader], List[Li
 				date_updated,
 				job_status
 			])
+
 	return job_headers, job_contents
 
 
 def prepare_describe_datetime(date_time : Optional[str]) -> Optional[str]:
 	if date_time:
 		return describe_time_ago(datetime.fromisoformat(date_time))
+
 	return None

@@ -29,6 +29,7 @@ def run_job(job_id : JobId, process_step : ProcessStep) -> bool:
 
 		if job_id in job_manager.find_job_ids('queued'):
 			job_manager.move_job_file(job_id, 'failed')
+
 	return False
 
 
@@ -40,9 +41,12 @@ def run_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 		for job_id in queued_job_ids:
 			if not run_job(job_id, process_step):
 				has_error = True
+
 				if halt_on_error:
 					return False
+
 		return not has_error
+
 	return False
 
 
@@ -51,6 +55,7 @@ def retry_job(job_id : JobId, process_step : ProcessStep) -> bool:
 
 	if job_id in failed_job_ids:
 		return job_manager.set_steps_status(job_id, 'queued') and job_manager.move_job_file(job_id, 'queued') and run_job(job_id, process_step)
+
 	return False
 
 
@@ -62,9 +67,12 @@ def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 		for job_id in failed_job_ids:
 			if not retry_job(job_id, process_step):
 				has_error = True
+
 				if halt_on_error:
 					return False
+
 		return not has_error
+
 	return False
 
 
@@ -93,7 +101,9 @@ def run_steps(job_id : JobId, process_step : ProcessStep) -> bool:
 		for index, step in enumerate(steps):
 			if not run_step(job_id, index, step, process_step):
 				return False
+
 		return True
+
 	return False
 
 
@@ -107,10 +117,12 @@ def finalize_steps(job_id : JobId) -> bool:
 		if has_videos:
 			if not concat_video(output_path, temp_output_paths):
 				return False
+
 		if not has_videos and has_images:
 			for temp_output_path in temp_output_paths:
 				if not move_file(temp_output_path, output_path):
 					return False
+
 		if not has_videos and not has_images:
 			if not create_directory(output_path):
 				return False
@@ -118,9 +130,11 @@ def finalize_steps(job_id : JobId) -> bool:
 			for temp_output_path in temp_output_paths:
 				if is_directory(temp_output_path):
 					temp_frame_paths = resolve_file_paths(temp_output_path)
+
 					for temp_frame_path in temp_frame_paths:
 						if not copy_file(temp_frame_path, os.path.join(output_path, os.path.basename(temp_frame_path))):
 							return False
+
 	return True
 
 
@@ -132,9 +146,11 @@ def clean_steps(job_id : JobId) -> bool:
 			if is_file(temp_output_path):
 				if not remove_file(temp_output_path):
 					return False
+
 			if is_directory(temp_output_path):
 				if not remove_directory(temp_output_path):
 					return False
+
 	return True
 
 
@@ -148,4 +164,5 @@ def collect_output_set(job_id : JobId) -> JobOutputSet:
 		if output_path:
 			step_output_path = job_helper.get_step_output_path(job_id, index, output_path)
 			job_output_set.setdefault(output_path, []).append(step_output_path)
+
 	return job_output_set
