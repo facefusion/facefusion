@@ -5,7 +5,7 @@ import pytest
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file, move_file, resolve_file_paths
+from facefusion.filesystem import copy_file, move_file
 from facefusion.jobs.job_manager import clear_jobs, init_jobs, move_job_file, set_steps_status
 from facefusion.vision import count_video_frame_total
 from tests.assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, prepare_test_output_directory
