@@ -84,11 +84,10 @@ ColorTransfer : TypeAlias = str
 VisionFrame : TypeAlias = NDArray[Any]
 VisionFrameSet : TypeAlias = Dict[int, VisionFrame]
 
-Mask : TypeAlias = NDArray[Any]
+Anchors : TypeAlias = NDArray[Any]
 Points : TypeAlias = NDArray[Any]
 Offsets : TypeAlias = NDArray[Any]
-Anchors : TypeAlias = NDArray[Any]
-
+Mask : TypeAlias = NDArray[Any]
 Matrix : TypeAlias = NDArray[Any]
 Translation : TypeAlias = NDArray[Any]
 
