@@ -127,24 +127,24 @@ def test_create_face_pointer_set() -> None:
 	assert group_faces([], [], 0.4) == {}
 	assert group_faces(faces, face_pointers, 0.05) == \
 		   {
-		'0': [ face_pointers[0] ],
-		'1': [ face_pointers[1] ],
-		'2': [ face_pointers[2] ],
-		'3': [ face_pointers[3] ]
+		0: [ face_pointers[0] ],
+		1: [ face_pointers[1] ],
+		2: [ face_pointers[2] ],
+		3: [ face_pointers[3] ]
 	}
 	assert group_faces(faces, face_pointers, 0.4) == \
 		   {
-		'0': [ face_pointers[0], face_pointers[1], face_pointers[3] ],
-		'2': [ face_pointers[2] ]
+		0: [ face_pointers[0], face_pointers[1], face_pointers[3] ],
+		2: [ face_pointers[2] ]
 	}
 	assert group_faces([faces[2], faces[0], faces[1], faces[3]], [face_pointers[2], face_pointers[0], face_pointers[1], face_pointers[3]], 0.4) == \
 		   {
-		'0': [ face_pointers[2] ],
-		'1': [ face_pointers[0], face_pointers[1], face_pointers[3] ]
+		0: [ face_pointers[2] ],
+		1: [ face_pointers[0], face_pointers[1], face_pointers[3] ]
 	}
 	assert group_faces(faces, face_pointers, 0.8) == \
 		   {
-		'0': [ face_pointers[0], face_pointers[1], face_pointers[3], face_pointers[2] ]
+		0: [ face_pointers[0], face_pointers[1], face_pointers[3], face_pointers[2] ]
 	}
 
 

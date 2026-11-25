@@ -8,13 +8,10 @@ from facefusion.types import Distance, DistanceMatrix, Face, FacePointer, FacePo
 
 def group_faces(faces : List[Face], face_pointers : List[FacePointer], face_distance : Distance) -> FacePointerSet:
 	face_total = len(faces)
-	group_keys : List[str] = []
 	face_pointer_set : FacePointerSet = {}
 
 	for face_index, face_pointer in enumerate(face_pointers):
-		group_key = str(face_index)
-		group_keys.append(group_key)
-		face_pointer_set[group_key] = [ face_pointer ]
+		face_pointer_set[face_index] = [ face_pointer ]
 
 	if faces:
 		group_distances = calculate_face_distances(faces)
@@ -25,8 +22,8 @@ def group_faces(faces : List[Face], face_pointers : List[FacePointer], face_dist
 			group_index, merge_index = numpy.unravel_index(group_distance_index, group_distances.shape)
 
 			if group_distances[group_index, merge_index] < face_distance:
-				group_key = group_keys[group_index]
-				merge_key = group_keys.pop(merge_index)
+				group_key = list(face_pointer_set.keys())[group_index]
+				merge_key = list(face_pointer_set.keys())[merge_index]
 				group_total = len(face_pointer_set.get(group_key))
 				merge_total = len(face_pointer_set.get(merge_key))
 				group_distances = merge_group_distances(group_distances, group_index, group_total, merge_index, merge_total)
