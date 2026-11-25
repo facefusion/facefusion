@@ -7,40 +7,117 @@ from facefusion.types import Face, FacePointer
 
 
 def create_faces() -> List[Face]:
-	faces = []
+	landmark_generator = numpy.random.default_rng(0)
 
-	for embedding in [ [ 1.0, 0.0 ], [ 0.0, 1.0 ], [ -1.0, 0.0 ], [ 0.6, 0.8 ] ]:
-		faces.append(Face(
+	return\
+	[
+		Face(
 			origin = 'detect',
 			bounding_box = numpy.array([ 0, 0, 10, 10 ]),
+			score_set =
+			{
+				'detector': 0.6,
+				'aligner': 0.0
+			},
+			landmark_set =
+			{
+				'5': landmark_generator.random((5, 2)),
+				'5/68': landmark_generator.random((5, 2)),
+				'68': landmark_generator.random((68, 2))
+			},
+			angle = 0,
+			embedding = numpy.array([ 1.0, 0.0 ]),
+			embedding_norm = numpy.array([ 1.0, 0.0 ]),
+			age = range(20, 29),
+			gender = 'female',
+			race = 'white'
+		),
+		Face(
+			origin = 'detect',
+			bounding_box = numpy.array([ 50, 10, 80, 40 ]),
+			score_set =
+			{
+				'detector': 0.9,
+				'aligner': 0.0
+			},
+			landmark_set =
+			{
+				'5': landmark_generator.random((5, 2)),
+				'5/68': landmark_generator.random((5, 2)),
+				'68': landmark_generator.random((68, 2))
+			},
+			angle = 0,
+			embedding = numpy.array([ 0.0, 1.0 ]),
+			embedding_norm = numpy.array([ 0.0, 1.0 ]),
+			age = range(30, 39),
+			gender = 'male',
+			race = 'black'
+		),
+		Face(
+			origin = 'detect',
+			bounding_box = numpy.array([ 20, 60, 25, 65 ]),
+			score_set =
+			{
+				'detector': 0.7,
+				'aligner': 0.0
+			},
+			landmark_set =
+			{
+				'5': landmark_generator.random((5, 2)),
+				'5/68': landmark_generator.random((5, 2)),
+				'68': landmark_generator.random((68, 2))
+			},
+			angle = 0,
+			embedding = numpy.array([ -1.0, 0.0 ]),
+			embedding_norm = numpy.array([ -1.0, 0.0 ]),
+			age = range(60, 69),
+			gender = 'female',
+			race = 'asian'
+		),
+		Face(
+			origin = 'detect',
+			bounding_box = numpy.array([ 30, 30, 50, 50 ]),
 			score_set =
 			{
 				'detector': 0.5,
 				'aligner': 0.0
 			},
-			landmark_set = {},
+			landmark_set =
+			{
+				'5': landmark_generator.random((5, 2)),
+				'5/68': landmark_generator.random((5, 2)),
+				'68': landmark_generator.random((68, 2))
+			},
 			angle = 0,
-			embedding = numpy.array(embedding),
-			embedding_norm = numpy.array(embedding),
-			age = range(20, 29),
-			gender = 'female',
+			embedding = numpy.array([ 0.6, 0.8 ]),
+			embedding_norm = numpy.array([ 0.6, 0.8 ]),
+			age = range(10, 19),
+			gender = 'male',
 			race = 'white'
-		))
-
-	return faces
+		)
+	]
 
 
 def create_face_pointers() -> List[FacePointer]:
-	face_pointers : List[FacePointer] = []
-
-	for frame_index in range(4):
-		face_pointers.append(
+	return\
+	[
 		{
-			'frame_index': frame_index,
+			'frame_index': 0,
 			'face_position': 0
-		})
-
-	return face_pointers
+		},
+		{
+			'frame_index': 100,
+			'face_position': 1
+		},
+		{
+			'frame_index': 200,
+			'face_position': 2
+		},
+		{
+			'frame_index': 300,
+			'face_position': 3
+		}
+	]
 
 
 def test_create_face_pointer_set() -> None:
