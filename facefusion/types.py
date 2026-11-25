@@ -88,7 +88,7 @@ Anchors : TypeAlias = NDArray[Any]
 Points : TypeAlias = NDArray[Any]
 Offsets : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
-Matrix : TypeAlias = NDArray[Any]
+AffineMatrix : TypeAlias = NDArray[Any]
 DistanceMatrix : TypeAlias = NDArray[Any]
 Translation : TypeAlias = NDArray[Any]
 

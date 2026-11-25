@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.types import Anchors, Angle, BoundingBox, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Offsets, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.types import AffineMatrix, Anchors, Angle, BoundingBox, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Offsets, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
@@ -68,19 +68,19 @@ WARP_TEMPLATE_SET : WarpTemplateSet =\
 }
 
 
-def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
+def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> AffineMatrix:
 	warp_template_norm = WARP_TEMPLATE_SET.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, warp_template_norm, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	return affine_matrix
 
 
-def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Tuple[VisionFrame, AffineMatrix]:
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, warp_template, crop_size)
 	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_vision_frame, affine_matrix
 
 
-def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, AffineMatrix]:
 	source_points = numpy.array([ [ bounding_box[0], bounding_box[1] ], [ bounding_box[2], bounding_box[1] ], [ bounding_box[0], bounding_box[3] ] ]).astype(numpy.float32)
 	target_points = numpy.array([ [ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ] ]).astype(numpy.float32)
 	affine_matrix = cv2.getAffineTransform(source_points, target_points)
@@ -92,13 +92,13 @@ def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : Bo
 	return crop_vision_frame, affine_matrix
 
 
-def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Translation, scale : float, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Translation, scale : float, crop_size : Size) -> Tuple[VisionFrame, AffineMatrix]:
 	affine_matrix = numpy.array([ [ scale, 0, translation[0] ], [ 0, scale, translation[1] ] ])
 	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size)
 	return crop_vision_frame, affine_matrix
 
 
-def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_vision_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
+def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_vision_mask : Mask, affine_matrix : AffineMatrix) -> VisionFrame:
 	paste_bounding_box, paste_matrix = calculate_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
 	x1, y1, x2, y2 = paste_bounding_box
 	paste_width = x2 - x1
@@ -113,7 +113,7 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 	return temp_vision_frame
 
 
-def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
+def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : AffineMatrix) -> Tuple[BoundingBox, AffineMatrix]:
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	crop_height, crop_width = crop_vision_frame.shape[:2]
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
@@ -139,7 +139,7 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_width
 	return anchors
 
 
-def create_rotation_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
+def create_rotation_matrix_and_size(angle : Angle, size : Size) -> Tuple[AffineMatrix, Size]:
 	rotation_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
 	rotation_size = numpy.dot(numpy.abs(rotation_matrix[:, :2]), size)
 	rotation_matrix[:, -1] += (rotation_size - size) * 0.5 #type:ignore[misc]
@@ -161,14 +161,14 @@ def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 	return numpy.array([ x1, y1, x2, y2 ])
 
 
-def transform_points(points : Points, matrix : Matrix) -> Points:
+def transform_points(points : Points, matrix : AffineMatrix) -> Points:
 	points = points.reshape(-1, 1, 2)
 	points = cv2.transform(points, matrix) #type:ignore[assignment]
 	points = points.reshape(-1, 2)
 	return points
 
 
-def transform_bounding_box(bounding_box : BoundingBox, matrix : Matrix) -> BoundingBox:
+def transform_bounding_box(bounding_box : BoundingBox, matrix : AffineMatrix) -> BoundingBox:
 	points = numpy.array(
 	[
 		[ bounding_box[0], bounding_box[1] ],
@@ -246,7 +246,7 @@ def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_ang
 	return 0.4
 
 
-def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
+def merge_matrix(temp_matrices : List[AffineMatrix]) -> AffineMatrix:
 	matrix = numpy.vstack([ temp_matrices[0], [ 0, 0, 1 ] ])
 
 	for temp_matrix in temp_matrices[1:]:
