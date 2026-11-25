@@ -67,7 +67,7 @@ def test_create_face_pointer_group_set() -> None:
 	}
 	assert create_face_pointer_group_set(faces, face_pointers, 0.8) ==\
 	{
-		'0': [ face_pointers[3], face_pointers[1], face_pointers[0], face_pointers[2] ]
+		'0': [ face_pointers[1], face_pointers[3], face_pointers[0], face_pointers[2] ]
 	}
 
 

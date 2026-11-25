@@ -25,7 +25,8 @@ def create_face_pointer_group_set(faces : List[Face], face_pointers : List[FaceP
 		numpy.fill_diagonal(group_distances, numpy.inf)
 
 		for _ in range(face_total - 1):
-			group_index, merge_index = sorted(map(int, numpy.unravel_index(numpy.argmin(group_distances), group_distances.shape)))
+			group_distance_index = numpy.argmin(group_distances)
+			group_index, merge_index = numpy.unravel_index(group_distance_index, group_distances.shape)
 
 			if group_distances[group_index, merge_index] < face_distance:
 				group_key = group_keys[group_index]
@@ -53,7 +54,9 @@ def sort_face_pointer_group(faces : List[Face], face_pointers : List[FacePointer
 	for face in faces:
 		average_distances.append(calculate_face_distance(face, average_face))
 
-	for sort_index in numpy.argsort(average_distances, kind = 'stable').tolist():
+	sort_indexes = numpy.argsort(numpy.round(average_distances, 4), kind = 'stable').tolist()
+
+	for sort_index in sort_indexes:
 		sort_face_pointers.append(face_pointers[sort_index])
 
 	return sort_face_pointers
