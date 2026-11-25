@@ -45,9 +45,9 @@ def get_reference_vision_frames() -> List[VisionFrame]:
 
 	if face_selector_mode == 'reference':
 		for face_selector_map in face_selector_maps:
-			for reference_face in face_selector_map.get('reference_faces'):
+			for reference_face_pointer in face_selector_map.get('reference_face_pointers'):
 				if is_video(target_path):
-					reference_vision_frames.append(read_static_video_frame(target_path, reference_face.get('frame_index')))
+					reference_vision_frames.append(read_static_video_frame(target_path, reference_face_pointer.get('frame_index')))
 				if is_image(target_path):
 					reference_vision_frames.append(read_static_image(target_path))
 

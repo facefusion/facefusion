@@ -87,8 +87,8 @@ def conditional_get_reference_vision_frames() -> List[VisionFrame]:
 	reference_vision_frames = []
 
 	for face_selector_map in face_selector_maps:
-		for reference_face in face_selector_map.get('reference_faces'):
-			reference_vision_frames.append(conditional_get_reference_vision_frame(reference_face.get('frame_index')))
+		for reference_face_pointer in face_selector_map.get('reference_face_pointers'):
+			reference_vision_frames.append(conditional_get_reference_vision_frame(reference_face_pointer.get('frame_index')))
 
 	return reference_vision_frames
 

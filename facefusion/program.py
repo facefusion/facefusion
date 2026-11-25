@@ -442,12 +442,12 @@ def create_face_selector_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_face_selector.add_argument(
-				'--reference-face-distance',
-				help = translator.get('help.reference_face_distance'),
+				'--reference-match-distance',
+				help = translator.get('help.reference_match_distance'),
 				type = float,
-				default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'),
-				choices = facefusion.choices.reference_face_distance_range,
-				metavar = create_float_metavar(facefusion.choices.reference_face_distance_range)
+				default = config.get_float_value('face_selector', 'reference_match_distance', '0.3'),
+				choices = facefusion.choices.reference_match_distance_range,
+				metavar = create_float_metavar(facefusion.choices.reference_match_distance_range)
 			)
 		],
 		scopes = [ 'api', 'cli' ],

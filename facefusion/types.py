@@ -270,8 +270,8 @@ FacePointer = TypedDict('FacePointer',
 })
 FaceSelectorMap = TypedDict('FaceSelectorMap',
 {
-	'source_faces' : List[FacePointer],
-	'reference_faces' : List[FacePointer]
+	'source_face_pointers' : List[FacePointer],
+	'reference_face_pointers' : List[FacePointer]
 })
 FaceOccluderModel = Literal['many', 'xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
@@ -637,7 +637,7 @@ StateKey = Literal\
 	'face_selector_age_start',
 	'face_selector_age_end',
 	'face_selector_maps',
-	'reference_face_distance',
+	'reference_match_distance',
 	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
@@ -714,7 +714,7 @@ State = TypedDict('State',
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'face_selector_maps' : List[Map],
-	'reference_face_distance' : float,
+	'reference_match_distance' : float,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
