@@ -453,6 +453,20 @@ def create_face_selector_program() -> ArgumentParser:
 		scopes = [ 'api', 'cli' ],
 		groups = [ 'face_selector' ]
 	)
+	capability_store.register_capability_set(
+		[
+			group_face_selector.add_argument(
+				'--reference-group-distance',
+				help = translator.get('help.reference_group_distance'),
+				type = float,
+				default = config.get_float_value('face_selector', 'reference_group_distance', '0.3'),
+				choices = facefusion.choices.reference_group_distance_range,
+				metavar = create_float_metavar(facefusion.choices.reference_group_distance_range)
+			)
+		],
+		scopes = [ 'api' ],
+		groups = [ 'face_selector' ]
+	)
 
 	return program
 

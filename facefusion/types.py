@@ -89,6 +89,7 @@ Points : TypeAlias = NDArray[Any]
 Offsets : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
 Matrix : TypeAlias = NDArray[Any]
+DistanceMatrix : TypeAlias = NDArray[Any]
 Translation : TypeAlias = NDArray[Any]
 
 Audio : TypeAlias = NDArray[Any]
@@ -271,6 +272,8 @@ FacePointer = TypedDict('FacePointer',
 	'frame_index' : int,
 	'face_position' : int
 })
+FaceGroupSet : TypeAlias = Dict[str, List[Face]]
+FacePointerGroupSet : TypeAlias = Dict[str, List[FacePointer]]
 FaceSelectorMap = TypedDict('FaceSelectorMap',
 {
 	'source_face_pointers' : List[FacePointer],
@@ -404,7 +407,7 @@ VideoAsset = TypedDict('VideoAsset',
 AssetMetadata : TypeAlias = AudioMetadata | ImageMetadata | VideoMetadata
 AssetSet : TypeAlias = Dict[AssetId, AudioAsset | ImageAsset | VideoAsset]
 
-AssetAction = Literal['capture']
+AssetAction = Literal['capture', 'group']
 AssetSubject = Literal['frame', 'face']
 
 BenchmarkMode = Literal['warm', 'cold']
@@ -641,6 +644,7 @@ StateKey = Literal\
 	'face_selector_age_end',
 	'face_selector_maps',
 	'reference_match_distance',
+	'reference_group_distance',
 	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
@@ -718,6 +722,7 @@ State = TypedDict('State',
 	'face_selector_age_end' : int,
 	'face_selector_maps' : List[Map],
 	'reference_match_distance' : Distance,
+	'reference_group_distance' : Distance,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,

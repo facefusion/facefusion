@@ -34,6 +34,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_selector_race', args.get('face_selector_race'))
 	apply_state_item('face_selector_maps', normalize_maps(args.get('face_selector_maps')))
 	apply_state_item('reference_match_distance', args.get('reference_match_distance'))
+	apply_state_item('reference_group_distance', args.get('reference_group_distance'))
 	apply_state_item('face_tracker_score', args.get('face_tracker_score'))
 	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
 	apply_state_item('face_parser_model', args.get('face_parser_model'))

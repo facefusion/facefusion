@@ -119,6 +119,7 @@ LOCALES : Locales =\
 			'face_selector_race': 'filter the detected faces based on their race',
 			'face_selector_map': 'map the source faces to the reference faces',
 			'reference_match_distance': 'specify the similarity between the reference face and target face',
+			'reference_group_distance': 'specify the similarity between the faces of a group',
 			'face_tracker_score': 'specify the overlap score used to match the tracked faces',
 			'face_occluder_model': 'choose the model responsible for the occlusion mask',
 			'face_parser_model': 'choose the model responsible for the region mask',
