@@ -7,7 +7,7 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
+from facefusion import face_aligner, face_classifier, face_detector, face_recognizer, ffmpeg, ffmpeg_builder, metadata, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -18,6 +18,22 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 def before_all() -> None:
 	state_manager.init()
 	state_manager.init_item('api_upload_limit', 512)
+	state_manager.init_item('execution_device_ids', [ 0 ])
+	state_manager.init_item('execution_providers', [ 'cpu' ])
+	state_manager.init_item('download_providers', [ 'github' ])
+	state_manager.init_item('face_detector_angles', [ 0 ])
+	state_manager.init_item('face_detector_model', 'many')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
+	state_manager.init_item('face_detector_score', 0.5)
+	state_manager.init_item('face_aligner_model', 'many')
+	state_manager.init_item('face_aligner_score', 0.5)
+	state_manager.init_item('reference_group_distance', 0.5)
+
+	face_classifier.pre_check()
+	face_detector.pre_check()
+	face_aligner.pre_check()
+	face_recognizer.pre_check()
 
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
@@ -191,6 +207,79 @@ def test_get_asset(test_client : TestClient) -> None:
 	assert get_response.content.count('Content-Type: image/jpeg'.encode()) == 1
 
 	assert get_response.status_code == 200
+
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, params =
+	{
+		'subject': 'face',
+		'action': 'group',
+		'frame_index': [ '0', '1' ]
+	})
+
+	assert get_response.json() ==\
+	{
+		'0':
+		[
+			{
+				'frame_index': 0,
+				'face_position': 0
+			}
+		]
+	}
+
+	assert get_response.status_code == 200
+
+	with open(get_test_example_file('target-240p.mp4'), 'rb') as target_file:
+		upload_response = test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target-240p.mp4', target_file.read(), 'video/mp4'))
+		])
+
+	target_asset_ids = upload_response.json().get('asset_ids')
+
+	get_response = test_client.get('/assets/' + target_asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, params =
+	{
+		'subject': 'face',
+		'action': 'group',
+		'frame_index': [ '0', '100' ]
+	})
+
+	assert get_response.json() ==\
+	{
+		'0':
+		[
+			{
+				'frame_index': 0,
+				'face_position': 0
+			},
+			{
+				'frame_index': 100,
+				'face_position': 0
+			}
+		]
+	}
+
+	assert get_response.status_code == 200
+
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	}, params =
+	{
+		'subject': 'invalid',
+		'action': 'group',
+		'frame_index': [ '0' ]
+	})
+
+	assert get_response.status_code == 400
 
 	get_response = test_client.get('/assets/' + asset_ids[0], headers =
 	{

@@ -10,7 +10,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import translator
 from facefusion.apis import asset_store, http_manager
-from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, save_asset_files
+from facefusion.apis.asset_helper import capture_asset_faces, capture_asset_frames, group_asset_faces, save_asset_files
 from facefusion.apis.asset_validator import validate_asset_resolution, validate_asset_type, validate_frame_index, validate_subject
 from facefusion.apis.media_validator import validate_resolution
 from facefusion.apis.multipart_helper import create_multipart_response
@@ -70,6 +70,24 @@ async def get_asset(request : Request) -> Response:
 
 			if is_vision_frames(vision_frames):
 				return create_multipart_response(vision_frames)
+
+		return Response(status_code = HTTP_400_BAD_REQUEST)
+
+	if action == 'group':
+		if asset and asset.get('media') in [ 'image', 'video' ]:
+			subject = request.query_params.get('subject')
+			frame_indexes = request.query_params.getlist('frame_index')
+
+			if validate_frame_index(frame_indexes) and validate_subject(subject):
+				if subject == 'face':
+					http_task = asyncio.current_task()
+
+					http_manager.start_request('group', http_task)
+					face_pointer_group_set = await asyncio.to_thread(group_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes)
+
+					http_manager.end_request('group', http_task)
+
+					return JSONResponse(face_pointer_group_set, status_code = HTTP_200_OK)
 
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 

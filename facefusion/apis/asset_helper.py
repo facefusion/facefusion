@@ -9,10 +9,11 @@ from starlette.datastructures import UploadFile
 import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager, translator
 from facefusion.face_creator import get_many_faces
+from facefusion.face_grouper import create_face_pointer_group_set
 from facefusion.face_helper import warp_face_by_bounding_box
 from facefusion.face_selector import sort_faces_by_order
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
-from facefusion.types import ImageAsset, ImageMetadata, MediaType, VideoAsset, VisionFrame
+from facefusion.types import Face, FacePointer, FacePointerGroupSet, ImageAsset, ImageMetadata, MediaType, VideoAsset, VisionFrame
 from facefusion.vision import detect_image_resolution, fit_contain_frame, is_vision_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
@@ -128,3 +129,29 @@ def capture_asset_faces(asset : ImageAsset | VideoAsset, frame_indexes : List[st
 			capture_vision_frames.append(capture_vision_frame)
 
 	return capture_vision_frames
+
+
+def group_asset_faces(asset : ImageAsset | VideoAsset, frame_indexes : List[str]) -> FacePointerGroupSet:
+	reference_group_distance = state_manager.get_item('reference_group_distance')
+	target_faces : List[Face] = []
+	face_pointers : List[FacePointer] = []
+
+	if asset.get('media') == 'image':
+		frame_indexes = frame_indexes[:1]
+
+	for frame_index in frame_indexes:
+		for temp_vision_frame in read_asset_frames(asset, [ frame_index ]):
+			faces = get_many_faces([ temp_vision_frame ])
+			faces = sort_faces_by_order(faces, 'large-small')
+
+			for face_position, face in enumerate(faces):
+				__frame_index__ = int(frame_index)
+				face_pointer : FacePointer =\
+				{
+					'frame_index': __frame_index__,
+					'face_position': face_position
+				}
+				target_faces.append(face)
+				face_pointers.append(face_pointer)
+
+	return create_face_pointer_group_set(target_faces, face_pointers, reference_group_distance)
