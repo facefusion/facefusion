@@ -13,6 +13,7 @@ from onnxruntime import InferenceSession
 
 Scale : TypeAlias = float
 Score : TypeAlias = float
+Distance : TypeAlias = float
 Angle : TypeAlias = int
 
 Detection : TypeAlias = NDArray[Any]
@@ -79,13 +80,15 @@ CameraPoolSet = TypedDict('CameraPoolSet',
 ColorMode = Literal['rgb', 'rgba']
 ColorSpace = Literal['bt601', 'bt709', 'bt2020']
 ColorTransfer : TypeAlias = str
+
 VisionFrame : TypeAlias = NDArray[Any]
 VisionFrameSet : TypeAlias = Dict[int, VisionFrame]
-Mask : TypeAlias = NDArray[Any]
-Points : TypeAlias = NDArray[Any]
-Distance : TypeAlias = NDArray[Any]
-Matrix : TypeAlias = NDArray[Any]
+
 Anchors : TypeAlias = NDArray[Any]
+Points : TypeAlias = NDArray[Any]
+Offsets : TypeAlias = NDArray[Any]
+Mask : TypeAlias = NDArray[Any]
+Matrix : TypeAlias = NDArray[Any]
 Translation : TypeAlias = NDArray[Any]
 
 Audio : TypeAlias = NDArray[Any]
@@ -270,8 +273,8 @@ FacePointer = TypedDict('FacePointer',
 })
 FaceSelectorMap = TypedDict('FaceSelectorMap',
 {
-	'source_faces' : List[FacePointer],
-	'reference_faces' : List[FacePointer]
+	'source_face_pointers' : List[FacePointer],
+	'reference_face_pointers' : List[FacePointer]
 })
 FaceOccluderModel = Literal['many', 'xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
@@ -637,7 +640,7 @@ StateKey = Literal\
 	'face_selector_age_start',
 	'face_selector_age_end',
 	'face_selector_maps',
-	'reference_face_distance',
+	'reference_match_distance',
 	'face_tracker_score',
 	'face_occluder_model',
 	'face_parser_model',
@@ -714,7 +717,7 @@ State = TypedDict('State',
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'face_selector_maps' : List[Map],
-	'reference_face_distance' : float,
+	'reference_match_distance' : Distance,
 	'face_tracker_score' : Score,
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
