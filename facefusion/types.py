@@ -272,8 +272,7 @@ FacePointer = TypedDict('FacePointer',
 	'frame_index' : int,
 	'face_position' : int
 })
-FaceGroupSet : TypeAlias = Dict[str, List[Face]]
-FacePointerGroupSet : TypeAlias = Dict[str, List[FacePointer]]
+FacePointerSet : TypeAlias = Dict[str, List[FacePointer]]
 FaceSelectorMap = TypedDict('FaceSelectorMap',
 {
 	'source_face_pointers' : List[FacePointer],

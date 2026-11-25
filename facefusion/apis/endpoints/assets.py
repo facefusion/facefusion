@@ -83,11 +83,11 @@ async def get_asset(request : Request) -> Response:
 					http_task = asyncio.current_task()
 
 					http_manager.start_request('group', http_task)
-					face_pointer_group_set = await asyncio.to_thread(group_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes)
+					face_pointer_set = await asyncio.to_thread(group_asset_faces, cast(ImageAsset | VideoAsset, asset), frame_indexes)
 
 					http_manager.end_request('group', http_task)
 
-					return JSONResponse(face_pointer_group_set, status_code = HTTP_200_OK)
+					return JSONResponse(face_pointer_set, status_code = HTTP_200_OK)
 
 		return Response(status_code = HTTP_400_BAD_REQUEST)
 

@@ -4,21 +4,19 @@ import numpy
 
 from facefusion.face_creator import average_face_identity
 from facefusion.face_selector import calculate_face_distance
-from facefusion.types import Distance, DistanceMatrix, Face, FaceGroupSet, FacePointer, FacePointerGroupSet
+from facefusion.types import Distance, DistanceMatrix, Face, FacePointer, FacePointerSet
 
 
-def create_face_pointer_group_set(faces : List[Face], face_pointers : List[FacePointer], face_distance : Distance) -> FacePointerGroupSet:
+def create_face_pointer_set(faces : List[Face], face_pointers : List[FacePointer], face_distance : Distance) -> FacePointerSet:
 	face_total = len(faces)
 	group_keys : List[str] = []
-	face_group_set : FaceGroupSet = {}
-	face_pointer_group_set : FacePointerGroupSet = {}
-	sort_face_pointer_group_set : FacePointerGroupSet = {}
+	merge_face_pointer_set : FacePointerSet = {}
+	sort_face_pointer_set : FacePointerSet = {}
 
-	for face_index, (face, face_pointer) in enumerate(zip(faces, face_pointers)):
+	for face_index, face_pointer in enumerate(face_pointers):
 		group_key = str(face_index)
 		group_keys.append(group_key)
-		face_group_set[group_key] = [ face ]
-		face_pointer_group_set[group_key] = [ face_pointer ]
+		merge_face_pointer_set[group_key] = [ face_pointer ]
 
 	if faces:
 		group_distances = calculate_face_distances(faces)
@@ -31,19 +29,24 @@ def create_face_pointer_group_set(faces : List[Face], face_pointers : List[FaceP
 			if group_distances[group_index, merge_index] < face_distance:
 				group_key = group_keys[group_index]
 				merge_key = group_keys.pop(merge_index)
-				group_total = len(face_group_set.get(group_key))
-				merge_total = len(face_group_set.get(merge_key))
+				group_total = len(merge_face_pointer_set.get(group_key))
+				merge_total = len(merge_face_pointer_set.get(merge_key))
 				group_distances = merge_group_distances(group_distances, group_index, group_total, merge_index, merge_total)
-				face_group_set[group_key].extend(face_group_set.pop(merge_key))
-				face_pointer_group_set[group_key].extend(face_pointer_group_set.pop(merge_key))
+
+				merge_face_pointer_set[group_key].extend(merge_face_pointer_set.pop(merge_key))
 
 	for group_key in group_keys:
-		face_pointer_group_set[group_key] = sort_face_pointer_group(face_group_set.get(group_key), face_pointer_group_set.get(group_key))
+		group_faces = []
 
-	for face_pointer_group_index, face_pointer_group in enumerate(sorted(face_pointer_group_set.values(), key = len, reverse = True)):
-		sort_face_pointer_group_set[str(face_pointer_group_index)] = face_pointer_group
+		for face_pointer in merge_face_pointer_set.get(group_key):
+			group_faces.append(faces[face_pointers.index(face_pointer)])
 
-	return sort_face_pointer_group_set
+		merge_face_pointer_set[group_key] = sort_face_pointer_group(group_faces, merge_face_pointer_set.get(group_key))
+
+	for face_pointer_group_index, face_pointer_group in enumerate(sorted(merge_face_pointer_set.values(), key = len, reverse = True)):
+		sort_face_pointer_set[str(face_pointer_group_index)] = face_pointer_group
+
+	return sort_face_pointer_set
 
 
 def sort_face_pointer_group(faces : List[Face], face_pointers : List[FacePointer]) -> List[FacePointer]:
