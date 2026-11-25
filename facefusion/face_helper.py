@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.types import Anchors, Angle, BoundingBox, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Offsets, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
@@ -182,18 +182,18 @@ def transform_bounding_box(bounding_box : BoundingBox, matrix : Matrix) -> Bound
 	return normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
 
 
-def distance_to_bounding_box(points : Points, distance : Distance) -> BoundingBox:
-	x1 = points[:, 0] - distance[:, 0]
-	y1 = points[:, 1] - distance[:, 1]
-	x2 = points[:, 0] + distance[:, 2]
-	y2 = points[:, 1] + distance[:, 3]
+def distance_to_bounding_box(points : Points, offsets : Offsets) -> BoundingBox:
+	x1 = points[:, 0] - offsets[:, 0]
+	y1 = points[:, 1] - offsets[:, 1]
+	x2 = points[:, 0] + offsets[:, 2]
+	y2 = points[:, 1] + offsets[:, 3]
 	bounding_box = numpy.column_stack([ x1, y1, x2, y2 ])
 	return bounding_box
 
 
-def distance_to_face_landmark_5(points : Points, distance : Distance) -> FaceLandmark5:
-	x = points[:, 0::2] + distance[:, 0::2]
-	y = points[:, 1::2] + distance[:, 1::2]
+def distance_to_face_landmark_5(points : Points, offsets : Offsets) -> FaceLandmark5:
+	x = points[:, 0::2] + offsets[:, 0::2]
+	y = points[:, 1::2] + offsets[:, 1::2]
 	face_landmark_5 = numpy.stack((x, y), axis = -1)
 	return face_landmark_5
 

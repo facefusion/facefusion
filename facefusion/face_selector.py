@@ -7,7 +7,7 @@ from facefusion import state_manager
 from facefusion.common_helper import get_first, get_last, get_middle
 from facefusion.face_creator import average_face_identity, get_one_face, get_static_faces
 from facefusion.face_tracker import track_faces
-from facefusion.types import Face, FacePointer, FaceSelectorMap, FaceSelectorOrder, Gender, Map, Race, Score, VisionFrame
+from facefusion.types import Distance, Face, FacePointer, FaceSelectorMap, FaceSelectorOrder, Gender, Map, Race, Score, VisionFrame
 
 
 def select_faces(reference_vision_frames : List[VisionFrame], source_vision_frames : List[VisionFrame], target_vision_frames : List[VisionFrame]) -> Tuple[List[Face], List[Face]]:
@@ -159,23 +159,23 @@ def extract_reference_faces(reference_vision_frames : List[VisionFrame], referen
 	return faces
 
 
-def find_match_faces(reference_faces : List[Face], target_faces : List[Face], match_distance : float) -> List[Face]:
+def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : Distance) -> List[Face]:
 	match_faces : List[Face] = []
 
 	for reference_face in reference_faces:
 		if reference_face:
 			for index, target_face in enumerate(target_faces):
-				if compare_faces(target_face, reference_face, match_distance):
+				if compare_faces(target_face, reference_face, face_distance):
 					match_faces.append(target_faces[index])
 
 	return match_faces
 
 
-def compare_faces(face : Face, reference_face : Face, match_distance : float) -> bool:
-	return calculate_face_distance(face, reference_face) < match_distance
+def compare_faces(face : Face, reference_face : Face, face_distance : Distance) -> bool:
+	return calculate_face_distance(face, reference_face) < face_distance
 
 
-def calculate_face_distance(face : Face, reference_face : Face) -> float:
+def calculate_face_distance(face : Face, reference_face : Face) -> Distance:
 	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
 		face_distance = 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
 		return float(numpy.interp(face_distance, [ 0, 2 ], [ 0, 1 ]))

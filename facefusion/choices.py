@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceAlignerModel, FaceDetectorModel, FaceDetectorSet, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogCharacterSet, LogLevel, LogLevelSet, ProgressActionSet, Race, Score, TempFrameFormat, TempPixelFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
+from facefusion.types import Angle, ApiSecurityStrategy, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, Distance, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceAlignerModel, FaceDetectorModel, FaceDetectorSet, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogCharacterSet, LogLevel, LogLevelSet, ProgressActionSet, Race, Score, TempFrameFormat, TempPixelFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -177,7 +177,7 @@ face_aligner_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
 face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
 face_selector_age_range : Sequence[int] = create_int_range(0, 100, 1)
-reference_match_distance_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
+reference_match_distance_range : Sequence[Distance] = create_float_range(0.0, 1.0, 0.05)
 face_tracker_score_range : Sequence[Score] = create_float_range(0.0, 0.5, 0.05)
 target_frame_amount_range : Sequence[int] = create_int_range(0, 10, 1)
 output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
