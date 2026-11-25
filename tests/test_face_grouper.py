@@ -2,7 +2,7 @@ from typing import List
 
 import numpy
 
-from facefusion.face_grouper import calculate_face_distances, create_face_pointer_set, merge_group_distances, sort_face_pointer_group
+from facefusion.face_grouper import calculate_face_distances, group_faces, merge_group_distances
 from facefusion.types import Face, FacePointer
 
 
@@ -124,36 +124,28 @@ def test_create_face_pointer_set() -> None:
 	faces = create_faces()
 	face_pointers = create_face_pointers()
 
-	assert create_face_pointer_set([], [], 0.4) == {}
-	assert create_face_pointer_set(faces, face_pointers, 0.05) ==\
-	{
+	assert group_faces([], [], 0.4) == {}
+	assert group_faces(faces, face_pointers, 0.05) == \
+		   {
 		'0': [ face_pointers[0] ],
 		'1': [ face_pointers[1] ],
 		'2': [ face_pointers[2] ],
 		'3': [ face_pointers[3] ]
 	}
-	assert create_face_pointer_set(faces, face_pointers, 0.4) ==\
-	{
-		'0': [ face_pointers[3], face_pointers[1], face_pointers[0] ],
-		'1': [ face_pointers[2] ]
+	assert group_faces(faces, face_pointers, 0.4) == \
+		   {
+		'0': [ face_pointers[0], face_pointers[1], face_pointers[3] ],
+		'2': [ face_pointers[2] ]
 	}
-	assert create_face_pointer_set([ faces[2], faces[0], faces[1], faces[3] ], [ face_pointers[2], face_pointers[0], face_pointers[1], face_pointers[3] ], 0.4) ==\
-	{
-		'0': [ face_pointers[3], face_pointers[1], face_pointers[0] ],
-		'1': [ face_pointers[2] ]
+	assert group_faces([faces[2], faces[0], faces[1], faces[3]], [face_pointers[2], face_pointers[0], face_pointers[1], face_pointers[3]], 0.4) == \
+		   {
+		'0': [ face_pointers[2] ],
+		'1': [ face_pointers[0], face_pointers[1], face_pointers[3] ]
 	}
-	assert create_face_pointer_set(faces, face_pointers, 0.8) ==\
-	{
-		'0': [ face_pointers[1], face_pointers[3], face_pointers[0], face_pointers[2] ]
+	assert group_faces(faces, face_pointers, 0.8) == \
+		   {
+		'0': [ face_pointers[0], face_pointers[1], face_pointers[3], face_pointers[2] ]
 	}
-
-
-def test_sort_face_pointer_group() -> None:
-	faces = create_faces()
-	face_pointers = create_face_pointers()
-
-	assert sort_face_pointer_group([ faces[0], faces[1], faces[3] ], [ face_pointers[0], face_pointers[1], face_pointers[3] ]) == [ face_pointers[3], face_pointers[1], face_pointers[0] ]
-	assert sort_face_pointer_group([ faces[2] ], [ face_pointers[2] ]) == [ face_pointers[2] ]
 
 
 def test_calculate_face_distances() -> None:
