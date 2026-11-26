@@ -71,7 +71,7 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
-@lru_cache(maxsize = 64)
+@lru_cache(maxsize = 128)
 def read_static_video_frame(video_path : str, frame_index : int = 0) -> Optional[VisionFrame]:
 	return read_video_frame(video_path, frame_index)
 
