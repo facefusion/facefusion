@@ -25,6 +25,7 @@ from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import delete_stream, post_stream, websocket_stream
 from facefusion.apis.middlewares.delivery import create_delivery_guard
 from facefusion.apis.middlewares.exception import create_exception_guard
+from facefusion.apis.middlewares.logger import create_logger
 from facefusion.apis.middlewares.security import create_security_guard
 from facefusion.apis.middlewares.session import create_session_guard
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
@@ -85,6 +86,7 @@ def create_api() -> Starlette:
 	api.add_middleware(create_delivery_guard)
 	api.add_middleware(create_exception_guard)
 	api.add_middleware(create_security_guard)
+	api.add_middleware(create_logger)
 
 	if api_upload_limit > 0:
 		api.add_middleware(RequestBodyLimitMiddleware, max_body_size = api_upload_limit * 1024 * 1024)
@@ -102,7 +104,15 @@ def create_server() -> uvicorn.Server:
 		port = state_manager.get_item('api_port'),
 		limit_concurrency = state_manager.get_item('api_session_limit') * 8,
 		ws_max_size = 8 * 1024 * 1024,
-		ws_max_queue = 8
+		ws_max_queue = 8,
+		log_config =
+		{
+			'version': 1,
+			'loggers':
+			{
+				'facefusion': {}
+			}
+		}
 	))
 
 
