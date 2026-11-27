@@ -218,7 +218,12 @@ LogGroup = TypedDict('LogGroup',
 	'label' : str,
 	'color' : LogColor
 })
-LogLine : TypeAlias = List[str]
+LogLine = TypedDict('LogLine',
+{
+	'group_label' : str,
+	'module_name' : str,
+	'message' : str
+})
 LogExtra = TypedDict('LogExtra',
 {
 	'module_names' : List[str],

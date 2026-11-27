@@ -16,7 +16,12 @@ def create_handler() -> BufferingHandler:
 
 
 def emit(buffering_handler : BufferingHandler, log_record : LogRecord) -> None:
-	previous_line : LogLine = []
+	previous_line : LogLine =\
+	{
+		'group_label': str(),
+		'module_name': str(),
+		'message': str()
+	}
 
 	for previous_record in buffering_handler.buffer:
 		previous_line = create_log_line(previous_record)

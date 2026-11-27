@@ -1,7 +1,7 @@
 from logging import ERROR, LogRecord, WARNING
 
 from facefusion import choices, session_context, session_manager, state_manager
-from facefusion.common_helper import get_first, get_last
+from facefusion.common_helper import get_last
 from facefusion.types import LogColor, LogGroup, LogLine
 
 
@@ -10,21 +10,29 @@ def create_log_line(log_record : LogRecord) -> LogLine:
 	log_group = log_record.__dict__.get('log_group')
 
 	if module_names and log_group:
-		return [ log_group.get('label'), get_last(module_names), color_message(log_record.getMessage(), log_record.levelno) ]
+		return\
+		{
+			'group_label': log_group.get('label'),
+			'module_name': get_last(module_names),
+			'message': color_message(log_record.getMessage(), log_record.levelno)
+		}
 
-	return [ log_record.getMessage() ]
+	return\
+	{
+		'group_label': str(),
+		'module_name': str(),
+		'message': log_record.getMessage()
+	}
 
 
 def format_log_line(previous_line : LogLine, current_line : LogLine) -> str:
-	if len(current_line) == 3:
-		line_label, line_type, line_text = current_line
+	if current_line.get('group_label'):
+		if current_line.get('group_label') == previous_line.get('group_label'):
+			return create_line(str(), 'white', '│', current_line.get('module_name'), current_line.get('message'))
 
-		if line_label == get_first(previous_line):
-			return create_line(str(), 'white', '│', line_type, line_text)
+		return create_line(current_line.get('group_label'), 'white', '┬', current_line.get('module_name'), current_line.get('message'))
 
-		return create_line(line_label, 'white', '┬', line_type, line_text)
-
-	return get_first(current_line)
+	return current_line.get('message')
 
 
 def color_message(message : str, log_level : int) -> str:

@@ -23,16 +23,16 @@ def test_create_log_line() -> None:
 	warn_record = logging.makeLogRecord({ 'msg': 'message', 'levelno': logging.WARNING, 'module_names': [ 'facefusion', 'face_detector' ], 'log_group': create_log_group('cli', 0) })
 	table_record = logging.makeLogRecord({ 'msg': '+---+' })
 
-	assert create_log_line(core_record) == [ 'cli.0', 'core', 'message' ]
-	assert create_log_line(warn_record) == [ 'cli.0', 'face_detector', color_message('message', logging.WARNING) ]
-	assert create_log_line(table_record) == [ '+---+' ]
+	assert create_log_line(core_record) == { 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }
+	assert create_log_line(warn_record) == { 'group_label': 'cli.0', 'module_name': 'face_detector', 'message': color_message('message', logging.WARNING) }
+	assert create_log_line(table_record) == { 'group_label': str(), 'module_name': str(), 'message': '+---+' }
 
 
 def test_format_log_line() -> None:
-	assert format_log_line([], [ 'cli.0', 'core', 'message' ]) == create_line('cli.0', 'white', '┬', 'core', 'message')
-	assert format_log_line([ 'cli.0', 'core', 'message' ], [ 'cli.0', 'core', 'message' ]) == create_line(str(), 'white', '│', 'core', 'message')
-	assert format_log_line([ 'api.0', 'core', 'message' ], [ 'cli.0', 'core', 'message' ]) == create_line('cli.0', 'white', '┬', 'core', 'message')
-	assert format_log_line([ 'cli.0', 'core', 'message' ], [ '+---+' ]) == '+---+'
+	assert format_log_line({ 'group_label': str(), 'module_name': str(), 'message': str() }, { 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }) == create_line('cli.0', 'white', '┬', 'core', 'message')
+	assert format_log_line({ 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }, { 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }) == create_line(str(), 'white', '│', 'core', 'message')
+	assert format_log_line({ 'group_label': 'api.0', 'module_name': 'core', 'message': 'message' }, { 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }) == create_line('cli.0', 'white', '┬', 'core', 'message')
+	assert format_log_line({ 'group_label': 'cli.0', 'module_name': 'core', 'message': 'message' }, { 'group_label': str(), 'module_name': str(), 'message': '+---+' }) == '+---+'
 
 
 def test_color_message() -> None:
