@@ -1,42 +1,28 @@
 import os
 import sys
-import threading
 from functools import partial
-from logging.handlers import MemoryHandler
+from logging import LogRecord
+from logging.handlers import BufferingHandler
 
 from facefusion import choices
 from facefusion.clis.cli_formatter import create_log_line, format_log_line
 from facefusion.types import LogLine
 
 
-def create_handler() -> MemoryHandler:
-	memory_handler = MemoryHandler(1024)
-	memory_handler.flush = partial(flush, memory_handler) #type:ignore[method-assign]
-	start_timer(memory_handler)
-	return memory_handler
+def create_handler() -> BufferingHandler:
+	buffering_handler = BufferingHandler(1)
+	buffering_handler.emit = partial(emit, buffering_handler) #type:ignore[method-assign]
+	return buffering_handler
 
 
-def start_timer(memory_handler : MemoryHandler) -> None:
-	flush_timer = threading.Timer(0.5, partial(end_timer, memory_handler))
-	flush_timer.daemon = True
-	flush_timer.start()
+def emit(buffering_handler : BufferingHandler, log_record : LogRecord) -> None:
+	previous_line : LogLine = []
 
+	for previous_record in buffering_handler.buffer:
+		previous_line = create_log_line(previous_record)
 
-def end_timer(memory_handler : MemoryHandler) -> None:
-	memory_handler.flush()
-	start_timer(memory_handler)
-
-
-def flush(memory_handler : MemoryHandler) -> None:
-	with memory_handler.lock:
-		previous_line : LogLine = []
-
-		for log_record in memory_handler.buffer:
-			current_line = create_log_line(log_record)
-			write(format_log_line(previous_line, current_line) + os.linesep)
-			previous_line = current_line
-
-		memory_handler.buffer = []
+	write(format_log_line(previous_line, create_log_line(log_record)) + os.linesep)
+	buffering_handler.buffer = [ log_record ]
 
 
 def write(message : str) -> None:
